@@ -1,0 +1,1 @@
+Ezyquant: powerful backtest python library for Thai stocks
