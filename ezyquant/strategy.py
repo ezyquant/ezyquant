@@ -3,7 +3,7 @@ from typing import Iterable
 import pandas as pd
 
 
-class _SETBaseFactorManager:
+class _SETBaseStrategyManager:
     def __init__(self, start_date: date, end_date: date) -> None:
         self._start_date = start_date
         self._end_date = end_date
@@ -57,7 +57,7 @@ class _SETBaseFactorManager:
     """
 
 
-class SETUniverseFactorManager(_SETBaseFactorManager):
+class SETUniverseStrategyManager(_SETBaseStrategyManager):
     def __init__(
         self,
         max_universe: str,
@@ -67,7 +67,7 @@ class SETUniverseFactorManager(_SETBaseFactorManager):
         super().__init__(start_date, end_date)
 
 
-class SETSymbolFactorManager(_SETBaseFactorManager):
+class SETSymbolStrategyManager(_SETBaseStrategyManager):
     def __init__(
         self,
         symbols: Iterable[str],
