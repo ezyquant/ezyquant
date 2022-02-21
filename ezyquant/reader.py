@@ -31,7 +31,7 @@ class SETDataReader:
     ) -> pd.DataFrame:
         return pd.DataFrame()
 
-    def get_cash_dividend(
+    def get_dividend(
         self,
         symbols: Optional[Iterable[str]] = None,
         start_date: Optional[date] = None,
