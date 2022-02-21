@@ -77,7 +77,9 @@ class SETDataReader:
         symbol_list: Optional[Iterable[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-        is_adjusted: bool = True,
+        adjusted_par: bool = True,
+        adjusted_stock_dividend: bool = True,
+        adjusted_cash_dividend: bool = True,
     ) -> pd.DataFrame:
         return pd.DataFrame()
 
@@ -87,7 +89,9 @@ class SETDataReader:
         symbol_list: Optional[Iterable[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-        is_adjusted: bool = True,
+        adjusted_par: bool = True,
+        adjusted_stock_dividend: bool = True,
+        adjusted_cash_dividend: bool = True,
     ) -> pd.DataFrame:
         return pd.DataFrame()
 
@@ -97,7 +101,9 @@ class SETDataReader:
         symbol_list: Optional[Iterable[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-        is_adjusted: bool = True,
+        adjusted_par: bool = True,
+        adjusted_stock_dividend: bool = True,
+        adjusted_cash_dividend: bool = True,
     ) -> pd.DataFrame:
         return pd.DataFrame()
 
@@ -107,7 +113,9 @@ class SETDataReader:
         symbol_list: Optional[Iterable[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-        is_adjusted: bool = True,
+        adjusted_par: bool = True,
+        adjusted_stock_dividend: bool = True,
+        adjusted_cash_dividend: bool = True,
     ) -> pd.DataFrame:
         return pd.DataFrame()
 
