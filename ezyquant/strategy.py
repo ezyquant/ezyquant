@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Iterable
+from typing import Dict, Iterable, List, Optional
 import pandas as pd
 
 
@@ -55,6 +55,25 @@ class _SETBaseStrategyManager:
     def weight_min_variance(factor_df: pd.DataFrame: total_days: int) -> pd.DataFrame:
         return pd.DataFrame()
     """
+
+    def backtest(
+        self,
+        weight_signal_df: pd.DataFrame,
+        backtest_start_date: date,
+        backtest_end_date: date,
+        commission: float,
+        initial_cash: float,
+        initial_positions: List[dict] = list(),
+        pct_buy_slip: float = 0.0,
+        pct_sell_slip: float = 0.0,
+        match_mode: str = "limit_slip",
+        match_price_mode: str = "open_or_prev_close",
+        signal_trigger_freq: str = "daily",
+        signal_trigger_at: Optional[str] = None,
+        rebalance_freq: str = "daily",
+        rebalance_at: Optional[str] = None,
+    ):
+        pass
 
 
 class SETUniverseStrategyManager(_SETBaseStrategyManager):
