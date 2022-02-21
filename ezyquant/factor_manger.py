@@ -38,6 +38,31 @@ class _SETBaseFactorManager:
     def is_banned(self):
         return pd.DataFrame()
 
+    @staticmethod
+    def weight_equally(factor_df: pd.DataFrame) -> pd.DataFrame:
+        return pd.DataFrame()
+
+    @staticmethod
+    def weight_fix(factor_df: pd.DataFrame, pct_weight: float) -> pd.DataFrame:
+        return pd.DataFrame()
+
+    """
+    in the future,
+    
+    def weight_max_sharpe(factor_df: pd.DataFrame, total_days: int) -> pd.DataFrame:
+        return pd.DataFrame()
+    
+    def weight_min_variance(factor_df: pd.DataFrame: total_days: int) -> pd.DataFrame:
+        return pd.DataFrame()
+    """
+
+
+"""
+in the future
+
+def weight_max_sharpe(factor:df, pd.DataFrame)
+"""
+
 
 class SETUniverseFactorManager(_SETBaseFactorManager):
     def __init__(
