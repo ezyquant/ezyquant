@@ -57,13 +57,6 @@ class _SETBaseFactorManager:
     """
 
 
-"""
-in the future
-
-def weight_max_sharpe(factor:df, pd.DataFrame)
-"""
-
-
 class SETUniverseFactorManager(_SETBaseFactorManager):
     def __init__(
         self,
