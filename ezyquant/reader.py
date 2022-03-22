@@ -92,12 +92,28 @@ class SETDataReader:
                 - market: str - I_MARKET
                 - industry: str - SECTOR.N_INDUSTRY
                 - sector: str - SECTOR.N_SECTOR
-                ...
+                - TODO: ...
         """
         return pd.DataFrame()
 
     def get_company_info(self, symbols: Optional[Iterable[str]] = None) -> pd.DataFrame:
-        """Data from table COMPANY."""
+        """Data from table COMPANY.
+
+        Parameters
+        ----------
+        symbols : Optional[Iterable[str]], optional
+            SECURITY.N_SECURITY in symbols, by default None
+
+        Returns
+        -------
+        pd.DataFrame
+            company info dataframe contain columns:
+                - company_id: int - I_COMPANY
+                - symbol: str - SECURITY.N_SECURITY
+                - company_name_t: str - N_COMPANY_T
+                - company_name_e: str - N_COMPANY_E
+                - TODO: ...
+        """
         return pd.DataFrame()
 
     def get_change_name(
