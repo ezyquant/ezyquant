@@ -5,7 +5,16 @@ import pandas as pd
 
 
 class SETDataReader:
+    """SETDataReader read PSIMS data."""
+
     def __init__(self, sqlite_path: str) -> None:
+        """SETDataReader constructor.
+
+        Parameters
+        ----------
+        sqlite_path : str
+            path to sqlite file e.g. /path/to/sqlite.db
+        """
         self.__sqlite_path = sqlite_path
 
     def get_trading_dates(
@@ -30,14 +39,61 @@ class SETDataReader:
         return []
 
     def is_trading_date(self, date_: date) -> bool:
-        """Data from table CALENDAR."""
+        """Data from table CALENDAR.
+
+        Parameters
+        ----------
+        date_ : date
+            D_TRADE
+
+        Returns
+        -------
+        bool
+            is trading date
+        """
         return True
 
     def is_today_trading_date(self) -> bool:
+        """Data from table CALENDAR.
+
+        Returns
+        -------
+        bool
+            is today trading date
+        """
         return is_trading_date(date.today())
 
-    def get_symbol_info(self, symbols: Optional[Iterable[str]] = None) -> pd.DataFrame:
-        """Data from table SECURITY."""
+    def get_symbol_info(
+        self,
+        symbols: Optional[Iterable[str]] = None,
+        market: Optional[str] = None,
+        industry: Optional[str] = None,
+        sector: Optional[str] = None,
+    ) -> pd.DataFrame:
+        """Data from table SECURITY.
+
+        Parameters
+        ----------
+        symbols : Optional[Iterable[str]], optional
+            N_SECURITY in symbols, case insensitive, by default None, by default None
+        market : Optional[str], optional
+            I_MARKET e.g. 'SET', 'MAI', by default None
+        industry : Optional[str], optional
+            SECTOR.N_INDUSTRY, by default None
+        sector : Optional[str], optional
+            SECTOR.N_SECTOR, by default None
+
+        Returns
+        -------
+        pd.DataFrame
+            symbol info dataframe contain columns:
+                - symbol_id: int - I_SECURITY
+                - symbol: str - N_SECURITY
+                - market: str - I_MARKET
+                - industry: str - SECTOR.N_INDUSTRY
+                - sector: str - SECTOR.N_SECTOR
+                ...
+        """
         return pd.DataFrame()
 
     def get_company_info(self, symbols: Optional[Iterable[str]] = None) -> pd.DataFrame:
