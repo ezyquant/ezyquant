@@ -12,15 +12,30 @@ class SETDataReader:
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> List[date]:
+        """
+        Use table: CALENDAR
+        """
         return []
 
-    def is_today_trading_date(self) -> bool:
+    def is_trading_date(self, date_: date) -> bool:
+        """
+        Use table: CALENDAR
+        """
         return True
 
+    def is_today_trading_date(self) -> bool:
+        return is_trading_date(date.today())
+
     def get_symbol_info(self, symbols: Optional[Iterable[str]] = None) -> pd.DataFrame:
+        """
+        Use table: SECURITY
+        """
         return pd.DataFrame()
 
     def get_company_info(self, symbols: Optional[Iterable[str]] = None) -> pd.DataFrame:
+        """
+        Use table: COMPANY
+        """
         return pd.DataFrame()
 
     def get_change_name(
@@ -29,6 +44,9 @@ class SETDataReader:
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> pd.DataFrame:
+        """
+        Use table: CHANGE_NAME_SECURITY
+        """
         return pd.DataFrame()
 
     def get_dividend(
@@ -36,7 +54,11 @@ class SETDataReader:
         symbols: Optional[Iterable[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
+        ca_type: Optional[str] = None,
     ) -> pd.DataFrame:
+        """
+        Use table: RIGHTS_BENEFIT
+        """
         return pd.DataFrame()
 
     def get_delisted(
@@ -45,6 +67,9 @@ class SETDataReader:
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> pd.DataFrame:
+        """
+        Use table: SECURITY_DETAIL
+        """
         return pd.DataFrame()
 
     def get_sp(
@@ -52,7 +77,11 @@ class SETDataReader:
         symbols: Optional[Iterable[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
+        sign: Optional[str] = None,
     ) -> pd.DataFrame:
+        """
+        Use table: SIGN_POSTING
+        """
         return pd.DataFrame()
 
     def get_symbols_by_index(
@@ -61,6 +90,9 @@ class SETDataReader:
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> pd.DataFrame:
+        """
+        Use table: SECURITY_INDEX
+        """
         return pd.DataFrame()
 
     def get_adjust_factor(
@@ -68,7 +100,11 @@ class SETDataReader:
         symbol_list: Optional[Iterable[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
+        ca_type: Optional[str] = None,
     ) -> pd.DataFrame:
+        """
+        Use table: ADJUST_FACTOR
+        """
         return pd.DataFrame()
 
     def get_data_symbol_daily(
@@ -81,6 +117,9 @@ class SETDataReader:
         adjusted_stock_dividend: bool = True,
         adjusted_cash_dividend: bool = True,
     ) -> pd.DataFrame:
+        """
+        Use table: DAILY_STOCK_STAT, DAILY_STOCK_TRADE
+        """
         return pd.DataFrame()
 
     def get_data_symbol_quarterly(
@@ -93,6 +132,9 @@ class SETDataReader:
         adjusted_stock_dividend: bool = True,
         adjusted_cash_dividend: bool = True,
     ) -> pd.DataFrame:
+        """
+        Use table: FINANCIAL_SCREEN, FINANCIAL_STAT_STD
+        """
         return pd.DataFrame()
 
     def get_data_symbol_yearly(
@@ -105,6 +147,9 @@ class SETDataReader:
         adjusted_stock_dividend: bool = True,
         adjusted_cash_dividend: bool = True,
     ) -> pd.DataFrame:
+        """
+        Use table: FINANCIAL_SCREEN, FINANCIAL_STAT_STD
+        """
         return pd.DataFrame()
 
     def get_data_symbol_ttm(
@@ -117,6 +162,9 @@ class SETDataReader:
         adjusted_stock_dividend: bool = True,
         adjusted_cash_dividend: bool = True,
     ) -> pd.DataFrame:
+        """
+        Use table: FINANCIAL_SCREEN, FINANCIAL_STAT_STD
+        """
         return pd.DataFrame()
 
     def get_data_symbol_ytd(
@@ -127,6 +175,9 @@ class SETDataReader:
         end_date: Optional[date] = None,
         is_adjusted: bool = True,
     ) -> pd.DataFrame:
+        """
+        Use table: FINANCIAL_SCREEN, FINANCIAL_STAT_STD
+        """
         return pd.DataFrame()
 
     def get_data_index_daily(
@@ -136,6 +187,9 @@ class SETDataReader:
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> pd.DataFrame:
+        """
+        Use table: MKTSTAT_DAILY_INDEX, MKTSTAT_DAILY_MARKET
+        """
         return pd.DataFrame()
 
     def get_data_sector_daily(
@@ -145,4 +199,7 @@ class SETDataReader:
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> pd.DataFrame:
+        """
+        Use table: DAILY_SECTOR_INFO
+        """
         return pd.DataFrame()
