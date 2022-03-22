@@ -1,0 +1,4 @@
+D_OPEN = "Z_OPEN"
+D_HIGH = "Z_HIGH"
+D_LOW = "Z_LOW"
+D_CLOSE = "Z_CLOSE"
