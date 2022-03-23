@@ -1,6 +1,6 @@
 Ezyquant: powerful live-test python library for Thai stocks
 
-# Extension for documention
+# Vscode extension for documentation
 
 ```
 Name: autoDocstring - Python Docstring Generator
