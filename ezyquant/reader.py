@@ -38,7 +38,7 @@ class SETDataReader:
         """
         return []
 
-    def is_trading_date(self, date_: date) -> bool:
+    def is_trading_date(self, check_date: date) -> bool:
         """Data from table CALENDAR.
 
         Parameters
@@ -170,7 +170,7 @@ class SETDataReader:
         symbol_list: Optional[List[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-        ca_type: Optional[List[str]] = None,
+        ca_type_list: Optional[List[str]] = None,
     ) -> pd.DataFrame:
         """Data from table RIGHTS_BENEFIT. Include only Cash Dividend (CA) and
         Stock Dividend (SD). Not include Cancelled (F_CANCEL='C').
@@ -183,8 +183,8 @@ class SETDataReader:
             start of ex_date (D_SIGN), by default None
         end_date : Optional[date]
             end of ex_date (D_SIGN), by default None
-        ca_type : Optional[List[str]]
-            Coperatie Action Type (N_CA_TYPE), by default None
+        ca_type_list : Optional[List[str]]
+            Coperatie action type (N_CA_TYPE), by default None
                 - CD - cash dividend
                 - SD - stock dividend
 
@@ -325,7 +325,7 @@ class SETDataReader:
         symbol_list: Optional[List[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-        ca_type: Optional[List[str]] = None,
+        ca_type_list: Optional[List[str]] = None,
     ) -> pd.DataFrame:
         """Data from table ADJUST_FACTOR.
 
@@ -337,8 +337,8 @@ class SETDataReader:
             start of effect_date (D_EFFECT), by default None
         end_date : Optional[date]
             end of effect_date (D_EFFECT), by default None
-        ca_type : Optional[List[str]]
-            Coperatie Action Type (N_CA_TYPE), by default None
+        ca_type_list : Optional[List[str]]
+            Coperatie action type (N_CA_TYPE), by default None
                 - '  '
                 - 'CR' - Capital Reduction
                 - 'PC' - Par Change
@@ -367,8 +367,7 @@ class SETDataReader:
         symbol_list: Optional[List[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-        adjusted_par: bool = True,
-        adjusted_stock_dividend: bool = True,
+        adjusted_list: List[str] = ["  ", "CR", "PC", "RC", "SD", "XR"],
     ) -> pd.DataFrame:
         """Data from table DAILY_STOCK_TRADE, DAILY_STOCK_STAT.
 
@@ -382,10 +381,8 @@ class SETDataReader:
             start of trade_date (D_TRADE), by default None
         end_date : Optional[date]
             end of trade_date (D_TRADE), by default None
-        adjusted_par : bool
-            TODO, by default True
-        adjusted_stock_dividend : bool
-            TODO, by default True
+        adjusted_list : List[str]
+            Adjust data by ca_type, empty list for no adjust, by default ["  ", "CR", "PC", "RC", "SD", "XR"]
 
         Returns
         -------
@@ -398,6 +395,7 @@ class SETDataReader:
         --------
         TODO: examples
         """
+        adjusted_list = list(adjusted_list)  # copy to avoid modify original list
         return pd.DataFrame()
 
     def get_data_symbol_quarterly(
