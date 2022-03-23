@@ -176,7 +176,7 @@ class SETDataReader:
         end_date : Optional[date], optional
             end of ex_date (D_SIGN), by default None
         ca_type : Optional[str], optional
-            N_CA_TYPE, by default None
+            Coperatie Action Type (N_CA_TYPE), by default None
                 - CD - cash dividend
                 - SD - stock dividend
 
@@ -263,7 +263,41 @@ class SETDataReader:
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> pd.DataFrame:
-        """Data from table SECURITY_INDEX."""
+        """Data from table SECURITY_INDEX.
+
+        Parameters
+        ----------
+        index_list : Optional[Iterable[str]]
+            index (SECTOR.N_SECTOR), case insensitive
+                - SETWB
+                - SETTHSI
+                - SETCLMV
+                - SETHD
+                - sSET
+                - SET100
+                - SET50
+        start_date : Optional[date], optional
+            start of as_of_date (D_AS_OF), by default None
+        end_date : Optional[date], optional
+            end of as_of_date (D_AS_OF), by default None
+
+        Returns
+        -------
+        pd.DataFrame
+            - as_of_date: date - D_AS_OF
+            - symbol: str - SECURITY.N_SECURITY
+            - index: str - SECTOR.N_SECTOR
+
+        Note
+        -------
+        - SET50 filter S_SEQ 1-50
+        - SET100 filter S_SEQ 1-100
+        - SETHD filter S_SEQ 1-30
+
+        Examples
+        --------
+        TODO: examples
+        """
         return pd.DataFrame()
 
     def get_adjust_factor(
@@ -273,7 +307,39 @@ class SETDataReader:
         end_date: Optional[date] = None,
         ca_type: Optional[str] = None,
     ) -> pd.DataFrame:
-        """Data from table ADJUST_FACTOR."""
+        """Data from table ADJUST_FACTOR.
+
+        Parameters
+        ----------
+        symbol_list : Optional[Iterable[str]], optional
+            N_SECURITY in symbols, case insensitive, by default None
+        start_date : Optional[date], optional
+            start of effect_date (D_EFFECT), by default None
+        end_date : Optional[date], optional
+            end of effect_date (D_EFFECT), by default None
+        ca_type : Optional[str], optional
+            Coperatie Action Type (N_CA_TYPE), by default None
+                - '  '
+                - 'CR' - Capital Reduction
+                - 'PC' - Par Change
+                - 'RC' - Ratio Change
+                - 'SD' - Stock Dividend
+                - 'XR' - Rights
+
+
+        Returns
+        -------
+        pd.DataFrame
+            adjust factor dataframe contain columns:
+                - symbol: str - SECURITY.N_SECURITY
+                - effect_date: date - D_EFFECT
+                - ca_type: str - N_CA_TYPE
+                - adjust_factor: float - F_FACTOR
+
+        Examples
+        --------
+        TODO: examples
+        """
         return pd.DataFrame()
 
     def get_data_symbol_daily(
