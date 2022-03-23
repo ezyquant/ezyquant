@@ -26,9 +26,9 @@ class SETDataReader:
 
         Parameters
         ----------
-        start_date : Optional[date], optional
+        start_date : Optional[date]
             start of D_TRADE, by default None
-        end_date : Optional[date], optional
+        end_date : Optional[date]
             end of D_TRADE, by default None
 
         Returns
@@ -74,13 +74,13 @@ class SETDataReader:
 
         Parameters
         ----------
-        symbols : Optional[Iterable[str]], optional
+        symbols : Optional[Iterable[str]]
             N_SECURITY in symbols, case insensitive, by default None
-        market : Optional[str], optional
+        market : Optional[str]
             I_MARKET e.g. 'SET', 'MAI', by default None
-        industry : Optional[str], optional
+        industry : Optional[str]
             SECTOR.N_INDUSTRY, by default None
-        sector : Optional[str], optional
+        sector : Optional[str]
             SECTOR.N_SECTOR, by default None
 
         Returns
@@ -105,7 +105,7 @@ class SETDataReader:
 
         Parameters
         ----------
-        symbols : Optional[Iterable[str]], optional
+        symbols : Optional[Iterable[str]]
             SECURITY.N_SECURITY in symbols, case insensitive, by default None
 
         Returns
@@ -134,11 +134,11 @@ class SETDataReader:
 
         Parameters
         ----------
-        symbols : Optional[List[str]], optional
+        symbols : Optional[List[str]]
             N_SECURITY in symbols, case insensitive, by default None
-        start_date : Optional[date], optional
+        start_date : Optional[date]
             start of effect_date (D_EFFECT), by default None
-        end_date : Optional[date], optional
+        end_date : Optional[date]
             end of effect_date (D_EFFECT), by default None
 
         Returns
@@ -162,20 +162,20 @@ class SETDataReader:
         symbols: Optional[Iterable[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-        ca_type: Optional[str] = None,
+        ca_type: Optional[List[str]] = None,
     ) -> pd.DataFrame:
         """Data from table RIGHTS_BENEFIT. Include only Cash Dividend (CA) and
         Stock Dividend (SD). Not include Cancelled (F_CANCEL='C').
 
         Parameters
         ----------
-        symbols : Optional[Iterable[str]], optional
+        symbols : Optional[Iterable[str]]
             N_SECURITY in symbols, case insensitive, by default None
-        start_date : Optional[date], optional
+        start_date : Optional[date]
             start of ex_date (D_SIGN), by default None
-        end_date : Optional[date], optional
+        end_date : Optional[date]
             end of ex_date (D_SIGN), by default None
-        ca_type : Optional[str], optional
+        ca_type : Optional[List[str]]
             Coperatie Action Type (N_CA_TYPE), by default None
                 - CD - cash dividend
                 - SD - stock dividend
@@ -207,11 +207,11 @@ class SETDataReader:
 
         Parameters
         ----------
-        symbols : Optional[Iterable[str]], optional
+        symbols : Optional[Iterable[str]]
             N_SECURITY in symbols, case insensitive, by default None
-        start_date : Optional[date], optional
+        start_date : Optional[date]
             start of delisted_date (D_DELISTED), by default None
-        end_date : Optional[date], optional
+        end_date : Optional[date]
             end of delisted_date (D_DELISTED), by default None
 
         Returns
@@ -237,11 +237,11 @@ class SETDataReader:
 
         Parameters
         ----------
-        symbols : Optional[Iterable[str]], optional
+        symbols : Optional[Iterable[str]]
             N_SECURITY in symbols, case insensitive, by default None
-        start_date : Optional[date], optional
+        start_date : Optional[date]
             start of hold_date (D_HOLD), by default None
-        end_date : Optional[date], optional
+        end_date : Optional[date]
             end of hold_date (D_HOLD), by default None
 
         Returns
@@ -276,9 +276,9 @@ class SETDataReader:
                 - sSET
                 - SET100
                 - SET50
-        start_date : Optional[date], optional
+        start_date : Optional[date]
             start of as_of_date (D_AS_OF), by default None
-        end_date : Optional[date], optional
+        end_date : Optional[date]
             end of as_of_date (D_AS_OF), by default None
 
         Returns
@@ -305,19 +305,19 @@ class SETDataReader:
         symbol_list: Optional[Iterable[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-        ca_type: Optional[str] = None,
+        ca_type: Optional[List[str]] = None,
     ) -> pd.DataFrame:
         """Data from table ADJUST_FACTOR.
 
         Parameters
         ----------
-        symbol_list : Optional[Iterable[str]], optional
+        symbol_list : Optional[Iterable[str]]
             N_SECURITY in symbols, case insensitive, by default None
-        start_date : Optional[date], optional
+        start_date : Optional[date]
             start of effect_date (D_EFFECT), by default None
-        end_date : Optional[date], optional
+        end_date : Optional[date]
             end of effect_date (D_EFFECT), by default None
-        ca_type : Optional[str], optional
+        ca_type : Optional[List[str]]
             Coperatie Action Type (N_CA_TYPE), by default None
                 - '  '
                 - 'CR' - Capital Reduction
@@ -325,7 +325,6 @@ class SETDataReader:
                 - 'RC' - Ratio Change
                 - 'SD' - Stock Dividend
                 - 'XR' - Rights
-
 
         Returns
         -------
@@ -350,9 +349,35 @@ class SETDataReader:
         end_date: Optional[date] = None,
         adjusted_par: bool = True,
         adjusted_stock_dividend: bool = True,
-        adjusted_cash_dividend: bool = True,
     ) -> pd.DataFrame:
-        """Data from table DAILY_STOCK_STAT, DAILY_STOCK_TRADE."""
+        """Data from table DAILY_STOCK_TRADE, DAILY_STOCK_STAT.
+
+        Parameters
+        ----------
+        field : str
+            Filed of data, case insensitive e.g. 'open', 'high', 'low', 'close', 'volume'. More fields can be found in ezyquant.fields
+        symbol_list : Optional[Iterable[str]]
+            N_SECURITY in symbols, case insensitive, by default None
+        start_date : Optional[date]
+            start of trade_date (D_TRADE), by default None
+        end_date : Optional[date]
+            end of trade_date (D_TRADE), by default None
+        adjusted_par : bool
+            TODO, by default True
+        adjusted_stock_dividend : bool
+            TODO, by default True
+
+        Returns
+        -------
+        pd.DataFrame
+            dataframe contain:
+                - symbol: str as column
+                - trade_date: date as index
+
+        Examples
+        --------
+        TODO: examples
+        """
         return pd.DataFrame()
 
     def get_data_symbol_quarterly(
@@ -361,11 +386,31 @@ class SETDataReader:
         symbol_list: Optional[Iterable[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-        adjusted_par: bool = True,
-        adjusted_stock_dividend: bool = True,
-        adjusted_cash_dividend: bool = True,
     ) -> pd.DataFrame:
-        """Data from table FINANCIAL_SCREEN, FINANCIAL_STAT_STD."""
+        """Data from table FINANCIAL_SCREEN, FINANCIAL_STAT_STD.
+
+        Parameters
+        ----------
+        field : str
+            Filed of data, case insensitive e.g. 'roe', 'roa', 'eps'. More fields can be found in ezyquant.fields
+        symbol_list : Optional[Iterable[str]]
+            N_SECURITY in symbols, case insensitive, by default None
+        start_date : Optional[date]
+            start of as_of_date (D_AS_OF), by default None
+        end_date : Optional[date]
+            end of as_of_date (D_AS_OF), by default None
+
+        Returns
+        -------
+        pd.DataFrame
+            dataframe contain:
+                - symbol: str as column
+                - as_of_date: date as index
+
+        Examples
+        --------
+        TODO: examples
+        """
         return pd.DataFrame()
 
     def get_data_symbol_yearly(
@@ -374,11 +419,31 @@ class SETDataReader:
         symbol_list: Optional[Iterable[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-        adjusted_par: bool = True,
-        adjusted_stock_dividend: bool = True,
-        adjusted_cash_dividend: bool = True,
     ) -> pd.DataFrame:
-        """Data from table FINANCIAL_SCREEN, FINANCIAL_STAT_STD."""
+        """Data from table FINANCIAL_SCREEN, FINANCIAL_STAT_STD.
+
+        Parameters
+        ----------
+        field : str
+            Filed of data, case insensitive e.g. 'roe', 'roa', 'eps'. More fields can be found in ezyquant.fields
+        symbol_list : Optional[Iterable[str]]
+            N_SECURITY in symbols, case insensitive, by default None
+        start_date : Optional[date]
+            start of as_of_date (D_AS_OF), by default None
+        end_date : Optional[date]
+            end of as_of_date (D_AS_OF), by default None
+
+        Returns
+        -------
+        pd.DataFrame
+            dataframe contain:
+                - symbol: str as column
+                - as_of_date: date as index
+
+        Examples
+        --------
+        TODO: examples
+        """
         return pd.DataFrame()
 
     def get_data_symbol_ttm(
@@ -387,11 +452,31 @@ class SETDataReader:
         symbol_list: Optional[Iterable[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-        adjusted_par: bool = True,
-        adjusted_stock_dividend: bool = True,
-        adjusted_cash_dividend: bool = True,
     ) -> pd.DataFrame:
-        """Data from table FINANCIAL_SCREEN, FINANCIAL_STAT_STD."""
+        """Data from table FINANCIAL_SCREEN, FINANCIAL_STAT_STD.
+
+        Parameters
+        ----------
+        field : str
+            Filed of data, case insensitive e.g. 'roe', 'roa', 'eps'. More fields can be found in ezyquant.fields
+        symbol_list : Optional[Iterable[str]]
+            N_SECURITY in symbols, case insensitive, by default None
+        start_date : Optional[date]
+            start of as_of_date (D_AS_OF), by default None
+        end_date : Optional[date]
+            end of as_of_date (D_AS_OF), by default None
+
+        Returns
+        -------
+        pd.DataFrame
+            dataframe contain:
+                - symbol: str as column
+                - as_of_date: date as index
+
+        Examples
+        --------
+        TODO: examples
+        """
         return pd.DataFrame()
 
     def get_data_symbol_ytd(
@@ -400,9 +485,31 @@ class SETDataReader:
         symbol_list: Optional[Iterable[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-        is_adjusted: bool = True,
     ) -> pd.DataFrame:
-        """Data from table FINANCIAL_SCREEN, FINANCIAL_STAT_STD."""
+        """Data from table FINANCIAL_SCREEN, FINANCIAL_STAT_STD.
+
+        Parameters
+        ----------
+        field : str
+            Filed of data, case insensitive e.g. 'roe', 'roa', 'eps'. More fields can be found in ezyquant.fields
+        symbol_list : Optional[Iterable[str]]
+            N_SECURITY in symbols, case insensitive, by default None
+        start_date : Optional[date]
+            start of as_of_date (D_AS_OF), by default None
+        end_date : Optional[date]
+            end of as_of_date (D_AS_OF), by default None
+
+        Returns
+        -------
+        pd.DataFrame
+            dataframe contain:
+                - symbol: str as column
+                - as_of_date: date as index
+
+        Examples
+        --------
+        TODO: examples
+        """
         return pd.DataFrame()
 
     def get_data_index_daily(
@@ -412,15 +519,61 @@ class SETDataReader:
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> pd.DataFrame:
-        """Data from table MKTSTAT_DAILY_INDEX, MKTSTAT_DAILY_MARKET."""
+        """Data from table MKTSTAT_DAILY_INDEX, MKTSTAT_DAILY_MARKET.
+
+        Parameters
+        ----------
+        field : str
+            Filed of data, case insensitive e.g. 'high', 'low', 'close'. More fields can be found in ezyquant.fields
+        index_list : Optional[Iterable[str]]
+            N_SECTOR in index_list, case insensitive, by default None. More index can be found in ezyquant.fields
+        start_date : Optional[date]
+            start of trade_date (D_TRADE), by default None
+        end_date : Optional[date]
+            end of trade_date (D_TRADE), by default None
+
+        Returns
+        -------
+        pd.DataFrame
+            dataframe contain:
+                - index: str as column
+                - trade_date: date as index
+
+        Examples
+        --------
+        TODO: examples
+        """
         return pd.DataFrame()
 
     def get_data_sector_daily(
         self,
         field: str,
-        index_list: Optional[Iterable[str]] = None,
+        sector_list: Optional[Iterable[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> pd.DataFrame:
-        """Data from table DAILY_SECTOR_INFO."""
+        """Data from table DAILY_SECTOR_INFO.
+
+        Parameters
+        ----------
+        field : str
+            Filed of data, case insensitive e.g. 'high', 'low', 'close'. More fields can be found in ezyquant.fields
+        sector_list : Optional[Iterable[str]]
+            N_SECTOR in sector_list, case insensitive, by default None. More sector can be found in ezyquant.fields
+        start_date : Optional[date]
+            start of trade_date (D_TRADE), by default None
+        end_date : Optional[date]
+            end of trade_date (D_TRADE), by default None
+
+        Returns
+        -------
+        pd.DataFrame
+            dataframe contain:
+                - sector: str as column
+                - trade_date: date as index
+
+        Examples
+        --------
+        TODO: examples
+        """
         return pd.DataFrame()
