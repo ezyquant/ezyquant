@@ -407,7 +407,9 @@ class SETDataReader:
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> pd.DataFrame:
-        """Data from table FINANCIAL_SCREEN, FINANCIAL_STAT_STD.
+        """Data from table FINANCIAL_SCREEN, FINANCIAL_STAT_STD. If field is
+        duplicate in FINANCIAL_SCREEN and FINANCIAL_STAT_STD, the data from
+        FINANCIAL_SCREEN will be used.
 
         Parameters
         ----------
@@ -440,7 +442,9 @@ class SETDataReader:
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> pd.DataFrame:
-        """Data from table FINANCIAL_SCREEN, FINANCIAL_STAT_STD.
+        """Data from table FINANCIAL_SCREEN, FINANCIAL_STAT_STD. If field is
+        duplicate in FINANCIAL_SCREEN and FINANCIAL_STAT_STD, the data from
+        FINANCIAL_SCREEN will be used.
 
         Parameters
         ----------
@@ -473,7 +477,9 @@ class SETDataReader:
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> pd.DataFrame:
-        """Data from table FINANCIAL_SCREEN, FINANCIAL_STAT_STD.
+        """Data from table FINANCIAL_SCREEN, FINANCIAL_STAT_STD. If field is
+        duplicate in FINANCIAL_SCREEN and FINANCIAL_STAT_STD, the data from
+        FINANCIAL_SCREEN will be used.
 
         Parameters
         ----------
@@ -506,7 +512,9 @@ class SETDataReader:
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> pd.DataFrame:
-        """Data from table FINANCIAL_SCREEN, FINANCIAL_STAT_STD.
+        """Data from table FINANCIAL_SCREEN, FINANCIAL_STAT_STD. If field is
+        duplicate in FINANCIAL_SCREEN and FINANCIAL_STAT_STD, the data from
+        FINANCIAL_SCREEN will be used.
 
         Parameters
         ----------
