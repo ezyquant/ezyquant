@@ -61,7 +61,7 @@ class SETDataReader:
         bool
             is today trading date
         """
-        return is_trading_date(date.today())
+        return self.is_trading_date(date.today())
 
     def get_symbol_info(
         self,
@@ -75,7 +75,7 @@ class SETDataReader:
         Parameters
         ----------
         symbols : Optional[Iterable[str]], optional
-            N_SECURITY in symbols, case insensitive, by default None, by default None
+            N_SECURITY in symbols, case insensitive, by default None
         market : Optional[str], optional
             I_MARKET e.g. 'SET', 'MAI', by default None
         industry : Optional[str], optional
@@ -102,7 +102,7 @@ class SETDataReader:
         Parameters
         ----------
         symbols : Optional[Iterable[str]], optional
-            SECURITY.N_SECURITY in symbols, by default None
+            SECURITY.N_SECURITY in symbols, case insensitive, by default None
 
         Returns
         -------
@@ -122,7 +122,27 @@ class SETDataReader:
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> pd.DataFrame:
-        """Data from table CHANGE_NAME_SECURITY."""
+        """Data from table CHANGE_NAME_SECURITY.
+
+        Parameters
+        ----------
+        symbols : Optional[List[str]], optional
+            N_SECURITY in symbols, case insensitive, by default None
+        start_date : Optional[date], optional
+            start of effect_date (D_EFFECT), by default None
+        end_date : Optional[date], optional
+            end of effect_date (D_EFFECT), by default None
+
+        Returns
+        -------
+        pd.DataFrame
+            change name dataframe contain columns:
+                - symbol_id: int - I_SECURITY
+                - symbol: str - SECURITY.N_SECURITY
+                - effect_date: date - D_EFFECT
+                - symbol_old: str - N_SECURITY_OLD
+                - symbol_new: str - N_SECURITY_NEW
+        """
         return pd.DataFrame()
 
     def get_dividend(
@@ -132,7 +152,32 @@ class SETDataReader:
         end_date: Optional[date] = None,
         ca_type: Optional[str] = None,
     ) -> pd.DataFrame:
-        """Data from table RIGHTS_BENEFIT."""
+        """Data from table RIGHTS_BENEFIT. Include only Cash Dividend (CA) and
+        Stock Dividend (SD). Not include Cancelled (F_CANCEL='C').
+
+        Parameters
+        ----------
+        symbols : Optional[Iterable[str]], optional
+            N_SECURITY in symbols, case insensitive, by default None
+        start_date : Optional[date], optional
+            start of ex_date (D_SIGN), by default None
+        end_date : Optional[date], optional
+            end of ex_date (D_SIGN), by default None
+        ca_type : Optional[str], optional
+            N_CA_TYPE, by default None
+                CD - cash dividend
+                SD - stock dividend
+
+        Returns
+        -------
+        pd.DataFrame
+            dividend dataframe contain columns:
+                - symbol: str - SECURITY.N_SECURITY
+                - ex_date: date - D_SIGN
+                - pay_date: date - D_BEG_PAID
+                - ca_type: str - N_CA_TYPE
+                - dps: int - Z_RIGHTS
+        """
         return pd.DataFrame()
 
     def get_delisted(
@@ -141,7 +186,25 @@ class SETDataReader:
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> pd.DataFrame:
-        """Data from table SECURITY_DETAIL."""
+        """Data from table SECURITY_DETAIL. Include only Delisted
+        (D_DELISTED!=None).
+
+        Parameters
+        ----------
+        symbols : Optional[Iterable[str]], optional
+            N_SECURITY in symbols, case insensitive, by default None
+        start_date : Optional[date], optional
+            start of delisted_date (D_DELISTED), by default None
+        end_date : Optional[date], optional
+            end of delisted_date (D_DELISTED), by default None
+
+        Returns
+        -------
+        pd.DataFrame
+            delisted dataframe contain columns:
+                - symbol: str - SECURITY.N_SECURITY
+                - delisted_date: date - D_DELISTED
+        """
         return pd.DataFrame()
 
     def get_sp(
