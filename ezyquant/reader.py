@@ -235,13 +235,14 @@ class SETDataReader:
         """
         return pd.DataFrame()
 
-    def get_sp(
+    def get_sign_posting(
         self,
         symbols: Optional[Iterable[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
+        sign_list: Optional[List[str]] = None,
     ) -> pd.DataFrame:
-        """Data from table SIGN_POSTING. Include only Suspension (N_SIGN='SP').
+        """Data from table SIGN_POSTING.
 
         Parameters
         ----------
@@ -251,6 +252,16 @@ class SETDataReader:
             start of hold_date (D_HOLD), by default None
         end_date : Optional[date]
             end of hold_date (D_HOLD), by default None
+        sign_list : Optional[List[str]]
+            N_SIGN in sign_list, by default None
+                - C - Caution Flag
+                - CM - Call Market
+                - DS - Designated
+                - H - Halt
+                - NC - Non Compliance
+                - NP - Notice Pending
+                - SP - Suspension
+                - ST
 
         Returns
         -------
@@ -258,6 +269,7 @@ class SETDataReader:
             sp dataframe contain columns:
                 - symbol: str - SECURITY.N_SECURITY
                 - hold_date: date - D_HOLD
+                - sign: str - N_SIGN
 
         Examples
         --------
