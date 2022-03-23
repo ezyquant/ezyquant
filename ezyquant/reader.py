@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Iterable, List, Optional
+from typing import List, Optional
 
 import pandas as pd
 
@@ -65,7 +65,7 @@ class SETDataReader:
 
     def get_symbol_info(
         self,
-        symbols: Optional[Iterable[str]] = None,
+        symbol_list: Optional[List[str]] = None,
         market: Optional[str] = None,
         industry: Optional[str] = None,
         sector: Optional[str] = None,
@@ -74,8 +74,8 @@ class SETDataReader:
 
         Parameters
         ----------
-        symbols : Optional[Iterable[str]]
-            N_SECURITY in symbols, case insensitive, by default None
+        symbol_list : Optional[List[str]]
+            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
         market : Optional[str]
             I_MARKET e.g. 'SET', 'MAI', by default None
         industry : Optional[str]
@@ -101,13 +101,13 @@ class SETDataReader:
         """
         return pd.DataFrame()
 
-    def get_company_info(self, symbols: Optional[Iterable[str]] = None) -> pd.DataFrame:
+    def get_company_info(self, symbol_list: Optional[List[str]] = None) -> pd.DataFrame:
         """Data from table COMPANY.
 
         Parameters
         ----------
-        symbols : Optional[Iterable[str]]
-            SECURITY.N_SECURITY in symbols, case insensitive, by default None
+        symbol_list : Optional[List[str]]
+            SECURITY.N_SECURITY in symbol_list, case insensitive, must be unique, by default None
 
         Returns
         -------
@@ -134,7 +134,7 @@ class SETDataReader:
 
     def get_change_name(
         self,
-        symbols: Optional[List[str]] = None,
+        symbol_list: Optional[List[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> pd.DataFrame:
@@ -142,8 +142,8 @@ class SETDataReader:
 
         Parameters
         ----------
-        symbols : Optional[List[str]]
-            N_SECURITY in symbols, case insensitive, by default None
+        symbol_list : Optional[List[str]]
+            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
         start_date : Optional[date]
             start of effect_date (D_EFFECT), by default None
         end_date : Optional[date]
@@ -167,7 +167,7 @@ class SETDataReader:
 
     def get_dividend(
         self,
-        symbols: Optional[Iterable[str]] = None,
+        symbol_list: Optional[List[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
         ca_type: Optional[List[str]] = None,
@@ -177,8 +177,8 @@ class SETDataReader:
 
         Parameters
         ----------
-        symbols : Optional[Iterable[str]]
-            N_SECURITY in symbols, case insensitive, by default None
+        symbol_list : Optional[List[str]]
+            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
         start_date : Optional[date]
             start of ex_date (D_SIGN), by default None
         end_date : Optional[date]
@@ -206,7 +206,7 @@ class SETDataReader:
 
     def get_delisted(
         self,
-        symbols: Optional[Iterable[str]] = None,
+        symbol_list: Optional[List[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> pd.DataFrame:
@@ -215,8 +215,8 @@ class SETDataReader:
 
         Parameters
         ----------
-        symbols : Optional[Iterable[str]]
-            N_SECURITY in symbols, case insensitive, by default None
+        symbol_list : Optional[List[str]]
+            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
         start_date : Optional[date]
             start of delisted_date (D_DELISTED), by default None
         end_date : Optional[date]
@@ -237,7 +237,7 @@ class SETDataReader:
 
     def get_sign_posting(
         self,
-        symbols: Optional[Iterable[str]] = None,
+        symbol_list: Optional[List[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
         sign_list: Optional[List[str]] = None,
@@ -246,8 +246,8 @@ class SETDataReader:
 
         Parameters
         ----------
-        symbols : Optional[Iterable[str]]
-            N_SECURITY in symbols, case insensitive, by default None
+        symbol_list : Optional[List[str]]
+            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
         start_date : Optional[date]
             start of hold_date (D_HOLD), by default None
         end_date : Optional[date]
@@ -279,7 +279,7 @@ class SETDataReader:
 
     def get_symbols_by_index(
         self,
-        index_list: Optional[Iterable[str]],
+        index_list: Optional[List[str]],
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> pd.DataFrame:
@@ -287,7 +287,7 @@ class SETDataReader:
 
         Parameters
         ----------
-        index_list : Optional[Iterable[str]]
+        index_list : Optional[List[str]]
             index (SECTOR.N_SECTOR), case insensitive
                 - SETWB
                 - SETTHSI
@@ -322,7 +322,7 @@ class SETDataReader:
 
     def get_adjust_factor(
         self,
-        symbol_list: Optional[Iterable[str]] = None,
+        symbol_list: Optional[List[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
         ca_type: Optional[List[str]] = None,
@@ -331,8 +331,8 @@ class SETDataReader:
 
         Parameters
         ----------
-        symbol_list : Optional[Iterable[str]]
-            N_SECURITY in symbols, case insensitive, by default None
+        symbol_list : Optional[List[str]]
+            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
         start_date : Optional[date]
             start of effect_date (D_EFFECT), by default None
         end_date : Optional[date]
@@ -364,7 +364,7 @@ class SETDataReader:
     def get_data_symbol_daily(
         self,
         field: str,
-        symbol_list: Optional[Iterable[str]] = None,
+        symbol_list: Optional[List[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
         adjusted_par: bool = True,
@@ -376,8 +376,8 @@ class SETDataReader:
         ----------
         field : str
             Filed of data, case insensitive e.g. 'open', 'high', 'low', 'close', 'volume'. More fields can be found in ezyquant.fields
-        symbol_list : Optional[Iterable[str]]
-            N_SECURITY in symbols, case insensitive, by default None
+        symbol_list : Optional[List[str]]
+            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
         start_date : Optional[date]
             start of trade_date (D_TRADE), by default None
         end_date : Optional[date]
@@ -403,7 +403,7 @@ class SETDataReader:
     def get_data_symbol_quarterly(
         self,
         field: str,
-        symbol_list: Optional[Iterable[str]] = None,
+        symbol_list: Optional[List[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> pd.DataFrame:
@@ -413,8 +413,8 @@ class SETDataReader:
         ----------
         field : str
             Filed of data, case insensitive e.g. 'roe', 'roa', 'eps'. More fields can be found in ezyquant.fields
-        symbol_list : Optional[Iterable[str]]
-            N_SECURITY in symbols, case insensitive, by default None
+        symbol_list : Optional[List[str]]
+            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
         start_date : Optional[date]
             start of as_of_date (D_AS_OF), by default None
         end_date : Optional[date]
@@ -436,7 +436,7 @@ class SETDataReader:
     def get_data_symbol_yearly(
         self,
         field: str,
-        symbol_list: Optional[Iterable[str]] = None,
+        symbol_list: Optional[List[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> pd.DataFrame:
@@ -446,8 +446,8 @@ class SETDataReader:
         ----------
         field : str
             Filed of data, case insensitive e.g. 'roe', 'roa', 'eps'. More fields can be found in ezyquant.fields
-        symbol_list : Optional[Iterable[str]]
-            N_SECURITY in symbols, case insensitive, by default None
+        symbol_list : Optional[List[str]]
+            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
         start_date : Optional[date]
             start of as_of_date (D_AS_OF), by default None
         end_date : Optional[date]
@@ -469,7 +469,7 @@ class SETDataReader:
     def get_data_symbol_ttm(
         self,
         field: str,
-        symbol_list: Optional[Iterable[str]] = None,
+        symbol_list: Optional[List[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> pd.DataFrame:
@@ -479,8 +479,8 @@ class SETDataReader:
         ----------
         field : str
             Filed of data, case insensitive e.g. 'roe', 'roa', 'eps'. More fields can be found in ezyquant.fields
-        symbol_list : Optional[Iterable[str]]
-            N_SECURITY in symbols, case insensitive, by default None
+        symbol_list : Optional[List[str]]
+            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
         start_date : Optional[date]
             start of as_of_date (D_AS_OF), by default None
         end_date : Optional[date]
@@ -502,7 +502,7 @@ class SETDataReader:
     def get_data_symbol_ytd(
         self,
         field: str,
-        symbol_list: Optional[Iterable[str]] = None,
+        symbol_list: Optional[List[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> pd.DataFrame:
@@ -512,8 +512,8 @@ class SETDataReader:
         ----------
         field : str
             Filed of data, case insensitive e.g. 'roe', 'roa', 'eps'. More fields can be found in ezyquant.fields
-        symbol_list : Optional[Iterable[str]]
-            N_SECURITY in symbols, case insensitive, by default None
+        symbol_list : Optional[List[str]]
+            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
         start_date : Optional[date]
             start of as_of_date (D_AS_OF), by default None
         end_date : Optional[date]
@@ -535,7 +535,7 @@ class SETDataReader:
     def get_data_index_daily(
         self,
         field: str,
-        index_list: Optional[Iterable[str]] = None,
+        index_list: Optional[List[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> pd.DataFrame:
@@ -545,7 +545,7 @@ class SETDataReader:
         ----------
         field : str
             Filed of data, case insensitive e.g. 'high', 'low', 'close'. More fields can be found in ezyquant.fields
-        index_list : Optional[Iterable[str]]
+        index_list : Optional[List[str]]
             N_SECTOR in index_list, case insensitive, by default None. More index can be found in ezyquant.fields
         start_date : Optional[date]
             start of trade_date (D_TRADE), by default None
@@ -568,7 +568,7 @@ class SETDataReader:
     def get_data_sector_daily(
         self,
         field: str,
-        sector_list: Optional[Iterable[str]] = None,
+        sector_list: Optional[List[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> pd.DataFrame:
@@ -578,7 +578,7 @@ class SETDataReader:
         ----------
         field : str
             Filed of data, case insensitive e.g. 'high', 'low', 'close'. More fields can be found in ezyquant.fields
-        sector_list : Optional[Iterable[str]]
+        sector_list : Optional[List[str]]
             N_SECTOR in sector_list, case insensitive, by default None. More sector can be found in ezyquant.fields
         start_date : Optional[date]
             start of trade_date (D_TRADE), by default None
