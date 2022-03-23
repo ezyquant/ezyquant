@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Dict, Iterable, List, Optional
+from typing import Iterable, List, Optional
 
 import pandas as pd
 
@@ -93,6 +93,10 @@ class SETDataReader:
                 - industry: str - SECTOR.N_INDUSTRY
                 - sector: str - SECTOR.N_SECTOR
                 - TODO: ...
+
+        Examples
+        --------
+        TODO: examples
         """
         return pd.DataFrame()
 
@@ -113,6 +117,10 @@ class SETDataReader:
                 - company_name_t: str - N_COMPANY_T
                 - company_name_e: str - N_COMPANY_E
                 - TODO: ...
+
+        Examples
+        --------
+        TODO: examples
         """
         return pd.DataFrame()
 
@@ -142,6 +150,10 @@ class SETDataReader:
                 - effect_date: date - D_EFFECT
                 - symbol_old: str - N_SECURITY_OLD
                 - symbol_new: str - N_SECURITY_NEW
+
+        Examples
+        --------
+        TODO: examples
         """
         return pd.DataFrame()
 
@@ -165,8 +177,8 @@ class SETDataReader:
             end of ex_date (D_SIGN), by default None
         ca_type : Optional[str], optional
             N_CA_TYPE, by default None
-                CD - cash dividend
-                SD - stock dividend
+                - CD - cash dividend
+                - SD - stock dividend
 
         Returns
         -------
@@ -177,6 +189,10 @@ class SETDataReader:
                 - pay_date: date - D_BEG_PAID
                 - ca_type: str - N_CA_TYPE
                 - dps: int - Z_RIGHTS
+
+        Examples
+        --------
+        TODO: examples
         """
         return pd.DataFrame()
 
@@ -204,6 +220,10 @@ class SETDataReader:
             delisted dataframe contain columns:
                 - symbol: str - SECURITY.N_SECURITY
                 - delisted_date: date - D_DELISTED
+
+        Examples
+        --------
+        TODO: examples
         """
         return pd.DataFrame()
 
@@ -212,9 +232,29 @@ class SETDataReader:
         symbols: Optional[Iterable[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-        sign: Optional[str] = None,
     ) -> pd.DataFrame:
-        """Data from table SIGN_POSTING."""
+        """Data from table SIGN_POSTING. Include only Suspension (N_SIGN='SP').
+
+        Parameters
+        ----------
+        symbols : Optional[Iterable[str]], optional
+            N_SECURITY in symbols, case insensitive, by default None
+        start_date : Optional[date], optional
+            start of hold_date (D_HOLD), by default None
+        end_date : Optional[date], optional
+            end of hold_date (D_HOLD), by default None
+
+        Returns
+        -------
+        pd.DataFrame
+            sp dataframe contain columns:
+                - symbol: str - SECURITY.N_SECURITY
+                - hold_date: date - D_HOLD
+
+        Examples
+        --------
+        TODO: examples
+        """
         return pd.DataFrame()
 
     def get_symbols_by_index(
