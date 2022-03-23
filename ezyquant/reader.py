@@ -92,7 +92,8 @@ class SETDataReader:
                 - market: str - I_MARKET
                 - industry: str - SECTOR.N_INDUSTRY
                 - sector: str - SECTOR.N_SECTOR
-                - TODO: ...
+                - sec_type: str - I_SEC_TYPE
+                - native: str - I_NATIVE
 
         Examples
         --------
@@ -116,7 +117,14 @@ class SETDataReader:
                 - symbol: str - SECURITY.N_SECURITY
                 - company_name_t: str - N_COMPANY_T
                 - company_name_e: str - N_COMPANY_E
-                - TODO: ...
+                - zip: str - I_ZIP
+                - tel: str - E_TEL
+                - fax: str - E_FAX
+                - email: str - E_EMAIL
+                - url: str - E_URL
+                - establish: date - D_ESTABLISH
+                - dvd_policy_t: str - E_DVD_POLICY_T
+                - dvd_policy_e: str - E_DVD_POLICY_E
 
         Examples
         --------
