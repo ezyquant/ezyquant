@@ -1,8 +1,10 @@
 from datetime import date
 from typing import List, Optional
 import sqlite3
+import sqlalchemy as sa
 import pandas as pd
 from datetime import datetime
+from sqlalchemy import MetaData, Table, and_, create_engine, func, or_, select
 
 
 class SETDataReader:
@@ -10,33 +12,32 @@ class SETDataReader:
 
     def __init__(self, sqlite_path: str) -> None:
         self.__sqlite_path = sqlite_path
-        self.__sqlite_url = "sqlite:////" + sqlite_path
-        # self.__engine = sa.create_engine(self.__sqlite_url, pool_pre_ping=True)
-        # self.con = self.__engine.connect()
-        self.con = sqlite3.connect(sqlite_path)
+        self.__sqlite_url = "sqlite:///" + sqlite_path
+        print(self.__sqlite_url)
+        self.__engine = sa.create_engine(
+            self.__sqlite_url,
+            pool_pre_ping=True,
+            connect_args={"timeout": 15},
+        )
+        self.con = self.__engine.connect()
+        # self.con = sqlite3.connect(sqlite_path)
 
     def get_trading_dates(
         self,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> List[date]:
-        query = "SELECT D_TRADE FROM CALENDAR"
-        if start_date is not None and end_date is None:
-            start_date_str = str(start_date)
-            query = query + f" WHERE D_TRADE>'{start_date_str}' "
-        if end_date is not None and start_date is None:
-            end_date_str = str(end_date)
-            query = query + f" WHERE D_TRADE<'{end_date_str}' "
-        if end_date is not None and start_date is not None:
-            start_date_str = str(start_date)
-            end_date_str = str(end_date)
-            query = (
-                query
-                + f" WHERE D_TRADE BETWEEN '{start_date_str}' AND '{end_date_str}' "
-            )
-        print(query)
-        data = self.con.execute(query)
-        data = [datetime.strptime(x[0][:-9], "%Y-%m-%d").date() for x in data]
+        t = Table("CALENDAR", MetaData(), autoload_with=self.con)
+        if start_date is None and end_date is None:
+            sql = select(t.c.D_TRADE)
+        elif start_date is not None and end_date is None:
+            sql = select(t.c.D_TRADE).where(t.c.D_TRADE > start_date)
+        elif start_date is None and end_date is not None:
+            sql = select(t.c.D_TRADE).where(t.c.D_TRADE < end_date)
+        else:
+            sql = select(t.c.D_TRADE).filter(t.c.D_TRADE.between(start_date, end_date))
+        res = self.con.execute(sql).fetchall()
+        data = [x[0].date() for x in res]
         return data
 
     def is_trading_date(self, check_date: date) -> bool:
