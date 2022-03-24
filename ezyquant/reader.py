@@ -1,42 +1,43 @@
 from datetime import date
 from typing import List, Optional
-
+import sqlite3
 import pandas as pd
+from datetime import datetime
 
 
 class SETDataReader:
     """SETDataReader read PSIMS data."""
 
     def __init__(self, sqlite_path: str) -> None:
-        """SETDataReader constructor.
-
-        Parameters
-        ----------
-        sqlite_path : str
-            path to sqlite file e.g. /path/to/sqlite.db
-        """
         self.__sqlite_path = sqlite_path
+        self.__sqlite_url = "sqlite:////" + sqlite_path
+        # self.__engine = sa.create_engine(self.__sqlite_url, pool_pre_ping=True)
+        # self.con = self.__engine.connect()
+        self.con = sqlite3.connect(sqlite_path)
 
     def get_trading_dates(
         self,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> List[date]:
-        """Data from table CALENDAR.
-
-        Parameters
-        ----------
-        start_date : Optional[date]
-            start of D_TRADE, by default None
-        end_date : Optional[date]
-            end of D_TRADE, by default None
-
-        Returns
-        -------
-        List[date]
-            list of trading dates
-        """
-        return []
+        query = "SELECT D_TRADE FROM CALENDAR"
+        if start_date is not None and end_date is None:
+            start_date_str = str(start_date)
+            query = query + f" WHERE D_TRADE>'{start_date_str}' "
+        if end_date is not None and start_date is None:
+            end_date_str = str(end_date)
+            query = query + f" WHERE D_TRADE<'{end_date_str}' "
+        if end_date is not None and start_date is not None:
+            start_date_str = str(start_date)
+            end_date_str = str(end_date)
+            query = (
+                query
+                + f" WHERE D_TRADE BETWEEN '{start_date_str}' AND '{end_date_str}' "
+            )
+        print(query)
+        data = self.con.execute(query)
+        data = [datetime.strptime(x[0][:-9], "%Y-%m-%d").date() for x in data]
+        return data
 
     def is_trading_date(self, check_date: date) -> bool:
         """Data from table CALENDAR.
