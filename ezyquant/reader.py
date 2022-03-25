@@ -1,9 +1,9 @@
-from datetime import date
-from typing import List, Optional
 import sqlite3
-import sqlalchemy as sa
+from datetime import date, datetime
+from typing import List, Optional
+
 import pandas as pd
-from datetime import datetime
+import sqlalchemy as sa
 from sqlalchemy import MetaData, Table, and_, create_engine, func, or_, select
 
 
@@ -12,33 +12,26 @@ class SETDataReader:
 
     def __init__(self, sqlite_path: str) -> None:
         self.__sqlite_path = sqlite_path
-        self.__sqlite_url = "sqlite:///" + sqlite_path
-        print(self.__sqlite_url)
-        self.__engine = sa.create_engine(
-            self.__sqlite_url,
-            pool_pre_ping=True,
-            connect_args={"timeout": 15},
-        )
-        self.con = self.__engine.connect()
-        # self.con = sqlite3.connect(sqlite_path)
+        self.__engine = sa.create_engine(f"sqlite:///{self.__sqlite_path}")
+        self.__metadata = MetaData(self.__engine)
 
     def get_trading_dates(
         self,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> List[date]:
-        t = Table("CALENDAR", MetaData(), autoload_with=self.con)
-        if start_date is None and end_date is None:
-            sql = select(t.c.D_TRADE)
-        elif start_date is not None and end_date is None:
-            sql = select(t.c.D_TRADE).where(t.c.D_TRADE > start_date)
-        elif start_date is None and end_date is not None:
-            sql = select(t.c.D_TRADE).where(t.c.D_TRADE < end_date)
-        else:
-            sql = select(t.c.D_TRADE).filter(t.c.D_TRADE.between(start_date, end_date))
-        res = self.con.execute(sql).fetchall()
-        data = [x[0].date() for x in res]
-        return data
+        t = Table("CALENDAR", self.__metadata, autoload=True)
+
+        stmt = select([t.c.D_TRADE])
+        if start_date is not None:
+            stmt = stmt.where(t.c.D_TRADE >= start_date)
+        if end_date is not None:
+            stmt = stmt.where(t.c.D_TRADE <= end_date)
+
+        stmt.order_by(t.c.D_TRADE)
+
+        res = self.__engine.execute(stmt).all()
+        return [i[0].date() for i in res]
 
     def is_trading_date(self, check_date: date) -> bool:
         """Data from table CALENDAR.
