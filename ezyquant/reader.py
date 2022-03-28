@@ -28,7 +28,7 @@ class SETDataReader:
         if end_date is not None:
             stmt = stmt.where(t.c.D_TRADE <= end_date)
 
-        stmt.order_by(t.c.D_TRADE)
+        stmt = stmt.order_by(t.c.D_TRADE)
 
         res = self.__engine.execute(stmt).all()
         return [i[0].date() for i in res]

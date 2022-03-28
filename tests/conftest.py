@@ -4,10 +4,10 @@ from ezyquant.reader import SETDataReader
 
 
 @pytest.fixture
-def sqlite_path():
-    return "ssetdi_db.db"
+def sqlite_path() -> str:
+    return "ssetdi.sqlite3"
 
 
 @pytest.fixture
-def sdr():
-    return SETDataReader(path)
+def sdr(sqlite_path: str) -> SETDataReader:
+    return SETDataReader(sqlite_path)
