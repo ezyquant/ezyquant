@@ -1,7 +1,7 @@
 import sqlite3
 from datetime import date, datetime
 from typing import List, Optional
-
+import string
 import pandas as pd
 import sqlalchemy as sa
 from sqlalchemy import MetaData, Table, and_, create_engine, func, or_, select
@@ -13,6 +13,7 @@ class SETDataReader:
     def __init__(self, sqlite_path: str) -> None:
         self.__sqlite_path = sqlite_path
         self.__engine = sa.create_engine(f"sqlite:///{self.__sqlite_path}")
+        print(f"sqlite:///{self.__sqlite_path}")
         self.__metadata = MetaData(self.__engine)
 
     def get_trading_dates(
@@ -65,6 +66,44 @@ class SETDataReader:
         industry: Optional[str] = None,
         sector: Optional[str] = None,
     ) -> pd.DataFrame:
+
+        security = Table("SECURITY", self.__metadata, autoload=True)
+        sect = Table("SECTOR", self.__metadata, autoload=True)
+        stmt = select(
+            [
+                security.c.I_COMPANY,
+                func.trim(security.c.N_SECURITY),
+                security.c.I_MARKET,
+                sect.c.N_INDUSTRY,
+                sect.c.N_SECTOR,
+                sect.c.I_MARKET,
+                security.c.I_SEC_TYPE,
+                security.c.I_NATIVE,
+            ]
+        )
+        if market is not None:
+            stmt = stmt.where(security.c.I_MARKET == market)
+        if symbol_list is not None:
+            # symbol_list = [self.symbol_to_20char(x) for x in symbol_list]
+            stmt = stmt.where(func.trim(security.c.N_SECURITY) in symbol_list)
+        if industry is not None:
+            stmt = stmt.where(func.trim(sect.c.N_INDUSTRY) == industry)
+        if industry is not None:
+            stmt = stmt.where(func.trim(sect.c.N_SECTOR) == sector)
+
+        stmt.join(
+            sect,
+            and_(
+                security.c.I_MARKET == sect.c.I_MARKET,
+                security.c.I_INDUSTRY == sect.c.I_INDUSTRY,
+                security.c.I_SECTOR == sect.c.I_SECTOR,
+            ),
+        )
+
+        res = self.__engine.execute(stmt).all()
+        # print(res)
+        res_df = pd.DataFrame(res)
+        print(res_df)
         """Data from table SECURITY.
 
         Parameters
@@ -94,9 +133,19 @@ class SETDataReader:
         --------
         TODO: examples
         """
-        return pd.DataFrame()
+        return res_df
 
     def get_company_info(self, symbol_list: Optional[List[str]] = None) -> pd.DataFrame:
+        t1 = Table("COMPANY", self.__metadata, autoload=True)
+        t2 = Table("SECURITY", self.__metadata, autoload=True)
+        stmt = select([t1.c.I_COMPANY, t2.c.N_SECURITY]).where(
+            t1.c.I_COMPANY == t2.c.I_COMPANY
+        )
+        if symbol_list is not None:
+            stmt = stmt.where(t2.c.N_SECURITY in symbol_list)
+        stmt = stmt.order_by(t1.c.I_COMPANY)
+        res = self.__engine.execute(stmt).all()
+        print(res)
         """Data from table COMPANY.
 
         Parameters
@@ -598,3 +647,6 @@ class SETDataReader:
         TODO: examples
         """
         return pd.DataFrame()
+
+    def symbol_to_20char(self, symbol: str) -> str:
+        return symbol.ljust(20, " ")
