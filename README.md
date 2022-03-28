@@ -10,3 +10,9 @@ Version: 0.6.1
 Publisher: Nils Werner
 VS Marketplace Link: https://marketplace.visualstudio.com/items?itemName=njpwerner.autodocstring
 ```
+
+settings.json
+
+```
+"autoDocstring.docstringFormat": "numpy"
+```
