@@ -66,44 +66,6 @@ class SETDataReader:
         industry: Optional[str] = None,
         sector: Optional[str] = None,
     ) -> pd.DataFrame:
-
-        security = Table("SECURITY", self.__metadata, autoload=True)
-        sect = Table("SECTOR", self.__metadata, autoload=True)
-        stmt = select(
-            [
-                security.c.I_COMPANY,
-                func.trim(security.c.N_SECURITY),
-                security.c.I_MARKET,
-                sect.c.N_INDUSTRY,
-                sect.c.N_SECTOR,
-                sect.c.I_MARKET,
-                security.c.I_SEC_TYPE,
-                security.c.I_NATIVE,
-            ]
-        )
-        if market is not None:
-            stmt = stmt.where(security.c.I_MARKET == market)
-        if symbol_list is not None:
-            # symbol_list = [self.symbol_to_20char(x) for x in symbol_list]
-            stmt = stmt.where(func.trim(security.c.N_SECURITY) in symbol_list)
-        if industry is not None:
-            stmt = stmt.where(func.trim(sect.c.N_INDUSTRY) == industry)
-        if industry is not None:
-            stmt = stmt.where(func.trim(sect.c.N_SECTOR) == sector)
-
-        stmt.join(
-            sect,
-            and_(
-                security.c.I_MARKET == sect.c.I_MARKET,
-                security.c.I_INDUSTRY == sect.c.I_INDUSTRY,
-                security.c.I_SECTOR == sect.c.I_SECTOR,
-            ),
-        )
-
-        res = self.__engine.execute(stmt).all()
-        # print(res)
-        res_df = pd.DataFrame(res)
-        print(res_df)
         """Data from table SECURITY.
 
         Parameters
@@ -133,19 +95,66 @@ class SETDataReader:
         --------
         TODO: examples
         """
+        security = Table("SECURITY", self.__metadata, autoload=True)
+        sect = Table("SECTOR", self.__metadata, autoload=True)
+        j = security.join(
+            sect,
+            and_(
+                security.c.I_MARKET == sect.c.I_MARKET,
+                security.c.I_INDUSTRY == sect.c.I_INDUSTRY,
+                security.c.I_SECTOR == sect.c.I_SECTOR,
+            ),
+        )
+        stmt = select(
+            [
+                security.c.I_COMPANY.label("symbol_id"),
+                func.trim(security.c.N_SECURITY).label("symbol"),
+                security.c.I_MARKET.label("market"),
+                sect.c.N_INDUSTRY.label("industry"),
+                sect.c.N_SECTOR.label("sector"),
+                security.c.I_SEC_TYPE.label("sec_type"),
+                security.c.I_NATIVE.label("native"),
+            ]
+        ).select_from(j)
+        if market != None:
+            stmt = stmt.where(security.c.I_MARKET == market)
+        if symbol_list != None:
+            stmt = stmt.where(func.trim(security.c.N_SECURITY).in_(symbol_list))
+        if industry != None:
+            stmt = stmt.where(func.trim(sect.c.N_INDUSTRY) == industry)
+        if sector != None:
+            stmt = stmt.where(func.trim(sect.c.N_SECTOR) == sector)
+        """
+        stmt.join(
+            sect,
+            and_(
+                security.c.I_MARKET == sect.c.I_MARKET,
+                security.c.I_INDUSTRY == sect.c.I_INDUSTRY,
+                security.c.I_SECTOR == sect.c.I_SECTOR,
+            ),
+        )
+        """
+        print(stmt)
+        res_df = pd.read_sql(stmt, self.__engine)
         return res_df
 
     def get_company_info(self, symbol_list: Optional[List[str]] = None) -> pd.DataFrame:
-        t1 = Table("COMPANY", self.__metadata, autoload=True)
-        t2 = Table("SECURITY", self.__metadata, autoload=True)
-        stmt = select([t1.c.I_COMPANY, t2.c.N_SECURITY]).where(
-            t1.c.I_COMPANY == t2.c.I_COMPANY
-        )
-        if symbol_list is not None:
-            stmt = stmt.where(t2.c.N_SECURITY in symbol_list)
-        stmt = stmt.order_by(t1.c.I_COMPANY)
-        res = self.__engine.execute(stmt).all()
-        print(res)
+        company = Table("COMPANY", self.__metadata, autoload=True)
+        security = Table("SECURITY", self.__metadata, autoload=True)
+        j = security.join(company, company.c.I_COMPANY == security.c.I_COMPANY)
+        stmt = select(
+            [
+                company.c.I_COMPANY.label("company_id"),
+                security.c.N_SECURITY.label("symbol"),
+                company.c.N_COMPANY_T.label("N_COMPANY_T"),
+                company.c.N_COMPANY_E.label("N_COMPANY_E"),
+            ]
+        ).select_from(j)
+        if symbol_list != None:
+            stmt = stmt.where(func.trim(security.c.N_SECURITY).in_(symbol_list))
+        # stmt.join(security, company.c.I_COMPANY == security.c.I_COMPANY)
+        res_df = pd.read_sql(stmt, self.__engine)
+
         """Data from table COMPANY.
 
         Parameters
@@ -174,7 +183,7 @@ class SETDataReader:
         --------
         TODO: examples
         """
-        return pd.DataFrame()
+        return res_df
 
     def get_change_name(
         self,
