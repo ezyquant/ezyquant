@@ -93,7 +93,18 @@ class SETDataReader:
 
         Examples
         --------
-        TODO: examples
+        >>> from ezyquant.reader import SETDataReader
+        >>> from ezyquant.fields import *
+        >>> sdr = SETDataReader("ssetdi_db.db")
+        >>> sdr.get_symbol_info(["SET"])
+                symbol_id symbol market  industry    sector sec_type native
+        0          0         SET      A  -         --------        S      L
+        >>> sdr.get_symbol_info(sector=SECTOR_MINE)
+                symbol_id symbol market  industry  sector sec_type native
+        0           61     THL-F      A  RESOURC   MINE          F      F
+        1           61       THL      A  RESOURC   MINE          S      L
+        2           61     THL-R      A  RESOURC   MINE          S      R
+        3           61     THL-U      A  RESOURC   MINE          S      U
         """
         security = Table("SECURITY", self.__metadata, autoload=True)
         sect = Table("SECTOR", self.__metadata, autoload=True)
@@ -119,42 +130,18 @@ class SETDataReader:
         if market != None:
             stmt = stmt.where(security.c.I_MARKET == market)
         if symbol_list != None:
-            stmt = stmt.where(func.trim(security.c.N_SECURITY).in_(symbol_list))
+            stmt = stmt.where(
+                func.trim(security.c.N_SECURITY).in_([s.upper() for s in symbol_list])
+            )
         if industry != None:
             stmt = stmt.where(func.trim(sect.c.N_INDUSTRY) == industry)
         if sector != None:
             stmt = stmt.where(func.trim(sect.c.N_SECTOR) == sector)
-        """
-        stmt.join(
-            sect,
-            and_(
-                security.c.I_MARKET == sect.c.I_MARKET,
-                security.c.I_INDUSTRY == sect.c.I_INDUSTRY,
-                security.c.I_SECTOR == sect.c.I_SECTOR,
-            ),
-        )
-        """
-        print(stmt)
+
         res_df = pd.read_sql(stmt, self.__engine)
         return res_df
 
     def get_company_info(self, symbol_list: Optional[List[str]] = None) -> pd.DataFrame:
-        company = Table("COMPANY", self.__metadata, autoload=True)
-        security = Table("SECURITY", self.__metadata, autoload=True)
-        j = security.join(company, company.c.I_COMPANY == security.c.I_COMPANY)
-        stmt = select(
-            [
-                company.c.I_COMPANY.label("company_id"),
-                security.c.N_SECURITY.label("symbol"),
-                company.c.N_COMPANY_T.label("N_COMPANY_T"),
-                company.c.N_COMPANY_E.label("N_COMPANY_E"),
-            ]
-        ).select_from(j)
-        if symbol_list != None:
-            stmt = stmt.where(func.trim(security.c.N_SECURITY).in_(symbol_list))
-        # stmt.join(security, company.c.I_COMPANY == security.c.I_COMPANY)
-        res_df = pd.read_sql(stmt, self.__engine)
-
         """Data from table COMPANY.
 
         Parameters
@@ -181,8 +168,40 @@ class SETDataReader:
 
         Examples
         --------
-        TODO: examples
+        >>> from ezyquant.reader import SETDataReader
+        >>> sdr = SETDataReader("ssetdi_db.db")
+        >>> sdr.get_company_info(symbol_list=["BBL", "PTT"])
+            company_id symbol             company_name_t  ...   establish                      dvd_policy_t                                      dvd_policy_e
+        0           1     BBL  ธนาคารกรุงเทพ จำกัด (มหาชน)  ...   1/12/1944   เมื่อผลประกอบการของธนาคารมีกำไร...  Pays when company has profit (with additional ...
+        1         646     PTT    บริษัท ปตท. จำกัด (มหาชน)  ...   1/10/2001   ไม่ต่ำกว่าร้อยละ 25 ของกำไรสุทธิที่...  Not less than 25% of net income after deductio...
+
         """
+        company = Table("COMPANY", self.__metadata, autoload=True)
+        security = Table("SECURITY", self.__metadata, autoload=True)
+        j = security.join(company, company.c.I_COMPANY == security.c.I_COMPANY)
+        stmt = select(
+            [
+                company.c.I_COMPANY.label("company_id"),
+                func.trim(security.c.N_SECURITY).label("symbol"),
+                company.c.N_COMPANY_T.label("company_name_t"),
+                company.c.N_COMPANY_E.label("company_name_e"),
+                company.c.I_ZIP.label("zip"),
+                company.c.E_TEL.label("tel"),
+                company.c.E_FAX.label("fax"),
+                company.c.E_EMAIL.label("email"),
+                company.c.E_URL.label("url"),
+                company.c.D_ESTABLISH.label("establish"),
+                company.c.E_DVD_POLICY_T.label("dvd_policy_t"),
+                company.c.E_DVD_POLICY_E.label("dvd_policy_e"),
+            ]
+        ).select_from(j)
+        if symbol_list != None:
+            stmt = stmt.where(
+                func.trim(security.c.N_SECURITY).in_([s.upper() for s in symbol_list])
+            )
+        # stmt.join(security, company.c.I_COMPANY == security.c.I_COMPANY)
+        res_df = pd.read_sql(stmt, self.__engine)
+
         return res_df
 
     def get_change_name(
@@ -214,9 +233,47 @@ class SETDataReader:
 
         Examples
         --------
-        TODO: examples
+        >>> from ezyquant.reader import SETDataReader
+        >>> sdr = SETDataReader("ssetdi_db.db")
+        >>> sdr.get_change_name(["SMG"])
+           symbol_id symbol effect_date symbol_old symbol_new
+        0        220    SMG  2006-07-31        SMG      SCSMG
+        1        220    SMG  2014-08-28      SCSMG        SMG
+        >>> sdr.get_change_name(start_date=datetime.date(2014, 8, 28),end_date=datetime.date(2014, 8, 29))
+           symbol_id    symbol effect_date  symbol_old symbol_new
+        0        220       SMG  2014-08-28       SCSMG        SMG
+        1        221     SMG-F  2014-08-28     SCSMG-F      SMG-F
+        2        222     SMG-R  2014-08-28     SCSMG-R      SMG-R
+        3       2793    SMG-W1  2014-08-28    SCSMG-W1     SMG-W1
+        4       2794    SMG-WB  2014-08-28    SCSMG-WB     SMG-WB
+        5       3375  SMG-W1-R  2014-08-28  SCSMG-W1-R   SMG-W1-R
         """
-        return pd.DataFrame()
+        security = Table("SECURITY", self.__metadata, autoload=True)
+        change_name = Table("CHANGE_NAME_SECURITY", self.__metadata, autoload=True)
+
+        j = change_name.join(
+            security, security.c.I_SECURITY == change_name.c.I_SECURITY
+        )
+        stmt = select(
+            [
+                change_name.c.I_SECURITY.label("symbol_id"),
+                func.trim(security.c.N_SECURITY).label("symbol"),
+                change_name.c.D_EFFECT.label("effect_date"),
+                func.trim(change_name.c.N_SECURITY_OLD).label("symbol_old"),
+                func.trim(change_name.c.N_SECURITY_NEW).label("symbol_new"),
+            ]
+        ).select_from(j)
+        stmt = self._list_start_end_condition(
+            query_object=stmt,
+            list_condition=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
+            col_list=security.c.N_SECURITY,
+            col_date=change_name.c.D_EFFECT,
+        )
+
+        res_df = pd.read_sql(stmt, self.__engine)
+        return res_df
 
     def get_dividend(
         self,
@@ -255,7 +312,35 @@ class SETDataReader:
         --------
         TODO: examples
         """
-        return pd.DataFrame()
+        security = Table("SECURITY", self.__metadata, autoload=True)
+        right = Table("RIGHTS_BENEFIT", self.__metadata, autoload=True)
+        j = right.join(security, security.c.I_SECURITY == right.c.I_SECURITY)
+        stmt = (
+            select(
+                [
+                    func.trim(security.c.N_SECURITY).label("symbol"),
+                    right.c.D_SIGN.label("ex_date"),
+                    right.c.D_BEG_PAID.label("pay_date"),
+                    right.c.N_CA_TYPE.label("ca_type"),
+                    right.c.Z_RIGHTS.label("dps"),
+                ]
+            )
+            .select_from(j)
+            .where(right.c.N_CA_TYPE.in_(["CD", "SD"]))
+        )
+
+        stmt = self._list_start_end_condition(
+            query_object=stmt,
+            list_condition=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
+            col_list=security.c.N_SECURITY,
+            col_date=right.c.D_SIGN,
+        )
+        if ca_type_list != None:
+            stmt = stmt.where(right.c.N_CA_TYPE == ca_type_list)
+        res_df = pd.read_sql(stmt, self.__engine)
+        return res_df
 
     def get_delisted(
         self,
@@ -286,7 +371,29 @@ class SETDataReader:
         --------
         TODO: examples
         """
-        return pd.DataFrame()
+        security = Table("SECURITY", self.__metadata, autoload=True)
+        detail = Table("SECURITY_DETAIL", self.__metadata, autoload=True)
+        j = detail.join(security, security.c.I_SECURITY == detail.c.I_SECURITY)
+        stmt = (
+            select(
+                [
+                    func.trim(security.c.N_SECURITY).label("symbol"),
+                    detail.c.D_DELISTED.label("delisted_date"),
+                ]
+            )
+            .select_from(j)
+            .where(detail.c.D_DELISTED != None)
+        )
+        stmt = self._list_start_end_condition(
+            query_object=stmt,
+            list_condition=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
+            col_list=security.c.N_SECURITY,
+            col_date=detail.c.D_DELISTED,
+        )
+        res_df = pd.read_sql(stmt, self.__engine)
+        return res_df
 
     def get_sign_posting(
         self,
@@ -657,5 +764,33 @@ class SETDataReader:
         """
         return pd.DataFrame()
 
-    def symbol_to_20char(self, symbol: str) -> str:
-        return symbol.ljust(20, " ")
+    def _list_start_end_condition(
+        self,
+        query_object,
+        list_condition: Optional[List[str]],
+        col_list,
+        start_date: Optional[date],
+        end_date: Optional[date],
+        col_date,
+    ):
+        """
+        helper function for make query
+
+        Parameters
+        ----------
+        query_object : query_object that want to fill query
+        list_condition : list will be condition for col_list to be in
+        col_list : column to apply list condition
+        start_date : start date condition
+        end_date : end date condition
+        col_date : column to apply date condition that date in this column must between start_data and end_date
+        """
+        if list_condition != None:
+            query_object = query_object.where(
+                func.trim(col_list).in_([s.upper() for s in list_condition])
+            )
+        if start_date != None:
+            query_object = query_object.where(col_date >= start_date)
+        if end_date != None:
+            query_object = query_object.where(col_date <= end_date)
+        return query_object
