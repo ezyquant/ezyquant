@@ -750,9 +750,9 @@ class SETDataReader:
             "YTD": ("Q1", "6M", "9M", "YE"),
         }
 
-        financial_screen = Table("FINANCIAL_SCREEN", MetaData(), autoload=True)
-        daily_stock_stat = Table("DAILY_STOCK_STAT", MetaData(), autoload=True)
-        security = Table("SECURITY", MetaData(), autoload=True)
+        financial_screen = Table("FINANCIAL_SCREEN", self.__metadata, autoload=True)
+        daily_stock_stat = Table("DAILY_STOCK_STAT", self.__metadata, autoload=True)
+        security = Table("SECURITY", self.__metadata, autoload=True)
 
         if field_list is not None:
             selected_fields = [
@@ -819,8 +819,9 @@ class SETDataReader:
             ),
         ).join(security, financial_screen.c.I_SECURITY == security.c.I_SECURITY)
 
-        sql = self._compile_sql(sql)
-        df = pd.read_sql(sql, self.__conn__, parse_dates="trading_datetime")
+        # sql = self._compile_sql(sql)
+        # df = pd.read_sql(sql, self.__conn__, parse_dates="trading_datetime")
+        df = pd.read_sql(sql, self.__engine, parse_dates="trading_datetime")
 
         # prevent duplicate from multiple fundamental announcement
         while True:
@@ -859,13 +860,9 @@ class SETDataReader:
 
         period = period.upper()
 
-        financial_stat_std = Table(
-            "FINANCIAL_STAT_STD", MetaData(), autoload_with=self.__conn__
-        )
-        daily_stock_stat = Table(
-            "DAILY_STOCK_STAT", MetaData(), autoload_with=self.__conn__
-        )
-        security = Table("SECURITY", MetaData(), autoload_with=self.__conn__)
+        financial_stat_std = Table("FINANCIAL_STAT_STD", MetaData(), autoload=True)
+        daily_stock_stat = Table("DAILY_STOCK_STAT", MetaData(), autoload=True)
+        security = Table("SECURITY", MetaData(), autoload=True)
 
         daily_stock_stat_subquery = (
             select(
@@ -924,8 +921,8 @@ class SETDataReader:
             ),
         ).join(security, financial_stat_std.c.I_SECURITY == security.c.I_SECURITY)
 
-        sql = self._compile_sql(sql)
-        df = pd.read_sql(sql, self.__conn__, parse_dates="trading_datetime")
+        # sql = self._compile_sql(sql)
+        df = pd.read_sql(sql, self.__engine, parse_dates="trading_datetime")
 
         # duplicate key mostly I_ACCT_FORM 6,7
         df = df.drop_duplicates(
@@ -990,6 +987,120 @@ class SETDataReader:
         TODO: examples
         """
         adjusted_list = list(adjusted_list)  # copy to avoid modify original list
+        daily_stock_trade = Table("DAILY_STOCK_TRADE", self.__metadata, autoload=True)
+        daily_stock_stat = Table("DAILY_STOCK_STAT", self.__metadata, autoload=True)
+        security = Table("SECURITY", self.__metadata, autoload=True)
+
+        NULL_IF_FIELD = {
+            "prior",
+            "open",
+            "high",
+            "low",
+            "close",
+            "average",
+            "last_bid",
+            "last_offer",
+        }
+
+        selected_fields = list()
+
+        if field is not None:
+            # for i in field:   field have only 1
+            field = field.lower()
+
+            if field in fc.DAILY_STOCK_TRADE_FACTOR:
+                selected_fields.append(
+                    daily_stock_trade.c[fc.DAILY_STOCK_TRADE_FACTOR[field]].label(field)
+                )
+            elif field in fc.DAILY_STOCK_STAT_FACTOR:
+                selected_fields.append(
+                    daily_stock_stat.c[fc.DAILY_STOCK_STAT_FACTOR[field]].label(field)
+                )
+            else:
+                raise ValueError(
+                    f"{field} not in Data 1D field. Please check fields for more details."
+                )
+        else:
+            selected_fields += [
+                daily_stock_trade.c[v].label(k)
+                for k, v in fc.DAILY_STOCK_TRADE_FACTOR.items()
+            ]
+            selected_fields += [
+                daily_stock_stat.c[v].label(k)
+                for k, v in fc.DAILY_STOCK_STAT_FACTOR.items()
+            ]
+
+        sql = (
+            select(
+                [
+                    daily_stock_trade.c.D_TRADE.label("trading_datetime"),
+                    func.trim(security.c.N_SECURITY).label("symbol"),
+                ]
+                + selected_fields
+            )
+            .select_from(daily_stock_trade)
+            .where(daily_stock_trade.c.I_TRADING_METHOD == "A")  # Auto Matching
+            .order_by(daily_stock_trade.c.D_TRADE.asc())
+        )
+
+        if symbol_list is not None:
+            sql = sql.where(
+                security.c.N_SECURITY.in_(
+                    ["{:<20}".format(s.upper()) for s in symbol_list]
+                )
+            )  # Format to have 20 characters (equal to column's data)
+        if not pd.isnull(start_date):
+            sql = sql.where(daily_stock_trade.c.D_TRADE >= start_date)
+        if not pd.isnull(end_date):
+            sql = sql.where(daily_stock_trade.c.D_TRADE <= end_date)
+
+        sql = sql.join(
+            security, daily_stock_trade.c.I_SECURITY == security.c.I_SECURITY
+        ).join(
+            daily_stock_stat,
+            and_(
+                daily_stock_trade.c.I_SECURITY == daily_stock_stat.c.I_SECURITY,
+                daily_stock_trade.c.D_TRADE == daily_stock_stat.c.D_TRADE,
+            ),
+            isouter=True,
+        )
+
+        # sql = self._compile_sql(sql)
+        df = pd.read_sql(
+            sql,
+            self.__engine,
+            index_col="trading_datetime",
+            parse_dates="trading_datetime",
+        )
+        # line 1430
+        # adjust price
+        # if is_adjusted:
+        #    df = self._merge_adjust_factor(df)
+
+        # replace 0 with nan
+        df = df.replace({i: 0 for i in NULL_IF_FIELD if i in df.columns}, np.nan)
+        return df
+        # to dict
+        if is_to_dict:
+            df = df.pivot(columns="symbol")
+
+            # reindex with index_1d
+            index_1d = self.get_data_index_1d(
+                symbol_list=["SET"],
+                field_list=[],
+                start_date=start_date,
+                end_date=end_date,
+                is_to_dict=False,
+            )
+            df = df.reindex(index_1d.index)  # type: ignore
+
+            data = {
+                k: v.droplevel(level=0, axis=1) for k, v in df.groupby(level=0, axis=1)
+            }
+            return data
+        else:
+            return df
+
         return pd.DataFrame()
 
     def get_data_symbol_quarterly(
