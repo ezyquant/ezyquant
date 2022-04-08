@@ -23,6 +23,20 @@ class SETDataReader:
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> List[date]:
+        """Data from table CALENDAR.
+
+        Parameters
+        ----------
+        start_date : Optional[date]
+            start of D_TRADE, by default None
+        end_date : Optional[date]
+            end of D_TRADE, by default None
+
+        Returns
+        -------
+        List[date]
+            list of trading dates
+        """
         t = Table("CALENDAR", self.__metadata, autoload=True)
 
         stmt = select([t.c.D_TRADE])
