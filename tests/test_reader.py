@@ -242,3 +242,93 @@ class TestSymbolInfo:
         assert_series_equal(result["sector"], result["sector"].str.upper())
 
         return result
+
+
+class TestGetCompanyInfo:
+    def test_all(self, sdr: SETDataReader):
+        result = sdr.get_company_info()
+
+        # Check
+        self._check(result)
+
+        assert not result.empty
+
+    def test_one(self, sdr: SETDataReader):
+        result = sdr.get_company_info(["PTT"])
+
+        # Check
+        self._check(result)
+
+        expect = pd.DataFrame(
+            [
+                [
+                    646,
+                    "PTT",
+                    "บริษัท ปตท. จำกัด (มหาชน)",
+                    "PTT PUBLIC COMPANY LIMITED",
+                    "555 ถนนวิภาวดีรังสิต แขวงจตุจักร เขตจตุจักร กทม.",
+                    "555 VIBHAVADI RANGSIT ROAD, CHATUCHAK Bangkok",
+                    "10900",
+                    "0-2537-2000",
+                    "0-2537-3498-9",
+                    None,
+                    "http://www.pttplc.com",
+                    "1/10/2001",
+                    "ไม่ต่ำกว่าร้อยละ 25 ของกำไรสุทธิที่เหลือหลังหักเงินสำรองต่างๆ ทุกประเภทที่กฎหมายและบริษัทได้กำหนดไว้ (โดยมีเงื่อนไขเพิ่มเติม)",
+                    "Not less than 25% of net income after deduction of all specified reserves (with additional conditions)",
+                ]
+            ],
+            columns=[
+                "company_id",
+                "symbol",
+                "company_name_t",
+                "company_name_e",
+                "address_t",
+                "address_e",
+                "zip",
+                "tel",
+                "fax",
+                "email",
+                "url",
+                "establish",
+                "dvd_policy_t",
+                "dvd_policy_e",
+            ],
+        )
+        assert_frame_equal(result, expect)
+
+    def test_no_result(self, sdr: SETDataReader):
+        result = sdr.get_company_info(["ABCD"])
+
+        # Check
+        self._check(result)
+        assert result.empty
+
+    @staticmethod
+    def _check(result):
+        assert isinstance(result, pd.DataFrame)
+        assert result["symbol"].is_unique
+
+        assert_index_equal(
+            result.columns,
+            pd.Index(
+                [
+                    "company_id",
+                    "symbol",
+                    "company_name_t",
+                    "company_name_e",
+                    "address_t",
+                    "address_e",
+                    "zip",
+                    "tel",
+                    "fax",
+                    "email",
+                    "url",
+                    "establish",
+                    "dvd_policy_t",
+                    "dvd_policy_e",
+                ]
+            ),
+        )
+
+        return result
