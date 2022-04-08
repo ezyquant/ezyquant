@@ -332,3 +332,52 @@ class TestGetCompanyInfo:
         )
 
         return result
+
+
+class TestGetChangeName:
+    def test_all(self, sdr: SETDataReader):
+        result = sdr.get_change_name()
+
+        # Check
+        self._check(result)
+
+        assert not result.empty
+
+    @staticmethod
+    def _check(result):
+        assert isinstance(result, pd.DataFrame)
+
+        assert_index_equal(
+            result.columns,
+            pd.Index(
+                [
+                    "symbol_id",
+                    "symbol",
+                    "effect_date",
+                    "symbol_old",
+                    "symbol_new",
+                ]
+            ),
+        )
+
+        assert is_df_unique(result[["symbol_id", "effect_date"]])
+        assert (result["symbol_old"] != result["symbol_new"]).all()
+        return result
+
+
+@pytest.mark.parametrize(
+    ("df", "expected"),
+    [
+        (pd.DataFrame(), True),
+        (pd.DataFrame([1, 1]), False),
+        (pd.DataFrame([1, 2]), True),
+        (pd.DataFrame([[1, 2], [1, 2]]), False),
+        (pd.DataFrame([[1, 1], [1, 2]]), True),
+    ],
+)
+def test_is_df_unique(df: pd.DataFrame, expected: bool):
+    assert is_df_unique(df) == expected
+
+
+def is_df_unique(df):
+    return (df.groupby([i for i in df.columns]).size() == 1).all()
