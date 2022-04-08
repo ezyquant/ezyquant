@@ -1,21 +1,28 @@
-import sqlite3
 from datetime import date, datetime
-from typing import List, Optional, Iterable, Union, Dict
-import string
+from typing import Dict, Iterable, List, Optional, Union
+
+import numpy as np
 import pandas as pd
 import sqlalchemy as sa
-from sqlalchemy import MetaData, Table, and_, create_engine, func, or_, select
+from sqlalchemy import MetaData, Table, and_, func, select
+
 from . import fields as fc
-import numpy as np
 
 
 class SETDataReader:
     """SETDataReader read PSIMS data."""
 
     def __init__(self, sqlite_path: str) -> None:
+        """SETDataReader constructor.
+
+        Parameters
+        ----------
+        sqlite_path : str
+            path to sqlite file e.g. /path/to/sqlite.db
+        """
         self.__sqlite_path = sqlite_path
+
         self.__engine = sa.create_engine(f"sqlite:///{self.__sqlite_path}")
-        print(f"sqlite:///{self.__sqlite_path}")
         self.__metadata = MetaData(self.__engine)
 
     def get_trading_dates(
