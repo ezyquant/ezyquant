@@ -180,6 +180,8 @@ class SETDataReader:
                 - symbol: str - SECURITY.N_SECURITY
                 - company_name_t: str - N_COMPANY_T
                 - company_name_e: str - N_COMPANY_E
+                - address_t: str - A_COMPANY_T
+                - address_e: str - A_COMPANY_E
                 - zip: str - I_ZIP
                 - tel: str - E_TEL
                 - fax: str - E_FAX
@@ -197,7 +199,6 @@ class SETDataReader:
             company_id symbol             company_name_t  ...   establish                      dvd_policy_t                                      dvd_policy_e
         0           1     BBL  ธนาคารกรุงเทพ จำกัด (มหาชน)  ...   1/12/1944   เมื่อผลประกอบการของธนาคารมีกำไร...  Pays when company has profit (with additional ...
         1         646     PTT    บริษัท ปตท. จำกัด (มหาชน)  ...   1/10/2001   ไม่ต่ำกว่าร้อยละ 25 ของกำไรสุทธิที่...  Not less than 25% of net income after deductio...
-
         """
         company = Table("COMPANY", self.__metadata, autoload=True)
         security = Table("SECURITY", self.__metadata, autoload=True)
@@ -208,6 +209,8 @@ class SETDataReader:
                 func.trim(security.c.N_SECURITY).label("symbol"),
                 company.c.N_COMPANY_T.label("company_name_t"),
                 company.c.N_COMPANY_E.label("company_name_e"),
+                company.c.A_COMPANY_T.label("address_t"),
+                company.c.A_COMPANY_E.label("address_e"),
                 company.c.I_ZIP.label("zip"),
                 company.c.E_TEL.label("tel"),
                 company.c.E_FAX.label("fax"),
