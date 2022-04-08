@@ -1,5 +1,5 @@
 from datetime import date
-from typing import List
+from typing import List, Optional
 
 import pandas as pd
 import pytest
@@ -114,45 +114,6 @@ class TestSymbolInfo:
         assert result["industry"].isin(fld.INDUSTRY_LIST).all()
         assert result["sector"].isin(fld.SECTOR_LIST).all()
 
-    def test_symbol_list(self, sdr: SETDataReader):
-        result = sdr.get_symbol_info(symbol_list=["TCCC", "PTTGC"])
-
-        # Check
-        self._check(result)
-
-        expect = pd.DataFrame(
-            [
-                [
-                    741,
-                    "TCCC",
-                    fld.MARKET_SET,
-                    fld.INDUSTRY_INDUS,
-                    fld.SECTOR_PETRO,
-                    "S",
-                    "L",
-                ],
-                [
-                    15382,
-                    "PTTGC",
-                    fld.MARKET_SET,
-                    fld.INDUSTRY_INDUS,
-                    fld.SECTOR_PETRO,
-                    "S",
-                    "L",
-                ],
-            ],
-            columns=[
-                "symbol_id",
-                "symbol",
-                "market",
-                "industry",
-                "sector",
-                "sec_type",
-                "native",
-            ],
-        )
-        assert_frame_equal(result, expect)
-
     def test_market(self, sdr: SETDataReader):
         result = sdr.get_symbol_info(market=fld.MARKET_MAI)
 
@@ -192,9 +153,20 @@ class TestSymbolInfo:
         assert (result["sector"] == fld.SECTOR_AGRI).all()
         assert "STA" in result["symbol"]
 
-    def test_symbol_list_and_sector(self, sdr: SETDataReader):
+    @pytest.mark.parametrize("symbol_list", ["TCCC", "PTTGC"])
+    @pytest.mark.parametrize("market", [fld.MARKET_SET, None])
+    @pytest.mark.parametrize("industry", [fld.INDUSTRY_INDUS, None])
+    @pytest.mark.parametrize("sector", [fld.SECTOR_PETRO, None])
+    def test_many_parameter(
+        self,
+        sdr: SETDataReader,
+        symbol_list: Optional[List[str]],
+        market: Optional[str],
+        industry: Optional[str],
+        sector: Optional[str],
+    ):
         result = sdr.get_symbol_info(
-            symbol_list=["TCCC", "PTTGC"], sector=fld.SECTOR_PETRO
+            symbol_list=symbol_list, market=market, industry=industry, sector=sector
         )
 
         # Check
