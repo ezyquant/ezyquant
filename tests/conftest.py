@@ -5,7 +5,7 @@ from ezyquant.reader import SETDataReader
 
 @pytest.fixture
 def sqlite_path() -> str:
-    return "ssetdi.sqlite3"
+    return "psims.sqlite3"
 
 
 @pytest.fixture

@@ -425,7 +425,7 @@ class TestGetDividend:
     @pytest.mark.parametrize("symbol_list", [["PTC"], ["ptc"]])
     @pytest.mark.parametrize("start_date", [date(2022, 3, 15), None])
     @pytest.mark.parametrize("end_date", [date(2022, 3, 15), None])
-    @pytest.mark.parametrize("ca_type_list", ["CD", None])
+    @pytest.mark.parametrize("ca_type_list", [["CD"], None])
     def test_one(
         self,
         sdr: SETDataReader,
@@ -439,6 +439,7 @@ class TestGetDividend:
             start_date=start_date,
             end_date=end_date,
             ca_type_list=ca_type_list,
+            adjusted_list=[],
         )
 
         # Check
@@ -460,8 +461,47 @@ class TestGetDividend:
             ),
         )
 
+    def test_adjust(self, sdr: SETDataReader):
+        result = sdr.get_dividend(
+            ["COM7"], ca_type_list=["CD"], start_date=date(2020, 1, 1)
+        )
+
+        # Check
+        self._check(result)
+
+        # COM7 split 2:1 2022-03-11
+        assert_frame_equal(
+            result,
+            pd.DataFrame(
+                [
+                    [
+                        "COM7",
+                        pd.Timestamp("2020-05-08"),
+                        pd.Timestamp("2020-05-26"),
+                        "CD",
+                        0.4,
+                    ],
+                    [
+                        "COM7",
+                        pd.Timestamp("2021-04-29"),
+                        pd.Timestamp("2021-05-21"),
+                        "CD",
+                        0.5,
+                    ],
+                    [
+                        "COM7",
+                        pd.Timestamp("2022-03-11"),
+                        pd.Timestamp("2022-05-06"),
+                        "CD",
+                        1.0,
+                    ],
+                ],
+                columns=["symbol", "ex_date", "pay_date", "ca_type", "dps"],
+            ),
+        )
+
     def test_cancel(self, sdr: SETDataReader):
-        result = sdr.get_dividend(["CRC"])
+        result = sdr.get_dividend(["CRC"], adjusted_list=[])
 
         # Check
         self._check(result)
