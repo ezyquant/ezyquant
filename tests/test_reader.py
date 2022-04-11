@@ -422,11 +422,43 @@ class TestGetDividend:
 
         assert not result.empty
 
-    def test_one(self, sdr: SETDataReader):
-        result = sdr.get_dividend(["TTB"])
+    @pytest.mark.parametrize("symbol_list", [["PTC"], ["ptc"]])
+    @pytest.mark.parametrize("start_date", [date(2022, 3, 15), None])
+    @pytest.mark.parametrize("end_date", [date(2022, 3, 15), None])
+    @pytest.mark.parametrize("ca_type_list", ["CD", None])
+    def test_one(
+        self,
+        sdr: SETDataReader,
+        symbol_list: Optional[List[str]],
+        start_date: Optional[date],
+        end_date: Optional[date],
+        ca_type_list: Optional[List[str]],
+    ):
+        result = sdr.get_dividend(
+            symbol_list=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
+            ca_type_list=ca_type_list,
+        )
 
         # Check
         self._check(result)
+
+        assert_frame_equal(
+            result,
+            pd.DataFrame(
+                [
+                    [
+                        "PTC",
+                        pd.Timestamp("2022-03-15"),
+                        pd.Timestamp("2022-05-24"),
+                        "CD",
+                        0.1,
+                    ]
+                ],
+                columns=["symbol", "ex_date", "pay_date", "ca_type", "dps"],
+            ),
+        )
 
     def test_cancel(self, sdr: SETDataReader):
         result = sdr.get_dividend(["CRC"])
@@ -513,6 +545,4 @@ def test_is_df_unique(df: pd.DataFrame, expected: bool):
 
 
 def is_df_unique(df):
-    x = df.groupby([i for i in df.columns]).size()
-    print(x[x != 1])
     return (df.groupby([i for i in df.columns]).size() == 1).all()
