@@ -313,6 +313,7 @@ class SETDataReader:
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
         ca_type_list: Optional[List[str]] = None,
+        adjusted_list: List[str] = ["  ", "CR", "PC", "RC", "SD", "XR"],
     ) -> pd.DataFrame:
         """Data from table RIGHTS_BENEFIT. Include only Cash Dividend (CA) and
         Stock Dividend (SD). Not include Cancelled (F_CANCEL!='C') and dps more
@@ -330,6 +331,8 @@ class SETDataReader:
             Coperatie action type (N_CA_TYPE), by default None
                 - CD - cash dividend
                 - SD - stock dividend
+        adjusted_list : List[str]
+            Adjust data by ca_type, empty list for no adjust, by default ["  ", "CR", "PC", "RC", "SD", "XR"]
 
         Returns
         -------
@@ -396,7 +399,7 @@ class SETDataReader:
             col_date=right.c.D_SIGN,
         )
         if ca_type_list != None:
-            stmt = stmt.where(right.c.N_CA_TYPE == ca_type_list)
+            stmt = stmt.where(right.c.N_CA_TYPE.in_(ca_type_list))
         res_df = pd.read_sql(stmt, self.__engine)
         return res_df
 
@@ -648,7 +651,7 @@ class SETDataReader:
                 - symbol: str - SECURITY.N_SECURITY
                 - effect_date: date - D_EFFECT
                 - ca_type: str - N_CA_TYPE
-                - adjust_factor: float - F_FACTOR
+                - adjust_factor: float - R_ADJUST_FACTOR
 
         Examples
         --------
