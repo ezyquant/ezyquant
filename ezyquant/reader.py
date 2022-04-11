@@ -1,21 +1,28 @@
-import sqlite3
 from datetime import date, datetime
-from typing import List, Optional, Iterable, Union, Dict
-import string
+from typing import Dict, Iterable, List, Optional, Union
+
+import numpy as np
 import pandas as pd
 import sqlalchemy as sa
-from sqlalchemy import MetaData, Table, and_, create_engine, func, or_, select
+from sqlalchemy import MetaData, Table, and_, func, select
+
 from . import fields as fc
-import numpy as np
 
 
 class SETDataReader:
     """SETDataReader read PSIMS data."""
 
     def __init__(self, sqlite_path: str) -> None:
+        """SETDataReader constructor.
+
+        Parameters
+        ----------
+        sqlite_path : str
+            path to sqlite file e.g. /path/to/sqlite.db
+        """
         self.__sqlite_path = sqlite_path
+
         self.__engine = sa.create_engine(f"sqlite:///{self.__sqlite_path}")
-        print(f"sqlite:///{self.__sqlite_path}")
         self.__metadata = MetaData(self.__engine)
 
     def get_trading_dates(
@@ -23,6 +30,20 @@ class SETDataReader:
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> List[date]:
+        """Data from table CALENDAR.
+
+        Parameters
+        ----------
+        start_date : Optional[date]
+            start of D_TRADE, by default None
+        end_date : Optional[date]
+            end of D_TRADE, by default None
+
+        Returns
+        -------
+        List[date]
+            list of trading dates
+        """
         t = Table("CALENDAR", self.__metadata, autoload=True)
 
         stmt = select([t.c.D_TRADE])
@@ -164,6 +185,8 @@ class SETDataReader:
                 - symbol: str - SECURITY.N_SECURITY
                 - company_name_t: str - N_COMPANY_T
                 - company_name_e: str - N_COMPANY_E
+                - address_t: str - A_COMPANY_T
+                - address_e: str - A_COMPANY_E
                 - zip: str - I_ZIP
                 - tel: str - E_TEL
                 - fax: str - E_FAX
@@ -181,7 +204,6 @@ class SETDataReader:
             company_id symbol             company_name_t  ...   establish                      dvd_policy_t                                      dvd_policy_e
         0           1     BBL  ธนาคารกรุงเทพ จำกัด (มหาชน)  ...   1/12/1944   เมื่อผลประกอบการของธนาคารมีกำไร...  Pays when company has profit (with additional ...
         1         646     PTT    บริษัท ปตท. จำกัด (มหาชน)  ...   1/10/2001   ไม่ต่ำกว่าร้อยละ 25 ของกำไรสุทธิที่...  Not less than 25% of net income after deductio...
-
         """
         company = Table("COMPANY", self.__metadata, autoload=True)
         security = Table("SECURITY", self.__metadata, autoload=True)
@@ -192,6 +214,8 @@ class SETDataReader:
                 func.trim(security.c.N_SECURITY).label("symbol"),
                 company.c.N_COMPANY_T.label("company_name_t"),
                 company.c.N_COMPANY_E.label("company_name_e"),
+                company.c.A_COMPANY_T.label("address_t"),
+                company.c.A_COMPANY_E.label("address_e"),
                 company.c.I_ZIP.label("zip"),
                 company.c.E_TEL.label("tel"),
                 company.c.E_FAX.label("fax"),

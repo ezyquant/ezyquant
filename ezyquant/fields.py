@@ -27,6 +27,9 @@ INDUSTRY_RESOURC = "RESOURC"
 INDUSTRY_SERVICE = "SERVICE"
 INDUSTRY_TECH = "TECH"
 
+INDUSTRY_LIST = [
+    v for k, v in locals().items() if isinstance(k, str) and k.startswith("INDUSTRY_")
+]
 
 """
 SELECT
@@ -79,7 +82,9 @@ SECTOR_RESOURC = "RESOURC"
 SECTOR_SERVICE = "SERVICE"
 SECTOR_TECH = "TECH"
 
-
+SECTOR_LIST = [
+    v for k, v in locals().items() if isinstance(k, str) and k.startswith("SECTOR_")
+]
 """
 SELECT
     DISTINCT("SECTOR"."N_SECTOR")
