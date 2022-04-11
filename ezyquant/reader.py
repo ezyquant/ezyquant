@@ -315,7 +315,8 @@ class SETDataReader:
         ca_type_list: Optional[List[str]] = None,
     ) -> pd.DataFrame:
         """Data from table RIGHTS_BENEFIT. Include only Cash Dividend (CA) and
-        Stock Dividend (SD). Not include Cancelled (F_CANCEL='C').
+        Stock Dividend (SD). Not include Cancelled (F_CANCEL!='C') and dps more
+        than 0 (Z_RIGHTS>0).
 
         Parameters
         ----------
