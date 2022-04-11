@@ -343,6 +343,45 @@ class TestGetChangeName:
 
         assert not result.empty
 
+    @pytest.mark.parametrize("symbol_list", [["TTB"], ["ttb"]])
+    @pytest.mark.parametrize("start_date", [date(2021, 5, 12), None])
+    @pytest.mark.parametrize("end_date", [date(2021, 5, 12), None])
+    def test_one(
+        self,
+        sdr: SETDataReader,
+        symbol_list: List[str],
+        start_date: Optional[date],
+        end_date: Optional[date],
+    ):
+        result = sdr.get_change_name(
+            symbol_list=symbol_list, start_date=start_date, end_date=end_date
+        )
+
+        # Check
+        self._check(result)
+
+        assert_frame_equal(
+            result,
+            pd.DataFrame(
+                [[181, "TTB", pd.Timestamp("2021-05-12"), "TMB", "TTB"]],
+                columns=[
+                    "symbol_id",
+                    "symbol",
+                    "effect_date",
+                    "symbol_old",
+                    "symbol_new",
+                ],
+            ),
+        )
+
+    def test_no_result(self, sdr: SETDataReader):
+        result = sdr.get_change_name(["ABCD"])
+
+        # Check
+        self._check(result)
+
+        assert result.empty
+
     @staticmethod
     def _check(result):
         assert isinstance(result, pd.DataFrame)
@@ -362,6 +401,7 @@ class TestGetChangeName:
 
         assert is_df_unique(result[["symbol_id", "effect_date"]])
         assert (result["symbol_old"] != result["symbol_new"]).all()
+
         return result
 
 
@@ -380,4 +420,6 @@ def test_is_df_unique(df: pd.DataFrame, expected: bool):
 
 
 def is_df_unique(df):
+    x = df.groupby([i for i in df.columns]).size()
+    print(x[x != 1])
     return (df.groupby([i for i in df.columns]).size() == 1).all()
