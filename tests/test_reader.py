@@ -93,7 +93,7 @@ class TestGetTradingDates:
             (date(2022, 1, 8), date(2022, 1, 7)),
         ],
     )
-    def test_no_result(self, sdr: SETDataReader, start_date: date, end_date: date):
+    def test_empty(self, sdr: SETDataReader, start_date: date, end_date: date):
         # Test
         result = sdr.get_trading_dates(start_date=start_date, end_date=end_date)
 
@@ -110,9 +110,6 @@ class TestSymbolInfo:
         self._check(result)
 
         assert not result.empty
-        assert result["market"].isin([fld.MARKET_SET, fld.MARKET_MAI]).all()
-        assert result["industry"].isin(fld.INDUSTRY_LIST).all()
-        assert result["sector"].isin(fld.SECTOR_LIST).all()
 
     def test_market(self, sdr: SETDataReader):
         result = sdr.get_symbol_info(market=fld.MARKET_MAI)
@@ -121,7 +118,6 @@ class TestSymbolInfo:
         self._check(result)
 
         assert (result["market"] == fld.MARKET_SET).all()
-        assert result["industry"].isin(fld.INDUSTRY_LIST).all()
         # MAI sector name same as industry name
         assert result["sector"].isin(fld.INDUSTRY_LIST).all()
         assert "STA" in result["symbol"]
@@ -132,7 +128,6 @@ class TestSymbolInfo:
         # Check
         self._check(result)
 
-        assert result["market"].isin([fld.MARKET_SET, fld.MARKET_MAI]).all()
         assert (result["industry"] == fld.INDUSTRY_AGRO).all()
         assert (
             result["sector"]
@@ -205,7 +200,7 @@ class TestSymbolInfo:
         )
         assert_frame_equal(result, expect)
 
-    def test_no_result(self, sdr: SETDataReader):
+    def test_empty(self, sdr: SETDataReader):
         result = sdr.get_symbol_info(
             symbol_list=["TCCC", "PTTGC"], market=fld.MARKET_MAI
         )
@@ -218,8 +213,6 @@ class TestSymbolInfo:
     @staticmethod
     def _check(result):
         assert isinstance(result, pd.DataFrame)
-        assert result["symbol_id"].is_unique
-        assert result["symbol"].is_unique
 
         assert_index_equal(
             result.columns,
@@ -236,10 +229,17 @@ class TestSymbolInfo:
             ),
         )
 
+        for i in result.columns:
+            assert pd.notna(result[i]).all(), f"{i} is null"
+
         assert_series_equal(result["symbol"], result["symbol"].str.upper())
-        assert_series_equal(result["market"], result["market"].str.upper())
-        assert_series_equal(result["industry"], result["industry"].str.upper())
-        assert_series_equal(result["sector"], result["sector"].str.upper())
+
+        assert result["market"].isin([fld.MARKET_SET, fld.MARKET_MAI]).all()
+        assert result["industry"].isin(fld.INDUSTRY_LIST).all()
+        assert result["sector"].isin(fld.SECTOR_LIST).all()
+
+        assert result["symbol_id"].is_unique
+        assert result["symbol"].is_unique
 
         return result
 
@@ -297,7 +297,7 @@ class TestGetCompanyInfo:
         )
         assert_frame_equal(result, expect)
 
-    def test_no_result(self, sdr: SETDataReader):
+    def test_empty(self, sdr: SETDataReader):
         result = sdr.get_company_info(["ABCD"])
 
         # Check
@@ -307,7 +307,6 @@ class TestGetCompanyInfo:
     @staticmethod
     def _check(result):
         assert isinstance(result, pd.DataFrame)
-        assert result["symbol"].is_unique
 
         assert_index_equal(
             result.columns,
@@ -330,6 +329,11 @@ class TestGetCompanyInfo:
                 ]
             ),
         )
+
+        assert pd.notna(result["company_id"]).all()
+        assert pd.notna(result["symbol"]).all()
+
+        assert result["symbol"].is_unique
 
         return result
 
@@ -374,7 +378,7 @@ class TestGetChangeName:
             ),
         )
 
-    def test_no_result(self, sdr: SETDataReader):
+    def test_empty(self, sdr: SETDataReader):
         result = sdr.get_change_name(["ABCD"])
 
         # Check
@@ -399,8 +403,97 @@ class TestGetChangeName:
             ),
         )
 
-        assert is_df_unique(result[["symbol_id", "effect_date"]])
+        for i in result.columns:
+            assert pd.notna(result[i]).all(), f"{i} is null"
+
         assert (result["symbol_old"] != result["symbol_new"]).all()
+
+        assert is_df_unique(result[["symbol_id", "effect_date"]])
+
+        return result
+
+
+class TestGetDividend:
+    def test_all(self, sdr: SETDataReader):
+        result = sdr.get_dividend()
+
+        # Check
+        self._check(result)
+
+        assert not result.empty
+
+    def test_one(self, sdr: SETDataReader):
+        result = sdr.get_dividend(["TTB"])
+
+        # Check
+        self._check(result)
+
+    def test_cancel(self, sdr: SETDataReader):
+        result = sdr.get_dividend(["CRC"])
+
+        # Check
+        self._check(result)
+
+        assert_frame_equal(
+            result,
+            pd.DataFrame(
+                [
+                    [
+                        "CRC",
+                        pd.Timestamp("2021-04-29"),
+                        pd.Timestamp("2021-05-21"),
+                        "CD",
+                        0.40,
+                    ],
+                    [
+                        "CRC",
+                        pd.Timestamp("2022-05-09"),
+                        pd.Timestamp("2022-05-27"),
+                        "CD",
+                        0.30,
+                    ],
+                ],
+                columns=[
+                    "symbol",
+                    "ex_date",
+                    "pay_date",
+                    "ca_type",
+                    "dps",
+                ],
+            ),
+        )
+
+    def test_empty(self, sdr: SETDataReader):
+        result = sdr.get_dividend(["ABCD"])
+
+        # Check
+        self._check(result)
+
+        assert result.empty
+
+    @staticmethod
+    def _check(result):
+        assert isinstance(result, pd.DataFrame)
+
+        assert_index_equal(
+            result.columns,
+            pd.Index(
+                [
+                    "symbol",
+                    "ex_date",
+                    "pay_date",
+                    "ca_type",
+                    "dps",
+                ]
+            ),
+        )
+
+        for i in result.columns:
+            assert pd.notna(result[i]).all(), f"{i} is null"
+
+        assert (result["pay_date"] >= result["ex_date"]).all()
+        assert result["ca_type"].isin(["CD", "SD"]).all()
+        assert (result["dps"] > 0).all()
 
         return result
 
