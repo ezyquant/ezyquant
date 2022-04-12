@@ -635,6 +635,71 @@ class TestGetDelisted:
         return result
 
 
+class TestGetSignPosting:
+    def test_all(self, sdr: SETDataReader):
+        result = sdr.get_sign_posting()
+
+        # Check
+        self._check(result)
+
+        assert not result.empty
+
+    @pytest.mark.parametrize("symbol_list", [["TAPAC"], ["tapac"]])
+    @pytest.mark.parametrize("start_date", [date(2022, 1, 5), None])
+    @pytest.mark.parametrize("end_date", [date(2022, 1, 5), None])
+    @pytest.mark.parametrize("sign_list", [["SP"], ["sp"], None])
+    def test_one(
+        self,
+        sdr: SETDataReader,
+        symbol_list: Optional[List[str]],
+        start_date: Optional[date],
+        end_date: Optional[date],
+        sign_list: Optional[List[str]],
+    ):
+        result = sdr.get_sign_posting(
+            symbol_list=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
+            sign_list=sign_list,
+        )
+
+        # Check
+        self._check(result)
+
+        assert_frame_equal(
+            result,
+            pd.DataFrame(
+                [["TAPAC", pd.Timestamp("2022-01-05"), "SP"]],
+                columns=["symbol", "hold_date", "sign"],
+            ),
+        )
+
+    @pytest.mark.parametrize("symbol_list", [["ABCD"], []])
+    def test_empty(self, sdr: SETDataReader, symbol_list: Optional[List[str]]):
+        result = sdr.get_sign_posting(symbol_list=symbol_list)
+
+        # Check
+        self._check(result)
+
+        assert result.empty
+
+    @staticmethod
+    def _check(result):
+        assert isinstance(result, pd.DataFrame)
+
+        assert_index_equal(
+            result.columns,
+            pd.Index(["symbol", "hold_date", "sign"]),
+        )
+
+        for i in result.columns:
+            assert pd.notna(result[i]).all(), f"{i} is null"
+
+        assert result["sign"].isin(["C", "CM", "DS", "H", "NC", "NP", "SP", "ST"]).all()
+
+        return result
+
+
 @pytest.mark.parametrize(
     ("df", "expected"),
     [
