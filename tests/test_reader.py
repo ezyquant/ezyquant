@@ -891,6 +891,142 @@ class TestGetAdjustFactor:
         return result
 
 
+class TestGetDataSymbolDaily:
+    @pytest.mark.parametrize(
+        "field", [getattr(fld, i) for i in dir(fld) if i.startswith("D_")]
+    )
+    def test_field(self, sdr: SETDataReader, field: str):
+        result = sdr.get_data_symbol_daily(
+            field,
+            symbol_list=["COM7"],
+            start_date=date(2022, 3, 10),
+            end_date=date(2022, 3, 10),
+        )
+
+        # Check
+        self._check(result)
+
+        assert not result.empty
+
+    def test_adjust_close(self, sdr: SETDataReader):
+        result = sdr.get_data_symbol_daily(
+            "close",
+            symbol_list=["COM7"],
+            start_date=date(2022, 3, 10),
+            end_date=date(2022, 3, 14),
+        )
+
+        # Check
+        self._check(result)
+
+        assert_frame_equal(
+            result,
+            pd.DataFrame(
+                {"COM7": [41.75, 42.25, 40.75]},
+                index=[
+                    pd.Timestamp("2022-03-10"),
+                    pd.Timestamp("2022-03-11"),
+                    pd.Timestamp("2022-03-14"),
+                ],
+            ),
+        )
+
+    def test_not_adjust_close(self, sdr: SETDataReader):
+        result = sdr.get_data_symbol_daily(
+            "close",
+            symbol_list=["COM7"],
+            start_date=date(2022, 3, 10),
+            end_date=date(2022, 3, 14),
+            adjusted_list=[],
+        )
+
+        # Check
+        self._check(result)
+
+        assert_frame_equal(
+            result,
+            pd.DataFrame(
+                {"COM7": [83.50, 42.25, 40.75]},
+                index=[
+                    pd.Timestamp("2022-03-10"),
+                    pd.Timestamp("2022-03-11"),
+                    pd.Timestamp("2022-03-14"),
+                ],
+            ),
+        )
+
+    def test_adjust_volume(self, sdr: SETDataReader):
+        result = sdr.get_data_symbol_daily(
+            "volume",
+            symbol_list=["COM7"],
+            start_date=date(2022, 3, 10),
+            end_date=date(2022, 3, 14),
+        )
+
+        # Check
+        self._check(result)
+
+        assert_frame_equal(
+            result,
+            pd.DataFrame(
+                {"COM7": [41811200, 35821300, 23099500]},
+                index=[
+                    pd.Timestamp("2022-03-10"),
+                    pd.Timestamp("2022-03-11"),
+                    pd.Timestamp("2022-03-14"),
+                ],
+            ),
+        )
+
+    def test_not_adjust_volume(self, sdr: SETDataReader):
+        result = sdr.get_data_symbol_daily(
+            "volume",
+            symbol_list=["COM7"],
+            start_date=date(2022, 3, 10),
+            end_date=date(2022, 3, 14),
+            adjusted_list=[],
+        )
+
+        # Check
+        self._check(result)
+
+        assert_frame_equal(
+            result,
+            pd.DataFrame(
+                {"COM7": [20905600, 35821300, 23099500]},
+                index=[
+                    pd.Timestamp("2022-03-10"),
+                    pd.Timestamp("2022-03-11"),
+                    pd.Timestamp("2022-03-14"),
+                ],
+            ),
+        )
+
+    def test_empty(self, sdr: SETDataReader):
+        result = sdr.get_data_symbol_daily(
+            "close",
+            symbol_list=[],
+        )
+
+        # Check
+        self._check(result)
+
+        assert result.empty
+
+    @staticmethod
+    def _check(result):
+        assert isinstance(result, pd.DataFrame)
+
+        assert isinstance(result.index, pd.DatetimeIndex)
+        assert result.index.is_monotonic_increasing
+        assert result.index.is_unique
+        assert (result.index == result.index.normalize()).all()  # type: ignore
+
+        assert (result.columns == result.columns.str.upper()).all()
+
+        return result
+
+
 @pytest.mark.parametrize(
     ("df", "expected"),
     [
