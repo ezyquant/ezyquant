@@ -80,7 +80,6 @@ class TestGetTradingDates:
         result = sdr.get_trading_dates(start_date=start_date, end_date=end_date)
 
         # Check
-        print(result)
         assert result == expect_dates
 
     @pytest.mark.parametrize(
@@ -696,6 +695,124 @@ class TestGetSignPosting:
             assert pd.notna(result[i]).all(), f"{i} is null"
 
         assert result["sign"].isin(["C", "CM", "DS", "H", "NC", "NP", "SP", "ST"]).all()
+
+        return result
+
+
+class TestGetSymbolsByIndex:
+    def test_all(self, sdr: SETDataReader):
+        result = sdr.get_symbols_by_index()
+
+        # Check
+        self._check(result)
+
+        assert not result.empty
+
+    @pytest.mark.parametrize("index_list", [["SET50"], ["set50"]])
+    @pytest.mark.parametrize("start_date", [date(2012, 1, 3), date(2012, 1, 4)])
+    @pytest.mark.parametrize("end_date", [date(2012, 1, 4), date(2012, 1, 5)])
+    def test_filter(
+        self,
+        sdr: SETDataReader,
+        index_list: Optional[List[str]],
+        start_date: Optional[date],
+        end_date: Optional[date],
+    ):
+        result = sdr.get_symbols_by_index(
+            index_list=index_list,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+        # Check
+        self._check(result)
+
+        assert_frame_equal(
+            result,
+            pd.DataFrame(
+                {
+                    "as_of_date": pd.Timestamp("2012-01-04"),
+                    "index": "SET50",
+                    "symbol": [
+                        "STA",
+                        "CPF",
+                        "MINT",
+                        "TU",
+                        "BAY",
+                        "BBL",
+                        "KBANK",
+                        "KTB",
+                        "SCB",
+                        "TCAP",
+                        "TISCO",
+                        "TTB",
+                        "BLA",
+                        "IVL",
+                        "PTTGC",
+                        "TPC",
+                        "DCC",
+                        "SCC",
+                        "SCCC",
+                        "TPIPL",
+                        "CPN",
+                        "LH",
+                        "PS",
+                        "SPALI",
+                        "BANPU",
+                        "BCP",
+                        "EGCO",
+                        "ESSO",
+                        "GLOW",
+                        "IRPC",
+                        "PTT",
+                        "PTTEP",
+                        "RATCH",
+                        "TOP",
+                        "BIGC",
+                        "BJC",
+                        "CPALL",
+                        "HMPRO",
+                        "MAKRO",
+                        "ROBINS",
+                        "BEC",
+                        "BDMS",
+                        "BH",
+                        "AOT",
+                        "BTS",
+                        "THAI",
+                        "ADVANC",
+                        "DTAC",
+                        "TRUE",
+                        "DELTA",
+                    ],
+                    "seq": [i for i in range(1, 51)],
+                },
+                columns=["as_of_date", "index", "symbol", "seq"],
+            ),
+        )
+
+    @pytest.mark.parametrize("index_list", [["ABCD"], []])
+    def test_empty(self, sdr: SETDataReader, index_list: Optional[List[str]]):
+        result = sdr.get_symbols_by_index(index_list=index_list)
+
+        # Check
+        self._check(result)
+
+        assert result.empty
+
+    @staticmethod
+    def _check(result):
+        assert isinstance(result, pd.DataFrame)
+
+        assert_index_equal(
+            result.columns,
+            pd.Index(["as_of_date", "symbol", "index", "seq"]),
+        )
+
+        for i in result.columns:
+            assert pd.notna(result[i]).all(), f"{i} is null"
+
+        assert result["index"].isin(fld.SYMBOL_INDEX_LIST).all()
 
         return result
 

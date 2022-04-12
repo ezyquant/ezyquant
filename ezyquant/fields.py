@@ -98,6 +98,12 @@ SYMBOL_INDEX_SSET = "sSET"
 SYMBOL_INDEX_SET100 = "SET100"
 SYMBOL_INDEX_SET50 = "SET50"
 
+SYMBOL_INDEX_LIST = [
+    v
+    for k, v in locals().items()
+    if isinstance(k, str) and k.startswith("SYMBOL_INDEX_")
+]
+
 D_PRIOR = "prior"  # last_close
 D_OPEN = "open"
 D_HIGH = "high"
