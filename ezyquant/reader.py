@@ -308,6 +308,9 @@ class SETDataReader:
         )
 
         res_df = pd.read_sql(stmt, self.__engine)
+        res_df = res_df.dropna()
+        res_df = res_df[res_df["symbol_old"] != res_df["symbol_new"]]
+        res_df = res_df.reset_index(drop=True)
         return res_df
 
     def get_dividend(
