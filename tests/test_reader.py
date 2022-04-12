@@ -67,7 +67,6 @@ class TestGetTradingDates:
             (date(2022, 1, 1), date(2022, 1, 5), [date(2022, 1, 4), date(2022, 1, 5)]),
             (date(2022, 1, 3), date(2022, 1, 5), [date(2022, 1, 4), date(2022, 1, 5)]),
             (date(2022, 1, 4), date(2022, 1, 5), [date(2022, 1, 4), date(2022, 1, 5)]),
-            (date(2022, 1, 1), date(2022, 1, 10), []),
         ],
     )
     def test_start_end_date(
