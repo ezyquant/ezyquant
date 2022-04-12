@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Dict, Iterable, List, Optional, Union
 
 import numpy as np
@@ -27,8 +27,8 @@ class SETDataReader:
 
     def get_trading_dates(
         self,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[Union[date, datetime]] = None,
+        end_date: Optional[Union[date, datetime]] = None,
     ) -> List[date]:
         """Data from table CALENDAR.
 
@@ -50,11 +50,14 @@ class SETDataReader:
         if start_date is not None:
             stmt = stmt.where(t.c.D_TRADE >= start_date)
         if end_date is not None:
+            min_time = datetime.min.time()
+            end_date = datetime.combine(end_date, min_time) + timedelta(minutes=1)
             stmt = stmt.where(t.c.D_TRADE <= end_date)
 
         stmt = stmt.order_by(t.c.D_TRADE)
 
         res = self.__engine.execute(stmt).all()
+
         return [i[0].date() for i in res]
 
     def is_trading_date(self, check_date: date) -> bool:
@@ -1356,5 +1359,7 @@ class SETDataReader:
         if start_date != None:
             query_object = query_object.where(col_date >= start_date)
         if end_date != None:
+            min_time = datetime.min.time()
+            end_date = datetime.combine(end_date, min_time) + timedelta(minutes=1)
             query_object = query_object.where(col_date <= end_date)
         return query_object
