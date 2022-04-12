@@ -630,7 +630,8 @@ class SETDataReader:
         end_date: Optional[date] = None,
         ca_type_list: Optional[List[str]] = None,
     ) -> pd.DataFrame:
-        """Data from table ADJUST_FACTOR.
+        """Data from table ADJUST_FACTOR. Filter only Auto Matching
+        (I_TRADING_METHOD='A').
 
         Parameters
         ----------
