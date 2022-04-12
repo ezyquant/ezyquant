@@ -567,6 +567,7 @@ class SETDataReader:
             - as_of_date: date - D_AS_OF
             - symbol: str - SECURITY.N_SECURITY
             - index: str - SECTOR.N_SECTOR
+            - seq: int - SECURITY_INDEX.S_SEQ
 
         Note
         -------
