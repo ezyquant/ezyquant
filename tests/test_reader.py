@@ -200,10 +200,9 @@ class TestSymbolInfo:
         )
         assert_frame_equal(result, expect)
 
-    def test_empty(self, sdr: SETDataReader):
-        result = sdr.get_symbol_info(
-            symbol_list=["TCCC", "PTTGC"], market=fld.MARKET_MAI
-        )
+    @pytest.mark.parametrize("symbol_list", [["ABCD"], []])
+    def test_empty(self, sdr: SETDataReader, symbol_list: List[str]):
+        result = sdr.get_symbol_info(symbol_list)
 
         # Check
         self._check(result)
@@ -297,8 +296,9 @@ class TestGetCompanyInfo:
         )
         assert_frame_equal(result, expect)
 
-    def test_empty(self, sdr: SETDataReader):
-        result = sdr.get_company_info(["ABCD"])
+    @pytest.mark.parametrize("symbol_list", [["ABCD"], []])
+    def test_empty(self, sdr: SETDataReader, symbol_list: List[str]):
+        result = sdr.get_company_info(symbol_list)
 
         # Check
         self._check(result)
@@ -378,8 +378,9 @@ class TestGetChangeName:
             ),
         )
 
-    def test_empty(self, sdr: SETDataReader):
-        result = sdr.get_change_name(["ABCD"])
+    @pytest.mark.parametrize("symbol_list", [["ABCD"], []])
+    def test_empty(self, sdr: SETDataReader, symbol_list: List[str]):
+        result = sdr.get_change_name(symbol_list)
 
         # Check
         self._check(result)
@@ -535,8 +536,9 @@ class TestGetDividend:
             ),
         )
 
-    def test_empty(self, sdr: SETDataReader):
-        result = sdr.get_dividend(["ABCD"])
+    @pytest.mark.parametrize("symbol_list", [["ABCD"], []])
+    def test_empty(self, sdr: SETDataReader, symbol_list: List[str]):
+        result = sdr.get_dividend(symbol_list)
 
         # Check
         self._check(result)
@@ -566,6 +568,70 @@ class TestGetDividend:
         assert (result["pay_date"] >= result["ex_date"]).all()
         assert result["ca_type"].isin(["CD", "SD"]).all()
         assert (result["dps"] > 0).all()
+
+        return result
+
+
+class TestGetDelisted:
+    def test_all(self, sdr: SETDataReader):
+        result = sdr.get_delisted()
+
+        # Check
+        self._check(result)
+
+        assert not result.empty
+
+    @pytest.mark.parametrize("symbol_list", [["ROBINS"], ["robins"]])
+    @pytest.mark.parametrize("start_date", [date(2020, 2, 20), None])
+    @pytest.mark.parametrize("end_date", [date(2020, 2, 20), None])
+    def test_one(
+        self,
+        sdr: SETDataReader,
+        symbol_list: Optional[List[str]],
+        start_date: Optional[date],
+        end_date: Optional[date],
+    ):
+        result = sdr.get_delisted(
+            symbol_list=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+        # Check
+        self._check(result)
+
+        assert_frame_equal(
+            result,
+            pd.DataFrame(
+                [["ROBINS", pd.Timestamp("2020-02-20")]],
+                columns=["symbol", "delisted_date"],
+            ),
+        )
+
+    @pytest.mark.parametrize("symbol_list", [["ABCD"], []])
+    def test_empty(self, sdr: SETDataReader, symbol_list: Optional[List[str]]):
+        result = sdr.get_delisted(symbol_list)
+
+        # Check
+        self._check(result)
+
+        assert result.empty
+
+    @staticmethod
+    def _check(result):
+        assert isinstance(result, pd.DataFrame)
+
+        assert_index_equal(
+            result.columns,
+            pd.Index(
+                ["symbol", "delisted_date"],
+            ),
+        )
+
+        for i in result.columns:
+            assert pd.notna(result[i]).all(), f"{i} is null"
+
+        assert result["symbol"].is_unique
 
         return result
 
