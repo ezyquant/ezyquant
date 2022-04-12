@@ -100,7 +100,7 @@ class TestGetTradingDates:
         assert len(result) == 0
 
 
-class TestSymbolInfo:
+class TestGetSymbolInfo:
     def test_get_all(self, sdr: SETDataReader):
         result = sdr.get_symbol_info()
 
@@ -813,6 +813,80 @@ class TestGetSymbolsByIndex:
             assert pd.notna(result[i]).all(), f"{i} is null"
 
         assert result["index"].isin(fld.SYMBOL_INDEX_LIST).all()
+
+        return result
+
+
+class TestGetAdjustFactor:
+    def test_all(self, sdr: SETDataReader):
+        result = sdr.get_adjust_factor()
+
+        # Check
+        self._check(result)
+
+        assert not result.empty
+
+    @pytest.mark.parametrize("symbol_list", [["COM7"], ["com7"]])
+    @pytest.mark.parametrize("start_date", [date(2022, 3, 11), None])
+    @pytest.mark.parametrize("end_date", [date(2022, 3, 11), None])
+    @pytest.mark.parametrize("ca_type_list", [["SD"], ["sd"], None])
+    def test_one(
+        self,
+        sdr: SETDataReader,
+        symbol_list: Optional[List[str]],
+        start_date: Optional[date],
+        end_date: Optional[date],
+        ca_type_list: Optional[List[str]],
+    ):
+        result = sdr.get_adjust_factor(
+            symbol_list=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
+            ca_type_list=ca_type_list,
+        )
+
+        # Check
+        self._check(result)
+
+        assert_frame_equal(
+            result,
+            pd.DataFrame(
+                [["COM7", pd.Timestamp("2022-03-11"), "SD", 0.5]],
+                columns=["symbol", "effect_date", "ca_type", "adjust_factor"],
+            ),
+        )
+
+    @pytest.mark.parametrize("symbol_list", [["ABCD"], []])
+    def test_empty(self, sdr: SETDataReader, symbol_list: Optional[List[str]]):
+        result = sdr.get_adjust_factor(symbol_list)
+
+        # Check
+        self._check(result)
+
+        assert result.empty
+
+    @staticmethod
+    def _check(result):
+        assert isinstance(result, pd.DataFrame)
+
+        assert_index_equal(
+            result.columns,
+            pd.Index(
+                [
+                    "symbol",
+                    "effect_date",
+                    "ca_type",
+                    "adjust_factor",
+                ]
+            ),
+        )
+
+        for i in result.columns:
+            assert pd.notna(result[i]).all(), f"{i} is null"
+
+        assert is_df_unique(result[["symbol", "effect_date"]])
+        assert result["ca_type"].isin(["  ", "CR", "PC", "RC", "SD", "XR"]).all()
+        assert (result["adjust_factor"] > 0).all()
 
         return result
 
