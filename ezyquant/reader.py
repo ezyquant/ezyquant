@@ -568,8 +568,8 @@ class SETDataReader:
         -------
         pd.DataFrame
             - as_of_date: date - D_AS_OF
-            - symbol: str - SECURITY.N_SECURITY
             - index: str - SECTOR.N_SECTOR
+            - symbol: str - SECURITY.N_SECURITY
             - seq: int - SECURITY_INDEX.S_SEQ
 
         Note
