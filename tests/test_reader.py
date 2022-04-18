@@ -1090,13 +1090,24 @@ class TestGetDataSymbolQuarterly:
 
         assert not result.empty
 
-    def test_total_revenue(self, sdr: SETDataReader):
+    @pytest.mark.parametrize(
+        ["field", "expected_list"],
+        [
+            (fld.Q_TOTAL_REVENUE, [12455598.38, 11965863.96, 11539297.17, 10075788.94]),
+            (fld.Q_CASH, [872146.45, 602185.66, 1028640.11, 1325286.41]),
+            (fld.Q_COS, [10943791.11, 10405065.63, 9985634.49, 8563360.14]),
+            (fld.Q_NET_CASH_FLOW, [58415.01, -269960.79, 426454.45, 296646.3]),
+        ],
+    )
+    def test_field_with_expected(
+        self, sdr: SETDataReader, field: str, expected_list: List[float]
+    ):
         symbol_list = ["COM7"]
         start_date = date(2021, 3, 3)
         end_date = date(2022, 11, 18)
 
         result = sdr.get_data_symbol_quarterly(
-            fld.Q_TOTAL_REVENUE,
+            field,
             symbol_list=symbol_list,
             start_date=start_date,
             end_date=end_date,
@@ -1109,7 +1120,7 @@ class TestGetDataSymbolQuarterly:
         )
 
         expected = pd.DataFrame(
-            {"COM7": [12455598.38, 11965863.96, 11539297.17, 10075788.94]},
+            {"COM7": expected_list},
             index=pd.DatetimeIndex(
                 ["2021-03-03", "2021-05-19", "2021-08-18", "2021-11-18"]
             ),

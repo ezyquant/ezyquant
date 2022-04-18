@@ -409,7 +409,7 @@ ORDER BY
     "N_ACCOUNT"
 """
 FINANCIAL_STAT_STD_MAP = {
-    "B": {
+    "B": {  # Balance Sheet
         Q_ACCOUNT_PAYABLE: "m_account_payable",
         Q_ACCOUNT_RECEIVABLE: "m_account_receivable",
         Q_ACCRUED_INT_RECEIVE: "m_accrued_int_receive",
@@ -444,7 +444,7 @@ FINANCIAL_STAT_STD_MAP = {
         Q_TOTAL_EQUITY: "m_total_equity",
         Q_TOTAL_LIABILITY: "m_total_liability",
     },
-    "C": {
+    "C": {  # Cashflow Statement
         Q_CHANGE_PPE: "m_change_ppe",
         Q_DIVIDEND: "m_dividend",
         Q_DP: "m_dp",
@@ -453,7 +453,7 @@ FINANCIAL_STAT_STD_MAP = {
         Q_NET_INVESTING: "m_net_investing",
         Q_NET_OPERATING: "m_net_operating",
     },
-    "I": {
+    "I": {  # Income Statement
         Q_BAD_DEBT: "m_bad_debt",
         Q_BROKER_FEE: "m_broker_fee",
         Q_COS: "m_cos",
