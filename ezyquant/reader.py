@@ -1016,8 +1016,8 @@ class SETDataReader:
         -------
         pd.DataFrame
             dataframe contain:
-                - symbol: str as column
-                - trade_date: date as index
+                - symbol(N_SECURITY): str as column
+                - trade_date(D_TRADE): date as index
 
         Examples
         --------
@@ -1126,7 +1126,9 @@ class SETDataReader:
     ) -> pd.DataFrame:
         """Data from table FINANCIAL_SCREEN, FINANCIAL_STAT_STD. If field is
         duplicate in FINANCIAL_SCREEN and FINANCIAL_STAT_STD, the data from
-        FINANCIAL_SCREEN will be used.
+        FINANCIAL_SCREEN will be used. Index date is trade date. Data will not
+        null if first DAILY_STOCK_STAT.D_TRADE which join on D_AS_OF. Null data
+        will be filled with -inf.
 
         Parameters
         ----------
@@ -1135,16 +1137,16 @@ class SETDataReader:
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, case insensitive, must be unique, by default None
         start_date : Optional[date]
-            start of as_of_date (D_AS_OF), by default None
+            start of trade date(DAILY_STOCK_STAT.D_TRADE), by default None
         end_date : Optional[date]
-            end of as_of_date (D_AS_OF), by default None
+            end of trade date(DAILY_STOCK_STAT.D_TRADE), by default None
 
         Returns
         -------
         pd.DataFrame
             dataframe contain:
-                - symbol: str as column
-                - as_of_date: date as index
+                - symbol(N_SECURITY): str as column
+                - trade date(DAILY_STOCK_STAT.D_TRADE): date as index
 
         Examples
         --------
@@ -1157,7 +1159,6 @@ class SETDataReader:
             end_date=end_date,
             period="Q",
         )
-        return pd.DataFrame()
 
     def get_data_symbol_yearly(
         self,
@@ -1168,7 +1169,9 @@ class SETDataReader:
     ) -> pd.DataFrame:
         """Data from table FINANCIAL_SCREEN, FINANCIAL_STAT_STD. If field is
         duplicate in FINANCIAL_SCREEN and FINANCIAL_STAT_STD, the data from
-        FINANCIAL_SCREEN will be used.
+        FINANCIAL_SCREEN will be used. Index date is trade date. Data will not
+        null if first DAILY_STOCK_STAT.D_TRADE which join on D_AS_OF. Null data
+        will be filled with -inf.
 
         Parameters
         ----------
@@ -1177,16 +1180,16 @@ class SETDataReader:
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, case insensitive, must be unique, by default None
         start_date : Optional[date]
-            start of as_of_date (D_AS_OF), by default None
+            start of trade date(DAILY_STOCK_STAT.D_TRADE), by default None
         end_date : Optional[date]
-            end of as_of_date (D_AS_OF), by default None
+            end of trade date(DAILY_STOCK_STAT.D_TRADE), by default None
 
         Returns
         -------
         pd.DataFrame
             dataframe contain:
-                - symbol: str as column
-                - as_of_date: date as index
+                - symbol(N_SECURITY): str as column
+                - trade date(DAILY_STOCK_STAT.D_TRADE): date as index
 
         Examples
         --------
@@ -1203,7 +1206,9 @@ class SETDataReader:
     ) -> pd.DataFrame:
         """Data from table FINANCIAL_SCREEN, FINANCIAL_STAT_STD. If field is
         duplicate in FINANCIAL_SCREEN and FINANCIAL_STAT_STD, the data from
-        FINANCIAL_SCREEN will be used.
+        FINANCIAL_SCREEN will be used. Index date is trade date. Data will not
+        null if first DAILY_STOCK_STAT.D_TRADE which join on D_AS_OF. Null data
+        will be filled with -inf.
 
         Parameters
         ----------
@@ -1212,16 +1217,16 @@ class SETDataReader:
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, case insensitive, must be unique, by default None
         start_date : Optional[date]
-            start of as_of_date (D_AS_OF), by default None
+            start of trade date(DAILY_STOCK_STAT.D_TRADE), by default None
         end_date : Optional[date]
-            end of as_of_date (D_AS_OF), by default None
+            end of trade date(DAILY_STOCK_STAT.D_TRADE), by default None
 
         Returns
         -------
         pd.DataFrame
             dataframe contain:
-                - symbol: str as column
-                - as_of_date: date as index
+                - symbol(N_SECURITY): str as column
+                - trade date(DAILY_STOCK_STAT.D_TRADE): date as index
 
         Examples
         --------
@@ -1238,7 +1243,9 @@ class SETDataReader:
     ) -> pd.DataFrame:
         """Data from table FINANCIAL_SCREEN, FINANCIAL_STAT_STD. If field is
         duplicate in FINANCIAL_SCREEN and FINANCIAL_STAT_STD, the data from
-        FINANCIAL_SCREEN will be used.
+        FINANCIAL_SCREEN will be used. Index date is trade date. Data will not
+        null if first DAILY_STOCK_STAT.D_TRADE which join on D_AS_OF. Null data
+        will be filled with -inf.
 
         Parameters
         ----------
@@ -1247,16 +1254,16 @@ class SETDataReader:
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, case insensitive, must be unique, by default None
         start_date : Optional[date]
-            start of as_of_date (D_AS_OF), by default None
+            start of trade date(DAILY_STOCK_STAT.D_TRADE), by default None
         end_date : Optional[date]
-            end of as_of_date (D_AS_OF), by default None
+            end of trade date(DAILY_STOCK_STAT.D_TRADE), by default None
 
         Returns
         -------
         pd.DataFrame
             dataframe contain:
-                - symbol: str as column
-                - as_of_date: date as index
+                - symbol(N_SECURITY): str as column
+                - trade date(DAILY_STOCK_STAT.D_TRADE): date as index
 
         Examples
         --------
