@@ -10,6 +10,8 @@ from ezyquant.reader import SETDataReader
 
 
 class TestGetTradingDates:
+    """source: https://www.bot.or.th/Thai/FinancialInstitutions/FIholiday/Pages/2022.aspx"""
+
     def test_all(self, sdr: SETDataReader):
         # Test
         result = sdr.get_trading_dates()
@@ -892,32 +894,48 @@ class TestGetAdjustFactor:
 
 
 class TestGetDataSymbolDaily:
+    """source: https://www.tradingview.com/chart/1ytBFuKM/"""
+
     @pytest.mark.parametrize(
-        "field", [getattr(fld, i) for i in dir(fld) if i.startswith("D_")]
+        "field", [getattr(fld, i) for i in dir(fld) if i.startswith("D_")][:5]
     )
     def test_field(self, sdr: SETDataReader, field: str):
+        symbol_list = ["COM7"]
+        start_date = date(2022, 3, 10)
+        end_date = date(2022, 3, 10)
+
         result = sdr.get_data_symbol_daily(
             field,
-            symbol_list=["COM7"],
-            start_date=date(2022, 3, 10),
-            end_date=date(2022, 3, 10),
+            symbol_list=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
         )
 
         # Check
         self._check(result)
+        assert_index_equal(
+            result.index, pd.DatetimeIndex(sdr.get_trading_dates(start_date, end_date))
+        )
 
         assert not result.empty
 
     def test_adjust_close(self, sdr: SETDataReader):
+        symbol_list = ["COM7"]
+        start_date = date(2022, 3, 10)
+        end_date = date(2022, 3, 14)
+
         result = sdr.get_data_symbol_daily(
             "close",
-            symbol_list=["COM7"],
-            start_date=date(2022, 3, 10),
-            end_date=date(2022, 3, 14),
+            symbol_list=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
         )
 
         # Check
         self._check(result)
+        assert_index_equal(
+            result.index, pd.DatetimeIndex(sdr.get_trading_dates(start_date, end_date))
+        )
 
         assert_frame_equal(
             result,
@@ -932,16 +950,23 @@ class TestGetDataSymbolDaily:
         )
 
     def test_not_adjust_close(self, sdr: SETDataReader):
+        symbol_list = ["COM7"]
+        start_date = date(2022, 3, 10)
+        end_date = date(2022, 3, 14)
+
         result = sdr.get_data_symbol_daily(
             "close",
-            symbol_list=["COM7"],
-            start_date=date(2022, 3, 10),
-            end_date=date(2022, 3, 14),
+            symbol_list=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
             adjusted_list=[],
         )
 
         # Check
         self._check(result)
+        assert_index_equal(
+            result.index, pd.DatetimeIndex(sdr.get_trading_dates(start_date, end_date))
+        )
 
         assert_frame_equal(
             result,
@@ -956,15 +981,22 @@ class TestGetDataSymbolDaily:
         )
 
     def test_adjust_volume(self, sdr: SETDataReader):
+        symbol_list = ["COM7"]
+        start_date = date(2022, 3, 10)
+        end_date = date(2022, 3, 14)
+
         result = sdr.get_data_symbol_daily(
             "volume",
-            symbol_list=["COM7"],
-            start_date=date(2022, 3, 10),
-            end_date=date(2022, 3, 14),
+            symbol_list=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
         )
 
         # Check
         self._check(result)
+        assert_index_equal(
+            result.index, pd.DatetimeIndex(sdr.get_trading_dates(start_date, end_date))
+        )
 
         assert_frame_equal(
             result,
@@ -979,16 +1011,23 @@ class TestGetDataSymbolDaily:
         )
 
     def test_not_adjust_volume(self, sdr: SETDataReader):
+        symbol_list = ["COM7"]
+        start_date = date(2022, 3, 10)
+        end_date = date(2022, 3, 14)
+
         result = sdr.get_data_symbol_daily(
             "volume",
-            symbol_list=["COM7"],
-            start_date=date(2022, 3, 10),
-            end_date=date(2022, 3, 14),
+            symbol_list=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
             adjusted_list=[],
         )
 
         # Check
         self._check(result)
+        assert_index_equal(
+            result.index, pd.DatetimeIndex(sdr.get_trading_dates(start_date, end_date))
+        )
 
         assert_frame_equal(
             result,
@@ -1025,6 +1064,63 @@ class TestGetDataSymbolDaily:
         assert (result.columns == result.columns.str.upper()).all()
 
         return result
+
+
+class TestGetDataSymbolQuarterly:
+    @pytest.mark.parametrize(
+        "field", [getattr(fld, i) for i in dir(fld) if i.startswith("Q_")][:5]
+    )
+    def test_field(self, sdr: SETDataReader, field: str):
+        symbol_list = ["COM7"]
+        start_date = date(2021, 1, 1)
+        end_date = date(2022, 1, 1)
+
+        result = sdr.get_data_symbol_quarterly(
+            field,
+            symbol_list=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+        # Check
+        self._check(result)
+        assert_index_equal(
+            result.index, pd.DatetimeIndex(sdr.get_trading_dates(start_date, end_date))
+        )
+
+        assert not result.empty
+
+    def test_total_revenue(self, sdr: SETDataReader):
+        symbol_list = ["COM7"]
+        start_date = date(2021, 3, 3)
+        end_date = date(2022, 11, 18)
+
+        result = sdr.get_data_symbol_quarterly(
+            fld.Q_TOTAL_REVENUE,
+            symbol_list=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+        # Check
+        self._check(result)
+        assert_index_equal(
+            result.index, pd.DatetimeIndex(sdr.get_trading_dates(start_date, end_date))
+        )
+
+        expected = pd.DataFrame(
+            {"COM7": [12455598.38, 11965863.96, 11539297.17, 10075788.94]},
+            index=pd.DatetimeIndex(
+                ["2021-03-03", "2021-05-19", "2021-08-18", "2021-11-18"]
+            ),
+        )
+        expected = expected.reindex(sdr.get_trading_dates(start_date, end_date))  # type: ignore
+
+        assert_frame_equal(result, expected)
+
+    @staticmethod
+    def _check(result):
+        return TestGetDataSymbolDaily._check(result)
 
 
 @pytest.mark.parametrize(
