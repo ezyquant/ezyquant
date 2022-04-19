@@ -114,6 +114,7 @@ class TestGetTradingDates:
         (date(2022, 1, 7), True),
         (date(2022, 1, 8), False),
         (date(2022, 1, 9), False),
+        (date(2022, 1, 10), True),
     ],
 )
 def test_is_trading_date(sdr: SETDataReader, check_date: date, expected: bool):

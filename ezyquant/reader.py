@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import date
 from typing import Iterable, List, Optional
 
 import numpy as np
@@ -44,15 +44,15 @@ class SETDataReader:
         List[date]
             list of trading dates
         """
-        t = Table("CALENDAR", self.__metadata, autoload=True)
+        calendar_table = Table("CALENDAR", self.__metadata, autoload=True)
 
-        stmt = select([t.c.D_TRADE])
+        stmt = select([calendar_table.c.D_TRADE])
         if start_date is not None:
-            stmt = stmt.where(func.DATE(t.c.D_TRADE) >= start_date)
+            stmt = stmt.where(func.DATE(calendar_table.c.D_TRADE) >= start_date)
         if end_date is not None:
-            stmt = stmt.where(func.DATE(t.c.D_TRADE) <= end_date)
+            stmt = stmt.where(func.DATE(calendar_table.c.D_TRADE) <= end_date)
 
-        stmt = stmt.order_by(t.c.D_TRADE)
+        stmt = stmt.order_by(calendar_table.c.D_TRADE)
 
         res = self.__engine.execute(stmt).all()
 
@@ -63,7 +63,7 @@ class SETDataReader:
 
         Parameters
         ----------
-        date_ : date
+        check_date : date
             D_TRADE
 
         Returns
@@ -71,12 +71,16 @@ class SETDataReader:
         bool
             is trading date
         """
-        res = self.get_trading_dates(
-            check_date - timedelta(days=2), check_date + timedelta(days=2)
+        calendar_table = Table("CALENDAR", self.__metadata, autoload=True)
+
+        stmt = select([func.count(calendar_table.c.D_TRADE)]).where(
+            func.DATE(calendar_table.c.D_TRADE) == check_date
         )
-        if check_date in res:
-            return True
-        return False
+
+        res = self.__engine.execute(stmt).scalar()
+
+        assert isinstance(res, int)
+        return res > 0
 
     def is_today_trading_date(self) -> bool:
         """Data from table CALENDAR.
