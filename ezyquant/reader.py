@@ -1,5 +1,5 @@
 from datetime import date, datetime, timedelta
-from typing import Iterable, List, Optional
+from typing import Dict, Iterable, List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -27,8 +27,8 @@ class SETDataReader:
 
     def get_trading_dates(
         self,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[Union[date, datetime]] = None,
+        end_date: Optional[Union[date, datetime]] = None,
     ) -> List[date]:
         """Data from table CALENDAR.
 
@@ -48,9 +48,11 @@ class SETDataReader:
 
         stmt = select([t.c.D_TRADE])
         if start_date is not None:
-            stmt = stmt.where(func.DATE(t.c.D_TRADE) >= start_date)
+            stmt = stmt.where(t.c.D_TRADE >= start_date)
         if end_date is not None:
-            stmt = stmt.where(func.DATE(t.c.D_TRADE) <= end_date)
+            min_time = datetime.min.time()
+            end_date = datetime.combine(end_date, min_time) + timedelta(minutes=1)
+            stmt = stmt.where(t.c.D_TRADE <= end_date)
 
         stmt = stmt.order_by(t.c.D_TRADE)
 
@@ -71,7 +73,12 @@ class SETDataReader:
         bool
             is trading date
         """
-        return True
+        res = self.get_trading_dates(
+            check_date - timedelta(days=2), check_date + timedelta(days=2)
+        )
+        if check_date in res:
+            return True
+        return False
 
     def is_today_trading_date(self) -> bool:
         """Data from table CALENDAR.
@@ -386,12 +393,14 @@ class SETDataReader:
                     func.trim(security.c.N_SECURITY).label("symbol"),
                     right.c.D_SIGN.label("ex_date"),
                     right.c.D_BEG_PAID.label("pay_date"),
-                    right.c.N_CA_TYPE.label("ca_type"),
+                    func.trim(right.c.N_CA_TYPE).label("ca_type"),
                     right.c.Z_RIGHTS.label("dps"),
                 ]
             )
             .select_from(j)
             .where(func.trim(right.c.N_CA_TYPE).in_(["CD", "SD"]))
+            .where(func.trim(right.c.F_CANCEL) != "C")
+            .where(func.trim(right.c.Z_RIGHTS) > 0.0)
         )
 
         stmt = self._list_start_end_condition(
@@ -405,6 +414,9 @@ class SETDataReader:
         if ca_type_list != None:
             stmt = stmt.where(right.c.N_CA_TYPE.in_(ca_type_list))
         res_df = pd.read_sql(stmt, self.__engine)
+        res_df = res_df.dropna()
+        res_df = res_df[res_df["dps"] > 0.0]
+        res_df = res_df.reset_index(drop=True)
         return res_df
 
     def get_delisted(
@@ -521,7 +533,7 @@ class SETDataReader:
             [
                 func.trim(security.c.N_SECURITY).label("symbol"),
                 sign_post.c.D_HOLD.label("hold_date"),
-                sign_post.c.N_SIGN.label("sign"),
+                func.trim(sign_post.c.N_SIGN).label("sign"),
             ]
         ).select_from(j)
         stmt = self._list_start_end_condition(
@@ -533,8 +545,8 @@ class SETDataReader:
             col_date=sign_post.c.D_HOLD,
         )
         if sign_list != None:
+            sign_list = [x.upper() for x in sign_list]
             stmt = stmt.where(func.trim(sign_post.c.N_SIGN).in_(sign_list))
-        print(stmt)
         res_df = pd.read_sql(stmt, self.__engine)
         return res_df
 
@@ -566,8 +578,8 @@ class SETDataReader:
         -------
         pd.DataFrame
             - as_of_date: date - D_AS_OF
-            - index: str - SECTOR.N_SECTOR
             - symbol: str - SECURITY.N_SECURITY
+            - index: str - SECTOR.N_SECTOR
             - seq: int - SECURITY_INDEX.S_SEQ
 
         Note
@@ -697,11 +709,12 @@ class SETDataReader:
         period: str,
         field: str,
         symbol_list: Optional[Iterable[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[Union[date, datetime]] = None,
+        end_date: Optional[Union[date, datetime]] = None,
         is_to_dict: bool = True,
     ) -> pd.DataFrame:
-        """fill nan with -np.inf if is_to_dict.
+        """
+        fill nan with -np.inf if is_to_dict
 
         period: str
             'Q' for Quarter, 'Y' for Quarter, 'YTD', 'TTM', 'AVG'
@@ -738,8 +751,8 @@ class SETDataReader:
         period: str,
         field: str,
         symbol_list: Optional[Iterable[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[Union[date, datetime]] = None,
+        end_date: Optional[Union[date, datetime]] = None,
     ) -> pd.DataFrame:
         """
         period: str
@@ -801,8 +814,8 @@ class SETDataReader:
         period: str,
         field: str,
         symbol_list: Optional[Iterable[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[Union[date, datetime]] = None,
+        end_date: Optional[Union[date, datetime]] = None,
     ) -> pd.DataFrame:
         """
         period: str
@@ -889,11 +902,12 @@ class SETDataReader:
         df = df.set_index("trading_datetime")
 
         if period == "Y":
-            """For Yearly fundamental "I_ACCT_TYPE".
-
-            - B use "M_ACCOUNT"
-            - I use "M_ACC_ACCOUNT_12M"
-            - C use "M_ACC_ACCOUNT_12M"
+            """
+            For Yearly fundamental
+            "I_ACCT_TYPE"
+                B use "M_ACCOUNT"
+                I use "M_ACC_ACCOUNT_12M"
+                C use "M_ACC_ACCOUNT_12M"
             """
             df = df.fillna({"value": df["M_ACCOUNT"]}).drop(columns="M_ACCOUNT")
 
@@ -922,10 +936,12 @@ class SETDataReader:
             "dps",
         },
         divide_columns: Iterable[str] = {"volume"},
-        start_date: Optional[date] = None,
+        start_date: Optional[Union[date, datetime]] = None,
         adjust_list: List[str] = None,
     ) -> pd.DataFrame:
-        """df index is trading_datetime and columns contain symbol."""
+        """
+        df index is trading_datetime and columns contain symbol
+        """
         if df.empty or (
             not set(df.columns) & (set(multiply_columns) | set(divide_columns))
         ):
@@ -1352,7 +1368,8 @@ class SETDataReader:
         end_date,
         col_date,
     ):
-        """helper function for make query.
+        """
+        helper function for make query
 
         Parameters
         ----------
@@ -1368,7 +1385,9 @@ class SETDataReader:
                 func.trim(col_list).in_([s.upper() for s in list_condition])
             )
         if start_date != None:
-            query_object = query_object.where(func.DATE(col_date) >= start_date)
+            query_object = query_object.where(col_date >= start_date)
         if end_date != None:
-            query_object = query_object.where(func.DATE(col_date) <= end_date)
+            min_time = datetime.min.time()
+            end_date = datetime.combine(end_date, min_time) + timedelta(minutes=1)
+            query_object = query_object.where(col_date <= end_date)
         return query_object
