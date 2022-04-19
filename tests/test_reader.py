@@ -102,6 +102,26 @@ class TestGetTradingDates:
         assert len(result) == 0
 
 
+@pytest.mark.parametrize(
+    ("check_date", "expected"),
+    [
+        (date(2022, 1, 1), False),
+        (date(2022, 1, 2), False),
+        (date(2022, 1, 3), False),
+        (date(2022, 1, 4), True),
+        (date(2022, 1, 5), True),
+        (date(2022, 1, 6), True),
+        (date(2022, 1, 7), True),
+        (date(2022, 1, 8), False),
+        (date(2022, 1, 9), False),
+    ],
+)
+def test_is_trading_date(sdr: SETDataReader, check_date: date, expected: bool):
+    result = sdr.is_trading_date(check_date)
+
+    assert result == expected
+
+
 class TestGetSymbolInfo:
     def test_get_all(self, sdr: SETDataReader):
         result = sdr.get_symbol_info()
@@ -1191,6 +1211,9 @@ class TestGetDataSymbolYtd:
         (pd.DataFrame(), True),
         (pd.DataFrame([1, 1]), False),
         (pd.DataFrame([1, 2]), True),
+        (pd.DataFrame([1, 2, 3]), True),
+        (pd.DataFrame([1, 1, 2]), False),
+        (pd.DataFrame([1, 1, 2, 2]), False),
         (pd.DataFrame([[1, 2], [1, 2]]), False),
         (pd.DataFrame([[1, 1], [1, 2]]), True),
     ],
