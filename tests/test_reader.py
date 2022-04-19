@@ -506,7 +506,7 @@ class TestGetDividend:
         )
 
     def test_adjust(self, sdr: SETDataReader):
-        """Source: https://www.tradingview.com/chart/1ytBFuKM/"""
+        """source: https://www.tradingview.com/chart/?symbol=SET:COM7"""
         # Test
         result = sdr.get_dividend(
             ["COM7"], ca_type_list=["CD"], start_date=date(2020, 1, 1)
@@ -871,7 +871,7 @@ class TestGetSymbolsByIndex:
         for i in result.columns:
             assert pd.notna(result[i]).all(), f"{i} is null"
 
-        assert result["index"].isin(fld.SYMBOL_INDEX_LIST).all()
+        assert result["index"].isin(fld.INDEX_LIST).all()
 
         return result
 
@@ -954,7 +954,7 @@ class TestGetAdjustFactor:
 
 
 class TestGetDataSymbolDaily:
-    """source: https://www.tradingview.com/chart/1ytBFuKM/"""
+    """source: https://www.tradingview.com/chart/?symbol=SET:COM7"""
 
     @pytest.mark.parametrize(
         "field", [getattr(fld, i) for i in dir(fld) if i.startswith("D_")][:5]
@@ -1010,6 +1010,9 @@ class TestGetDataSymbolDaily:
                 ],
             ),
         )
+
+    def test_adjust_2_time(self, sdr: SETDataReader):
+        pass
 
     def test_not_adjust_close(self, sdr: SETDataReader):
         symbol_list = ["COM7"]
@@ -1173,7 +1176,7 @@ class TestGetDataSymbolQuarterly:
     ):
         symbol_list = ["COM7"]
         start_date = date(2021, 3, 3)
-        end_date = date(2022, 11, 18)
+        end_date = date(2021, 11, 18)
 
         # Test
         result = sdr.get_data_symbol_quarterly(
@@ -1203,7 +1206,7 @@ class TestGetDataSymbolQuarterly:
     def test_null_data(self, sdr: SETDataReader, field: str):
         symbol_list = ["TTB"]
         start_date = date(2021, 3, 3)
-        end_date = date(2022, 11, 18)
+        end_date = date(2021, 11, 18)
 
         # Test
         result = sdr.get_data_symbol_quarterly(
@@ -1259,9 +1262,7 @@ class TestGetDataIndexDaily:
     )
     def test_field(self, sdr: SETDataReader, field: str):
         # Test
-        result = sdr.get_data_index_daily(
-            field=field,
-        )
+        result = sdr.get_data_index_daily(field=field)
 
         # Check
         self._check(result)
@@ -1283,14 +1284,14 @@ class TestGetDataIndexDaily:
         ],
     )
     def test_field_with_expected(self, sdr: SETDataReader, field: str, expected: float):
-        """Source: https://www.tradingview.com/chart/1ytBFuKM/?symbol=SET%3ASET"""
-        start_date = date(2021, 1, 4)
-        end_date = date(2021, 1, 4)
+        """source: https://www.tradingview.com/chart/?symbol=SET:SET"""
+        start_date = date(2022, 1, 4)
+        end_date = date(2022, 1, 4)
 
         # Test
         result = sdr.get_data_index_daily(
             field=field,
-            index_list=["SET"],
+            index_list=[fld.INDEX_SET],
             start_date=start_date,
             end_date=end_date,
         )
@@ -1302,8 +1303,8 @@ class TestGetDataIndexDaily:
             result,
             pd.DataFrame(
                 [[expected]],
-                columns=["SET"],
-                index=pd.DatetimeIndex(["2021-01-04"]),
+                columns=[fld.INDEX_SET],
+                index=pd.DatetimeIndex(["2022-01-04"]),
             ),
         )
 
@@ -1328,13 +1329,88 @@ class TestGetDataIndexDaily:
         assert result.index.is_unique
         assert (result.index == result.index.normalize()).all()  # type: ignore
 
-        assert result.columns.isin(fld.SYMBOL_INDEX_LIST)
+        assert result.columns.isin(fld.INDEX_LIST)
 
         return result
 
 
 class TestGetDataSectorDaily:
-    pass
+    @pytest.mark.parametrize(
+        "field", [getattr(fld, i) for i in dir(fld) if i.startswith("D_SECTOR")][:5]
+    )
+    def test_field(self, sdr: SETDataReader, field: str):
+        # Test
+        result = sdr.get_data_sector_daily(field=field)
+
+        # Check
+        self._check(result)
+
+        assert not result.empty
+
+    @pytest.mark.parametrize(
+        ["field", "expected"],
+        [
+            (fld.D_SECTOR_INDEX_OPEN, 297.55),
+            (fld.D_SECTOR_INDEX_HIGH, 299.36),
+            (fld.D_SECTOR_INDEX_LOW, 293.34),
+            (fld.D_SECTOR_INDEX_CLOSE, 296.13),
+            (fld.D_SECTOR_VOLUME, 124063453),
+            (fld.D_SECTOR_VALUE, 795051373.2),
+            (fld.D_SECTOR_MKT_PE, 4.50),
+            (fld.D_SECTOR_MKT_PBV, 1.29),
+            (fld.D_SECTOR_MKT_YIELD, 4.30),
+            (fld.D_SECTOR_MKT_CAP, 108032636545.26),
+        ],
+    )
+    def test_field_with_expected(self, sdr: SETDataReader, field: str, expected: float):
+        """source: https://www.tradingview.com/chart/?symbol=SET:AGRI"""
+        start_date = date(2022, 1, 4)
+        end_date = date(2022, 1, 4)
+
+        # Test
+        result = sdr.get_data_sector_daily(
+            field=field,
+            sector_list=[fld.SECTOR_AGRI],
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+        # Check
+        self._check(result)
+
+        assert_frame_equal(
+            result,
+            pd.DataFrame(
+                [[expected]],
+                columns=[fld.SECTOR_AGRI],
+                index=pd.DatetimeIndex(["2022-01-04"]),
+            ),
+        )
+
+    @pytest.mark.parametrize(
+        "field", [getattr(fld, i) for i in dir(fld) if i.startswith("D_SECTOR")]
+    )
+    def test_empty(self, sdr: SETDataReader, field: str):
+        # Test
+        result = sdr.get_data_sector_daily(field=field, sector_list=[])
+
+        # Check
+        self._check(result)
+
+        assert result.empty
+
+    @staticmethod
+    def _check(result):
+        assert isinstance(result, pd.DataFrame)
+
+        assert isinstance(result.index, pd.DatetimeIndex)
+        assert result.index.is_monotonic_increasing
+        assert result.index.is_unique
+        assert (result.index == result.index.normalize()).all()  # type: ignore
+
+        assert result.columns.isin(fld.SECTOR_LIST)
+
+        return result
 
 
 @pytest.mark.parametrize(

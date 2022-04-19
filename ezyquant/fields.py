@@ -90,18 +90,18 @@ FROM
     "SECURITY_INDEX"
     JOIN "SECTOR" USING("I_SECTOR")
 """
-SYMBOL_INDEX_SETWB = "SETWB"
-SYMBOL_INDEX_SETTHSI = "SETTHSI"
-SYMBOL_INDEX_SETCLMV = "SETCLMV"
-SYMBOL_INDEX_SETHD = "SETHD"
-SYMBOL_INDEX_SSET = "sSET"
-SYMBOL_INDEX_SET100 = "SET100"
-SYMBOL_INDEX_SET50 = "SET50"
+INDEX_SET = "SET"
+INDEX_MAI = "mai"
+INDEX_SETWB = "SETWB"
+INDEX_SETTHSI = "SETTHSI"
+INDEX_SETCLMV = "SETCLMV"
+INDEX_SETHD = "SETHD"
+INDEX_SSET = "sSET"
+INDEX_SET100 = "SET100"
+INDEX_SET50 = "SET50"
 
-SYMBOL_INDEX_LIST = [
-    v
-    for k, v in locals().items()
-    if isinstance(k, str) and k.startswith("SYMBOL_INDEX_")
+INDEX_LIST = [
+    v for k, v in locals().items() if isinstance(k, str) and k.startswith("INDEX_")
 ]
 
 D_PRIOR = "prior"  # last_close
