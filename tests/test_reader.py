@@ -1067,6 +1067,8 @@ class TestGetDataSymbolDaily:
 
 
 class TestGetDataSymbolQuarterly:
+    _check = staticmethod(TestGetDataSymbolDaily._check)
+
     @pytest.mark.parametrize(
         "field", [getattr(fld, i) for i in dir(fld) if i.startswith("Q_")][:5]
     )
@@ -1076,7 +1078,7 @@ class TestGetDataSymbolQuarterly:
         end_date = date(2022, 1, 1)
 
         result = sdr.get_data_symbol_quarterly(
-            field,
+            field=field,
             symbol_list=symbol_list,
             start_date=start_date,
             end_date=end_date,
@@ -1107,7 +1109,7 @@ class TestGetDataSymbolQuarterly:
         end_date = date(2022, 11, 18)
 
         result = sdr.get_data_symbol_quarterly(
-            field,
+            field=field,
             symbol_list=symbol_list,
             start_date=start_date,
             end_date=end_date,
@@ -1129,9 +1131,44 @@ class TestGetDataSymbolQuarterly:
 
         assert_frame_equal(result, expected)
 
-    @staticmethod
-    def _check(result):
-        return TestGetDataSymbolDaily._check(result)
+    @pytest.mark.parametrize("field", [fld.Q_GROSS_PROFIT_MARGIN])
+    def test_null_data(self, sdr: SETDataReader, field: str):
+        symbol_list = ["TTB"]
+        start_date = date(2021, 3, 3)
+        end_date = date(2022, 11, 18)
+
+        result = sdr.get_data_symbol_quarterly(
+            field=field,
+            symbol_list=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+        # Check
+        self._check(result)
+        assert_index_equal(
+            result.index, pd.DatetimeIndex(sdr.get_trading_dates(start_date, end_date))
+        )
+
+        expected = pd.DataFrame(
+            {"TTB": [-float("inf"), -float("inf"), -float("inf"), -float("inf")]},
+            index=pd.DatetimeIndex(
+                ["2021-03-01", "2021-05-13", "2021-08-27", "2021-11-11"]
+            ),
+        )
+        expected = expected.reindex(sdr.get_trading_dates(start_date, end_date))  # type: ignore
+
+        assert_frame_equal(result, expected)
+
+    @pytest.mark.parametrize(
+        "field", [getattr(fld, i) for i in dir(fld) if i.startswith("Q_")]
+    )
+    def test_empty(self, sdr: SETDataReader, field: str):
+        result = sdr.get_data_symbol_quarterly(field=field, symbol_list=[])
+
+        # Check
+        self._check(result)
+        assert result.empty
 
 
 @pytest.mark.parametrize(

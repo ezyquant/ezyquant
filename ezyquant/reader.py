@@ -997,7 +997,9 @@ class SETDataReader:
         end_date: Optional[date] = None,
         adjusted_list: List[str] = ["  ", "CR", "PC", "RC", "SD", "XR"],
     ) -> pd.DataFrame:
-        """Data from table DAILY_STOCK_TRADE, DAILY_STOCK_STAT.
+        """Data from table DAILY_STOCK_TRADE, DAILY_STOCK_STAT. Replace 0 with
+        NaN in following field e.g. prior, open, high, low, close, average,
+        last_bid, last_offer.
 
         Parameters
         ----------
@@ -1126,8 +1128,9 @@ class SETDataReader:
     ) -> pd.DataFrame:
         """Data from table FINANCIAL_SCREEN, FINANCIAL_STAT_STD. If field is
         duplicate in FINANCIAL_SCREEN and FINANCIAL_STAT_STD, the data from
-        FINANCIAL_SCREEN will be used. Index date is trade date. Data will not
-        null if first DAILY_STOCK_STAT.D_TRADE which join on D_AS_OF. Null data
+        FINANCIAL_SCREEN will be used. Index date is trade
+        date(DAILY_STOCK_STAT.D_TRADE). Data is showing at first
+        DAILY_STOCK_STAT.D_TRADE which join on D_AS_OF. Null data in database
         will be filled with -inf.
 
         Parameters
@@ -1169,8 +1172,9 @@ class SETDataReader:
     ) -> pd.DataFrame:
         """Data from table FINANCIAL_SCREEN, FINANCIAL_STAT_STD. If field is
         duplicate in FINANCIAL_SCREEN and FINANCIAL_STAT_STD, the data from
-        FINANCIAL_SCREEN will be used. Index date is trade date. Data will not
-        null if first DAILY_STOCK_STAT.D_TRADE which join on D_AS_OF. Null data
+        FINANCIAL_SCREEN will be used. Index date is trade
+        date(DAILY_STOCK_STAT.D_TRADE). Data is showing at first
+        DAILY_STOCK_STAT.D_TRADE which join on D_AS_OF. Null data in database
         will be filled with -inf.
 
         Parameters
@@ -1206,8 +1210,9 @@ class SETDataReader:
     ) -> pd.DataFrame:
         """Data from table FINANCIAL_SCREEN, FINANCIAL_STAT_STD. If field is
         duplicate in FINANCIAL_SCREEN and FINANCIAL_STAT_STD, the data from
-        FINANCIAL_SCREEN will be used. Index date is trade date. Data will not
-        null if first DAILY_STOCK_STAT.D_TRADE which join on D_AS_OF. Null data
+        FINANCIAL_SCREEN will be used. Index date is trade
+        date(DAILY_STOCK_STAT.D_TRADE). Data is showing at first
+        DAILY_STOCK_STAT.D_TRADE which join on D_AS_OF. Null data in database
         will be filled with -inf.
 
         Parameters
@@ -1243,8 +1248,9 @@ class SETDataReader:
     ) -> pd.DataFrame:
         """Data from table FINANCIAL_SCREEN, FINANCIAL_STAT_STD. If field is
         duplicate in FINANCIAL_SCREEN and FINANCIAL_STAT_STD, the data from
-        FINANCIAL_SCREEN will be used. Index date is trade date. Data will not
-        null if first DAILY_STOCK_STAT.D_TRADE which join on D_AS_OF. Null data
+        FINANCIAL_SCREEN will be used. Index date is trade
+        date(DAILY_STOCK_STAT.D_TRADE). Data is showing at first
+        DAILY_STOCK_STAT.D_TRADE which join on D_AS_OF. Null data in database
         will be filled with -inf.
 
         Parameters
