@@ -980,18 +980,133 @@ class TestGetDataSymbolDaily:
 
         assert not result.empty
 
-    def test_adjust_close(self, sdr: SETDataReader):
-        symbol_list = ["COM7"]
-        start_date = date(2022, 3, 10)
-        end_date = date(2022, 3, 14)
-
+    @pytest.mark.parametrize(
+        ("field", "symbol", "start_date", "end_date", "is_adjust", "expected"),
+        [
+            (
+                # adjust close 1 time
+                "close",
+                "COM7",
+                date(2022, 3, 10),
+                date(2022, 3, 14),
+                True,
+                pd.DataFrame(
+                    {"COM7": [41.75, 42.25, 40.75]},
+                    index=[
+                        pd.Timestamp("2022-03-10"),
+                        pd.Timestamp("2022-03-11"),
+                        pd.Timestamp("2022-03-14"),
+                    ],
+                ),
+            ),
+            (
+                # adjust close 2 time (first)
+                "close",
+                "MALEE",
+                date(2013, 4, 17),
+                date(2013, 4, 19),
+                True,
+                pd.DataFrame(
+                    {"MALEE": [36.75, 37.15, 36.90]},
+                    index=[
+                        pd.Timestamp("2013-04-17"),
+                        pd.Timestamp("2013-04-18"),
+                        pd.Timestamp("2013-04-19"),
+                    ],
+                ),
+            ),
+            (
+                # adjust close 2 time (last)
+                "close",
+                "MALEE",
+                date(2017, 5, 15),
+                date(2017, 5, 17),
+                True,
+                pd.DataFrame(
+                    {"MALEE": [50.75, 53.25, 54.0]},
+                    index=[
+                        pd.Timestamp("2017-05-15"),
+                        pd.Timestamp("2017-05-16"),
+                        pd.Timestamp("2017-05-17"),
+                    ],
+                ),
+            ),
+            (
+                # not adjust close
+                "close",
+                "COM7",
+                date(2022, 3, 10),
+                date(2022, 3, 14),
+                False,
+                pd.DataFrame(
+                    {"COM7": [83.50, 42.25, 40.75]},
+                    index=[
+                        pd.Timestamp("2022-03-10"),
+                        pd.Timestamp("2022-03-11"),
+                        pd.Timestamp("2022-03-14"),
+                    ],
+                ),
+            ),
+            (
+                # adjust volume 1 time
+                "volume",
+                "COM7",
+                date(2022, 3, 10),
+                date(2022, 3, 14),
+                True,
+                pd.DataFrame(
+                    {"COM7": [41811200, 35821300, 23099500]},
+                    index=[
+                        pd.Timestamp("2022-03-10"),
+                        pd.Timestamp("2022-03-11"),
+                        pd.Timestamp("2022-03-14"),
+                    ],
+                ),
+            ),
+            (
+                # not adjust volume
+                "volume",
+                "COM7",
+                date(2022, 3, 10),
+                date(2022, 3, 14),
+                False,
+                pd.DataFrame(
+                    {"COM7": [20905600, 35821300, 23099500]},
+                    index=[
+                        pd.Timestamp("2022-03-10"),
+                        pd.Timestamp("2022-03-11"),
+                        pd.Timestamp("2022-03-14"),
+                    ],
+                ),
+            ),
+        ],
+    )
+    def test_with_expect(
+        self,
+        sdr: SETDataReader,
+        field: str,
+        symbol: str,
+        start_date: date,
+        end_date: date,
+        is_adjust: bool,
+        expected: pd.DataFrame,
+    ):
         # Test
-        result = sdr.get_data_symbol_daily(
-            "close",
-            symbol_list=symbol_list,
-            start_date=start_date,
-            end_date=end_date,
-        )
+        if is_adjust:
+            result = sdr.get_data_symbol_daily(
+                field=field,
+                symbol_list=[symbol],
+                start_date=start_date,
+                end_date=end_date,
+            )
+        else:
+            result = sdr.get_data_symbol_daily(
+                "close",
+                symbol_list=[symbol],
+                start_date=start_date,
+                end_date=end_date,
+                adjusted_list=[],
+            )
 
         # Check
         self._check(result)
@@ -999,122 +1114,11 @@ class TestGetDataSymbolDaily:
             result.index, pd.DatetimeIndex(sdr.get_trading_dates(start_date, end_date))
         )
 
-        assert_frame_equal(
-            result,
-            pd.DataFrame(
-                {"COM7": [41.75, 42.25, 40.75]},
-                index=[
-                    pd.Timestamp("2022-03-10"),
-                    pd.Timestamp("2022-03-11"),
-                    pd.Timestamp("2022-03-14"),
-                ],
-            ),
-        )
-
-    def test_adjust_2_time(self, sdr: SETDataReader):
-        pass
-
-    def test_not_adjust_close(self, sdr: SETDataReader):
-        symbol_list = ["COM7"]
-        start_date = date(2022, 3, 10)
-        end_date = date(2022, 3, 14)
-
-        # Test
-        result = sdr.get_data_symbol_daily(
-            "close",
-            symbol_list=symbol_list,
-            start_date=start_date,
-            end_date=end_date,
-            adjusted_list=[],
-        )
-
-        # Check
-        self._check(result)
-        assert_index_equal(
-            result.index, pd.DatetimeIndex(sdr.get_trading_dates(start_date, end_date))
-        )
-
-        assert_frame_equal(
-            result,
-            pd.DataFrame(
-                {"COM7": [83.50, 42.25, 40.75]},
-                index=[
-                    pd.Timestamp("2022-03-10"),
-                    pd.Timestamp("2022-03-11"),
-                    pd.Timestamp("2022-03-14"),
-                ],
-            ),
-        )
-
-    def test_adjust_volume(self, sdr: SETDataReader):
-        symbol_list = ["COM7"]
-        start_date = date(2022, 3, 10)
-        end_date = date(2022, 3, 14)
-
-        # Test
-        result = sdr.get_data_symbol_daily(
-            "volume",
-            symbol_list=symbol_list,
-            start_date=start_date,
-            end_date=end_date,
-        )
-
-        # Check
-        self._check(result)
-        assert_index_equal(
-            result.index, pd.DatetimeIndex(sdr.get_trading_dates(start_date, end_date))
-        )
-
-        assert_frame_equal(
-            result,
-            pd.DataFrame(
-                {"COM7": [41811200, 35821300, 23099500]},
-                index=[
-                    pd.Timestamp("2022-03-10"),
-                    pd.Timestamp("2022-03-11"),
-                    pd.Timestamp("2022-03-14"),
-                ],
-            ),
-        )
-
-    def test_not_adjust_volume(self, sdr: SETDataReader):
-        symbol_list = ["COM7"]
-        start_date = date(2022, 3, 10)
-        end_date = date(2022, 3, 14)
-
-        # Test
-        result = sdr.get_data_symbol_daily(
-            "volume",
-            symbol_list=symbol_list,
-            start_date=start_date,
-            end_date=end_date,
-            adjusted_list=[],
-        )
-
-        # Check
-        self._check(result)
-        assert_index_equal(
-            result.index, pd.DatetimeIndex(sdr.get_trading_dates(start_date, end_date))
-        )
-
-        assert_frame_equal(
-            result,
-            pd.DataFrame(
-                {"COM7": [20905600, 35821300, 23099500]},
-                index=[
-                    pd.Timestamp("2022-03-10"),
-                    pd.Timestamp("2022-03-11"),
-                    pd.Timestamp("2022-03-14"),
-                ],
-            ),
-        )
+        assert_frame_equal(result, expected)
 
     def test_empty(self, sdr: SETDataReader):
         # Test
-        result = sdr.get_data_symbol_daily(
-            "close",
-            symbol_list=[],
-        )
+        result = sdr.get_data_symbol_daily("close", symbol_list=[])
 
         # Check
         self._check(result)
