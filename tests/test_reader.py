@@ -483,14 +483,13 @@ class TestGetDividend:
                         "CD",
                         0.4,
                     ],
-                    # D_BEG_PAID is null in database
-                    # [
-                    #     "COM7",
-                    #     pd.Timestamp("2021-04-29"),
-                    #     pd.Timestamp("2021-05-21"),
-                    #     "CD",
-                    #     0.5,
-                    # ],
+                    [
+                        "COM7",
+                        pd.Timestamp("2021-04-29"),
+                        None,  # D_BEG_PAID is null in database
+                        "CD",
+                        0.5,
+                    ],
                     [
                         "COM7",
                         pd.Timestamp("2022-03-11"),
@@ -564,10 +563,11 @@ class TestGetDividend:
             ),
         )
 
-        for i in result.columns:
-            assert pd.notna(result[i]).all(), f"{i} is null"
+        # ex_date and pay_date can null in database
+        assert pd.notna(result["symbol"]).all()
+        assert pd.notna(result["ca_type"]).all()
+        assert pd.notna(result["dps"]).all()
 
-        assert (result["pay_date"] >= result["ex_date"]).all()
         assert result["ca_type"].isin(["CD", "SD"]).all()
         assert (result["dps"] > 0).all()
 

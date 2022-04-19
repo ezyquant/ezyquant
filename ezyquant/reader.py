@@ -326,7 +326,7 @@ class SETDataReader:
     ) -> pd.DataFrame:
         """Data from table RIGHTS_BENEFIT. Include only Cash Dividend (CA) and
         Stock Dividend (SD). Not include Cancelled (F_CANCEL!='C') and dps more
-        than 0 (Z_RIGHTS>0).
+        than 0 (Z_RIGHTS>0). ex_date and pay_date can be null.
 
         Parameters
         ----------
@@ -398,7 +398,7 @@ class SETDataReader:
             .select_from(j)
             .where(func.trim(right.c.N_CA_TYPE).in_(["CD", "SD"]))
             .where(func.trim(right.c.F_CANCEL) != "C")
-            .where(func.trim(right.c.Z_RIGHTS) > 0.0)
+            .where(right.c.Z_RIGHTS > 0)
         )
 
         stmt = self._list_start_end_condition(
