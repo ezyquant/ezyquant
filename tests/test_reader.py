@@ -463,6 +463,7 @@ class TestGetDividend:
         )
 
     def test_adjust(self, sdr: SETDataReader):
+        """Source: https://www.tradingview.com/chart/1ytBFuKM/"""
         result = sdr.get_dividend(
             ["COM7"], ca_type_list=["CD"], start_date=date(2020, 1, 1)
         )
@@ -482,13 +483,14 @@ class TestGetDividend:
                         "CD",
                         0.4,
                     ],
-                    [
-                        "COM7",
-                        pd.Timestamp("2021-04-29"),
-                        pd.Timestamp("2021-05-21"),
-                        "CD",
-                        0.5,
-                    ],
+                    # D_BEG_PAID is null in database
+                    # [
+                    #     "COM7",
+                    #     pd.Timestamp("2021-04-29"),
+                    #     pd.Timestamp("2021-05-21"),
+                    #     "CD",
+                    #     0.5,
+                    # ],
                     [
                         "COM7",
                         pd.Timestamp("2022-03-11"),
@@ -1169,6 +1171,18 @@ class TestGetDataSymbolQuarterly:
         # Check
         self._check(result)
         assert result.empty
+
+
+class TestGetDataSymbolYearly:
+    _check = staticmethod(TestGetDataSymbolDaily._check)
+
+
+class TestGetDataSymbolTtm:
+    _check = staticmethod(TestGetDataSymbolDaily._check)
+
+
+class TestGetDataSymbolYtd:
+    _check = staticmethod(TestGetDataSymbolDaily._check)
 
 
 @pytest.mark.parametrize(
