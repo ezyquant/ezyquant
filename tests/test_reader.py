@@ -118,13 +118,22 @@ class TestGetTradingDates:
     ],
 )
 def test_is_trading_date(sdr: SETDataReader, check_date: date, expected: bool):
+    # Test
     result = sdr.is_trading_date(check_date)
 
     assert result == expected
 
 
+def test_is_today_trading_date(sdr: SETDataReader):
+    # Test
+    result = sdr.is_today_trading_date()
+
+    assert isinstance(result, bool)
+
+
 class TestGetSymbolInfo:
     def test_get_all(self, sdr: SETDataReader):
+        # Test
         result = sdr.get_symbol_info()
 
         # Check
@@ -133,6 +142,7 @@ class TestGetSymbolInfo:
         assert not result.empty
 
     def test_market(self, sdr: SETDataReader):
+        # Test
         result = sdr.get_symbol_info(market=fld.MARKET_MAI)
 
         # Check
@@ -144,6 +154,7 @@ class TestGetSymbolInfo:
         assert "STA" in result["symbol"]
 
     def test_industry(self, sdr: SETDataReader):
+        # Test
         result = sdr.get_symbol_info(industry=fld.INDUSTRY_AGRO)
 
         # Check
@@ -158,6 +169,7 @@ class TestGetSymbolInfo:
         assert "STA" in result["symbol"]
 
     def test_sector(self, sdr: SETDataReader):
+        # Test
         result = sdr.get_symbol_info(sector=fld.SECTOR_AGRI)
 
         # Check
@@ -181,6 +193,7 @@ class TestGetSymbolInfo:
         industry: Optional[str],
         sector: Optional[str],
     ):
+        # Test
         result = sdr.get_symbol_info(
             symbol_list=symbol_list, market=market, industry=industry, sector=sector
         )
@@ -223,6 +236,7 @@ class TestGetSymbolInfo:
 
     @pytest.mark.parametrize("symbol_list", [["ABCD"], []])
     def test_empty(self, sdr: SETDataReader, symbol_list: List[str]):
+        # Test
         result = sdr.get_symbol_info(symbol_list)
 
         # Check
@@ -266,6 +280,7 @@ class TestGetSymbolInfo:
 
 class TestGetCompanyInfo:
     def test_all(self, sdr: SETDataReader):
+        # Test
         result = sdr.get_company_info()
 
         # Check
@@ -274,6 +289,7 @@ class TestGetCompanyInfo:
         assert not result.empty
 
     def test_one(self, sdr: SETDataReader):
+        # Test
         result = sdr.get_company_info(["PTT"])
 
         # Check
@@ -319,6 +335,7 @@ class TestGetCompanyInfo:
 
     @pytest.mark.parametrize("symbol_list", [["ABCD"], []])
     def test_empty(self, sdr: SETDataReader, symbol_list: List[str]):
+        # Test
         result = sdr.get_company_info(symbol_list)
 
         # Check
@@ -361,6 +378,7 @@ class TestGetCompanyInfo:
 
 class TestGetChangeName:
     def test_all(self, sdr: SETDataReader):
+        # Test
         result = sdr.get_change_name()
 
         # Check
@@ -378,6 +396,7 @@ class TestGetChangeName:
         start_date: Optional[date],
         end_date: Optional[date],
     ):
+        # Test
         result = sdr.get_change_name(
             symbol_list=symbol_list, start_date=start_date, end_date=end_date
         )
@@ -401,6 +420,7 @@ class TestGetChangeName:
 
     @pytest.mark.parametrize("symbol_list", [["ABCD"], []])
     def test_empty(self, sdr: SETDataReader, symbol_list: List[str]):
+        # Test
         result = sdr.get_change_name(symbol_list)
 
         # Check
@@ -437,6 +457,7 @@ class TestGetChangeName:
 
 class TestGetDividend:
     def test_all(self, sdr: SETDataReader):
+        # Test
         result = sdr.get_dividend()
 
         # Check
@@ -456,6 +477,7 @@ class TestGetDividend:
         end_date: Optional[date],
         ca_type_list: Optional[List[str]],
     ):
+        # Test
         result = sdr.get_dividend(
             symbol_list=symbol_list,
             start_date=start_date,
@@ -485,6 +507,7 @@ class TestGetDividend:
 
     def test_adjust(self, sdr: SETDataReader):
         """Source: https://www.tradingview.com/chart/1ytBFuKM/"""
+        # Test
         result = sdr.get_dividend(
             ["COM7"], ca_type_list=["CD"], start_date=date(2020, 1, 1)
         )
@@ -524,6 +547,7 @@ class TestGetDividend:
         )
 
     def test_cancel(self, sdr: SETDataReader):
+        # Test
         result = sdr.get_dividend(["CRC"], adjusted_list=[])
 
         # Check
@@ -560,6 +584,7 @@ class TestGetDividend:
 
     @pytest.mark.parametrize("symbol_list", [["ABCD"], []])
     def test_empty(self, sdr: SETDataReader, symbol_list: List[str]):
+        # Test
         result = sdr.get_dividend(symbol_list)
 
         # Check
@@ -597,6 +622,7 @@ class TestGetDividend:
 
 class TestGetDelisted:
     def test_all(self, sdr: SETDataReader):
+        # Test
         result = sdr.get_delisted()
 
         # Check
@@ -614,6 +640,7 @@ class TestGetDelisted:
         start_date: Optional[date],
         end_date: Optional[date],
     ):
+        # Test
         result = sdr.get_delisted(
             symbol_list=symbol_list,
             start_date=start_date,
@@ -633,6 +660,7 @@ class TestGetDelisted:
 
     @pytest.mark.parametrize("symbol_list", [["ABCD"], []])
     def test_empty(self, sdr: SETDataReader, symbol_list: Optional[List[str]]):
+        # Test
         result = sdr.get_delisted(symbol_list)
 
         # Check
@@ -661,6 +689,7 @@ class TestGetDelisted:
 
 class TestGetSignPosting:
     def test_all(self, sdr: SETDataReader):
+        # Test
         result = sdr.get_sign_posting()
 
         # Check
@@ -680,6 +709,7 @@ class TestGetSignPosting:
         end_date: Optional[date],
         sign_list: Optional[List[str]],
     ):
+        # Test
         result = sdr.get_sign_posting(
             symbol_list=symbol_list,
             start_date=start_date,
@@ -700,6 +730,7 @@ class TestGetSignPosting:
 
     @pytest.mark.parametrize("symbol_list", [["ABCD"], []])
     def test_empty(self, sdr: SETDataReader, symbol_list: Optional[List[str]]):
+        # Test
         result = sdr.get_sign_posting(symbol_list=symbol_list)
 
         # Check
@@ -726,6 +757,7 @@ class TestGetSignPosting:
 
 class TestGetSymbolsByIndex:
     def test_all(self, sdr: SETDataReader):
+        # Test
         result = sdr.get_symbols_by_index()
 
         # Check
@@ -743,6 +775,7 @@ class TestGetSymbolsByIndex:
         start_date: Optional[date],
         end_date: Optional[date],
     ):
+        # Test
         result = sdr.get_symbols_by_index(
             index_list=index_list,
             start_date=start_date,
@@ -818,6 +851,7 @@ class TestGetSymbolsByIndex:
 
     @pytest.mark.parametrize("index_list", [["ABCD"], []])
     def test_empty(self, sdr: SETDataReader, index_list: Optional[List[str]]):
+        # Test
         result = sdr.get_symbols_by_index(index_list=index_list)
 
         # Check
@@ -844,6 +878,7 @@ class TestGetSymbolsByIndex:
 
 class TestGetAdjustFactor:
     def test_all(self, sdr: SETDataReader):
+        # Test
         result = sdr.get_adjust_factor()
 
         # Check
@@ -863,6 +898,7 @@ class TestGetAdjustFactor:
         end_date: Optional[date],
         ca_type_list: Optional[List[str]],
     ):
+        # Test
         result = sdr.get_adjust_factor(
             symbol_list=symbol_list,
             start_date=start_date,
@@ -883,6 +919,7 @@ class TestGetAdjustFactor:
 
     @pytest.mark.parametrize("symbol_list", [["ABCD"], []])
     def test_empty(self, sdr: SETDataReader, symbol_list: Optional[List[str]]):
+        # Test
         result = sdr.get_adjust_factor(symbol_list)
 
         # Check
@@ -927,6 +964,7 @@ class TestGetDataSymbolDaily:
         start_date = date(2022, 3, 10)
         end_date = date(2022, 3, 10)
 
+        # Test
         result = sdr.get_data_symbol_daily(
             field,
             symbol_list=symbol_list,
@@ -947,6 +985,7 @@ class TestGetDataSymbolDaily:
         start_date = date(2022, 3, 10)
         end_date = date(2022, 3, 14)
 
+        # Test
         result = sdr.get_data_symbol_daily(
             "close",
             symbol_list=symbol_list,
@@ -977,6 +1016,7 @@ class TestGetDataSymbolDaily:
         start_date = date(2022, 3, 10)
         end_date = date(2022, 3, 14)
 
+        # Test
         result = sdr.get_data_symbol_daily(
             "close",
             symbol_list=symbol_list,
@@ -1008,6 +1048,7 @@ class TestGetDataSymbolDaily:
         start_date = date(2022, 3, 10)
         end_date = date(2022, 3, 14)
 
+        # Test
         result = sdr.get_data_symbol_daily(
             "volume",
             symbol_list=symbol_list,
@@ -1038,6 +1079,7 @@ class TestGetDataSymbolDaily:
         start_date = date(2022, 3, 10)
         end_date = date(2022, 3, 14)
 
+        # Test
         result = sdr.get_data_symbol_daily(
             "volume",
             symbol_list=symbol_list,
@@ -1065,6 +1107,7 @@ class TestGetDataSymbolDaily:
         )
 
     def test_empty(self, sdr: SETDataReader):
+        # Test
         result = sdr.get_data_symbol_daily(
             "close",
             symbol_list=[],
@@ -1100,6 +1143,7 @@ class TestGetDataSymbolQuarterly:
         start_date = date(2021, 1, 1)
         end_date = date(2022, 1, 1)
 
+        # Test
         result = sdr.get_data_symbol_quarterly(
             field=field,
             symbol_list=symbol_list,
@@ -1131,6 +1175,7 @@ class TestGetDataSymbolQuarterly:
         start_date = date(2021, 3, 3)
         end_date = date(2022, 11, 18)
 
+        # Test
         result = sdr.get_data_symbol_quarterly(
             field=field,
             symbol_list=symbol_list,
@@ -1160,6 +1205,7 @@ class TestGetDataSymbolQuarterly:
         start_date = date(2021, 3, 3)
         end_date = date(2022, 11, 18)
 
+        # Test
         result = sdr.get_data_symbol_quarterly(
             field=field,
             symbol_list=symbol_list,
@@ -1187,6 +1233,7 @@ class TestGetDataSymbolQuarterly:
         "field", [getattr(fld, i) for i in dir(fld) if i.startswith("Q_")]
     )
     def test_empty(self, sdr: SETDataReader, field: str):
+        # Test
         result = sdr.get_data_symbol_quarterly(field=field, symbol_list=[])
 
         # Check
@@ -1204,6 +1251,90 @@ class TestGetDataSymbolTtm:
 
 class TestGetDataSymbolYtd:
     _check = staticmethod(TestGetDataSymbolDaily._check)
+
+
+class TestGetDataIndexDaily:
+    @pytest.mark.parametrize(
+        "field", [getattr(fld, i) for i in dir(fld) if i.startswith("D_INDEX")]
+    )
+    def test_field(self, sdr: SETDataReader, field: str):
+        # Test
+        result = sdr.get_data_index_daily(
+            field=field,
+        )
+
+        # Check
+        self._check(result)
+
+        assert not result.empty
+
+    @pytest.mark.parametrize(
+        ["field", "expected"],
+        [
+            (fld.D_INDEX_HIGH, 1674.10),
+            (fld.D_INDEX_LOW, 1663.50),
+            (fld.D_INDEX_CLOSE, 1670.28),
+            (fld.D_INDEX_TOTAL_VOLUME, 28684980655),
+            (fld.D_INDEX_TOTAL_VALUE, 100014911411.57),
+            (fld.D_INDEX_MKT_PE, 20.96),
+            (fld.D_INDEX_MKT_PBV, 1.80),
+            (fld.D_INDEX_MKT_YIELD, 2.08),
+            (fld.D_INDEX_MKT_CAP, 19733996617934.5),
+        ],
+    )
+    def test_field_with_expected(self, sdr: SETDataReader, field: str, expected: float):
+        """Source: https://www.tradingview.com/chart/1ytBFuKM/?symbol=SET%3ASET"""
+        start_date = date(2021, 1, 4)
+        end_date = date(2021, 1, 4)
+
+        # Test
+        result = sdr.get_data_index_daily(
+            field=field,
+            index_list=["SET"],
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+        # Check
+        self._check(result)
+
+        assert_frame_equal(
+            result,
+            pd.DataFrame(
+                [[expected]],
+                columns=["SET"],
+                index=pd.DatetimeIndex(["2021-01-04"]),
+            ),
+        )
+
+    @pytest.mark.parametrize(
+        "field", [getattr(fld, i) for i in dir(fld) if i.startswith("D_INDEX")]
+    )
+    def test_empty(self, sdr: SETDataReader, field: str):
+        # Test
+        result = sdr.get_data_index_daily(field=field, index_list=[])
+
+        # Check
+        self._check(result)
+
+        assert result.empty
+
+    @staticmethod
+    def _check(result):
+        assert isinstance(result, pd.DataFrame)
+
+        assert isinstance(result.index, pd.DatetimeIndex)
+        assert result.index.is_monotonic_increasing
+        assert result.index.is_unique
+        assert (result.index == result.index.normalize()).all()  # type: ignore
+
+        assert result.columns.isin(fld.SYMBOL_INDEX_LIST)
+
+        return result
+
+
+class TestGetDataSectorDaily:
+    pass
 
 
 @pytest.mark.parametrize(
