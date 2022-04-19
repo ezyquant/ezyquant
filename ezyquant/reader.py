@@ -699,6 +699,7 @@ class SETDataReader:
             col_date=adj_fac.c.D_EFFECT,
         )
         if ca_type_list != None:
+            ca_type_list = [i.upper() for i in ca_type_list]
             stmt = stmt.where(func.trim(adj_fac.c.N_CA_TYPE).in_(ca_type_list))
         res_df = pd.read_sql(stmt, self.__engine)
         return res_df
