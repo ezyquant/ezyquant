@@ -1169,7 +1169,7 @@ class TestGetDataSymbolQuarterly:
     @pytest.mark.parametrize(
         ["field", "expected_list"],
         [
-            # Statistics
+            # Financial Ratio
             (
                 fld.Q_ROA,
                 [
@@ -1262,7 +1262,7 @@ class TestGetDataSymbolYearly:
     @pytest.mark.parametrize(
         ["field", "expected_list"],
         [
-            # Statistics
+            # Financial Ratio
             (fld.Q_ROA, [1.6829434061191892]),
             (fld.Q_GROSS_PROFIT_MARGIN, [-float("inf")]),
             # Balance Sheet
@@ -1344,8 +1344,8 @@ class TestGetDataSymbolTtm:
     @pytest.mark.parametrize(
         ["field", "expected_list"],
         [
-            # Statistics
-            # TODO: Statistics no TTM can be any result
+            # Financial Ratio
+            # TODO: Financial Ratio no TTM can be any result
             (fld.Q_ROA, [-float("inf")] * 4),
             (fld.Q_GROSS_PROFIT_MARGIN, [-float("inf")] * 4),
             # Balance Sheet
@@ -1403,6 +1403,97 @@ class TestGetDataSymbolTtm:
 
 class TestGetDataSymbolYtd:
     _check = staticmethod(TestGetDataSymbolDaily._check)
+
+    @pytest.mark.parametrize(
+        "field", [getattr(fld, i) for i in dir(fld) if i.startswith("Q_")][::5]
+    )
+    def test_field(self, sdr: SETDataReader, field: str):
+        symbol_list = ["COM7"]
+        start_date = date(2021, 1, 1)
+        end_date = date(2022, 1, 1)
+
+        # Test
+        result = sdr.get_data_symbol_ytd(
+            field=field,
+            symbol_list=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+        # Check
+        self._check(result)
+        assert_index_equal(
+            result.index, pd.DatetimeIndex(sdr.get_trading_dates(start_date, end_date))
+        )
+
+        assert not result.empty
+
+    @pytest.mark.parametrize(
+        ["field", "expected_list"],
+        [
+            # Financial Ratio
+            # TODO: Financial Ratio no YTD can be any result
+            (
+                fld.Q_ROA,
+                [
+                    1.4697230952727913,
+                    1.3504085549573543,
+                    1.3672515432689933,
+                    1.46001638580354,
+                ],
+            ),
+            (fld.Q_GROSS_PROFIT_MARGIN, [-float("inf")] * 4),
+            # Balance Sheet
+            # TODO: Balance Sheet no YTD can be any result
+            (fld.Q_CASH, [-float("inf")] * 4),
+            # Income Statement
+            (fld.Q_TOTAL_REVENUE, [89885610, 21069316, 41039535, 60766625]),
+            (fld.Q_COS, [23861086, 4767026, 9418355, 13917921]),
+            # Cashflow Statement
+            (fld.Q_NET_CASH_FLOW, [-1889251, -3732755, -5875001, -7253999]),
+        ],
+    )
+    def test_field_with_expected(
+        self, sdr: SETDataReader, field: str, expected_list: List[float]
+    ):
+        symbol = "TTB"
+        start_date = date(2021, 3, 1)
+        end_date = date(2021, 11, 11)
+
+        # Test
+        result = sdr.get_data_symbol_ytd(
+            field=field,
+            symbol_list=[symbol],
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+        # Check
+        self._check(result)
+        assert_index_equal(
+            result.index, pd.DatetimeIndex(sdr.get_trading_dates(start_date, end_date))
+        )
+
+        expected = pd.DataFrame(
+            {symbol: expected_list},
+            index=pd.DatetimeIndex(
+                ["2021-03-01", "2021-05-13", "2021-08-27", "2021-11-11"]
+            ),
+        )
+        expected = expected.reindex(sdr.get_trading_dates(start_date, end_date))  # type: ignore
+
+        assert_frame_equal(result, expected)
+
+    @pytest.mark.parametrize(
+        "field", [getattr(fld, i) for i in dir(fld) if i.startswith("Q_")]
+    )
+    def test_empty(self, sdr: SETDataReader, field: str):
+        # Test
+        result = sdr.get_data_symbol_ytd(field=field, symbol_list=[])
+
+        # Check
+        self._check(result)
+        assert result.empty
 
 
 class TestGetDataIndexDaily:
