@@ -957,7 +957,7 @@ class TestGetDataSymbolDaily:
     """source: https://www.tradingview.com/chart/?symbol=SET:COM7"""
 
     @pytest.mark.parametrize(
-        "field", [getattr(fld, i) for i in dir(fld) if i.startswith("D_")][:5]
+        "field", [getattr(fld, i) for i in dir(fld) if i.startswith("D_")][::5]
     )
     def test_field(self, sdr: SETDataReader, field: str):
         symbol_list = ["COM7"]
@@ -1143,7 +1143,7 @@ class TestGetDataSymbolQuarterly:
     _check = staticmethod(TestGetDataSymbolDaily._check)
 
     @pytest.mark.parametrize(
-        "field", [getattr(fld, i) for i in dir(fld) if i.startswith("Q_")][:5]
+        "field", [getattr(fld, i) for i in dir(fld) if i.startswith("Q_")][::5]
     )
     def test_field(self, sdr: SETDataReader, field: str):
         symbol_list = ["COM7"]
@@ -1169,23 +1169,37 @@ class TestGetDataSymbolQuarterly:
     @pytest.mark.parametrize(
         ["field", "expected_list"],
         [
-            (fld.Q_TOTAL_REVENUE, [12455598.38, 11965863.96, 11539297.17, 10075788.94]),
-            (fld.Q_CASH, [872146.45, 602185.66, 1028640.11, 1325286.41]),
-            (fld.Q_COS, [10943791.11, 10405065.63, 9985634.49, 8563360.14]),
-            (fld.Q_NET_CASH_FLOW, [58415.01, -269960.79, 426454.45, 296646.3]),
+            # Financial Ratio
+            (
+                fld.Q_ROA,
+                [
+                    1.6829434061191892,
+                    1.4697230952727913,
+                    1.3504085549573543,
+                    1.3672515432689933,
+                ],
+            ),
+            (fld.Q_GROSS_PROFIT_MARGIN, [-float("inf")] * 4),
+            # Balance Sheet
+            (fld.Q_CASH, [233127550, 231865550, 185736074, 168533280]),
+            # Income Statement
+            (fld.Q_TOTAL_REVENUE, [22019850, 21069316, 19970220, 19727090]),
+            (fld.Q_COS, [5073409, 4767026, 4651329, 4499566]),
+            # Cashflow Statement
+            (fld.Q_NET_CASH_FLOW, [3042325, -3732755, -2142246, -1378998]),
         ],
     )
     def test_field_with_expected(
         self, sdr: SETDataReader, field: str, expected_list: List[float]
     ):
-        symbol_list = ["COM7"]
-        start_date = date(2021, 3, 3)
-        end_date = date(2021, 11, 18)
+        symbol = "TTB"
+        start_date = date(2021, 3, 1)
+        end_date = date(2021, 11, 11)
 
         # Test
         result = sdr.get_data_symbol_quarterly(
             field=field,
-            symbol_list=symbol_list,
+            symbol_list=[symbol],
             start_date=start_date,
             end_date=end_date,
         )
@@ -1197,37 +1211,7 @@ class TestGetDataSymbolQuarterly:
         )
 
         expected = pd.DataFrame(
-            {"COM7": expected_list},
-            index=pd.DatetimeIndex(
-                ["2021-03-03", "2021-05-19", "2021-08-18", "2021-11-18"]
-            ),
-        )
-        expected = expected.reindex(sdr.get_trading_dates(start_date, end_date))  # type: ignore
-
-        assert_frame_equal(result, expected)
-
-    @pytest.mark.parametrize("field", [fld.Q_GROSS_PROFIT_MARGIN])
-    def test_null_data(self, sdr: SETDataReader, field: str):
-        symbol_list = ["TTB"]
-        start_date = date(2021, 3, 3)
-        end_date = date(2021, 11, 18)
-
-        # Test
-        result = sdr.get_data_symbol_quarterly(
-            field=field,
-            symbol_list=symbol_list,
-            start_date=start_date,
-            end_date=end_date,
-        )
-
-        # Check
-        self._check(result)
-        assert_index_equal(
-            result.index, pd.DatetimeIndex(sdr.get_trading_dates(start_date, end_date))
-        )
-
-        expected = pd.DataFrame(
-            {"TTB": [-float("inf"), -float("inf"), -float("inf"), -float("inf")]},
+            {symbol: expected_list},
             index=pd.DatetimeIndex(
                 ["2021-03-01", "2021-05-13", "2021-08-27", "2021-11-11"]
             ),
@@ -1251,13 +1235,265 @@ class TestGetDataSymbolQuarterly:
 class TestGetDataSymbolYearly:
     _check = staticmethod(TestGetDataSymbolDaily._check)
 
+    @pytest.mark.parametrize(
+        "field", [getattr(fld, i) for i in dir(fld) if i.startswith("Q_")][::5]
+    )
+    def test_field(self, sdr: SETDataReader, field: str):
+        symbol_list = ["COM7"]
+        start_date = date(2021, 1, 1)
+        end_date = date(2022, 1, 1)
+
+        # Test
+        result = sdr.get_data_symbol_yearly(
+            field=field,
+            symbol_list=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+        # Check
+        self._check(result)
+        assert_index_equal(
+            result.index, pd.DatetimeIndex(sdr.get_trading_dates(start_date, end_date))
+        )
+
+        assert not result.empty
+
+    @pytest.mark.parametrize(
+        ["field", "expected_list"],
+        [
+            # Financial Ratio
+            (fld.Q_ROA, [1.6829434061191892]),
+            (fld.Q_GROSS_PROFIT_MARGIN, [-float("inf")]),
+            # Balance Sheet
+            (fld.Q_CASH, [233127550]),
+            # Income Statement
+            (fld.Q_TOTAL_REVENUE, [89885610]),
+            (fld.Q_COS, [23861086]),
+            # Cashflow Statement
+            (fld.Q_NET_CASH_FLOW, [-1889251]),
+        ],
+    )
+    def test_field_with_expected(
+        self, sdr: SETDataReader, field: str, expected_list: List[float]
+    ):
+        symbol = "TTB"
+        start_date = date(2021, 3, 1)
+        end_date = date(2021, 3, 1)
+
+        # Test
+        result = sdr.get_data_symbol_yearly(
+            field=field,
+            symbol_list=[symbol],
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+        # Check
+        self._check(result)
+        assert_index_equal(
+            result.index, pd.DatetimeIndex(sdr.get_trading_dates(start_date, end_date))
+        )
+
+        expected = pd.DataFrame(
+            {symbol: expected_list}, index=pd.DatetimeIndex(["2021-03-01"])
+        )
+
+        assert_frame_equal(result, expected)
+
+    @pytest.mark.parametrize(
+        "field", [getattr(fld, i) for i in dir(fld) if i.startswith("Q_")]
+    )
+    def test_empty(self, sdr: SETDataReader, field: str):
+        # Test
+        result = sdr.get_data_symbol_yearly(field=field, symbol_list=[])
+
+        # Check
+        self._check(result)
+
+        assert result.empty
+
 
 class TestGetDataSymbolTtm:
     _check = staticmethod(TestGetDataSymbolDaily._check)
 
+    @pytest.mark.parametrize(
+        "field", [getattr(fld, i) for i in dir(fld) if i.startswith("Q_")][::5]
+    )
+    def test_field(self, sdr: SETDataReader, field: str):
+        symbol_list = ["COM7"]
+        start_date = date(2021, 1, 1)
+        end_date = date(2022, 1, 1)
+
+        # Test
+        result = sdr.get_data_symbol_ttm(
+            field=field,
+            symbol_list=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+        # Check
+        self._check(result)
+        assert_index_equal(
+            result.index, pd.DatetimeIndex(sdr.get_trading_dates(start_date, end_date))
+        )
+
+        assert not result.empty
+
+    @pytest.mark.parametrize(
+        ["field", "expected_list"],
+        [
+            # Financial Ratio
+            # TODO: Financial Ratio no TTM can be any result
+            (fld.Q_ROA, [-float("inf")] * 4),
+            (fld.Q_GROSS_PROFIT_MARGIN, [-float("inf")] * 4),
+            # Balance Sheet
+            # TODO: Balance Sheet no TTM can be any result
+            (fld.Q_CASH, [-float("inf")] * 4),
+            # Income Statement
+            (fld.Q_TOTAL_REVENUE, [89885610, 86495188, 84669125, 82786475]),
+            (fld.Q_COS, [23861086, 21442714, 19895590, 18991330]),
+            # Cashflow Statement
+            (fld.Q_NET_CASH_FLOW, [-1889251, -2540135, -1985902, -4211674]),
+        ],
+    )
+    def test_field_with_expected(
+        self, sdr: SETDataReader, field: str, expected_list: List[float]
+    ):
+        symbol = "TTB"
+        start_date = date(2021, 3, 1)
+        end_date = date(2021, 11, 11)
+
+        # Test
+        result = sdr.get_data_symbol_ttm(
+            field=field,
+            symbol_list=[symbol],
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+        # Check
+        self._check(result)
+        assert_index_equal(
+            result.index, pd.DatetimeIndex(sdr.get_trading_dates(start_date, end_date))
+        )
+
+        expected = pd.DataFrame(
+            {symbol: expected_list},
+            index=pd.DatetimeIndex(
+                ["2021-03-01", "2021-05-13", "2021-08-27", "2021-11-11"]
+            ),
+        )
+        expected = expected.reindex(sdr.get_trading_dates(start_date, end_date))  # type: ignore
+
+        assert_frame_equal(result, expected)
+
+    @pytest.mark.parametrize(
+        "field", [getattr(fld, i) for i in dir(fld) if i.startswith("Q_")]
+    )
+    def test_empty(self, sdr: SETDataReader, field: str):
+        # Test
+        result = sdr.get_data_symbol_ttm(field=field, symbol_list=[])
+
+        # Check
+        self._check(result)
+        assert result.empty
+
 
 class TestGetDataSymbolYtd:
     _check = staticmethod(TestGetDataSymbolDaily._check)
+
+    @pytest.mark.parametrize(
+        "field", [getattr(fld, i) for i in dir(fld) if i.startswith("Q_")][::5]
+    )
+    def test_field(self, sdr: SETDataReader, field: str):
+        symbol_list = ["COM7"]
+        start_date = date(2021, 1, 1)
+        end_date = date(2022, 1, 1)
+
+        # Test
+        result = sdr.get_data_symbol_ytd(
+            field=field,
+            symbol_list=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+        # Check
+        self._check(result)
+        assert_index_equal(
+            result.index, pd.DatetimeIndex(sdr.get_trading_dates(start_date, end_date))
+        )
+
+        assert not result.empty
+
+    @pytest.mark.parametrize(
+        ["field", "expected_list"],
+        [
+            # Financial Ratio
+            # TODO: Financial Ratio no YTD can be any result
+            (
+                fld.Q_ROA,
+                [
+                    1.4697230952727913,
+                    1.3504085549573543,
+                    1.3672515432689933,
+                    1.46001638580354,
+                ],
+            ),
+            (fld.Q_GROSS_PROFIT_MARGIN, [-float("inf")] * 4),
+            # Balance Sheet
+            # TODO: Balance Sheet no YTD can be any result
+            (fld.Q_CASH, [-float("inf")] * 4),
+            # Income Statement
+            (fld.Q_TOTAL_REVENUE, [89885610, 21069316, 41039535, 60766625]),
+            (fld.Q_COS, [23861086, 4767026, 9418355, 13917921]),
+            # Cashflow Statement
+            (fld.Q_NET_CASH_FLOW, [-1889251, -3732755, -5875001, -7253999]),
+        ],
+    )
+    def test_field_with_expected(
+        self, sdr: SETDataReader, field: str, expected_list: List[float]
+    ):
+        symbol = "TTB"
+        start_date = date(2021, 3, 1)
+        end_date = date(2021, 11, 11)
+
+        # Test
+        result = sdr.get_data_symbol_ytd(
+            field=field,
+            symbol_list=[symbol],
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+        # Check
+        self._check(result)
+        assert_index_equal(
+            result.index, pd.DatetimeIndex(sdr.get_trading_dates(start_date, end_date))
+        )
+
+        expected = pd.DataFrame(
+            {symbol: expected_list},
+            index=pd.DatetimeIndex(
+                ["2021-03-01", "2021-05-13", "2021-08-27", "2021-11-11"]
+            ),
+        )
+        expected = expected.reindex(sdr.get_trading_dates(start_date, end_date))  # type: ignore
+
+        assert_frame_equal(result, expected)
+
+    @pytest.mark.parametrize(
+        "field", [getattr(fld, i) for i in dir(fld) if i.startswith("Q_")]
+    )
+    def test_empty(self, sdr: SETDataReader, field: str):
+        # Test
+        result = sdr.get_data_symbol_ytd(field=field, symbol_list=[])
+
+        # Check
+        self._check(result)
+        assert result.empty
 
 
 class TestGetDataIndexDaily:
@@ -1340,7 +1576,7 @@ class TestGetDataIndexDaily:
 
 class TestGetDataSectorDaily:
     @pytest.mark.parametrize(
-        "field", [getattr(fld, i) for i in dir(fld) if i.startswith("D_SECTOR")][:5]
+        "field", [getattr(fld, i) for i in dir(fld) if i.startswith("D_SECTOR")][::5]
     )
     def test_field(self, sdr: SETDataReader, field: str):
         # Test

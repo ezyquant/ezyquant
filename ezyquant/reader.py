@@ -449,8 +449,8 @@ class SETDataReader:
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> pd.DataFrame:
-        """Data from table SECURITY_DETAIL. Include only Delisted
-        (D_DELISTED!=None).
+        """Data from table SECURITY_DETAIL. Filter delisted by D_DELISTED !=
+        None.
 
         Parameters
         ----------
@@ -670,8 +670,7 @@ class SETDataReader:
         end_date: Optional[date] = None,
         ca_type_list: Optional[List[str]] = None,
     ) -> pd.DataFrame:
-        """Data from table ADJUST_FACTOR. Filter only Auto Matching
-        (I_TRADING_METHOD='A').
+        """Data from table ADJUST_FACTOR.
 
         Parameters
         ----------
@@ -1046,9 +1045,10 @@ class SETDataReader:
         end_date: Optional[date] = None,
         adjusted_list: List[str] = ["  ", "CR", "PC", "RC", "SD", "XR"],
     ) -> pd.DataFrame:
-        """Data from table DAILY_STOCK_TRADE, DAILY_STOCK_STAT. Replace 0 with
-        NaN in following field e.g. prior, open, high, low, close, average,
-        last_bid, last_offer.
+        """Data from table DAILY_STOCK_TRADE, DAILY_STOCK_STAT. Filter only
+        Auto Matching (I_TRADING_METHOD='A'). Replace 0 with NaN in following
+        field e.g. prior, open, high, low, close, average, last_bid,
+        last_offer.
 
         Parameters
         ----------
@@ -1148,12 +1148,13 @@ class SETDataReader:
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> pd.DataFrame:
-        """Data from table FINANCIAL_SCREEN, FINANCIAL_STAT_STD. If field is
-        duplicate in FINANCIAL_SCREEN and FINANCIAL_STAT_STD, the data from
-        FINANCIAL_SCREEN will be used. Index date is trade
-        date(DAILY_STOCK_STAT.D_TRADE). Data is showing at first
-        DAILY_STOCK_STAT.D_TRADE which join on D_AS_OF. Null data in database
-        will be filled with -inf.
+        """Data from tables FINANCIAL_STAT_STD and FINANCIAL_SCREEN. If field
+        is in both table, the data from FINANCIAL_STAT_STD will be used.
+        FINANCIAL_STAT_STD using data from column M_ACCOUNT. FINANCIAL_SCREEN
+        filter by I_PERIOD_TYPE='QY' and I_PERIOD in ('Q1','Q2','Q3','Q4').
+        Index date is trade date (DAILY_STOCK_STAT.D_TRADE). Data is showing at
+        first trade date which join on D_AS_OF. Null data in database will be
+        filled with -inf.
 
         Parameters
         ----------
@@ -1162,9 +1163,9 @@ class SETDataReader:
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, case insensitive, must be unique, by default None
         start_date : Optional[date]
-            start of trade date(DAILY_STOCK_STAT.D_TRADE), by default None
+            start of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
         end_date : Optional[date]
-            end of trade date(DAILY_STOCK_STAT.D_TRADE), by default None
+            end of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
 
         Returns
         -------
@@ -1192,12 +1193,13 @@ class SETDataReader:
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> pd.DataFrame:
-        """Data from table FINANCIAL_SCREEN, FINANCIAL_STAT_STD. If field is
-        duplicate in FINANCIAL_SCREEN and FINANCIAL_STAT_STD, the data from
-        FINANCIAL_SCREEN will be used. Index date is trade
-        date(DAILY_STOCK_STAT.D_TRADE). Data is showing at first
-        DAILY_STOCK_STAT.D_TRADE which join on D_AS_OF. Null data in database
-        will be filled with -inf.
+        """Data from table FINANCIAL_STAT_STD and FINANCIAL_SCREEN. If field is
+        in both table, the data from FINANCIAL_STAT_STD will be used.
+        FINANCIAL_STAT_STD filter by "I_QUARTER"='9' and using data from column
+        M_ACCOUNT. FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and
+        I_PERIOD='YE'. Index date is trade date (DAILY_STOCK_STAT.D_TRADE).
+        Data is showing at first trade date which join on D_AS_OF. Null data in
+        database will be filled with -inf.
 
         Parameters
         ----------
@@ -1206,9 +1208,9 @@ class SETDataReader:
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, case insensitive, must be unique, by default None
         start_date : Optional[date]
-            start of trade date(DAILY_STOCK_STAT.D_TRADE), by default None
+            start of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
         end_date : Optional[date]
-            end of trade date(DAILY_STOCK_STAT.D_TRADE), by default None
+            end of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
 
         Returns
         -------
@@ -1230,12 +1232,16 @@ class SETDataReader:
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> pd.DataFrame:
-        """Data from table FINANCIAL_SCREEN, FINANCIAL_STAT_STD. If field is
-        duplicate in FINANCIAL_SCREEN and FINANCIAL_STAT_STD, the data from
-        FINANCIAL_SCREEN will be used. Index date is trade
-        date(DAILY_STOCK_STAT.D_TRADE). Data is showing at first
-        DAILY_STOCK_STAT.D_TRADE which join on D_AS_OF. Null data in database
-        will be filled with -inf.
+        """Trailing 12 months (TTM) is a term used to describe the past 12
+        consecutive months of a company's performance data. TTM can be
+        calculate only Income Statement and Cashflow, but not Financial Ratio
+        and Balance Sheet. Data from table FINANCIAL_STAT_STD,
+        FINANCIAL_SCREEN. If field is in both table, the data from
+        FINANCIAL_SCREEN will be used. FINANCIAL_STAT_STD filter by using data
+        from column M_ACC_ACCOUNT_12M. FINANCIAL_SCREEN don't have TTM data.
+        Index date is trade date (DAILY_STOCK_STAT.D_TRADE). Data is showing at
+        first trade date which join on D_AS_OF. Null data in database will be
+        filled with -inf.
 
         Parameters
         ----------
@@ -1244,9 +1250,9 @@ class SETDataReader:
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, case insensitive, must be unique, by default None
         start_date : Optional[date]
-            start of trade date(DAILY_STOCK_STAT.D_TRADE), by default None
+            start of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
         end_date : Optional[date]
-            end of trade date(DAILY_STOCK_STAT.D_TRADE), by default None
+            end of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
 
         Returns
         -------
@@ -1268,10 +1274,15 @@ class SETDataReader:
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> pd.DataFrame:
-        """Data from table FINANCIAL_SCREEN, FINANCIAL_STAT_STD. If field is
-        duplicate in FINANCIAL_SCREEN and FINANCIAL_STAT_STD, the data from
-        FINANCIAL_SCREEN will be used. Index date is trade
-        date(DAILY_STOCK_STAT.D_TRADE). Data is showing at first
+        """Year to date (YTD) refers to the period of time beginning the first
+        day of the current calendar year or fiscal year up to the current date.
+        YTD can be calculate only Income Statement and Cashflow, but not
+        Financial Ratio and Balance Sheet. Data from table FINANCIAL_STAT_STD
+        and FINANCIAL_SCREEN. If field is in both table, the data from
+        FINANCIAL_STAT_STD will be used. FINANCIAL_STAT_STD using data from
+        column M_ACC_ACCOUNT. FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and
+        I_PERIOD in ('Q1','6M','9M','YE'). Index date is trade date
+        (DAILY_STOCK_STAT.D_TRADE). Data is showing at first
         DAILY_STOCK_STAT.D_TRADE which join on D_AS_OF. Null data in database
         will be filled with -inf.
 
@@ -1282,9 +1293,9 @@ class SETDataReader:
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, case insensitive, must be unique, by default None
         start_date : Optional[date]
-            start of trade date(DAILY_STOCK_STAT.D_TRADE), by default None
+            start of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
         end_date : Optional[date]
-            end of trade date(DAILY_STOCK_STAT.D_TRADE), by default None
+            end of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
 
         Returns
         -------
