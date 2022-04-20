@@ -424,8 +424,8 @@ class SETDataReader:
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> pd.DataFrame:
-        """Data from table SECURITY_DETAIL. Include only Delisted
-        (D_DELISTED!=None).
+        """Data from table SECURITY_DETAIL. Filter delisted by D_DELISTED !=
+        None.
 
         Parameters
         ----------
@@ -641,8 +641,7 @@ class SETDataReader:
         end_date: Optional[date] = None,
         ca_type_list: Optional[List[str]] = None,
     ) -> pd.DataFrame:
-        """Data from table ADJUST_FACTOR. Filter only Auto Matching
-        (I_TRADING_METHOD='A').
+        """Data from table ADJUST_FACTOR.
 
         Parameters
         ----------
@@ -1009,9 +1008,10 @@ class SETDataReader:
         end_date: Optional[date] = None,
         adjusted_list: List[str] = ["  ", "CR", "PC", "RC", "SD", "XR"],
     ) -> pd.DataFrame:
-        """Data from table DAILY_STOCK_TRADE, DAILY_STOCK_STAT. Replace 0 with
-        NaN in following field e.g. prior, open, high, low, close, average,
-        last_bid, last_offer.
+        """Data from table DAILY_STOCK_TRADE, DAILY_STOCK_STAT. Filter only
+        Auto Matching (I_TRADING_METHOD='A'). Replace 0 with NaN in following
+        field e.g. prior, open, high, low, close, average, last_bid,
+        last_offer.
 
         Parameters
         ----------
