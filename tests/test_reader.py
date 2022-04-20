@@ -1169,9 +1169,22 @@ class TestGetDataSymbolQuarterly:
     @pytest.mark.parametrize(
         ["field", "expected_list"],
         [
-            (fld.Q_TOTAL_REVENUE, [12455598.38, 11965863.96, 11539297.17, 10075788.94]),
+            # Financial screen
+            (
+                fld.Q_ROA,
+                [
+                    20.431238207094577,
+                    21.70301524712787,
+                    25.04718335154266,
+                    25.720698104742297,
+                ],
+            ),
+            # Balance Sheet
             (fld.Q_CASH, [872146.45, 602185.66, 1028640.11, 1325286.41]),
+            # Income Statement
+            (fld.Q_TOTAL_REVENUE, [12455598.38, 11965863.96, 11539297.17, 10075788.94]),
             (fld.Q_COS, [10943791.11, 10405065.63, 9985634.49, 8563360.14]),
+            # Cashflow Statement
             (fld.Q_NET_CASH_FLOW, [58415.01, -269960.79, 426454.45, 296646.3]),
         ],
     )
