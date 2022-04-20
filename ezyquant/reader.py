@@ -1,4 +1,5 @@
 from datetime import date
+
 from typing import Iterable, List, Optional
 
 import numpy as np
@@ -313,10 +314,10 @@ class SETDataReader:
             col_list=security.c.N_SECURITY,
             col_date=change_name.c.D_EFFECT,
         )
-
+        stmt.where(change_name.c.N_SECURITY_OLD != change_name.c.N_SECURITY_NEW)
         res_df = pd.read_sql(stmt, self.__engine)
         res_df = res_df.dropna()
-        res_df = res_df[res_df["symbol_old"] != res_df["symbol_new"]]
+        res_df = res_df.drop_duplicates()
         res_df = res_df.reset_index(drop=True)
         return res_df
 
@@ -415,7 +416,31 @@ class SETDataReader:
         )
         if ca_type_list != None:
             stmt = stmt.where(right.c.N_CA_TYPE.in_(ca_type_list))
-        res_df = pd.read_sql(stmt, self.__engine)
+        res_df = pd.read_sql(
+            stmt,
+            self.__engine,
+            # index_col="ex_date",
+            # parse_dates=["ex_date", "pay_date"],
+        )
+        res_df_copy = res_df.copy()
+        res_df.index = res_df.ex_date
+        if symbol_list == None:
+            res_df = self._merge_adjust_factor(
+                df=res_df,
+                multiply_columns=["dps"],
+                divide_columns=set(),
+                adjust_list=adjusted_list,
+                is_all_symbol=True,
+            )
+        else:
+            res_df = self._merge_adjust_factor(
+                df=res_df,
+                multiply_columns=["dps"],
+                divide_columns=set(),
+                adjust_list=adjusted_list,
+                is_all_symbol=False,
+            )
+        res_df = res_df.reset_index(drop=True)
         return res_df
 
     def get_delisted(
@@ -518,12 +543,10 @@ class SETDataReader:
         >>> from ezyquant.reader import SETDataReader
         >>> import datetime
         >>> sdr = SETDataReader("ssetdi_db.db")
-        >>> sdr.get_delisted(start_date=datetime.date(2014, 8, 27), end_date=datetime.date(2014, 8, 28))
-             symbol delisted_date
-        0  EGAT148B    2014-08-27
-        1  DTAC148A    2014-08-27
-        2    AA148A    2014-08-27
-        3  TB14827A    2014-08-27
+        >>>     sdr.get_sign_posting(start_date=datetime.date(2014, 8, 20),end_date=datetime.date(2014, 8, 25),sign_list=["H"])
+           symbol  hold_date sign
+        0     DV8 2014-08-20    H
+        1  DV8-W1 2014-08-20    H
         """
         security = Table("SECURITY", self.__metadata, autoload=True)
         sign_post = Table("SIGN_POSTING", self.__metadata, autoload=True)
@@ -606,9 +629,7 @@ class SETDataReader:
         j = security_index.join(
             sector,
             and_(
-                security.c.I_MARKET == sector.c.I_MARKET,
-                security.c.I_INDUSTRY == sector.c.I_INDUSTRY,
-                security.c.I_SECTOR == sector.c.I_SECTOR,
+                security_index.c.I_SECTOR == sector.c.I_SECTOR,
             ),
         ).join(
             security,
@@ -617,11 +638,11 @@ class SETDataReader:
         stmt = select(
             [
                 security_index.c.D_AS_OF.label("as_of_date"),
-                func.trim(security.c.N_SECURITY).label("symbol"),
                 func.trim(sector.c.N_SECTOR).label("index"),
+                func.trim(security.c.N_SECURITY).label("symbol"),
+                security_index.c.S_SEQ.label("seq"),
             ]
         ).select_from(j)
-
         stmt = self._list_start_end_condition(
             query_object=stmt,
             list_condition=index_list,
@@ -632,6 +653,14 @@ class SETDataReader:
         )
 
         res_df = pd.read_sql(stmt, self.__engine)
+        for ind, data in res_df.iterrows():
+            if data["index"] == "SET50" and data["seq"] not in range(1, 51):
+                res_df = res_df.drop([ind])
+            if data["index"] == "SET100" and data["seq"] not in range(1, 101):
+                res_df = res_df.drop([ind])
+            if data["index"] == "SETHD" and data["seq"] not in range(1, 31):
+                res_df = res_df.drop([ind])
+        res_df = res_df.reset_index(drop=True)
         return res_df
 
     def get_adjust_factor(
@@ -702,6 +731,7 @@ class SETDataReader:
             ca_type_list = [i.upper() for i in ca_type_list]
             stmt = stmt.where(func.trim(adj_fac.c.N_CA_TYPE).in_(ca_type_list))
         res_df = pd.read_sql(stmt, self.__engine)
+
         return res_df
 
     def _get_fundamental_data(
@@ -936,6 +966,7 @@ class SETDataReader:
         divide_columns: Iterable[str] = {"volume"},
         start_date: Optional[date] = None,
         adjust_list: List[str] = None,
+        is_all_symbol: Optional[bool] = False,
     ) -> pd.DataFrame:
         """df index is trading_datetime and columns contain symbol."""
         if df.empty or (
@@ -946,11 +977,17 @@ class SETDataReader:
         if pd.isnull(start_date):
             start_date = df.index.min().date()
 
-        adj_factor = self.get_adjust_factor(
-            symbol_list=df["symbol"].unique().tolist(),
-            start_date=start_date,
-            ca_type_list=adjust_list,
-        )
+        if is_all_symbol:
+            adj_factor = self.get_adjust_factor(
+                start_date=start_date,
+                ca_type_list=adjust_list,
+            )
+        else:
+            adj_factor = self.get_adjust_factor(
+                symbol_list=df["symbol"].unique().tolist(),
+                start_date=start_date,
+                ca_type_list=adjust_list,
+            )
 
         adj_factor.index = adj_factor.effect_date
 
@@ -1038,10 +1075,57 @@ class SETDataReader:
         TODO: examples
         """
         adjusted_list = list(adjusted_list)  # copy to avoid modify original list
-        daily_stock_trade = Table("DAILY_STOCK_TRADE", self.__metadata, autoload=True)
-        daily_stock_stat = Table("DAILY_STOCK_STAT", self.__metadata, autoload=True)
-        security = Table("SECURITY", self.__metadata, autoload=True)
 
+        security = Table("SECURITY", self.__metadata, autoload=True)
+        selected_fields = list()
+        field = field.lower()
+        from_table = ""
+        if field in fc.DAILY_STOCK_TRADE_FACTOR:
+            daily_stock__ = Table("DAILY_STOCK_TRADE", self.__metadata, autoload=True)
+            selected_fields.append(
+                daily_stock__.c[fc.DAILY_STOCK_TRADE_FACTOR[field]].label(field.upper())
+            )
+            from_table = "DAILY_STOCK_TRADE"
+        elif field in fc.DAILY_STOCK_STAT_FACTOR:
+            daily_stock__ = Table("DAILY_STOCK_STAT", self.__metadata, autoload=True)
+            selected_fields.append(
+                daily_stock__.c[fc.DAILY_STOCK_STAT_FACTOR[field]].label(field.upper())
+            )
+            from_table = "DAILY_STOCK_STAT"
+        else:
+            raise ValueError(
+                f"{field} not in Data 1D field. Please check fields for more details."
+            )
+        j = daily_stock__.join(
+            security, daily_stock__.c.I_SECURITY == security.c.I_SECURITY
+        )
+
+        stmt = select(
+            [
+                daily_stock__.c.D_TRADE.label("TRADING_DATETIME"),
+                func.trim(security.c.N_SECURITY).label("SYMBOL"),
+            ]
+            + selected_fields
+        ).select_from(j)
+        if from_table == "DAILY_STOCK_TRADE":
+            stmt.where(daily_stock__.c.I_TRADING_METHOD == "A")  # Auto Matching
+        stmt = self._list_start_end_condition(
+            query_object=stmt,
+            list_condition=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
+            col_list=security.c.N_SECURITY,
+            col_date=daily_stock__.c.D_TRADE,
+        )
+
+        df = pd.read_sql(
+            stmt,
+            self.__engine,
+            index_col="TRADING_DATETIME",
+            parse_dates="TRADING_DATETIME",
+        )
+        # return df
+        # replace 0 with nan
         NULL_IF_FIELD = {
             "prior",
             "open",
@@ -1052,83 +1136,9 @@ class SETDataReader:
             "last_bid",
             "last_offer",
         }
-
-        selected_fields = list()
-
-        if field is not None:
-            # for i in field:   field have only 1
-            field = field.lower()
-
-            if field in fc.DAILY_STOCK_TRADE_FACTOR:
-                selected_fields.append(
-                    daily_stock_trade.c[fc.DAILY_STOCK_TRADE_FACTOR[field]].label(field)
-                )
-            elif field in fc.DAILY_STOCK_STAT_FACTOR:
-                selected_fields.append(
-                    daily_stock_stat.c[fc.DAILY_STOCK_STAT_FACTOR[field]].label(field)
-                )
-            else:
-                raise ValueError(
-                    f"{field} not in Data 1D field. Please check fields for more details."
-                )
-        else:
-            selected_fields += [
-                daily_stock_trade.c[v].label(k)
-                for k, v in fc.DAILY_STOCK_TRADE_FACTOR.items()
-            ]
-            selected_fields += [
-                daily_stock_stat.c[v].label(k)
-                for k, v in fc.DAILY_STOCK_STAT_FACTOR.items()
-            ]
-
-        sql = (
-            select(
-                [
-                    daily_stock_trade.c.D_TRADE.label("trading_datetime"),
-                    func.trim(security.c.N_SECURITY).label("symbol"),
-                ]
-                + selected_fields
-            )
-            .select_from(daily_stock_trade)
-            .where(daily_stock_trade.c.I_TRADING_METHOD == "A")  # Auto Matching
-            .order_by(daily_stock_trade.c.D_TRADE.asc())
-        )
-
-        sql = self._list_start_end_condition(
-            query_object=sql,
-            list_condition=symbol_list,
-            start_date=start_date,
-            end_date=end_date,
-            col_list=security.c.N_SECURITY,
-            col_date=daily_stock_trade.c.D_TRADE,
-        )
-
-        sql = sql.join(
-            security, daily_stock_trade.c.I_SECURITY == security.c.I_SECURITY
-        ).join(
-            daily_stock_stat,
-            and_(
-                daily_stock_trade.c.I_SECURITY == daily_stock_stat.c.I_SECURITY,
-                daily_stock_trade.c.D_TRADE == daily_stock_stat.c.D_TRADE,
-            ),
-            isouter=True,
-        )
-
-        # sql = self._compile_sql(sql)
-        df = pd.read_sql(
-            sql,
-            self.__engine,
-            index_col="trading_datetime",
-            parse_dates="trading_datetime",
-        )
-        # line 1430
-        # adjust price
-        # if is_adjusted:
-        #    df = self._merge_adjust_factor(df)
-
-        # replace 0 with nan
         df = df.replace({i: 0 for i in NULL_IF_FIELD if i in df.columns}, np.nan)
-        self._merge_adjust_factor(df, adjust_list=adjusted_list)
+        # return df
+        df = self._merge_adjust_factor(df, adjust_list=adjusted_list)
         return df
 
     def get_data_symbol_quarterly(

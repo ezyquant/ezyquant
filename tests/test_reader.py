@@ -865,7 +865,7 @@ class TestGetSymbolsByIndex:
 
         assert_index_equal(
             result.columns,
-            pd.Index(["as_of_date", "symbol", "index", "seq"]),
+            pd.Index(["as_of_date", "index", "symbol", "seq"]),
         )
 
         for i in result.columns:
