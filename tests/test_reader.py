@@ -269,8 +269,6 @@ class TestGetSymbolInfo:
         assert_series_equal(result["symbol"], result["symbol"].str.upper())
 
         assert result["market"].isin([fld.MARKET_SET, fld.MARKET_MAI]).all()
-        assert result["industry"].isin(fld.INDUSTRY_LIST).all()
-        assert result["sector"].isin(fld.SECTOR_LIST).all()
 
         assert result["symbol_id"].is_unique
         assert result["symbol"].is_unique
