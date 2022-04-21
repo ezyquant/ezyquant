@@ -1,5 +1,4 @@
 from datetime import date
-
 from typing import Iterable, List, Optional
 
 import numpy as np

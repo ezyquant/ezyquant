@@ -148,10 +148,8 @@ class TestGetSymbolInfo:
         # Check
         self._check(result)
 
-        assert (result["market"] == fld.MARKET_SET).all()
-        # MAI sector name same as industry name
-        assert result["sector"].isin(fld.INDUSTRY_LIST).all()
-        assert "STA" in result["symbol"]
+        assert (result["market"] == fld.MARKET_MAI).all()
+        assert "AU" in result["symbol"].tolist()
 
     def test_industry(self, sdr: SETDataReader):
         # Test
@@ -166,7 +164,7 @@ class TestGetSymbolInfo:
             .isin([fld.SECTOR_AGRI, fld.SECTOR_FOOD, fld.SECTOR_AGRO])
             .all()
         )
-        assert "STA" in result["symbol"]
+        assert "STA" in result["symbol"].tolist()
 
     def test_sector(self, sdr: SETDataReader):
         # Test
@@ -179,9 +177,9 @@ class TestGetSymbolInfo:
         assert (result["market"] == fld.MARKET_SET).all()
         assert (result["industry"] == fld.INDUSTRY_AGRO).all()
         assert (result["sector"] == fld.SECTOR_AGRI).all()
-        assert "STA" in result["symbol"]
+        assert "STA" in result["symbol"].tolist()
 
-    @pytest.mark.parametrize("symbol_list", ["TCCC", "PTTGC"])
+    @pytest.mark.parametrize("symbol_list", [["TCCC", "PTTGC"]])
     @pytest.mark.parametrize("market", [fld.MARKET_SET, None])
     @pytest.mark.parametrize("industry", [fld.INDUSTRY_INDUS, None])
     @pytest.mark.parametrize("sector", [fld.SECTOR_PETRO, None])
@@ -268,7 +266,11 @@ class TestGetSymbolInfo:
 
         assert_series_equal(result["symbol"], result["symbol"].str.upper())
 
-        assert result["market"].isin([fld.MARKET_SET, fld.MARKET_MAI]).all()
+        assert (
+            result["market"]
+            .isin([fld.MARKET_SET, fld.MARKET_MAI, fld.MARKET_BOND])
+            .all()
+        )
 
         assert result["symbol_id"].is_unique
         assert result["symbol"].is_unique
