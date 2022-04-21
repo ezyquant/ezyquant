@@ -164,7 +164,7 @@ class SETDataReader:
             ]
         ).select_from(j)
         if market != None:
-            stmt = stmt.where(security.c.I_MARKET == market)
+            stmt = stmt.where(security.c.I_MARKET == fc.MARKET_MAP[market])
         if symbol_list != None:
             stmt = stmt.where(
                 func.trim(security.c.N_SECURITY).in_([s.upper() for s in symbol_list])
@@ -178,6 +178,8 @@ class SETDataReader:
 
         map_market = {v: k for k, v in fc.MARKET_MAP.items()}
         res_df["market"] = res_df["market"].map(map_market)
+        res_df = res_df.dropna()
+        res_df = res_df.reset_index(drop=True)
         return res_df
 
     def get_company_info(self, symbol_list: Optional[List[str]] = None) -> pd.DataFrame:
@@ -243,7 +245,7 @@ class SETDataReader:
             )
         # stmt.join(security, company.c.I_COMPANY == security.c.I_COMPANY)
         res_df = pd.read_sql(stmt, self.__engine)
-
+        res_df = res_df.replace("", None)
         return res_df
 
     def get_change_name(
@@ -314,7 +316,10 @@ class SETDataReader:
             col_list=security.c.N_SECURITY,
             col_date=change_name.c.D_EFFECT,
         )
-        stmt.where(change_name.c.N_SECURITY_OLD != change_name.c.N_SECURITY_NEW)
+        stmt = stmt.where(
+            func.trim(change_name.c.N_SECURITY_OLD)
+            != func.trim(change_name.c.N_SECURITY_NEW)
+        )
         res_df = pd.read_sql(stmt, self.__engine)
         res_df = res_df.dropna()
         res_df = res_df.drop_duplicates()
@@ -1108,7 +1113,9 @@ class SETDataReader:
             + selected_fields
         ).select_from(j)
         if from_table == "DAILY_STOCK_TRADE":
-            stmt.where(daily_stock__.c.I_TRADING_METHOD == "A")  # Auto Matching
+            stmt = stmt.where(
+                func.trim(daily_stock__.c.I_TRADING_METHOD) == "A"
+            )  # Auto Matching
         stmt = self._list_start_end_condition(
             query_object=stmt,
             list_condition=symbol_list,
@@ -1139,6 +1146,7 @@ class SETDataReader:
         df = df.replace({i: 0 for i in NULL_IF_FIELD if i in df.columns}, np.nan)
         # return df
         df = self._merge_adjust_factor(df, adjust_list=adjusted_list)
+        df.index.name = None
         return df
 
     def get_data_symbol_quarterly(

@@ -663,7 +663,7 @@ DAILY_STOCK_STAT_FACTOR = {
     "par": "Z_PAR",
     "dps": "R_DPS",
     "dvd_yield": "P_DVD_YIELD",
-    "mkt_cap": "M_MKT_CAP",
+    "mkt_cap": "M_MKT_CAP",  #
     "eps": "R_EPS",
     "book_value": "M_BOOK_VALUE",
     "quarter_fin": "I_QUARTER_FIN",
@@ -673,7 +673,7 @@ DAILY_STOCK_STAT_FACTOR = {
     "status": "N_STATUS",
     "benefit": "N_BENEFIT",
     "share_listed": "Q_SHARE_LISTED",
-    "turnover": "R_TURNOVER",
+    "turnover": "R_TURNOVER",  #
     "share_index": "Q_SHARE_INDEX",
     "npg": "F_NPG",
     "total_volume": "Q_TOTAL_VOLUME",
@@ -691,6 +691,6 @@ DAILY_STOCK_STAT_FACTOR = {
     "stabilization": "F_STABILIZATION",
     "call_market": "F_CALL_MARKET",
     "caution": "F_CAUTION",
-    "dvd_12m_yield": "P_12M_DVD_YIELD",
+    "12m_dvd_yield": "P_12M_DVD_YIELD",  #
     "peg": "R_PEG",
 }
