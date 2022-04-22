@@ -894,6 +894,9 @@ class SETDataReader:
 
         df = df.pivot(columns="symbol", values=field)
 
+        df.index.name = None
+        df.columns.name = None
+
         if field in {"open", "close", "low", "high", "average", "eps", "dps"}:
             df = self._merge_adjust_factor(
                 df, is_multiply=True, adjust_list=adjusted_list
@@ -1173,6 +1176,9 @@ class SETDataReader:
         adjust_list: Optional[List[str]] = None,
     ) -> pd.DataFrame:
         """df index is trade_date and columns is symbol."""
+        if df.empty:
+            return df
+
         if start_date == None:
             start_date = df.index.min().date()
 

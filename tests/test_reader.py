@@ -979,7 +979,12 @@ class TestGetDataSymbolDaily:
     """source: https://www.tradingview.com/chart/?symbol=SET:COM7"""
 
     @pytest.mark.parametrize(
-        "field", [getattr(fld, i) for i in dir(fld) if i.startswith("D_")][::5]
+        "field",
+        [
+            getattr(fld, i)
+            for i in dir(fld)
+            if i.startswith("D_") and not i.startswith(("D_INDEX", "D_SECTOR"))
+        ][::5],
     )
     def test_field(self, sdr: SETDataReader, field: str):
         symbol_list = ["COM7"]
@@ -1077,7 +1082,7 @@ class TestGetDataSymbolDaily:
                 date(2022, 3, 14),
                 True,
                 pd.DataFrame(
-                    {"COM7": [41811200, 35821300, 23099500]},
+                    {"COM7": [41811200.0, 35821300.0, 23099500.0]},
                     index=[
                         pd.Timestamp("2022-03-10"),
                         pd.Timestamp("2022-03-11"),
@@ -1093,7 +1098,7 @@ class TestGetDataSymbolDaily:
                 date(2022, 3, 14),
                 False,
                 pd.DataFrame(
-                    {"COM7": [20905600, 35821300, 23099500]},
+                    {"COM7": [20905600.0, 35821300.0, 23099500.0]},
                     index=[
                         pd.Timestamp("2022-03-10"),
                         pd.Timestamp("2022-03-11"),
