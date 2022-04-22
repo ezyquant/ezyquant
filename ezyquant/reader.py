@@ -126,18 +126,18 @@ class SETDataReader:
 
         Examples
         --------
+        >>> from ezyquant import fields as fld
         >>> from ezyquant.reader import SETDataReader
-        >>> from ezyquant.fields import *
-        >>> sdr = SETDataReader("ssetdi_db.db")
-        >>> sdr.get_symbol_info(["SET"])
-                symbol_id symbol market  industry    sector sec_type native
-        0          0         SET      A  -         --------        S      L
-        >>> sdr.get_symbol_info(sector=SECTOR_MINE)
-                symbol_id symbol market  industry  sector sec_type native
-        0           61     THL-F      A  RESOURC   MINE          F      F
-        1           61       THL      A  RESOURC   MINE          S      L
-        2           61     THL-R      A  RESOURC   MINE          S      R
-        3           61     THL-U      A  RESOURC   MINE          S      U
+        >>> sdr = SETDataReader("psims.db")
+        >>> sdr.get_symbol_info(["BBL"])
+           symbol_id symbol market industry sector sec_type native
+        0          1    BBL    SET  FINCIAL   BANK        S      L
+        >>> sdr.get_symbol_info(sector=fld.SECTOR_MINE)
+           symbol_id symbol market industry sector sec_type native
+        0        167    THL    SET  RESOURC   MINE        S      L
+        1        168  THL-R    SET  RESOURC   MINE        S      R
+        2        169  THL-U    SET  RESOURC   MINE        S      U
+        3       2968  THL-F    SET  RESOURC   MINE        F      F
         """
         security_t = self._table("SECURITY")
         sector_t = self._table("SECTOR")
@@ -212,11 +212,11 @@ class SETDataReader:
         Examples
         --------
         >>> from ezyquant.reader import SETDataReader
-        >>> sdr = SETDataReader("ssetdi_db.db")
+        >>> sdr = SETDataReader("psims.db")
         >>> sdr.get_company_info(symbol_list=["BBL", "PTT"])
-            company_id symbol             company_name_t  ...   establish                      dvd_policy_t                                      dvd_policy_e
-        0           1     BBL  ธนาคารกรุงเทพ จำกัด (มหาชน)  ...   1/12/1944   เมื่อผลประกอบการของธนาคารมีกำไร...  Pays when company has profit (with additional ...
-        1         646     PTT    บริษัท ปตท. จำกัด (มหาชน)  ...   1/10/2001   ไม่ต่ำกว่าร้อยละ 25 ของกำไรสุทธิที่...  Not less than 25% of net income after deductio...
+           company_id symbol               company_name_t  ...  establish                                       dvd_policy_t                                       dvd_policy_e
+        0           1    BBL  ธนาคารกรุงเทพ จำกัด (มหาชน)  ...  1/12/1944  เมื่อผลประกอบการของธนาคารมีกำไร (โดยมีเงื่อนไข...  Pays when company has profit (with additional ...
+        1         646    PTT    บริษัท ปตท. จำกัด (มหาชน)  ...  1/10/2001  ไม่ต่ำกว่าร้อยละ 25 ของกำไรสุทธิที่เหลือหลังหั...  Not less than 25% of net income after deductio...
         """
         company_t = self._table("COMPANY")
         security_t = self._table("SECURITY")
@@ -242,12 +242,10 @@ class SETDataReader:
         ).select_from(j)
 
         if symbol_list != None:
-            stmt = stmt.where(
-                func.trim(security_t.c.N_SECURITY).in_([s.upper() for s in symbol_list])
-            )
+            symbol_list = [s.upper() for s in symbol_list]
+            stmt = stmt.where(func.trim(security_t.c.N_SECURITY).in_(symbol_list))
 
         res_df = pd.read_sql(stmt, self.__engine)
-        res_df = res_df.replace("", None)
         return res_df
 
     def get_change_name(
@@ -279,14 +277,14 @@ class SETDataReader:
 
         Examples
         --------
+        >>> from datetime import date
         >>> from ezyquant.reader import SETDataReader
-        >>> import datetime
-        >>> sdr = SETDataReader("ssetdi_db.db")
+        >>> sdr = SETDataReader("psims.db")
         >>> sdr.get_change_name(["SMG"])
            symbol_id symbol effect_date symbol_old symbol_new
         0        220    SMG  2006-07-31        SMG      SCSMG
         1        220    SMG  2014-08-28      SCSMG        SMG
-        >>> sdr.get_change_name(start_date=datetime.date(2014, 8, 28),end_date=datetime.date(2014, 8, 29))
+        >>> sdr.get_change_name(start_date=date(2014, 8, 28), end_date=date(2014, 8, 29))
            symbol_id    symbol effect_date  symbol_old symbol_new
         0        220       SMG  2014-08-28       SCSMG        SMG
         1        221     SMG-F  2014-08-28     SCSMG-F      SMG-F
@@ -370,7 +368,7 @@ class SETDataReader:
         --------
         >>> from ezyquant.reader import SETDataReader
         >>> import datetime
-        >>> sdr = SETDataReader("ssetdi_db.db")
+        >>> sdr = SETDataReader("psims.db")
         >>> sdr.get_dividend(["M"])
            symbol     ex_date    pay_date ca_type  dps
         0       M  2014-05-06  2014-05-21      CD  1.6
@@ -483,7 +481,7 @@ class SETDataReader:
         --------
         >>> from ezyquant.reader import SETDataReader
         >>> import datetime
-        >>> sdr = SETDataReader("ssetdi_db.db")
+        >>> sdr = SETDataReader("psims.db")
         >>> sdr.get_delisted(start_date=datstart, end_date=datend)
              symbol delisted_date
         0  CB14828A    2014-08-28
@@ -556,7 +554,7 @@ class SETDataReader:
         --------
         >>> from ezyquant.reader import SETDataReader
         >>> import datetime
-        >>> sdr = SETDataReader("ssetdi_db.db")
+        >>> sdr = SETDataReader("psims.db")
         >>>     sdr.get_sign_posting(start_date=datetime.date(2014, 8, 20),end_date=datetime.date(2014, 8, 25),sign_list=["H"])
            symbol  hold_date sign
         0     DV8 2014-08-20    H
@@ -631,7 +629,7 @@ class SETDataReader:
         --------
         >>> from ezyquant.reader import SETDataReader
         >>> import datetime
-        >>> sdr = SETDataReader("ssetdi_db.db")
+        >>> sdr = SETDataReader("psims.db")
         >>> sdr.get_symbols_by_index(["COMM"],start_date=datetime.date(2022, 1, 1),end_date=datetime.date(2022, 4, 1))
            as_of_date  symbol index
         0  2022-01-04     BJC  COMM
@@ -719,7 +717,7 @@ class SETDataReader:
         Examples
         --------
         >>> from ezyquant.reader import SETDataReader
-        >>> sdr = SETDataReader("ssetdi_db.db")
+        >>> sdr = SETDataReader("psims.db")
         >>> print(sdr.get_adjust_factor(symbol_list=["ASW", "DITTO"], ca_type_list=["SD"]))
           symbol effect_date ca_type  adjust_factor
         0    ASW  2021-08-25      SD         0.8889
