@@ -4,7 +4,7 @@ from typing import Iterable, List, Optional
 import numpy as np
 import pandas as pd
 import sqlalchemy as sa
-from sqlalchemy import MetaData, Table, and_, func, select
+from sqlalchemy import MetaData, Table, and_, distinct, func, select
 
 from . import fields as fc
 
@@ -150,7 +150,7 @@ class SETDataReader:
                 security_t.c.I_SECTOR == sector_t.c.I_SECTOR,
                 security_t.c.I_SUBSECTOR == sector_t.c.I_SUBSECTOR,
             ),
-            isouter=True,  # left outerjoin
+            isouter=True,
         )
         stmt = select(
             [
@@ -320,11 +320,10 @@ class SETDataReader:
             func.trim(change_name_t.c.N_SECURITY_OLD)
             != func.trim(change_name_t.c.N_SECURITY_NEW)
         )
+        stmt = stmt.where(change_name_t.c.D_EFFECT != None)
 
         res_df = pd.read_sql(stmt, self.__engine)
-        res_df = res_df.dropna()
-        res_df = res_df.drop_duplicates()
-        res_df = res_df.reset_index(drop=True)
+        res_df = res_df.drop_duplicates(ignore_index=True)
         return res_df
 
     def get_dividend(
