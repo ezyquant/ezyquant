@@ -148,6 +148,7 @@ class SETDataReader:
                 security_t.c.I_MARKET == sector_t.c.I_MARKET,
                 security_t.c.I_INDUSTRY == sector_t.c.I_INDUSTRY,
                 security_t.c.I_SECTOR == sector_t.c.I_SECTOR,
+                security_t.c.I_SUBSECTOR == sector_t.c.I_SUBSECTOR,
             ),
             isouter=True,  # left outerjoin
         )
@@ -177,9 +178,8 @@ class SETDataReader:
         res_df = pd.read_sql(stmt, self.__engine)
 
         map_market = {v: k for k, v in fc.MARKET_MAP.items()}
-        res_df["market"] = res_df["market"].map(map_market)
-        res_df = res_df.dropna()
-        res_df = res_df.reset_index(drop=True)
+        res_df["market"] = res_df["market"].replace(map_market)
+
         return res_df
 
     def get_company_info(self, symbol_list: Optional[List[str]] = None) -> pd.DataFrame:
