@@ -4,7 +4,8 @@ from typing import Iterable, List, Optional
 import numpy as np
 import pandas as pd
 import sqlalchemy as sa
-from sqlalchemy import MetaData, Table, and_, func, select
+from sqlalchemy import Column, MetaData, Table, and_, func, select
+from sqlalchemy.sql import Select
 
 from . import fields as fld
 
@@ -308,13 +309,13 @@ class SETDataReader:
                 func.trim(change_name_t.c.N_SECURITY_NEW).label("symbol_new"),
             ]
         ).select_from(j)
-        stmt = self._list_start_end_condition(
-            query_object=stmt,
-            list_condition=symbol_list,
+        stmt = self._filter_symbol_start_end(
+            stmt=stmt,
+            symbol_column=security_t.c.N_SECURITY,
+            date_column=change_name_t.c.D_EFFECT,
+            symbol_list=symbol_list,
             start_date=start_date,
             end_date=end_date,
-            col_list=security_t.c.N_SECURITY,
-            col_date=change_name_t.c.D_EFFECT,
         )
         stmt = stmt.where(
             func.trim(change_name_t.c.N_SECURITY_OLD)
@@ -414,13 +415,13 @@ class SETDataReader:
             .where(rights_benefit_t.c.Z_RIGHTS > 0)
         )
 
-        stmt = self._list_start_end_condition(
-            query_object=stmt,
-            list_condition=symbol_list,
+        stmt = self._filter_symbol_start_end(
+            stmt=stmt,
+            symbol_list=symbol_list,
             start_date=start_date,
             end_date=end_date,
-            col_list=security_t.c.N_SECURITY,
-            col_date=rights_benefit_t.c.D_SIGN,
+            symbol_column=security_t.c.N_SECURITY,
+            date_column=rights_benefit_t.c.D_SIGN,
         )
         if ca_type_list != None:
             stmt = stmt.where(rights_benefit_t.c.N_CA_TYPE.in_(ca_type_list))
@@ -502,13 +503,13 @@ class SETDataReader:
             .select_from(j)
             .where(security_detail_t.c.D_DELISTED != None)
         )
-        stmt = self._list_start_end_condition(
-            query_object=stmt,
-            list_condition=symbol_list,
+        stmt = self._filter_symbol_start_end(
+            stmt=stmt,
+            symbol_list=symbol_list,
             start_date=start_date,
             end_date=end_date,
-            col_list=security_t.c.N_SECURITY,
-            col_date=security_detail_t.c.D_DELISTED,
+            symbol_column=security_t.c.N_SECURITY,
+            date_column=security_detail_t.c.D_DELISTED,
         )
         res_df = pd.read_sql(stmt, self.__engine)
         return res_df
@@ -572,13 +573,13 @@ class SETDataReader:
                 func.trim(sign_posting_t.c.N_SIGN).label("sign"),
             ]
         ).select_from(j)
-        stmt = self._list_start_end_condition(
-            query_object=stmt,
-            list_condition=symbol_list,
+        stmt = self._filter_symbol_start_end(
+            stmt=stmt,
+            symbol_list=symbol_list,
             start_date=start_date,
             end_date=end_date,
-            col_list=security_t.c.N_SECURITY,
-            col_date=sign_posting_t.c.D_HOLD,
+            symbol_column=security_t.c.N_SECURITY,
+            date_column=sign_posting_t.c.D_HOLD,
         )
         if sign_list != None:
             sign_list = [x.upper() for x in sign_list]
@@ -658,13 +659,13 @@ class SETDataReader:
                 security_index_t.c.S_SEQ.label("seq"),
             ]
         ).select_from(j)
-        stmt = self._list_start_end_condition(
-            query_object=stmt,
-            list_condition=index_list,
+        stmt = self._filter_symbol_start_end(
+            stmt=stmt,
+            symbol_list=index_list,
             start_date=start_date,
             end_date=end_date,
-            col_list=sector_t.c.N_SECTOR,
-            col_date=security_index_t.c.D_AS_OF,
+            symbol_column=sector_t.c.N_SECTOR,
+            date_column=security_index_t.c.D_AS_OF,
         )
 
         res_df = pd.read_sql(stmt, self.__engine)
@@ -736,13 +737,13 @@ class SETDataReader:
                 adjust_factor_t.c.R_ADJUST_FACTOR.label("adjust_factor"),
             ]
         ).select_from(j)
-        stmt = self._list_start_end_condition(
-            query_object=stmt,
-            list_condition=symbol_list,
+        stmt = self._filter_symbol_start_end(
+            stmt=stmt,
+            symbol_list=symbol_list,
             start_date=start_date,
             end_date=end_date,
-            col_list=security_t.c.N_SECURITY,
-            col_date=adjust_factor_t.c.D_EFFECT,
+            symbol_column=security_t.c.N_SECURITY,
+            date_column=adjust_factor_t.c.D_EFFECT,
         )
         if ca_type_list != None:
             ca_type_list = [i.upper() for i in ca_type_list]
@@ -750,312 +751,6 @@ class SETDataReader:
         res_df = pd.read_sql(stmt, self.__engine)
 
         return res_df
-
-    def _get_fundamental_data(
-        self,
-        period: str,
-        field: str,
-        symbol_list: Optional[Iterable[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
-        is_to_dict: bool = True,
-    ) -> pd.DataFrame:
-        """fill nan with -np.inf if is_to_dict.
-
-        period: str
-            'Q' for Quarter, 'Y' for Quarter, 'YTD', 'TTM', 'AVG'
-        """
-        # split field_list for 2 tables
-        screen_field_list = list()
-        stat_field_list = list()
-        df = pd.DataFrame
-        field = field.lower()
-        if field in fld.FINANCIAL_SCREEN_FACTOR:
-            df = self._get_financial_screen(
-                symbol_list=symbol_list,
-                field=field,
-                start_date=start_date,
-                end_date=end_date,
-                period=period,
-            )
-        elif field in fld.FINANCIAL_STAT_STD_FACTOR:
-            df = self._get_financial_stat_std(
-                symbol_list=symbol_list,
-                field=field,
-                start_date=start_date,
-                end_date=end_date,
-                period=period,
-            )
-        else:
-            raise ValueError(
-                f"{field} not in Data {period} field. Please check psims factor for more details."
-            )
-        return df
-
-    def _get_financial_screen(
-        self,
-        period: str,
-        field: str,
-        symbol_list: Optional[Iterable[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
-    ) -> pd.DataFrame:
-        """
-        period: str
-            'Q' for Quarter, 'Y' for Year, 'YTD' for Year to date
-        period_type: str
-            'QY', 'QOQ', 'YOY'
-        """
-        PERIOD_DICT = {
-            "Q": ("Q1", "Q2", "Q3", "Q4"),
-            "Y": ("YE",),
-            "YTD": ("Q1", "6M", "9M", "YE"),
-        }
-
-        financial_screen_t = self._table("FINANCIAL_SCREEN")
-        security_t = self._table("SECURITY")
-
-        j = financial_screen_t.join(
-            security_t, financial_screen_t.c.I_SECURITY == security_t.c.I_SECURITY
-        )
-
-        sql = (
-            select(
-                [
-                    financial_screen_t.c.D_AS_OF.label("trading_datetime"),
-                    func.trim(security_t.c.N_SECURITY).label("symbol"),
-                    financial_screen_t.c[
-                        fld.FINANCIAL_SCREEN_FACTOR[field.lower()]
-                    ].label(field.lower()),
-                ]
-            )
-            .where(
-                financial_screen_t.c.I_PERIOD.in_(
-                    PERIOD_DICT.get(period.upper(), tuple())
-                )
-            )
-            .select_from(j)
-            .order_by(financial_screen_t.c.D_AS_OF)
-            .order_by(financial_screen_t.c.I_YEAR.asc())
-            .order_by(financial_screen_t.c.I_QUARTER.asc())
-        )
-
-        if symbol_list != None:
-            sql = sql.where(
-                security_t.c.N_SECURITY.in_(
-                    ["{:<20}".format(s.upper()) for s in symbol_list]
-                )
-            )
-
-        if not pd.isnull(start_date):
-            sql = sql.where(financial_screen_t.c.D_AS_OF >= start_date)
-        if not pd.isnull(end_date):
-            sql = sql.where(financial_screen_t.c.D_AS_OF <= end_date)
-
-        df = pd.read_sql(sql, self.__engine, parse_dates="trading_datetime")
-        return df
-
-    def _get_financial_stat_std(
-        self,
-        period: str,
-        field: str,
-        symbol_list: Optional[Iterable[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
-    ) -> pd.DataFrame:
-        """
-        period: str
-            'Q' for Quarter, 'Y' for Year
-        """
-        PERIOD_DICT = {
-            "Q": "M_ACCOUNT",
-            "Y": "M_ACC_ACCOUNT_12M",
-            "YTD": "M_ACC_ACCOUNT",
-            "AVG": "M_ACCOUNT_AVG",
-            "TTM": "M_ACC_ACCOUNT_12M",
-        }
-
-        period = period.upper()
-
-        financial_stat_std_t = self._table("FINANCIAL_STAT_STD")
-        daily_stock_stat_t = self._table("DAILY_STOCK_STAT")
-        security_t = self._table("SECURITY")
-
-        daily_stock_stat_subquery = (
-            select(
-                [
-                    daily_stock_stat_t.c.I_SECURITY,
-                    daily_stock_stat_t.c.D_AS_OF,
-                    func.min(daily_stock_stat_t.c.D_TRADE).label("D_TRADE"),
-                ]
-            )
-            .group_by(daily_stock_stat_t.c.I_SECURITY, daily_stock_stat_t.c.D_AS_OF)
-            .subquery()  # type: ignore
-        )
-
-        selected_fields = [
-            daily_stock_stat_subquery.c.D_TRADE.label("trading_datetime"),
-            func.trim(security_t.c.N_SECURITY).label("symbol"),
-            financial_stat_std_t.c.N_ACCOUNT.label("field"),
-            financial_stat_std_t.c[PERIOD_DICT[period]].label("value"),
-        ]
-
-        if period == "Y":
-            selected_fields.append(financial_stat_std_t.c.M_ACCOUNT)
-
-        sql = (
-            select(selected_fields)
-            .select_from(financial_stat_std_t)
-            .order_by(daily_stock_stat_subquery.c.D_TRADE.asc())
-            .order_by(financial_stat_std_t.c.I_ACCT_FORM.asc())
-        )
-
-        if period == "Y":
-            sql = sql.where(financial_stat_std_t.c.I_QUARTER == 9)
-
-        sql = sql.where(
-            financial_stat_std_t.c.N_ACCOUNT.in_(
-                fld.FINANCIAL_STAT_STD_FACTOR[field.lower()]
-            )
-        )
-
-        if symbol_list is not None:
-            sql = sql.where(
-                security_t.c.N_SECURITY.in_(
-                    ["{:<20}".format(s.upper()) for s in symbol_list]
-                )
-            )
-
-        if not pd.isnull(start_date):
-            sql = sql.where(daily_stock_stat_subquery.c.D_TRADE >= start_date)
-        if not pd.isnull(end_date):
-            sql = sql.where(daily_stock_stat_subquery.c.D_TRADE <= end_date)
-
-        sql = sql.join(
-            daily_stock_stat_subquery,
-            and_(
-                financial_stat_std_t.c.D_AS_OF == daily_stock_stat_subquery.c.D_AS_OF,
-                financial_stat_std_t.c.I_SECURITY
-                == daily_stock_stat_subquery.c.I_SECURITY,
-            ),
-        ).join(security_t, financial_stat_std_t.c.I_SECURITY == security_t.c.I_SECURITY)
-
-        # sql = self._compile_sql(sql)
-        df = pd.read_sql(sql, self.__engine, parse_dates="trading_datetime")
-
-        # duplicate key mostly I_ACCT_FORM 6,7
-        df = df.drop_duplicates(
-            subset=["trading_datetime", "symbol", "field"], keep="last"
-        )
-        df = df.set_index("trading_datetime")
-
-        if period == "Y":
-            """For Yearly fundamental "I_ACCT_TYPE".
-
-            - B use "M_ACCOUNT"
-            - I use "M_ACC_ACCOUNT_12M"
-            - C use "M_ACC_ACCOUNT_12M"
-            """
-            df = df.fillna({"value": df["M_ACCOUNT"]}).drop(columns="M_ACCOUNT")
-
-        # pivot dataframe
-        df = df.reset_index()
-        df = df.pivot(
-            index=["trading_datetime", "symbol"], columns="field", values="value"
-        )
-        df = df.reset_index("symbol")
-
-        # rename columns
-        df = df.rename(columns={v: k for k, v in fld.FINANCIAL_STAT_STD_FACTOR.items()})
-
-        return df
-
-    def _merge_adjust_factor(
-        self,
-        df: pd.DataFrame,
-        multiply_columns: Iterable[str] = {
-            "open",
-            "close",
-            "low",
-            "high",
-            "average",
-            "eps",
-            "dps",
-        },
-        divide_columns: Iterable[str] = {"volume"},
-        start_date: Optional[date] = None,
-        adjust_list: Optional[List[str]] = None,
-        is_all_symbol: Optional[bool] = False,
-    ) -> pd.DataFrame:
-        """df index is trading_datetime and columns contain symbol."""
-        if df.empty or (
-            not set(df.columns) & (set(multiply_columns) | set(divide_columns))
-        ):
-            return df
-
-        if pd.isnull(start_date):
-            start_date = df.index.min().date()
-
-        if is_all_symbol:
-            adj_factor = self.get_adjust_factor(
-                start_date=start_date,
-                ca_type_list=adjust_list,
-            )
-        else:
-            adj_factor = self.get_adjust_factor(
-                symbol_list=df["symbol"].unique().tolist(),
-                start_date=start_date,
-                ca_type_list=adjust_list,
-            )
-
-        adj_factor.index = adj_factor.effect_date
-
-        # print(adj_factor)
-        end_adj = adj_factor.effect_date.max()
-
-        if adj_factor.empty:
-            return df
-
-        # pivot table
-        adj_factor = adj_factor.pivot(columns="symbol", values="adjust_factor")
-        # print(adj_factor)
-        # cumulate product of adjust factor
-        adj_factor = adj_factor.iloc[::-1].cumprod().iloc[::-1]  # type: ignore
-        # print(adj_factor)
-        # reindex and shift back 1 day
-        adj_factor = adj_factor.reindex(
-            pd.date_range(
-                start=df.index.min(),
-                end=max(df.index.max(), end_adj),
-                normalize=True,
-            ),
-        )
-        # print(adj_factor)
-        adj_factor = adj_factor.shift(-1)
-
-        # back fill and fill 1
-        adj_factor = adj_factor.fillna(method="backfill").fillna(1)
-        # stack to series
-        adj_factor = adj_factor.stack("symbol")
-
-        # merge adjust factor to dataframe
-        df = df.set_index("symbol", append=True)
-        df["adj_factor"] = adj_factor
-        df = df.fillna({"adj_factor": 1})
-        df = df.reset_index("symbol")
-        # print(df)
-        mul_cols = [i for i in multiply_columns if i in df.columns]
-        div_cols = [i for i in divide_columns if i in df.columns]
-
-        for field in mul_cols:
-            df[field] *= df["adj_factor"]
-        for field in div_cols:
-            df[field] /= df["adj_factor"]
-
-        df = df.drop(columns=["adj_factor"]).dropna(
-            subset=mul_cols + div_cols, how="all"
-        )  # dropna from outer merge
-        return df
 
     def get_data_symbol_daily(
         self,
@@ -1133,13 +828,13 @@ class SETDataReader:
             stmt = stmt.where(
                 func.trim(daily_stock_t.c.I_TRADING_METHOD) == "A"
             )  # Auto Matching
-        stmt = self._list_start_end_condition(
-            query_object=stmt,
-            list_condition=symbol_list,
+        stmt = self._filter_symbol_start_end(
+            stmt=stmt,
+            symbol_list=symbol_list,
             start_date=start_date,
             end_date=end_date,
-            col_list=security_t.c.N_SECURITY,
-            col_date=daily_stock_t.c.D_TRADE,
+            symbol_column=security_t.c.N_SECURITY,
+            date_column=daily_stock_t.c.D_TRADE,
         )
 
         df = pd.read_sql(
@@ -1408,32 +1103,326 @@ class SETDataReader:
     def _table(self, name: str) -> Table:
         return Table(name, self.__metadata, autoload=True)
 
-    def _list_start_end_condition(
+    def _filter_symbol_start_end(
         self,
-        query_object,
-        list_condition,
-        col_list,
-        start_date,
-        end_date,
-        col_date,
+        stmt: Select,
+        symbol_column: Column,
+        date_column: Column,
+        symbol_list: Optional[List[str]],
+        start_date: Optional[date],
+        end_date: Optional[date],
     ):
-        """helper function for make query.
-
-        Parameters
-        ----------
-        query_object : query_object that want to fill query
-        list_condition : list will be condition for col_list to be in
-        col_list : column to apply list condition
-        start_date : start date condition
-        end_date : end date condition
-        col_date : column to apply date condition that date in this column must between start_data and end_date
-        """
-        if list_condition != None:
-            query_object = query_object.where(
-                func.trim(col_list).in_([s.upper() for s in list_condition])
-            )
+        if symbol_list != None:
+            symbol_list = [i.upper() for i in symbol_list]
+            stmt = stmt.where(func.trim(symbol_column).in_(symbol_list))
         if start_date != None:
-            query_object = query_object.where(func.DATE(col_date) >= start_date)
+            stmt = stmt.where(func.DATE(date_column) >= start_date)
         if end_date != None:
-            query_object = query_object.where(func.DATE(col_date) <= end_date)
-        return query_object
+            stmt = stmt.where(func.DATE(date_column) <= end_date)
+        return stmt
+
+    def _merge_adjust_factor(
+        self,
+        df: pd.DataFrame,
+        multiply_columns: Iterable[str] = {
+            "open",
+            "close",
+            "low",
+            "high",
+            "average",
+            "eps",
+            "dps",
+        },
+        divide_columns: Iterable[str] = {"volume"},
+        start_date: Optional[date] = None,
+        adjust_list: Optional[List[str]] = None,
+        is_all_symbol: Optional[bool] = False,
+    ) -> pd.DataFrame:
+        """df index is trading_datetime and columns contain symbol."""
+        if df.empty or (
+            not set(df.columns) & (set(multiply_columns) | set(divide_columns))
+        ):
+            return df
+
+        if pd.isnull(start_date):
+            start_date = df.index.min().date()
+
+        if is_all_symbol:
+            adj_factor = self.get_adjust_factor(
+                start_date=start_date,
+                ca_type_list=adjust_list,
+            )
+        else:
+            adj_factor = self.get_adjust_factor(
+                symbol_list=df["symbol"].unique().tolist(),
+                start_date=start_date,
+                ca_type_list=adjust_list,
+            )
+
+        adj_factor.index = adj_factor.effect_date
+
+        # print(adj_factor)
+        end_adj = adj_factor.effect_date.max()
+
+        if adj_factor.empty:
+            return df
+
+        # pivot table
+        adj_factor = adj_factor.pivot(columns="symbol", values="adjust_factor")
+        # print(adj_factor)
+        # cumulate product of adjust factor
+        adj_factor = adj_factor.iloc[::-1].cumprod().iloc[::-1]  # type: ignore
+        # print(adj_factor)
+        # reindex and shift back 1 day
+        adj_factor = adj_factor.reindex(
+            pd.date_range(
+                start=df.index.min(),
+                end=max(df.index.max(), end_adj),
+                normalize=True,
+            ),
+        )
+        # print(adj_factor)
+        adj_factor = adj_factor.shift(-1)
+
+        # back fill and fill 1
+        adj_factor = adj_factor.fillna(method="backfill").fillna(1)
+        # stack to series
+        adj_factor = adj_factor.stack("symbol")
+
+        # merge adjust factor to dataframe
+        df = df.set_index("symbol", append=True)
+        df["adj_factor"] = adj_factor
+        df = df.fillna({"adj_factor": 1})
+        df = df.reset_index("symbol")
+        # print(df)
+        mul_cols = [i for i in multiply_columns if i in df.columns]
+        div_cols = [i for i in divide_columns if i in df.columns]
+
+        for field in mul_cols:
+            df[field] *= df["adj_factor"]
+        for field in div_cols:
+            df[field] /= df["adj_factor"]
+
+        df = df.drop(columns=["adj_factor"]).dropna(
+            subset=mul_cols + div_cols, how="all"
+        )  # dropna from outer merge
+        return df
+
+    def _get_fundamental_data(
+        self,
+        period: str,
+        field: str,
+        symbol_list: Optional[Iterable[str]] = None,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
+        is_to_dict: bool = True,
+    ) -> pd.DataFrame:
+        """fill nan with -np.inf if is_to_dict.
+
+        period: str
+            'Q' for Quarter, 'Y' for Quarter, 'YTD', 'TTM', 'AVG'
+        """
+        # split field_list for 2 tables
+        screen_field_list = list()
+        stat_field_list = list()
+        df = pd.DataFrame
+        field = field.lower()
+        if field in fld.FINANCIAL_SCREEN_FACTOR:
+            df = self._get_financial_screen(
+                symbol_list=symbol_list,
+                field=field,
+                start_date=start_date,
+                end_date=end_date,
+                period=period,
+            )
+        elif field in fld.FINANCIAL_STAT_STD_FACTOR:
+            df = self._get_financial_stat_std(
+                symbol_list=symbol_list,
+                field=field,
+                start_date=start_date,
+                end_date=end_date,
+                period=period,
+            )
+        else:
+            raise ValueError(
+                f"{field} not in Data {period} field. Please check psims factor for more details."
+            )
+        return df
+
+    def _get_financial_screen(
+        self,
+        period: str,
+        field: str,
+        symbol_list: Optional[Iterable[str]] = None,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
+    ) -> pd.DataFrame:
+        """
+        period: str
+            'Q' for Quarter, 'Y' for Year, 'YTD' for Year to date
+        period_type: str
+            'QY', 'QOQ', 'YOY'
+        """
+        PERIOD_DICT = {
+            "Q": ("Q1", "Q2", "Q3", "Q4"),
+            "Y": ("YE",),
+            "YTD": ("Q1", "6M", "9M", "YE"),
+        }
+
+        financial_screen_t = self._table("FINANCIAL_SCREEN")
+        security_t = self._table("SECURITY")
+
+        j = financial_screen_t.join(
+            security_t, financial_screen_t.c.I_SECURITY == security_t.c.I_SECURITY
+        )
+
+        sql = (
+            select(
+                [
+                    financial_screen_t.c.D_AS_OF.label("trading_datetime"),
+                    func.trim(security_t.c.N_SECURITY).label("symbol"),
+                    financial_screen_t.c[
+                        fld.FINANCIAL_SCREEN_FACTOR[field.lower()]
+                    ].label(field.lower()),
+                ]
+            )
+            .where(
+                financial_screen_t.c.I_PERIOD.in_(
+                    PERIOD_DICT.get(period.upper(), tuple())
+                )
+            )
+            .select_from(j)
+            .order_by(financial_screen_t.c.D_AS_OF)
+            .order_by(financial_screen_t.c.I_YEAR.asc())
+            .order_by(financial_screen_t.c.I_QUARTER.asc())
+        )
+
+        if symbol_list != None:
+            sql = sql.where(
+                security_t.c.N_SECURITY.in_(
+                    ["{:<20}".format(s.upper()) for s in symbol_list]
+                )
+            )
+
+        if not pd.isnull(start_date):
+            sql = sql.where(financial_screen_t.c.D_AS_OF >= start_date)
+        if not pd.isnull(end_date):
+            sql = sql.where(financial_screen_t.c.D_AS_OF <= end_date)
+
+        df = pd.read_sql(sql, self.__engine, parse_dates="trading_datetime")
+        return df
+
+    def _get_financial_stat_std(
+        self,
+        period: str,
+        field: str,
+        symbol_list: Optional[Iterable[str]] = None,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
+    ) -> pd.DataFrame:
+        """
+        period: str
+            'Q' for Quarter, 'Y' for Year
+        """
+        PERIOD_DICT = {
+            "Q": "M_ACCOUNT",
+            "Y": "M_ACC_ACCOUNT_12M",
+            "YTD": "M_ACC_ACCOUNT",
+            "AVG": "M_ACCOUNT_AVG",
+            "TTM": "M_ACC_ACCOUNT_12M",
+        }
+
+        period = period.upper()
+
+        financial_stat_std_t = self._table("FINANCIAL_STAT_STD")
+        daily_stock_stat_t = self._table("DAILY_STOCK_STAT")
+        security_t = self._table("SECURITY")
+
+        daily_stock_stat_subquery = (
+            select(
+                [
+                    daily_stock_stat_t.c.I_SECURITY,
+                    daily_stock_stat_t.c.D_AS_OF,
+                    func.min(daily_stock_stat_t.c.D_TRADE).label("D_TRADE"),
+                ]
+            )
+            .group_by(daily_stock_stat_t.c.I_SECURITY, daily_stock_stat_t.c.D_AS_OF)
+            .subquery()  # type: ignore
+        )
+
+        selected_fields = [
+            daily_stock_stat_subquery.c.D_TRADE.label("trading_datetime"),
+            func.trim(security_t.c.N_SECURITY).label("symbol"),
+            financial_stat_std_t.c.N_ACCOUNT.label("field"),
+            financial_stat_std_t.c[PERIOD_DICT[period]].label("value"),
+        ]
+
+        if period == "Y":
+            selected_fields.append(financial_stat_std_t.c.M_ACCOUNT)
+
+        sql = (
+            select(selected_fields)
+            .select_from(financial_stat_std_t)
+            .order_by(daily_stock_stat_subquery.c.D_TRADE.asc())
+            .order_by(financial_stat_std_t.c.I_ACCT_FORM.asc())
+        )
+
+        if period == "Y":
+            sql = sql.where(financial_stat_std_t.c.I_QUARTER == 9)
+
+        sql = sql.where(
+            financial_stat_std_t.c.N_ACCOUNT.in_(
+                fld.FINANCIAL_STAT_STD_FACTOR[field.lower()]
+            )
+        )
+
+        if symbol_list is not None:
+            sql = sql.where(
+                security_t.c.N_SECURITY.in_(
+                    ["{:<20}".format(s.upper()) for s in symbol_list]
+                )
+            )
+
+        if not pd.isnull(start_date):
+            sql = sql.where(daily_stock_stat_subquery.c.D_TRADE >= start_date)
+        if not pd.isnull(end_date):
+            sql = sql.where(daily_stock_stat_subquery.c.D_TRADE <= end_date)
+
+        sql = sql.join(
+            daily_stock_stat_subquery,
+            and_(
+                financial_stat_std_t.c.D_AS_OF == daily_stock_stat_subquery.c.D_AS_OF,
+                financial_stat_std_t.c.I_SECURITY
+                == daily_stock_stat_subquery.c.I_SECURITY,
+            ),
+        ).join(security_t, financial_stat_std_t.c.I_SECURITY == security_t.c.I_SECURITY)
+
+        # sql = self._compile_sql(sql)
+        df = pd.read_sql(sql, self.__engine, parse_dates="trading_datetime")
+
+        # duplicate key mostly I_ACCT_FORM 6,7
+        df = df.drop_duplicates(
+            subset=["trading_datetime", "symbol", "field"], keep="last"
+        )
+        df = df.set_index("trading_datetime")
+
+        if period == "Y":
+            """For Yearly fundamental "I_ACCT_TYPE".
+
+            - B use "M_ACCOUNT"
+            - I use "M_ACC_ACCOUNT_12M"
+            - C use "M_ACC_ACCOUNT_12M"
+            """
+            df = df.fillna({"value": df["M_ACCOUNT"]}).drop(columns="M_ACCOUNT")
+
+        # pivot dataframe
+        df = df.reset_index()
+        df = df.pivot(
+            index=["trading_datetime", "symbol"], columns="field", values="value"
+        )
+        df = df.reset_index("symbol")
+
+        # rename columns
+        df = df.rename(columns={v: k for k, v in fld.FINANCIAL_STAT_STD_FACTOR.items()})
+
+        return df
