@@ -44,15 +44,15 @@ class SETDataReader:
         List[date]
             list of trading dates
         """
-        calendar_table = Table("CALENDAR", self.__metadata, autoload=True)
+        calendar_t = self._table("CALENDAR")
 
-        stmt = select([calendar_table.c.D_TRADE])
+        stmt = select([calendar_t.c.D_TRADE])
         if start_date is not None:
-            stmt = stmt.where(func.DATE(calendar_table.c.D_TRADE) >= start_date)
+            stmt = stmt.where(func.DATE(calendar_t.c.D_TRADE) >= start_date)
         if end_date is not None:
-            stmt = stmt.where(func.DATE(calendar_table.c.D_TRADE) <= end_date)
+            stmt = stmt.where(func.DATE(calendar_t.c.D_TRADE) <= end_date)
 
-        stmt = stmt.order_by(calendar_table.c.D_TRADE)
+        stmt = stmt.order_by(calendar_t.c.D_TRADE)
 
         res = self.__engine.execute(stmt).all()
 
@@ -71,10 +71,10 @@ class SETDataReader:
         bool
             is trading date
         """
-        calendar_table = Table("CALENDAR", self.__metadata, autoload=True)
+        calendar_t = self._table("CALENDAR")
 
-        stmt = select([func.count(calendar_table.c.D_TRADE)]).where(
-            func.DATE(calendar_table.c.D_TRADE) == check_date
+        stmt = select([func.count(calendar_t.c.D_TRADE)]).where(
+            func.DATE(calendar_t.c.D_TRADE) == check_date
         )
 
         res = self.__engine.execute(stmt).scalar()
@@ -139,39 +139,40 @@ class SETDataReader:
         2           61     THL-R      A  RESOURC   MINE          S      R
         3           61     THL-U      A  RESOURC   MINE          S      U
         """
-        security = Table("SECURITY", self.__metadata, autoload=True)
-        sect = Table("SECTOR", self.__metadata, autoload=True)
-        j = security.join(
-            sect,
+        security_t = self._table("SECURITY")
+        sector_t = self._table("SECTOR")
+
+        j = security_t.join(
+            sector_t,
             and_(
-                security.c.I_MARKET == sect.c.I_MARKET,
-                security.c.I_INDUSTRY == sect.c.I_INDUSTRY,
-                security.c.I_SECTOR == sect.c.I_SECTOR,
+                security_t.c.I_MARKET == sector_t.c.I_MARKET,
+                security_t.c.I_INDUSTRY == sector_t.c.I_INDUSTRY,
+                security_t.c.I_SECTOR == sector_t.c.I_SECTOR,
             ),
-            isouter=True
-            # left outerjoin
+            isouter=True,  # left outerjoin
         )
         stmt = select(
             [
-                security.c.I_SECURITY.label("symbol_id"),
-                func.trim(security.c.N_SECURITY).label("symbol"),
-                security.c.I_MARKET.label("market"),
-                func.trim(sect.c.N_INDUSTRY).label("industry"),
-                func.trim(sect.c.N_SECTOR).label("sector"),
-                security.c.I_SEC_TYPE.label("sec_type"),
-                security.c.I_NATIVE.label("native"),
+                security_t.c.I_SECURITY.label("symbol_id"),
+                func.trim(security_t.c.N_SECURITY).label("symbol"),
+                security_t.c.I_MARKET.label("market"),
+                func.trim(sector_t.c.N_INDUSTRY).label("industry"),
+                func.trim(sector_t.c.N_SECTOR).label("sector"),
+                security_t.c.I_SEC_TYPE.label("sec_type"),
+                security_t.c.I_NATIVE.label("native"),
             ]
         ).select_from(j)
+
         if market != None:
-            stmt = stmt.where(security.c.I_MARKET == fc.MARKET_MAP[market])
+            stmt = stmt.where(security_t.c.I_MARKET == fc.MARKET_MAP[market])
         if symbol_list != None:
             stmt = stmt.where(
-                func.trim(security.c.N_SECURITY).in_([s.upper() for s in symbol_list])
+                func.trim(security_t.c.N_SECURITY).in_([s.upper() for s in symbol_list])
             )
         if industry != None:
-            stmt = stmt.where(func.trim(sect.c.N_INDUSTRY) == industry)
+            stmt = stmt.where(func.trim(sector_t.c.N_INDUSTRY) == industry)
         if sector != None:
-            stmt = stmt.where(func.trim(sect.c.N_SECTOR) == sector)
+            stmt = stmt.where(func.trim(sector_t.c.N_SECTOR) == sector)
 
         res_df = pd.read_sql(stmt, self.__engine)
 
@@ -217,32 +218,34 @@ class SETDataReader:
         0           1     BBL  ธนาคารกรุงเทพ จำกัด (มหาชน)  ...   1/12/1944   เมื่อผลประกอบการของธนาคารมีกำไร...  Pays when company has profit (with additional ...
         1         646     PTT    บริษัท ปตท. จำกัด (มหาชน)  ...   1/10/2001   ไม่ต่ำกว่าร้อยละ 25 ของกำไรสุทธิที่...  Not less than 25% of net income after deductio...
         """
-        company = Table("COMPANY", self.__metadata, autoload=True)
-        security = Table("SECURITY", self.__metadata, autoload=True)
-        j = security.join(company, company.c.I_COMPANY == security.c.I_COMPANY)
+        company_t = self._table("COMPANY")
+        security_t = self._table("SECURITY")
+
+        j = security_t.join(company_t, company_t.c.I_COMPANY == security_t.c.I_COMPANY)
         stmt = select(
             [
-                company.c.I_COMPANY.label("company_id"),
-                func.trim(security.c.N_SECURITY).label("symbol"),
-                company.c.N_COMPANY_T.label("company_name_t"),
-                company.c.N_COMPANY_E.label("company_name_e"),
-                company.c.A_COMPANY_T.label("address_t"),
-                company.c.A_COMPANY_E.label("address_e"),
-                company.c.I_ZIP.label("zip"),
-                company.c.E_TEL.label("tel"),
-                company.c.E_FAX.label("fax"),
-                company.c.E_EMAIL.label("email"),
-                company.c.E_URL.label("url"),
-                func.trim(company.c.D_ESTABLISH).label("establish"),
-                company.c.E_DVD_POLICY_T.label("dvd_policy_t"),
-                company.c.E_DVD_POLICY_E.label("dvd_policy_e"),
+                company_t.c.I_COMPANY.label("company_id"),
+                func.trim(security_t.c.N_SECURITY).label("symbol"),
+                company_t.c.N_COMPANY_T.label("company_name_t"),
+                company_t.c.N_COMPANY_E.label("company_name_e"),
+                company_t.c.A_COMPANY_T.label("address_t"),
+                company_t.c.A_COMPANY_E.label("address_e"),
+                company_t.c.I_ZIP.label("zip"),
+                company_t.c.E_TEL.label("tel"),
+                company_t.c.E_FAX.label("fax"),
+                company_t.c.E_EMAIL.label("email"),
+                company_t.c.E_URL.label("url"),
+                func.trim(company_t.c.D_ESTABLISH).label("establish"),
+                company_t.c.E_DVD_POLICY_T.label("dvd_policy_t"),
+                company_t.c.E_DVD_POLICY_E.label("dvd_policy_e"),
             ]
         ).select_from(j)
+
         if symbol_list != None:
             stmt = stmt.where(
-                func.trim(security.c.N_SECURITY).in_([s.upper() for s in symbol_list])
+                func.trim(security_t.c.N_SECURITY).in_([s.upper() for s in symbol_list])
             )
-        # stmt.join(security, company.c.I_COMPANY == security.c.I_COMPANY)
+
         res_df = pd.read_sql(stmt, self.__engine)
         res_df = res_df.replace("", None)
         return res_df
@@ -292,19 +295,19 @@ class SETDataReader:
         4       2794    SMG-WB  2014-08-28    SCSMG-WB     SMG-WB
         5       3375  SMG-W1-R  2014-08-28  SCSMG-W1-R   SMG-W1-R
         """
-        security = Table("SECURITY", self.__metadata, autoload=True)
-        change_name = Table("CHANGE_NAME_SECURITY", self.__metadata, autoload=True)
+        security_t = self._table("SECURITY")
+        change_name_t = self._table("CHANGE_NAME_SECURITY")
 
-        j = change_name.join(
-            security, security.c.I_SECURITY == change_name.c.I_SECURITY
+        j = change_name_t.join(
+            security_t, security_t.c.I_SECURITY == change_name_t.c.I_SECURITY
         )
         stmt = select(
             [
-                change_name.c.I_SECURITY.label("symbol_id"),
-                func.trim(security.c.N_SECURITY).label("symbol"),
-                change_name.c.D_EFFECT.label("effect_date"),
-                func.trim(change_name.c.N_SECURITY_OLD).label("symbol_old"),
-                func.trim(change_name.c.N_SECURITY_NEW).label("symbol_new"),
+                change_name_t.c.I_SECURITY.label("symbol_id"),
+                func.trim(security_t.c.N_SECURITY).label("symbol"),
+                change_name_t.c.D_EFFECT.label("effect_date"),
+                func.trim(change_name_t.c.N_SECURITY_OLD).label("symbol_old"),
+                func.trim(change_name_t.c.N_SECURITY_NEW).label("symbol_new"),
             ]
         ).select_from(j)
         stmt = self._list_start_end_condition(
@@ -312,13 +315,14 @@ class SETDataReader:
             list_condition=symbol_list,
             start_date=start_date,
             end_date=end_date,
-            col_list=security.c.N_SECURITY,
-            col_date=change_name.c.D_EFFECT,
+            col_list=security_t.c.N_SECURITY,
+            col_date=change_name_t.c.D_EFFECT,
         )
         stmt = stmt.where(
-            func.trim(change_name.c.N_SECURITY_OLD)
-            != func.trim(change_name.c.N_SECURITY_NEW)
+            func.trim(change_name_t.c.N_SECURITY_OLD)
+            != func.trim(change_name_t.c.N_SECURITY_NEW)
         )
+
         res_df = pd.read_sql(stmt, self.__engine)
         res_df = res_df.dropna()
         res_df = res_df.drop_duplicates()
@@ -391,23 +395,26 @@ class SETDataReader:
         1        M  2021-05-10  2021-05-25      CD  0.5
         2        M  2022-05-10  2022-05-25      CD  0.8
         """
-        security = Table("SECURITY", self.__metadata, autoload=True)
-        right = Table("RIGHTS_BENEFIT", self.__metadata, autoload=True)
-        j = right.join(security, security.c.I_SECURITY == right.c.I_SECURITY)
+        security_t = self._table("SECURITY")
+        rights_benefit_t = self._table("RIGHTS_BENEFIT")
+
+        j = rights_benefit_t.join(
+            security_t, security_t.c.I_SECURITY == rights_benefit_t.c.I_SECURITY
+        )
         stmt = (
             select(
                 [
-                    func.trim(security.c.N_SECURITY).label("symbol"),
-                    right.c.D_SIGN.label("ex_date"),
-                    right.c.D_BEG_PAID.label("pay_date"),
-                    func.trim(right.c.N_CA_TYPE).label("ca_type"),
-                    right.c.Z_RIGHTS.label("dps"),
+                    func.trim(security_t.c.N_SECURITY).label("symbol"),
+                    rights_benefit_t.c.D_SIGN.label("ex_date"),
+                    rights_benefit_t.c.D_BEG_PAID.label("pay_date"),
+                    func.trim(rights_benefit_t.c.N_CA_TYPE).label("ca_type"),
+                    rights_benefit_t.c.Z_RIGHTS.label("dps"),
                 ]
             )
             .select_from(j)
-            .where(func.trim(right.c.N_CA_TYPE).in_(["CD", "SD"]))
-            .where(func.trim(right.c.F_CANCEL) != "C")
-            .where(right.c.Z_RIGHTS > 0)
+            .where(func.trim(rights_benefit_t.c.N_CA_TYPE).in_(["CD", "SD"]))
+            .where(func.trim(rights_benefit_t.c.F_CANCEL) != "C")
+            .where(rights_benefit_t.c.Z_RIGHTS > 0)
         )
 
         stmt = self._list_start_end_condition(
@@ -415,11 +422,11 @@ class SETDataReader:
             list_condition=symbol_list,
             start_date=start_date,
             end_date=end_date,
-            col_list=security.c.N_SECURITY,
-            col_date=right.c.D_SIGN,
+            col_list=security_t.c.N_SECURITY,
+            col_date=rights_benefit_t.c.D_SIGN,
         )
         if ca_type_list != None:
-            stmt = stmt.where(right.c.N_CA_TYPE.in_(ca_type_list))
+            stmt = stmt.where(rights_benefit_t.c.N_CA_TYPE.in_(ca_type_list))
         res_df = pd.read_sql(
             stmt,
             self.__engine,
@@ -482,26 +489,29 @@ class SETDataReader:
         0  CB14828A    2014-08-28
         1  CB14828B    2014-08-28
         """
-        security = Table("SECURITY", self.__metadata, autoload=True)
-        detail = Table("SECURITY_DETAIL", self.__metadata, autoload=True)
-        j = detail.join(security, security.c.I_SECURITY == detail.c.I_SECURITY)
+        security_t = self._table("SECURITY")
+        security_detail_t = self._table("SECURITY_DETAIL")
+
+        j = security_detail_t.join(
+            security_t, security_t.c.I_SECURITY == security_detail_t.c.I_SECURITY
+        )
         stmt = (
             select(
                 [
-                    func.trim(security.c.N_SECURITY).label("symbol"),
-                    detail.c.D_DELISTED.label("delisted_date"),
+                    func.trim(security_t.c.N_SECURITY).label("symbol"),
+                    security_detail_t.c.D_DELISTED.label("delisted_date"),
                 ]
             )
             .select_from(j)
-            .where(detail.c.D_DELISTED != None)
+            .where(security_detail_t.c.D_DELISTED != None)
         )
         stmt = self._list_start_end_condition(
             query_object=stmt,
             list_condition=symbol_list,
             start_date=start_date,
             end_date=end_date,
-            col_list=security.c.N_SECURITY,
-            col_date=detail.c.D_DELISTED,
+            col_list=security_t.c.N_SECURITY,
+            col_date=security_detail_t.c.D_DELISTED,
         )
         res_df = pd.read_sql(stmt, self.__engine)
         return res_df
@@ -552,14 +562,17 @@ class SETDataReader:
         0     DV8 2014-08-20    H
         1  DV8-W1 2014-08-20    H
         """
-        security = Table("SECURITY", self.__metadata, autoload=True)
-        sign_post = Table("SIGN_POSTING", self.__metadata, autoload=True)
-        j = sign_post.join(security, security.c.I_SECURITY == sign_post.c.I_SECURITY)
+        security_t = self._table("SECURITY")
+        sign_posting_t = self._table("SIGN_POSTING")
+
+        j = sign_posting_t.join(
+            security_t, security_t.c.I_SECURITY == sign_posting_t.c.I_SECURITY
+        )
         stmt = select(
             [
-                func.trim(security.c.N_SECURITY).label("symbol"),
-                sign_post.c.D_HOLD.label("hold_date"),
-                func.trim(sign_post.c.N_SIGN).label("sign"),
+                func.trim(security_t.c.N_SECURITY).label("symbol"),
+                sign_posting_t.c.D_HOLD.label("hold_date"),
+                func.trim(sign_posting_t.c.N_SIGN).label("sign"),
             ]
         ).select_from(j)
         stmt = self._list_start_end_condition(
@@ -567,12 +580,12 @@ class SETDataReader:
             list_condition=symbol_list,
             start_date=start_date,
             end_date=end_date,
-            col_list=security.c.N_SECURITY,
-            col_date=sign_post.c.D_HOLD,
+            col_list=security_t.c.N_SECURITY,
+            col_date=sign_posting_t.c.D_HOLD,
         )
         if sign_list != None:
             sign_list = [x.upper() for x in sign_list]
-            stmt = stmt.where(func.trim(sign_post.c.N_SIGN).in_(sign_list))
+            stmt = stmt.where(func.trim(sign_posting_t.c.N_SIGN).in_(sign_list))
         res_df = pd.read_sql(stmt, self.__engine)
         return res_df
 
@@ -627,24 +640,25 @@ class SETDataReader:
         3  2022-01-04  GLOBAL  COMM
         4  2022-01-04    MEGA  COMM
         """
-        security = Table("SECURITY", self.__metadata, autoload=True)
-        sector = Table("SECTOR", self.__metadata, autoload=True)
-        security_index = Table("SECURITY_INDEX", self.__metadata, autoload=True)
-        j = security_index.join(
-            sector,
+        security_t = self._table("SECURITY")
+        sector_t = self._table("SECTOR")
+        security_index_t = self._table("SECURITY_INDEX")
+
+        j = security_index_t.join(
+            sector_t,
             and_(
-                security_index.c.I_SECTOR == sector.c.I_SECTOR,
+                security_index_t.c.I_SECTOR == sector_t.c.I_SECTOR,
             ),
         ).join(
-            security,
-            security.c.I_SECURITY == security_index.c.I_SECURITY,
+            security_t,
+            security_t.c.I_SECURITY == security_index_t.c.I_SECURITY,
         )
         stmt = select(
             [
-                security_index.c.D_AS_OF.label("as_of_date"),
-                func.trim(sector.c.N_SECTOR).label("index"),
-                func.trim(security.c.N_SECURITY).label("symbol"),
-                security_index.c.S_SEQ.label("seq"),
+                security_index_t.c.D_AS_OF.label("as_of_date"),
+                func.trim(sector_t.c.N_SECTOR).label("index"),
+                func.trim(security_t.c.N_SECURITY).label("symbol"),
+                security_index_t.c.S_SEQ.label("seq"),
             ]
         ).select_from(j)
         stmt = self._list_start_end_condition(
@@ -652,8 +666,8 @@ class SETDataReader:
             list_condition=index_list,
             start_date=start_date,
             end_date=end_date,
-            col_list=sector.c.N_SECTOR,
-            col_date=security_index.c.D_AS_OF,
+            col_list=sector_t.c.N_SECTOR,
+            col_date=security_index_t.c.D_AS_OF,
         )
 
         res_df = pd.read_sql(stmt, self.__engine)
@@ -711,15 +725,18 @@ class SETDataReader:
         0    ASW  2021-08-25      SD         0.8889
         1  DITTO  2022-03-15      SD         0.8333
         """
-        security = Table("SECURITY", self.__metadata, autoload=True)
-        adj_fac = Table("ADJUST_FACTOR", self.__metadata, autoload=True)
-        j = adj_fac.join(security, security.c.I_SECURITY == adj_fac.c.I_SECURITY)
+        security_t = self._table("SECURITY")
+        adjust_factor_t = self._table("ADJUST_FACTOR")
+
+        j = adjust_factor_t.join(
+            security_t, security_t.c.I_SECURITY == adjust_factor_t.c.I_SECURITY
+        )
         stmt = select(
             [
-                func.trim(security.c.N_SECURITY).label("symbol"),
-                adj_fac.c.D_EFFECT.label("effect_date"),
-                adj_fac.c.N_CA_TYPE.label("ca_type"),
-                adj_fac.c.R_ADJUST_FACTOR.label("adjust_factor"),
+                func.trim(security_t.c.N_SECURITY).label("symbol"),
+                adjust_factor_t.c.D_EFFECT.label("effect_date"),
+                adjust_factor_t.c.N_CA_TYPE.label("ca_type"),
+                adjust_factor_t.c.R_ADJUST_FACTOR.label("adjust_factor"),
             ]
         ).select_from(j)
         stmt = self._list_start_end_condition(
@@ -727,12 +744,12 @@ class SETDataReader:
             list_condition=symbol_list,
             start_date=start_date,
             end_date=end_date,
-            col_list=security.c.N_SECURITY,
-            col_date=adj_fac.c.D_EFFECT,
+            col_list=security_t.c.N_SECURITY,
+            col_date=adjust_factor_t.c.D_EFFECT,
         )
         if ca_type_list != None:
             ca_type_list = [i.upper() for i in ca_type_list]
-            stmt = stmt.where(func.trim(adj_fac.c.N_CA_TYPE).in_(ca_type_list))
+            stmt = stmt.where(func.trim(adjust_factor_t.c.N_CA_TYPE).in_(ca_type_list))
         res_df = pd.read_sql(stmt, self.__engine)
 
         return res_df
@@ -798,45 +815,45 @@ class SETDataReader:
             "YTD": ("Q1", "6M", "9M", "YE"),
         }
 
-        financial_screen = Table("FINANCIAL_SCREEN", self.__metadata, autoload=True)
-        security = Table("SECURITY", self.__metadata, autoload=True)
+        financial_screen_t = self._table("FINANCIAL_SCREEN")
+        security_t = self._table("SECURITY")
 
-        j = financial_screen.join(
-            security, financial_screen.c.I_SECURITY == security.c.I_SECURITY
+        j = financial_screen_t.join(
+            security_t, financial_screen_t.c.I_SECURITY == security_t.c.I_SECURITY
         )
 
         sql = (
             select(
                 [
-                    financial_screen.c.D_AS_OF.label("trading_datetime"),
-                    func.trim(security.c.N_SECURITY).label("symbol"),
-                    financial_screen.c[fc.FINANCIAL_SCREEN_FACTOR[field.lower()]].label(
-                        field.lower()
-                    ),
+                    financial_screen_t.c.D_AS_OF.label("trading_datetime"),
+                    func.trim(security_t.c.N_SECURITY).label("symbol"),
+                    financial_screen_t.c[
+                        fc.FINANCIAL_SCREEN_FACTOR[field.lower()]
+                    ].label(field.lower()),
                 ]
             )
             .where(
-                financial_screen.c.I_PERIOD.in_(
+                financial_screen_t.c.I_PERIOD.in_(
                     PERIOD_DICT.get(period.upper(), tuple())
                 )
             )
             .select_from(j)
-            .order_by(financial_screen.c.D_AS_OF)
-            .order_by(financial_screen.c.I_YEAR.asc())
-            .order_by(financial_screen.c.I_QUARTER.asc())
+            .order_by(financial_screen_t.c.D_AS_OF)
+            .order_by(financial_screen_t.c.I_YEAR.asc())
+            .order_by(financial_screen_t.c.I_QUARTER.asc())
         )
 
         if symbol_list != None:
             sql = sql.where(
-                security.c.N_SECURITY.in_(
+                security_t.c.N_SECURITY.in_(
                     ["{:<20}".format(s.upper()) for s in symbol_list]
                 )
             )
 
         if not pd.isnull(start_date):
-            sql = sql.where(financial_screen.c.D_AS_OF >= start_date)
+            sql = sql.where(financial_screen_t.c.D_AS_OF >= start_date)
         if not pd.isnull(end_date):
-            sql = sql.where(financial_screen.c.D_AS_OF <= end_date)
+            sql = sql.where(financial_screen_t.c.D_AS_OF <= end_date)
 
         df = pd.read_sql(sql, self.__engine, parse_dates="trading_datetime")
         return df
@@ -863,49 +880,51 @@ class SETDataReader:
 
         period = period.upper()
 
-        financial_stat_std = Table("FINANCIAL_STAT_STD", self.__metadata, autoload=True)
-        daily_stock_stat = Table("DAILY_STOCK_STAT", self.__metadata, autoload=True)
-        security = Table("SECURITY", self.__metadata, autoload=True)
+        financial_stat_std_t = self._table("FINANCIAL_STAT_STD")
+        daily_stock_stat_t = self._table("DAILY_STOCK_STAT")
+        security_t = self._table("SECURITY")
 
         daily_stock_stat_subquery = (
             select(
                 [
-                    daily_stock_stat.c.I_SECURITY,
-                    daily_stock_stat.c.D_AS_OF,
-                    func.min(daily_stock_stat.c.D_TRADE).label("D_TRADE"),
+                    daily_stock_stat_t.c.I_SECURITY,
+                    daily_stock_stat_t.c.D_AS_OF,
+                    func.min(daily_stock_stat_t.c.D_TRADE).label("D_TRADE"),
                 ]
             )
-            .group_by(daily_stock_stat.c.I_SECURITY, daily_stock_stat.c.D_AS_OF)
+            .group_by(daily_stock_stat_t.c.I_SECURITY, daily_stock_stat_t.c.D_AS_OF)
             .subquery()  # type: ignore
         )
 
         selected_fields = [
             daily_stock_stat_subquery.c.D_TRADE.label("trading_datetime"),
-            func.trim(security.c.N_SECURITY).label("symbol"),
-            financial_stat_std.c.N_ACCOUNT.label("field"),
-            financial_stat_std.c[PERIOD_DICT[period]].label("value"),
+            func.trim(security_t.c.N_SECURITY).label("symbol"),
+            financial_stat_std_t.c.N_ACCOUNT.label("field"),
+            financial_stat_std_t.c[PERIOD_DICT[period]].label("value"),
         ]
 
         if period == "Y":
-            selected_fields.append(financial_stat_std.c.M_ACCOUNT)
+            selected_fields.append(financial_stat_std_t.c.M_ACCOUNT)
 
         sql = (
             select(selected_fields)
-            .select_from(financial_stat_std)
+            .select_from(financial_stat_std_t)
             .order_by(daily_stock_stat_subquery.c.D_TRADE.asc())
-            .order_by(financial_stat_std.c.I_ACCT_FORM.asc())
+            .order_by(financial_stat_std_t.c.I_ACCT_FORM.asc())
         )
 
         if period == "Y":
-            sql = sql.where(financial_stat_std.c.I_QUARTER == 9)
+            sql = sql.where(financial_stat_std_t.c.I_QUARTER == 9)
 
-        if field_list is not None:
-            field_list = [fc.FINANCIAL_STAT_STD_FACTOR[i.lower()] for i in field_list]
-            sql = sql.where(financial_stat_std.c.N_ACCOUNT.in_(field_list))
+        sql = sql.where(
+            financial_stat_std_t.c.N_ACCOUNT.in_(
+                fc.FINANCIAL_STAT_STD_FACTOR[field.lower()]
+            )
+        )
 
         if symbol_list is not None:
             sql = sql.where(
-                security.c.N_SECURITY.in_(
+                security_t.c.N_SECURITY.in_(
                     ["{:<20}".format(s.upper()) for s in symbol_list]
                 )
             )
@@ -918,11 +937,11 @@ class SETDataReader:
         sql = sql.join(
             daily_stock_stat_subquery,
             and_(
-                financial_stat_std.c.D_AS_OF == daily_stock_stat_subquery.c.D_AS_OF,
-                financial_stat_std.c.I_SECURITY
+                financial_stat_std_t.c.D_AS_OF == daily_stock_stat_subquery.c.D_AS_OF,
+                financial_stat_std_t.c.I_SECURITY
                 == daily_stock_stat_subquery.c.I_SECURITY,
             ),
-        ).join(security, financial_stat_std.c.I_SECURITY == security.c.I_SECURITY)
+        ).join(security_t, financial_stat_std_t.c.I_SECURITY == security_t.c.I_SECURITY)
 
         # sql = self._compile_sql(sql)
         df = pd.read_sql(sql, self.__engine, parse_dates="trading_datetime")
@@ -968,7 +987,7 @@ class SETDataReader:
         },
         divide_columns: Iterable[str] = {"volume"},
         start_date: Optional[date] = None,
-        adjust_list: List[str] = None,
+        adjust_list: Optional[List[str]] = None,
         is_all_symbol: Optional[bool] = False,
     ) -> pd.DataFrame:
         """df index is trading_datetime and columns contain symbol."""
@@ -1080,48 +1099,48 @@ class SETDataReader:
         """
         adjusted_list = list(adjusted_list)  # copy to avoid modify original list
 
-        security = Table("SECURITY", self.__metadata, autoload=True)
+        security_t = self._table("SECURITY")
         selected_fields = list()
         field = field.lower()
         from_table = ""
         if field in fc.DAILY_STOCK_TRADE_FACTOR:
-            daily_stock__ = Table("DAILY_STOCK_TRADE", self.__metadata, autoload=True)
+            daily_stock_t = self._table("DAILY_STOCK_TRADE")
             selected_fields.append(
-                daily_stock__.c[fc.DAILY_STOCK_TRADE_FACTOR[field]].label(field.upper())
+                daily_stock_t.c[fc.DAILY_STOCK_TRADE_FACTOR[field]].label(field.upper())
             )
             from_table = "DAILY_STOCK_TRADE"
         elif field in fc.DAILY_STOCK_STAT_FACTOR:
-            daily_stock__ = Table("DAILY_STOCK_STAT", self.__metadata, autoload=True)
+            daily_stock_t = self._table("DAILY_STOCK_STAT")
             selected_fields.append(
-                daily_stock__.c[fc.DAILY_STOCK_STAT_FACTOR[field]].label(field.upper())
+                daily_stock_t.c[fc.DAILY_STOCK_STAT_FACTOR[field]].label(field.upper())
             )
             from_table = "DAILY_STOCK_STAT"
         else:
             raise ValueError(
                 f"{field} not in Data 1D field. Please check fields for more details."
             )
-        j = daily_stock__.join(
-            security, daily_stock__.c.I_SECURITY == security.c.I_SECURITY
+        j = daily_stock_t.join(
+            security_t, daily_stock_t.c.I_SECURITY == security_t.c.I_SECURITY
         )
 
         stmt = select(
             [
-                daily_stock__.c.D_TRADE.label("TRADING_DATETIME"),
-                func.trim(security.c.N_SECURITY).label("SYMBOL"),
+                daily_stock_t.c.D_TRADE.label("TRADING_DATETIME"),
+                func.trim(security_t.c.N_SECURITY).label("SYMBOL"),
             ]
             + selected_fields
         ).select_from(j)
         if from_table == "DAILY_STOCK_TRADE":
             stmt = stmt.where(
-                func.trim(daily_stock__.c.I_TRADING_METHOD) == "A"
+                func.trim(daily_stock_t.c.I_TRADING_METHOD) == "A"
             )  # Auto Matching
         stmt = self._list_start_end_condition(
             query_object=stmt,
             list_condition=symbol_list,
             start_date=start_date,
             end_date=end_date,
-            col_list=security.c.N_SECURITY,
-            col_date=daily_stock__.c.D_TRADE,
+            col_list=security_t.c.N_SECURITY,
+            col_date=daily_stock_t.c.D_TRADE,
         )
 
         df = pd.read_sql(
@@ -1382,6 +1401,13 @@ class SETDataReader:
         TODO: examples
         """
         return pd.DataFrame()
+
+    """ 
+    Protected methods
+    """
+
+    def _table(self, name: str) -> Table:
+        return Table(name, self.__metadata, autoload=True)
 
     def _list_start_end_condition(
         self,
