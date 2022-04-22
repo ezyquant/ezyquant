@@ -766,6 +766,27 @@ class TestGetSymbolsByIndex:
 
         assert not result.empty
 
+    @pytest.mark.parametrize(
+        "index",
+        [
+            fld.INDEX_SETWB,
+            fld.INDEX_SETTHSI,
+            fld.INDEX_SETCLMV,
+            fld.INDEX_SETHD,
+            fld.INDEX_SSET,
+            fld.INDEX_SET100,
+            fld.INDEX_SET50,
+        ],
+    )
+    def test_index(self, sdr: SETDataReader, index: str):
+        # Test
+        result = sdr.get_symbols_by_index([index])
+
+        # Check
+        self._check(result)
+
+        assert not result.empty
+
     @pytest.mark.parametrize("index_list", [["SET50"], ["set50"]])
     @pytest.mark.parametrize("start_date", [date(2012, 1, 3), date(2012, 1, 4)])
     @pytest.mark.parametrize("end_date", [date(2012, 1, 4), date(2012, 1, 5)])

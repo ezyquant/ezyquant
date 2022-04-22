@@ -4,7 +4,7 @@ from typing import Iterable, List, Optional
 import numpy as np
 import pandas as pd
 import sqlalchemy as sa
-from sqlalchemy import Column, MetaData, Table, and_, func, select
+from sqlalchemy import Column, MetaData, Table, and_, case, func, select
 from sqlalchemy.sql import Select
 
 from . import fields as fld
@@ -634,38 +634,97 @@ class SETDataReader:
 
         Examples
         --------
+        >>> from datetime import date
         >>> from ezyquant.reader import SETDataReader
-        >>> import datetime
         >>> sdr = SETDataReader("psims.db")
-        >>> sdr.get_symbols_by_index(["COMM"],start_date=datetime.date(2022, 1, 1),end_date=datetime.date(2022, 4, 1))
-           as_of_date  symbol index
-        0  2022-01-04     BJC  COMM
-        1  2022-01-04   HMPRO  COMM
-        2  2022-01-04   CPALL  COMM
-        3  2022-01-04  GLOBAL  COMM
-        4  2022-01-04    MEGA  COMM
+        >>> sdr.get_symbols_by_index(index_list=["SET50"], start_date=date(2022, 1, 4), end_date=date(2022, 1, 4))
+           as_of_date  index  symbol  seq
+        0  2022-01-04  SET50     OSP    1
+        1  2022-01-04  SET50     CBG    2
+        2  2022-01-04  SET50      TU    3
+        3  2022-01-04  SET50    MINT    4
+        4  2022-01-04  SET50     CPF    5
+        5  2022-01-04  SET50    STGT    6
+        6  2022-01-04  SET50   TISCO    7
+        7  2022-01-04  SET50     KTB    8
+        8  2022-01-04  SET50     TTB    9
+        9  2022-01-04  SET50     SCB   10
+        10 2022-01-04  SET50   KBANK   11
+        11 2022-01-04  SET50     BBL   12
+        12 2022-01-04  SET50  TIDLOR   13
+        13 2022-01-04  SET50     MTC   14
+        14 2022-01-04  SET50   SAWAD   15
+        15 2022-01-04  SET50     KTC   16
+        16 2022-01-04  SET50   PTTGC   17
+        17 2022-01-04  SET50     IVL   18
+        18 2022-01-04  SET50    SCGP   19
+        19 2022-01-04  SET50     SCC   20
+        20 2022-01-04  SET50     AWC   21
+        21 2022-01-04  SET50     CPN   22
+        22 2022-01-04  SET50      LH   23
+        23 2022-01-04  SET50      OR   24
+        24 2022-01-04  SET50    GULF   25
+        25 2022-01-04  SET50   BGRIM   26
+        26 2022-01-04  SET50    GPSC   27
+        27 2022-01-04  SET50      EA   28
+        28 2022-01-04  SET50     TOP   29
+        29 2022-01-04  SET50     PTT   30
+        30 2022-01-04  SET50   RATCH   31
+        31 2022-01-04  SET50    IRPC   32
+        32 2022-01-04  SET50    EGCO   33
+        33 2022-01-04  SET50   PTTEP   34
+        34 2022-01-04  SET50   BANPU   35
+        35 2022-01-04  SET50     CRC   36
+        36 2022-01-04  SET50    COM7   37
+        37 2022-01-04  SET50  GLOBAL   38
+        38 2022-01-04  SET50   CPALL   39
+        39 2022-01-04  SET50   HMPRO   40
+        40 2022-01-04  SET50    BDMS   41
+        41 2022-01-04  SET50      BH   42
+        42 2022-01-04  SET50     BEM   43
+        43 2022-01-04  SET50     AOT   44
+        44 2022-01-04  SET50     BTS   45
+        45 2022-01-04  SET50    DTAC   46
+        46 2022-01-04  SET50    TRUE   47
+        47 2022-01-04  SET50  ADVANC   48
+        48 2022-01-04  SET50  INTUCH   49
+        49 2022-01-04  SET50     KCE   50
         """
         security_t = self._table("SECURITY")
         sector_t = self._table("SECTOR")
         security_index_t = self._table("SECURITY_INDEX")
 
         j = security_index_t.join(
-            sector_t,
-            and_(
-                security_index_t.c.I_SECTOR == sector_t.c.I_SECTOR,
-            ),
-        ).join(
-            security_t,
-            security_t.c.I_SECURITY == security_index_t.c.I_SECURITY,
+            sector_t, security_index_t.c.I_SECTOR == sector_t.c.I_SECTOR
+        ).join(security_t, security_t.c.I_SECURITY == security_index_t.c.I_SECURITY)
+        stmt = (
+            select(
+                [
+                    security_index_t.c.D_AS_OF.label("as_of_date"),
+                    func.trim(sector_t.c.N_SECTOR).label("index"),
+                    func.trim(security_t.c.N_SECURITY).label("symbol"),
+                    security_index_t.c.S_SEQ.label("seq"),
+                ]
+            )
+            .select_from(j)
+            .where(
+                case(
+                    (
+                        func.trim(sector_t.c.N_SECTOR) == fld.INDEX_SET50,
+                        security_index_t.c.S_SEQ <= 50,
+                    ),
+                    (
+                        func.trim(sector_t.c.N_SECTOR) == fld.INDEX_SET100,
+                        security_index_t.c.S_SEQ <= 100,
+                    ),
+                    (
+                        func.trim(sector_t.c.N_SECTOR) == fld.INDEX_SETHD,
+                        security_index_t.c.S_SEQ <= 30,
+                    ),
+                    else_=True,
+                )
+            )
         )
-        stmt = select(
-            [
-                security_index_t.c.D_AS_OF.label("as_of_date"),
-                func.trim(sector_t.c.N_SECTOR).label("index"),
-                func.trim(security_t.c.N_SECURITY).label("symbol"),
-                security_index_t.c.S_SEQ.label("seq"),
-            ]
-        ).select_from(j)
         stmt = self._filter_symbol_start_end(
             stmt=stmt,
             symbol_list=index_list,
@@ -676,14 +735,7 @@ class SETDataReader:
         )
 
         res_df = pd.read_sql(stmt, self.__engine)
-        for ind, data in res_df.iterrows():
-            if data["index"] == "SET50" and data["seq"] not in range(1, 51):
-                res_df = res_df.drop([ind])
-            if data["index"] == "SET100" and data["seq"] not in range(1, 101):
-                res_df = res_df.drop([ind])
-            if data["index"] == "SETHD" and data["seq"] not in range(1, 31):
-                res_df = res_df.drop([ind])
-        res_df = res_df.reset_index(drop=True)
+
         return res_df
 
     def get_adjust_factor(
@@ -1121,7 +1173,7 @@ class SETDataReader:
     ):
         if symbol_list != None:
             symbol_list = [i.upper() for i in symbol_list]
-            stmt = stmt.where(func.trim(symbol_column).in_(symbol_list))
+            stmt = stmt.where(func.upper(func.trim(symbol_column)).in_(symbol_list))
         if start_date != None:
             stmt = stmt.where(func.DATE(date_column) >= start_date)
         if end_date != None:
