@@ -4,9 +4,9 @@ from typing import Iterable, List, Optional
 import numpy as np
 import pandas as pd
 import sqlalchemy as sa
-from sqlalchemy import MetaData, Table, and_, distinct, func, select
+from sqlalchemy import MetaData, Table, and_, func, select
 
-from . import fields as fc
+from . import fields as fld
 
 
 class SETDataReader:
@@ -165,7 +165,7 @@ class SETDataReader:
         ).select_from(j)
 
         if market != None:
-            stmt = stmt.where(security_t.c.I_MARKET == fc.MARKET_MAP[market])
+            stmt = stmt.where(security_t.c.I_MARKET == fld.MARKET_MAP[market])
         if symbol_list != None:
             stmt = stmt.where(
                 func.trim(security_t.c.N_SECURITY).in_([s.upper() for s in symbol_list])
@@ -177,7 +177,7 @@ class SETDataReader:
 
         res_df = pd.read_sql(stmt, self.__engine)
 
-        map_market = {v: k for k, v in fc.MARKET_MAP.items()}
+        map_market = {v: k for k, v in fld.MARKET_MAP.items()}
         res_df["market"] = res_df["market"].replace(map_market)
 
         return res_df
@@ -770,7 +770,7 @@ class SETDataReader:
         stat_field_list = list()
         df = pd.DataFrame
         field = field.lower()
-        if field in fc.FINANCIAL_SCREEN_FACTOR:
+        if field in fld.FINANCIAL_SCREEN_FACTOR:
             df = self._get_financial_screen(
                 symbol_list=symbol_list,
                 field=field,
@@ -778,7 +778,7 @@ class SETDataReader:
                 end_date=end_date,
                 period=period,
             )
-        elif field in fc.FINANCIAL_STAT_STD_FACTOR:
+        elif field in fld.FINANCIAL_STAT_STD_FACTOR:
             df = self._get_financial_stat_std(
                 symbol_list=symbol_list,
                 field=field,
@@ -825,7 +825,7 @@ class SETDataReader:
                     financial_screen_t.c.D_AS_OF.label("trading_datetime"),
                     func.trim(security_t.c.N_SECURITY).label("symbol"),
                     financial_screen_t.c[
-                        fc.FINANCIAL_SCREEN_FACTOR[field.lower()]
+                        fld.FINANCIAL_SCREEN_FACTOR[field.lower()]
                     ].label(field.lower()),
                 ]
             )
@@ -915,7 +915,7 @@ class SETDataReader:
 
         sql = sql.where(
             financial_stat_std_t.c.N_ACCOUNT.in_(
-                fc.FINANCIAL_STAT_STD_FACTOR[field.lower()]
+                fld.FINANCIAL_STAT_STD_FACTOR[field.lower()]
             )
         )
 
@@ -966,7 +966,7 @@ class SETDataReader:
         df = df.reset_index("symbol")
 
         # rename columns
-        df = df.rename(columns={v: k for k, v in fc.FINANCIAL_STAT_STD_FACTOR.items()})
+        df = df.rename(columns={v: k for k, v in fld.FINANCIAL_STAT_STD_FACTOR.items()})
 
         return df
 
@@ -1100,16 +1100,18 @@ class SETDataReader:
         selected_fields = list()
         field = field.lower()
         from_table = ""
-        if field in fc.DAILY_STOCK_TRADE_FACTOR:
+        if field in fld.DAILY_STOCK_TRADE_FACTOR:
             daily_stock_t = self._table("DAILY_STOCK_TRADE")
             selected_fields.append(
-                daily_stock_t.c[fc.DAILY_STOCK_TRADE_FACTOR[field]].label(field.upper())
+                daily_stock_t.c[fld.DAILY_STOCK_TRADE_FACTOR[field]].label(
+                    field.upper()
+                )
             )
             from_table = "DAILY_STOCK_TRADE"
-        elif field in fc.DAILY_STOCK_STAT_FACTOR:
+        elif field in fld.DAILY_STOCK_STAT_FACTOR:
             daily_stock_t = self._table("DAILY_STOCK_STAT")
             selected_fields.append(
-                daily_stock_t.c[fc.DAILY_STOCK_STAT_FACTOR[field]].label(field.upper())
+                daily_stock_t.c[fld.DAILY_STOCK_STAT_FACTOR[field]].label(field.upper())
             )
             from_table = "DAILY_STOCK_STAT"
         else:
