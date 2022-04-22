@@ -300,15 +300,23 @@ class SETDataReader:
         j = change_name_t.join(
             security_t, security_t.c.I_SECURITY == change_name_t.c.I_SECURITY
         )
-        stmt = select(
-            [
-                change_name_t.c.I_SECURITY.label("symbol_id"),
-                func.trim(security_t.c.N_SECURITY).label("symbol"),
-                change_name_t.c.D_EFFECT.label("effect_date"),
-                func.trim(change_name_t.c.N_SECURITY_OLD).label("symbol_old"),
-                func.trim(change_name_t.c.N_SECURITY_NEW).label("symbol_new"),
-            ]
-        ).select_from(j)
+        stmt = (
+            select(
+                [
+                    change_name_t.c.I_SECURITY.label("symbol_id"),
+                    func.trim(security_t.c.N_SECURITY).label("symbol"),
+                    change_name_t.c.D_EFFECT.label("effect_date"),
+                    func.trim(change_name_t.c.N_SECURITY_OLD).label("symbol_old"),
+                    func.trim(change_name_t.c.N_SECURITY_NEW).label("symbol_new"),
+                ]
+            )
+            .select_from(j)
+            .where(change_name_t.c.D_EFFECT != None)
+            .where(
+                func.trim(change_name_t.c.N_SECURITY_OLD)
+                != func.trim(change_name_t.c.N_SECURITY_NEW)
+            )
+        )
         stmt = self._filter_symbol_start_end(
             stmt=stmt,
             symbol_column=security_t.c.N_SECURITY,
@@ -317,11 +325,6 @@ class SETDataReader:
             start_date=start_date,
             end_date=end_date,
         )
-        stmt = stmt.where(
-            func.trim(change_name_t.c.N_SECURITY_OLD)
-            != func.trim(change_name_t.c.N_SECURITY_NEW)
-        )
-        stmt = stmt.where(change_name_t.c.D_EFFECT != None)
 
         res_df = pd.read_sql(stmt, self.__engine)
         res_df = res_df.drop_duplicates(ignore_index=True)
@@ -479,13 +482,15 @@ class SETDataReader:
 
         Examples
         --------
+        >>> from datetime import date
         >>> from ezyquant.reader import SETDataReader
-        >>> import datetime
         >>> sdr = SETDataReader("psims.db")
-        >>> sdr.get_delisted(start_date=datstart, end_date=datend)
+        >>> sdr.get_delisted(start_date=date(2020, 2, 20), end_date=date(2020, 2, 20))
              symbol delisted_date
-        0  CB14828A    2014-08-28
-        1  CB14828B    2014-08-28
+        0    ROBINS    2020-02-20
+        1    KK202A    2020-02-20
+        2  CB20220A    2020-02-20
+        3  CB20220B    2020-02-20
         """
         security_t = self._table("SECURITY")
         security_detail_t = self._table("SECURITY_DETAIL")
@@ -511,6 +516,7 @@ class SETDataReader:
             symbol_column=security_t.c.N_SECURITY,
             date_column=security_detail_t.c.D_DELISTED,
         )
+
         res_df = pd.read_sql(stmt, self.__engine)
         return res_df
 
@@ -552,13 +558,13 @@ class SETDataReader:
 
         Examples
         --------
+        >>> from datetime import date
         >>> from ezyquant.reader import SETDataReader
-        >>> import datetime
         >>> sdr = SETDataReader("psims.db")
-        >>>     sdr.get_sign_posting(start_date=datetime.date(2014, 8, 20),end_date=datetime.date(2014, 8, 25),sign_list=["H"])
-           symbol  hold_date sign
-        0     DV8 2014-08-20    H
-        1  DV8-W1 2014-08-20    H
+        >>> sdr.get_sign_posting(symbol_list=["THAI"], start_date=date(2020, 11, 12), end_date=date(2021, 2, 25))
+          symbol  hold_date sign
+        0   THAI 2020-11-12   SP
+        1   THAI 2021-02-25   SP
         """
         security_t = self._table("SECURITY")
         sign_posting_t = self._table("SIGN_POSTING")
@@ -582,8 +588,9 @@ class SETDataReader:
             date_column=sign_posting_t.c.D_HOLD,
         )
         if sign_list != None:
-            sign_list = [x.upper() for x in sign_list]
+            sign_list = [i.upper() for i in sign_list]
             stmt = stmt.where(func.trim(sign_posting_t.c.N_SIGN).in_(sign_list))
+
         res_df = pd.read_sql(stmt, self.__engine)
         return res_df
 
@@ -1096,7 +1103,7 @@ class SETDataReader:
         """
         return pd.DataFrame()
 
-    """ 
+    """
     Protected methods
     """
 
