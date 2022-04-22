@@ -436,22 +436,8 @@ class SETDataReader:
         )
         res_df_copy = res_df.copy()
         res_df.index = res_df.ex_date
-        if symbol_list == None:
-            res_df = self._merge_adjust_factor(
-                df=res_df,
-                multiply_columns=["dps"],
-                divide_columns=set(),
-                adjust_list=adjusted_list,
-                is_all_symbol=True,
-            )
-        else:
-            res_df = self._merge_adjust_factor(
-                df=res_df,
-                multiply_columns=["dps"],
-                divide_columns=set(),
-                adjust_list=adjusted_list,
-                is_all_symbol=False,
-            )
+        # TODO: adjust factor
+        res_df = self._merge_adjust_factor(df=res_df, adjust_list=adjusted_list)
         res_df = res_df.reset_index(drop=True)
         return res_df
 
@@ -777,10 +763,10 @@ class SETDataReader:
         --------
         >>> from ezyquant.reader import SETDataReader
         >>> sdr = SETDataReader("psims.db")
-        >>> print(sdr.get_adjust_factor(symbol_list=["ASW", "DITTO"], ca_type_list=["SD"]))
+        >>> sdr.get_adjust_factor(symbol_list=["RAM"])
           symbol effect_date ca_type  adjust_factor
-        0    ASW  2021-08-25      SD         0.8889
-        1  DITTO  2022-03-15      SD         0.8333
+        0    RAM  2019-06-17      PC           0.05
+        1    RAM  2021-11-09      PC           0.20
         """
         security_t = self._table("SECURITY")
         adjust_factor_t = self._table("ADJUST_FACTOR")
@@ -807,6 +793,7 @@ class SETDataReader:
         if ca_type_list != None:
             ca_type_list = [i.upper() for i in ca_type_list]
             stmt = stmt.where(func.trim(adjust_factor_t.c.N_CA_TYPE).in_(ca_type_list))
+
         res_df = pd.read_sql(stmt, self.__engine)
 
         return res_df
@@ -850,40 +837,32 @@ class SETDataReader:
         """
         adjusted_list = list(adjusted_list)  # copy to avoid modify original list
 
-        security_t = self._table("SECURITY")
-        selected_fields = list()
         field = field.lower()
-        from_table = ""
-        if field in fld.DAILY_STOCK_TRADE_FACTOR:
+        security_t = self._table("SECURITY")
+
+        if field in fld.DAILY_STOCK_TRADE_MAP:
             daily_stock_t = self._table("DAILY_STOCK_TRADE")
-            selected_fields.append(
-                daily_stock_t.c[fld.DAILY_STOCK_TRADE_FACTOR[field]].label(
-                    field.upper()
-                )
-            )
-            from_table = "DAILY_STOCK_TRADE"
-        elif field in fld.DAILY_STOCK_STAT_FACTOR:
+            field_col = daily_stock_t.c[fld.DAILY_STOCK_TRADE_MAP[field]].label(field)
+        elif field in fld.DAILY_STOCK_STAT_MAP:
             daily_stock_t = self._table("DAILY_STOCK_STAT")
-            selected_fields.append(
-                daily_stock_t.c[fld.DAILY_STOCK_STAT_FACTOR[field]].label(field.upper())
-            )
-            from_table = "DAILY_STOCK_STAT"
+            field_col = daily_stock_t.c[fld.DAILY_STOCK_STAT_MAP[field]].label(field)
         else:
             raise ValueError(
-                f"{field} not in Data 1D field. Please check fields for more details."
+                f"Invalid field ({field}). Please check field in ezyquant.fields"
             )
+
         j = daily_stock_t.join(
             security_t, daily_stock_t.c.I_SECURITY == security_t.c.I_SECURITY
         )
 
         stmt = select(
             [
-                daily_stock_t.c.D_TRADE.label("TRADING_DATETIME"),
-                func.trim(security_t.c.N_SECURITY).label("SYMBOL"),
+                daily_stock_t.c.D_TRADE.label("trade_date"),
+                func.trim(security_t.c.N_SECURITY).label("symbol"),
+                field_col,
             ]
-            + selected_fields
         ).select_from(j)
-        if from_table == "DAILY_STOCK_TRADE":
+        if "I_TRADING_METHOD" in daily_stock_t.c:
             stmt = stmt.where(
                 func.trim(daily_stock_t.c.I_TRADING_METHOD) == "A"
             )  # Auto Matching
@@ -897,14 +876,11 @@ class SETDataReader:
         )
 
         df = pd.read_sql(
-            stmt,
-            self.__engine,
-            index_col="TRADING_DATETIME",
-            parse_dates="TRADING_DATETIME",
+            stmt, self.__engine, index_col="trade_date", parse_dates="trade_date"
         )
-        # return df
+
         # replace 0 with nan
-        NULL_IF_FIELD = {
+        if field in {
             "prior",
             "open",
             "high",
@@ -913,11 +889,20 @@ class SETDataReader:
             "average",
             "last_bid",
             "last_offer",
-        }
-        df = df.replace({i: 0 for i in NULL_IF_FIELD if i in df.columns}, np.nan)
-        # return df
-        df = self._merge_adjust_factor(df, adjust_list=adjusted_list)
-        df.index.name = None
+        }:
+            df = df.replace(0, np.nan)
+
+        df = df.pivot(columns="symbol", values=field)
+
+        if field in {"open", "close", "low", "high", "average", "eps", "dps"}:
+            df = self._merge_adjust_factor(
+                df, is_multiply=True, adjust_list=adjusted_list
+            )
+        elif field in {"volume"}:
+            df = self._merge_adjust_factor(
+                df, is_multiply=False, adjust_list=adjusted_list
+            )
+
         return df
 
     def get_data_symbol_quarterly(
@@ -1183,88 +1168,56 @@ class SETDataReader:
     def _merge_adjust_factor(
         self,
         df: pd.DataFrame,
-        multiply_columns: Iterable[str] = {
-            "open",
-            "close",
-            "low",
-            "high",
-            "average",
-            "eps",
-            "dps",
-        },
-        divide_columns: Iterable[str] = {"volume"},
+        is_multiply: bool = True,
         start_date: Optional[date] = None,
         adjust_list: Optional[List[str]] = None,
-        is_all_symbol: Optional[bool] = False,
     ) -> pd.DataFrame:
-        """df index is trading_datetime and columns contain symbol."""
-        if df.empty or (
-            not set(df.columns) & (set(multiply_columns) | set(divide_columns))
-        ):
-            return df
-
-        if pd.isnull(start_date):
+        """df index is trade_date and columns is symbol."""
+        if start_date == None:
             start_date = df.index.min().date()
 
-        if is_all_symbol:
-            adj_factor = self.get_adjust_factor(
-                start_date=start_date,
-                ca_type_list=adjust_list,
-            )
-        else:
-            adj_factor = self.get_adjust_factor(
-                symbol_list=df["symbol"].unique().tolist(),
-                start_date=start_date,
-                ca_type_list=adjust_list,
-            )
+        adjust_factor_df = self.get_adjust_factor(
+            symbol_list=df.columns.tolist(),
+            start_date=start_date,
+            ca_type_list=adjust_list,
+        )
 
-        adj_factor.index = adj_factor.effect_date
-
-        # print(adj_factor)
-        end_adj = adj_factor.effect_date.max()
-
-        if adj_factor.empty:
+        if adjust_factor_df.empty:
             return df
 
         # pivot table
-        adj_factor = adj_factor.pivot(columns="symbol", values="adjust_factor")
-        # print(adj_factor)
-        # cumulate product of adjust factor
-        adj_factor = adj_factor.iloc[::-1].cumprod().iloc[::-1]  # type: ignore
-        # print(adj_factor)
-        # reindex and shift back 1 day
-        adj_factor = adj_factor.reindex(
+        adjust_factor_df = adjust_factor_df.pivot(
+            index="effect_date", columns="symbol", values="adjust_factor"
+        )
+
+        # reverse cumulate product adjust factor
+        adjust_factor_df = (
+            adjust_factor_df.iloc[::-1].cumprod(skipna=True).iloc[::-1]  # type: ignore
+        )
+
+        # reindex trade date
+        adjust_factor_df = adjust_factor_df.reindex(
             pd.date_range(
                 start=df.index.min(),
-                end=max(df.index.max(), end_adj),
+                end=max(df.index.max(), adjust_factor_df.index.max()),
                 normalize=True,
             ),
         )
-        # print(adj_factor)
-        adj_factor = adj_factor.shift(-1)
+        # shift back 1 day
+        adjust_factor_df = adjust_factor_df.shift(-1)
 
         # back fill and fill 1
-        adj_factor = adj_factor.fillna(method="backfill").fillna(1)
-        # stack to series
-        adj_factor = adj_factor.stack("symbol")
+        adjust_factor_df = adjust_factor_df.fillna(method="backfill").fillna(1)
 
-        # merge adjust factor to dataframe
-        df = df.set_index("symbol", append=True)
-        df["adj_factor"] = adj_factor
-        df = df.fillna({"adj_factor": 1})
-        df = df.reset_index("symbol")
-        # print(df)
-        mul_cols = [i for i in multiply_columns if i in df.columns]
-        div_cols = [i for i in divide_columns if i in df.columns]
+        # reindex adjust_factor_df to df
+        adjust_factor_df = adjust_factor_df.reindex(df.index)
 
-        for field in mul_cols:
-            df[field] *= df["adj_factor"]
-        for field in div_cols:
-            df[field] /= df["adj_factor"]
+        # multiply or divide
+        if is_multiply:
+            df = df * adjust_factor_df
+        else:
+            df = df / adjust_factor_df
 
-        df = df.drop(columns=["adj_factor"]).dropna(
-            subset=mul_cols + div_cols, how="all"
-        )  # dropna from outer merge
         return df
 
     def _get_fundamental_data(
