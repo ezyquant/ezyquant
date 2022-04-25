@@ -871,9 +871,32 @@ class TestGetSymbolsByIndex:
             ),
         )
 
-    def test_sset(self, sdr: SETDataReader):
+    @pytest.mark.parametrize("index_list", [["sSET"], ["SSET"], ["sset"]])
+    @pytest.mark.parametrize("start_date", [date(2022, 1, 3), date(2022, 1, 4)])
+    @pytest.mark.parametrize("end_date", [date(2022, 1, 4), date(2022, 1, 5)])
+    def test_sset(
+        self,
+        sdr: SETDataReader,
+        index_list: Optional[List[str]],
+        start_date: Optional[date],
+        end_date: Optional[date],
+    ):
         """sSET is not upper"""
-        # TODO: test sSET
+        # Test
+        result = sdr.get_symbols_by_index(
+            index_list=index_list,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+        # Check
+        self._check(result)
+
+        assert_series_equal(
+            result["seq"], pd.Series([i for i in range(1, 139)], name="seq")
+        )
+        assert (result["as_of_date"] == pd.Timestamp("2022-01-04")).all()
+        assert (result["index"] == fld.INDEX_SSET).all()
 
     @pytest.mark.parametrize("index_list", [["ABCD"], []])
     def test_empty(self, sdr: SETDataReader, index_list: Optional[List[str]]):
@@ -898,6 +921,7 @@ class TestGetSymbolsByIndex:
             assert pd.notna(result[i]).all(), f"{i} is null"
 
         assert result["index"].isin(fld.INDEX_LIST).all()
+        assert (result["symbol"] == result["symbol"].str.upper()).all()
 
         return result
 
