@@ -428,17 +428,11 @@ class SETDataReader:
         )
         if ca_type_list != None:
             stmt = stmt.where(rights_benefit_t.c.N_CA_TYPE.in_(ca_type_list))
-        res_df = pd.read_sql(
-            stmt,
-            self.__engine,
-            # index_col="ex_date",
-            # parse_dates=["ex_date", "pay_date"],
-        )
-        res_df_copy = res_df.copy()
-        res_df.index = res_df.ex_date
-        # TODO: adjust factor
-        res_df = self._merge_adjust_factor(df=res_df, adjust_list=adjusted_list)
-        res_df = res_df.reset_index(drop=True)
+
+        res_df = pd.read_sql(stmt, self.__engine)
+
+        res_df = self._merge_adjust_factor_dividend(res_df, adjusted_list=adjusted_list)
+
         return res_df
 
     def get_delisted(
@@ -899,11 +893,11 @@ class SETDataReader:
 
         if field in {"open", "close", "low", "high", "average", "eps", "dps"}:
             df = self._merge_adjust_factor(
-                df, is_multiply=True, adjust_list=adjusted_list
+                df, is_multiply=True, adjusted_list=adjusted_list
             )
         elif field in {"volume"}:
             df = self._merge_adjust_factor(
-                df, is_multiply=False, adjust_list=adjusted_list
+                df, is_multiply=False, adjusted_list=adjusted_list
             )
 
         return df
@@ -1168,61 +1162,133 @@ class SETDataReader:
             stmt = stmt.where(func.DATE(date_column) <= end_date)
         return stmt
 
+    def _get_pivot_adjust_factor_df(
+        self,
+        min_date: date,
+        max_date: date,
+        symbol_list: Optional[List[str]] = None,
+        start_date: Optional[date] = None,
+        ca_type_list: Optional[List[str]] = None,
+    ) -> pd.DataFrame:
+        df = self.get_adjust_factor(
+            symbol_list=symbol_list,
+            start_date=start_date,
+            ca_type_list=ca_type_list,
+        )
+
+        # pivot table
+        df = df.pivot(index="effect_date", columns="symbol", values="adjust_factor")
+
+        # reverse cumulate product adjust factor
+        df = df.iloc[::-1].cumprod(skipna=True).iloc[::-1]  # type: ignore
+
+        # reindex trade date
+        if not df.empty:
+            max_date = max(max_date, df.index.max())
+        df = df.reindex(
+            index=pd.date_range(
+                start=min_date,
+                end=max_date,
+                normalize=True,
+                name="effect_date",
+            ),
+            columns=symbol_list,
+        )
+
+        # shift back 1 day
+        df = df.shift(-1)
+
+        # back fill and fill 1
+        df = df.fillna(method="backfill").fillna(1)
+
+        return df
+
     def _merge_adjust_factor(
         self,
         df: pd.DataFrame,
         is_multiply: bool = True,
-        start_date: Optional[date] = None,
-        adjust_list: Optional[List[str]] = None,
+        start_adjust_date: Optional[date] = None,
+        adjusted_list: Optional[List[str]] = None,
     ) -> pd.DataFrame:
-        """df index is trade_date and columns is symbol."""
+        """Adjust dataframe by adjust_factor.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            index must be trade_date and columns must be symbol
+        is_multiply : bool, optional
+            is multiply by adjust factor (adjust factor usually less than 1), by default True
+        start_adjust_date : Optional[date], optional
+            start of get adjust factor effect date, by default None
+        adjusted_list : Optional[List[str]], optional
+            n_ca_type list, by default None
+
+        Returns
+        -------
+        pd.DataFrame
+            index is trade_date and columns is symbol
+        """
         if df.empty:
             return df
 
-        if start_date == None:
-            start_date = df.index.min().date()
+        if start_adjust_date == None:
+            start_adjust_date = df.index.min().date()
 
-        adjust_factor_df = self.get_adjust_factor(
+        adjust_factor_df = self._get_pivot_adjust_factor_df(
+            min_date=df.index.min().date(),
+            max_date=df.index.max().date(),
             symbol_list=df.columns.tolist(),
-            start_date=start_date,
-            ca_type_list=adjust_list,
+            start_date=start_adjust_date,
+            ca_type_list=adjusted_list,
         )
-
-        if adjust_factor_df.empty:
-            return df
-
-        # pivot table
-        adjust_factor_df = adjust_factor_df.pivot(
-            index="effect_date", columns="symbol", values="adjust_factor"
-        )
-
-        # reverse cumulate product adjust factor
-        adjust_factor_df = (
-            adjust_factor_df.iloc[::-1].cumprod(skipna=True).iloc[::-1]  # type: ignore
-        )
-
-        # reindex trade date
-        adjust_factor_df = adjust_factor_df.reindex(
-            pd.date_range(
-                start=df.index.min(),
-                end=max(df.index.max(), adjust_factor_df.index.max()),
-                normalize=True,
-            ),
-        )
-        # shift back 1 day
-        adjust_factor_df = adjust_factor_df.shift(-1)
-
-        # back fill and fill 1
-        adjust_factor_df = adjust_factor_df.fillna(method="backfill").fillna(1)
 
         # reindex adjust_factor_df to df
-        adjust_factor_df = adjust_factor_df.reindex(df.index)
+        adjust_factor_df = adjust_factor_df.reindex(df.index)  # type: ignore
 
         # multiply or divide
         if is_multiply:
             df = df * adjust_factor_df
         else:
             df = df / adjust_factor_df
+
+        return df
+
+    def _merge_adjust_factor_dividend(
+        self,
+        df: pd.DataFrame,
+        start_adjust_date: Optional[date] = None,
+        adjusted_list: Optional[List[str]] = None,
+    ) -> pd.DataFrame:
+        if df.empty:
+            return df
+
+        if start_adjust_date == None:
+            start_adjust_date = df["ex_date"].min().date()
+
+        adjust_factor_df = self._get_pivot_adjust_factor_df(
+            min_date=df["ex_date"].min().date(),
+            max_date=df["ex_date"].max().date(),
+            symbol_list=df["symbol"].unique().tolist(),
+            start_date=start_adjust_date,
+            ca_type_list=adjusted_list,
+        )
+
+        adjust_factor_df = (
+            adjust_factor_df.stack().rename("adjust_factor").reset_index()  # type: ignore
+        )
+
+        df = df.merge(
+            adjust_factor_df,
+            how="left",
+            left_on=["ex_date", "symbol"],
+            right_on=["effect_date", "symbol"],
+            validate="m:1",
+        )
+        df["adjust_factor"] = df["adjust_factor"].fillna(1)
+
+        df["dps"] *= df["adjust_factor"]
+
+        df = df.drop(columns=["effect_date", "adjust_factor"])
 
         return df
 
@@ -1365,7 +1431,7 @@ class SETDataReader:
                 ]
             )
             .group_by(daily_stock_stat_t.c.I_SECURITY, daily_stock_stat_t.c.D_AS_OF)
-            .subquery()  # type: ignore
+            .subquery()
         )
 
         selected_fields = [
