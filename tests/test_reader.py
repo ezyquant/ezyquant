@@ -1034,7 +1034,7 @@ class TestGetDataSymbolDaily:
                 date(2013, 4, 19),
                 True,
                 pd.DataFrame(
-                    {"MALEE": [36.75, 37.15, 36.90]},
+                    {"MALEE": [36.75, 37.125, 36.875]},
                     index=[
                         pd.Timestamp("2013-04-17"),
                         pd.Timestamp("2013-04-18"),
@@ -1128,7 +1128,7 @@ class TestGetDataSymbolDaily:
             )
         else:
             result = sdr.get_data_symbol_daily(
-                "close",
+                field=field,
                 symbol_list=[symbol],
                 start_date=start_date,
                 end_date=end_date,
