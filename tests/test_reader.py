@@ -871,6 +871,10 @@ class TestGetSymbolsByIndex:
             ),
         )
 
+    def test_sset(self, sdr: SETDataReader):
+        """sSET is not upper"""
+        # TODO: test sSET
+
     @pytest.mark.parametrize("index_list", [["ABCD"], []])
     def test_empty(self, sdr: SETDataReader, index_list: Optional[List[str]]):
         # Test
@@ -1166,6 +1170,7 @@ class TestGetDataSymbolDaily:
         return result
 
 
+@pytest.mark.skip("Not impemented")
 class TestGetDataSymbolQuarterly:
     _check = staticmethod(TestGetDataSymbolDaily._check)
 
@@ -1259,6 +1264,7 @@ class TestGetDataSymbolQuarterly:
         assert result.empty
 
 
+@pytest.mark.skip("Not impemented")
 class TestGetDataSymbolYearly:
     _check = staticmethod(TestGetDataSymbolDaily._check)
 
@@ -1341,6 +1347,7 @@ class TestGetDataSymbolYearly:
         assert result.empty
 
 
+@pytest.mark.skip("Not impemented")
 class TestGetDataSymbolTtm:
     _check = staticmethod(TestGetDataSymbolDaily._check)
 
@@ -1428,6 +1435,7 @@ class TestGetDataSymbolTtm:
         assert result.empty
 
 
+@pytest.mark.skip("Not impemented")
 class TestGetDataSymbolYtd:
     _check = staticmethod(TestGetDataSymbolDaily._check)
 
@@ -1523,6 +1531,7 @@ class TestGetDataSymbolYtd:
         assert result.empty
 
 
+@pytest.mark.skip("Not impemented")
 class TestGetDataIndexDaily:
     @pytest.mark.parametrize(
         "field", [getattr(fld, i) for i in dir(fld) if i.startswith("D_INDEX")]
@@ -1575,6 +1584,10 @@ class TestGetDataIndexDaily:
             ),
         )
 
+    def test_sset(self, sdr: SETDataReader):
+        """sSET is not upper"""
+        # TODO: test sSET
+
     @pytest.mark.parametrize(
         "field", [getattr(fld, i) for i in dir(fld) if i.startswith("D_INDEX")]
     )
@@ -1601,6 +1614,7 @@ class TestGetDataIndexDaily:
         return result
 
 
+@pytest.mark.skip("Not impemented")
 class TestGetDataSectorDaily:
     @pytest.mark.parametrize(
         "field", [getattr(fld, i) for i in dir(fld) if i.startswith("D_SECTOR")][::5]
