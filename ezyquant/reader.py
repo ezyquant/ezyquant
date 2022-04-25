@@ -317,7 +317,7 @@ class SETDataReader:
                 != func.trim(change_name_t.c.N_SECURITY_NEW)
             )
         )
-        stmt = self._filter_symbol_start_end(
+        stmt = self._filter_stmt_by_symbol_and_date(
             stmt=stmt,
             symbol_column=security_t.c.N_SECURITY,
             date_column=change_name_t.c.D_EFFECT,
@@ -418,7 +418,7 @@ class SETDataReader:
             .where(rights_benefit_t.c.Z_RIGHTS > 0)
         )
 
-        stmt = self._filter_symbol_start_end(
+        stmt = self._filter_stmt_by_symbol_and_date(
             stmt=stmt,
             symbol_list=symbol_list,
             start_date=start_date,
@@ -494,7 +494,7 @@ class SETDataReader:
             .select_from(j)
             .where(security_detail_t.c.D_DELISTED != None)
         )
-        stmt = self._filter_symbol_start_end(
+        stmt = self._filter_stmt_by_symbol_and_date(
             stmt=stmt,
             symbol_list=symbol_list,
             start_date=start_date,
@@ -565,7 +565,7 @@ class SETDataReader:
                 func.trim(sign_posting_t.c.N_SIGN).label("sign"),
             ]
         ).select_from(j)
-        stmt = self._filter_symbol_start_end(
+        stmt = self._filter_stmt_by_symbol_and_date(
             stmt=stmt,
             symbol_list=symbol_list,
             start_date=start_date,
@@ -711,7 +711,7 @@ class SETDataReader:
                 )
             )
         )
-        stmt = self._filter_symbol_start_end(
+        stmt = self._filter_stmt_by_symbol_and_date(
             stmt=stmt,
             symbol_list=index_list,
             start_date=start_date,
@@ -782,7 +782,7 @@ class SETDataReader:
                 adjust_factor_t.c.R_ADJUST_FACTOR.label("adjust_factor"),
             ]
         ).select_from(j)
-        stmt = self._filter_symbol_start_end(
+        stmt = self._filter_stmt_by_symbol_and_date(
             stmt=stmt,
             symbol_list=symbol_list,
             start_date=start_date,
@@ -866,7 +866,7 @@ class SETDataReader:
             stmt = stmt.where(
                 func.trim(daily_stock_t.c.I_TRADING_METHOD) == "A"
             )  # Auto Matching
-        stmt = self._filter_symbol_start_end(
+        stmt = self._filter_stmt_by_symbol_and_date(
             stmt=stmt,
             symbol_list=symbol_list,
             start_date=start_date,
@@ -1150,7 +1150,7 @@ class SETDataReader:
     def _table(self, name: str) -> Table:
         return Table(name, self.__metadata, autoload=True)
 
-    def _filter_symbol_start_end(
+    def _filter_stmt_by_symbol_and_date(
         self,
         stmt: Select,
         symbol_column: Column,
