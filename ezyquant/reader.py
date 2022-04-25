@@ -875,14 +875,14 @@ class SETDataReader:
 
         # replace 0 with nan
         if field in {
-            "prior",
-            "open",
-            "high",
-            "low",
-            "close",
-            "average",
-            "last_bid",
-            "last_offer",
+            fld.D_PRIOR,
+            fld.D_OPEN,
+            fld.D_HIGH,
+            fld.D_LOW,
+            fld.D_CLOSE,
+            fld.D_AVERAGE,
+            fld.D_LAST_BID,
+            fld.D_LAST_OFFER,
         }:
             df = df.replace(0, np.nan)
 
@@ -891,11 +891,22 @@ class SETDataReader:
         df.index.name = None
         df.columns.name = None
 
-        if field in {"open", "close", "low", "high", "average", "eps", "dps"}:
+        if field in {
+            fld.D_PRIOR,
+            fld.D_OPEN,
+            fld.D_HIGH,
+            fld.D_LOW,
+            fld.D_CLOSE,
+            fld.D_AVERAGE,
+            fld.D_LAST_BID,
+            fld.D_LAST_OFFER,
+            fld.D_EPS,
+            fld.D_DPS,
+        }:
             df = self._merge_adjust_factor(
                 df, is_multiply=True, adjusted_list=adjusted_list
             )
-        elif field in {"volume"}:
+        elif field in {fld.D_VOLUME}:
             df = self._merge_adjust_factor(
                 df, is_multiply=False, adjusted_list=adjusted_list
             )
