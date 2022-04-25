@@ -1570,20 +1570,25 @@ class TestGetDataIndexDaily:
         assert not result.empty
 
     @pytest.mark.parametrize(
-        ["field", "expected"],
+        ["index", "field", "expected"],
         [
-            (fld.D_INDEX_HIGH, 1674.10),
-            (fld.D_INDEX_LOW, 1663.50),
-            (fld.D_INDEX_CLOSE, 1670.28),
-            (fld.D_INDEX_TOTAL_VOLUME, 28684980655),
-            (fld.D_INDEX_TOTAL_VALUE, 100014911411.57),
-            (fld.D_INDEX_MKT_PE, 20.96),
-            (fld.D_INDEX_MKT_PBV, 1.80),
-            (fld.D_INDEX_MKT_YIELD, 2.08),
-            (fld.D_INDEX_MKT_CAP, 19733996617934.5),
+            (fld.INDEX_SET, fld.D_INDEX_HIGH, 1674.10),
+            (fld.INDEX_SET, fld.D_INDEX_LOW, 1663.50),
+            (fld.INDEX_SET, fld.D_INDEX_CLOSE, 1670.28),
+            (fld.INDEX_SET, fld.D_INDEX_TOTAL_VOLUME, 28684980655),
+            (fld.INDEX_SET, fld.D_INDEX_TOTAL_VALUE, 100014911411.57),
+            (fld.INDEX_SET, fld.D_INDEX_MKT_PE, 20.96),
+            (fld.INDEX_SET, fld.D_INDEX_MKT_PBV, 1.80),
+            (fld.INDEX_SET, fld.D_INDEX_MKT_YIELD, 2.08),
+            (fld.INDEX_SET, fld.D_INDEX_MKT_CAP, 19733996617934.5),
+            (fld.INDEX_SSET, fld.D_INDEX_HIGH, 1156.83),
+            (fld.INDEX_SSET, fld.D_INDEX_LOW, 1135.33),
+            (fld.INDEX_SSET, fld.D_INDEX_CLOSE, 1156.83),
         ],
     )
-    def test_field_with_expected(self, sdr: SETDataReader, field: str, expected: float):
+    def test_field_with_expected(
+        self, sdr: SETDataReader, index: str, field: str, expected: float
+    ):
         """source: https://www.tradingview.com/chart/?symbol=SET:SET"""
         start_date = date(2022, 1, 4)
         end_date = date(2022, 1, 4)
@@ -1591,7 +1596,7 @@ class TestGetDataIndexDaily:
         # Test
         result = sdr.get_data_index_daily(
             field=field,
-            index_list=[fld.INDEX_SET],
+            index_list=[index],
             start_date=start_date,
             end_date=end_date,
         )
@@ -1607,10 +1612,6 @@ class TestGetDataIndexDaily:
                 index=pd.DatetimeIndex(["2022-01-04"]),
             ),
         )
-
-    def test_sset(self, sdr: SETDataReader):
-        """sSET is not upper"""
-        # TODO: test sSET
 
     @pytest.mark.parametrize(
         "field", [getattr(fld, i) for i in dir(fld) if i.startswith("D_INDEX")]
