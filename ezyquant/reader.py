@@ -1134,74 +1134,45 @@ class SETDataReader:
         --------
         TODO: examples
         """
-        mktstat_daily_index = Table("MKTSTAT_DAILY_INDEX")
-        mktstat_daily_market = Table("MKTSTAT_DAILY_MARKET")
-        sector = Table("SECTOR")
 
-        selected_fields = list()
-
+        sector = self._table("SECTOR")
         field = field.lower()
 
         if field in fld.MKTSTAT_DAILY_INDEX_MAP:
-            selected_fields = mktstat_daily_index.c[
-                fld.MKTSTAT_DAILY_INDEX_MAP[field]
-            ].label(field)
+            mktstat_daily = self._table("MKTSTAT_DAILY_INDEX")
+            field_que = mktstat_daily.c[fld.MKTSTAT_DAILY_INDEX_MAP[field]].label(field)
 
         elif field in fld.MKTSTAT_DAILY_MARKET:
-            selected_fields = mktstat_daily_market.c[
-                fld.MKTSTAT_DAILY_MARKET[field]
-            ].label(field)
+            mktstat_daily = self._table("MKTSTAT_DAILY_MARKET")
+            field_que = mktstat_daily.c[fld.MKTSTAT_DAILY_MARKET[field]].label(field)
 
         else:
             raise ValueError(
                 f"{field} not in Data 1D field. Please check psims factor for more details."
             )
 
+        j = mktstat_daily.join(sector, mktstat_daily.c.I_SECTOR == sector.c.I_SECTOR)
+
         sql = (
             select(
                 [
-                    mktstat_daily_index.c.D_TRADE.label("trading_datetime"),
-                    func.trim(sector.c.N_SECTOR).label("symbol"),
+                    mktstat_daily.c.D_TRADE.label("trading_datetime"),
+                    func.trim(sector.c.N_SECTOR).label("index"),
+                    field_que,
                 ]
-                + selected_fields
-            )
-            .select_from(mktstat_daily_index)
+            ).select_from(j)
             # .where(sector.c.F_DATA == "M")
-            .where(sector.c.D_INDEX_BASE != None)
-            .order_by(mktstat_daily_index.c.D_TRADE.asc())
+            # .where(sector.c.D_INDEX_BASE != None)
+            # .order_by(mktstat_daily_index.c.D_TRADE.asc())
         )
-
-        # index_list = [fld.INDEX_LIST[i] for i in index_list]
-        if index_list != None:
-            sql = sql.where(
-                sector.c.N_SECTOR.in_("{:<8}".format(s) for s in index_list)
-            )
-
-        if not pd.isnull(start_date):
-            sql = sql.where(mktstat_daily_index.c.D_TRADE >= start_date)
-        if not pd.isnull(end_date):
-            sql = sql.where(mktstat_daily_index.c.D_TRADE <= end_date)
 
         sql = self._filter_stmt_by_symbol_and_date(
             stmt=sql,
             symbol_column=sector.c.N_SECTOR,
-            date_column=mktstat_daily_index.c.D_TRADE,
+            date_column=mktstat_daily.c.D_TRADE,
             symbol_list=index_list,
             start_date=start_date,
             end_date=end_date,
-        )
-
-        sql = sql.join(
-            mktstat_daily_market,
-            and_(
-                mktstat_daily_index.c.I_SECTOR == mktstat_daily_market.c.I_SECTOR,
-                mktstat_daily_index.c.D_TRADE == mktstat_daily_market.c.D_TRADE,
-            ),
-            isouter=True,
-        ).join(
-            sector,
-            mktstat_daily_index.c.I_SECTOR == sector.c.I_SECTOR,
-            isouter=True,
         )
 
         df = pd.read_sql(
@@ -1211,8 +1182,6 @@ class SETDataReader:
             parse_dates="trading_datetime",
         )
         return df
-
-        return pd.DataFrame()
 
     def get_data_sector_daily(
         self,
@@ -1245,6 +1214,44 @@ class SETDataReader:
         --------
         TODO: examples
         """
+        sector = self._table("SECTOR")
+        sector_info = self._table("DAILY_SECTOR_INFO")
+        field = field.lower()
+
+        j = sector_info.join(
+            sector,
+            sector_info.c.I_SECTOR == sector.c.I_SECTOR,
+        )
+
+        sql = (
+            select(
+                [
+                    sector_info.c.D_TRADE.label("trading_datetime"),
+                    func.trim(sector.c.N_SECTOR).label("sector"),
+                    sector_info.c[fld.MKTSTAT_DAILY_INDEX_MAP[field]].label(field),
+                ]
+            ).select_from(j)
+            # .where(sector.c.F_DATA == "M")
+            # .where(sector.c.D_INDEX_BASE != None)
+            # .order_by(mktstat_daily_index.c.D_TRADE.asc())
+        )
+
+        sql = self._filter_stmt_by_symbol_and_date(
+            stmt=sql,
+            symbol_column=sector.c.N_SECTOR,
+            date_column=sector_info.c.D_TRADE,
+            symbol_list=sector_list,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+        df = pd.read_sql(
+            sql,
+            self.__engine,
+            index_col="trading_datetime",
+            parse_dates="trading_datetime",
+        )
+        return df
         return pd.DataFrame()
 
     """
@@ -1633,6 +1640,8 @@ def _check_date(start_date, end_date):
 
 
 def _check_duplicate(data_list: Optional[List[str]], list_name: str):
+
     if data_list != None:
+        data_list = [x.upper() for x in data_list]
         if len(data_list) != len(set(data_list)):
             raise InputError(f"Duplicate {list_name}")
