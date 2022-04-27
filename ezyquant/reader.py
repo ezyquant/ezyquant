@@ -1537,12 +1537,13 @@ class SETDataReader:
         }
 
         period = period.upper()
+        field = field.lower()
 
         financial_stat_std_t = self._table("FINANCIAL_STAT_STD")
         daily_stock_stat_t = self._table("DAILY_STOCK_STAT")
         security_t = self._table("SECURITY")
 
-        daily_stock_stat_subquery = (
+        d_trade_subquery = (
             select(
                 [
                     daily_stock_stat_t.c.I_SECURITY,
@@ -1554,80 +1555,52 @@ class SETDataReader:
             .subquery()
         )
 
-        selected_fields = [
-            daily_stock_stat_subquery.c.D_TRADE.label("trading_datetime"),
-            func.trim(security_t.c.N_SECURITY).label("symbol"),
-            financial_stat_std_t.c.N_ACCOUNT.label("field"),
-            financial_stat_std_t.c[PERIOD_DICT[period]].label("value"),
-        ]
-
-        if period == "Y":
-            selected_fields.append(financial_stat_std_t.c.M_ACCOUNT)
-
-        sql = (
-            select(selected_fields)
-            .select_from(financial_stat_std_t)
-            .order_by(daily_stock_stat_subquery.c.D_TRADE.asc())
-            .order_by(financial_stat_std_t.c.I_ACCT_FORM.asc())
-        )
-
-        if period == "Y":
-            sql = sql.where(financial_stat_std_t.c.I_QUARTER == 9)
-
-        sql = sql.where(
-            financial_stat_std_t.c.N_ACCOUNT.in_(
-                fld.FINANCIAL_STAT_STD_FACTOR[field.lower()]
-            )
-        )
-
-        if symbol_list is not None:
-            sql = sql.where(
-                security_t.c.N_SECURITY.in_(
-                    ["{:<20}".format(s.upper()) for s in symbol_list]
-                )
-            )
-
-        if not pd.isnull(start_date):
-            sql = sql.where(daily_stock_stat_subquery.c.D_TRADE >= start_date)
-        if not pd.isnull(end_date):
-            sql = sql.where(daily_stock_stat_subquery.c.D_TRADE <= end_date)
-
-        sql = sql.join(
-            daily_stock_stat_subquery,
+        j = financial_stat_std_t.join(
+            security_t, financial_stat_std_t.c.I_SECURITY == security_t.c.I_COMPANY
+        ).join(
+            d_trade_subquery,
             and_(
-                financial_stat_std_t.c.D_AS_OF == daily_stock_stat_subquery.c.D_AS_OF,
-                financial_stat_std_t.c.I_SECURITY
-                == daily_stock_stat_subquery.c.I_SECURITY,
+                financial_stat_std_t.c.I_SECURITY == d_trade_subquery.c.I_SECURITY,
+                financial_stat_std_t.c.D_AS_OF == d_trade_subquery.c.D_AS_OF,
             ),
-        ).join(security_t, financial_stat_std_t.c.I_SECURITY == security_t.c.I_SECURITY)
+        )
 
-        # sql = self._compile_sql(sql)
-        df = pd.read_sql(sql, self.__engine, parse_dates="trading_datetime")
+        # TODO: Yearly data depends on I_ACCT_TYPE
+        stmt = (
+            select(
+                [
+                    d_trade_subquery.c.D_TRADE.label("trade_date"),
+                    func.trim(security_t.c.N_SECURITY).label("symbol"),
+                    financial_stat_std_t.c[PERIOD_DICT[period]].label("value"),
+                ]
+            )
+            .select_from(j)
+            .where(
+                financial_stat_std_t.c.N_ACCOUNT == fld.FINANCIAL_STAT_STD_FACTOR[field]
+            )
+            .order_by(d_trade_subquery.c.D_TRADE.asc())
+            .order_by(security_t.c.I_SECURITY)
+        )
+
+        if period == "Y":
+            stmt = stmt.where(financial_stat_std_t.c.I_QUARTER == 9)
+
+        stmt = self._filter_stmt_by_symbol_and_date(
+            stmt=stmt,
+            symbol_column=security_t.c.N_SECURITY,
+            date_column=d_trade_subquery.c.D_TRADE,
+            symbol_list=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+        df = pd.read_sql(stmt, self.__engine, parse_dates="trade_date")
 
         # duplicate key mostly I_ACCT_FORM 6,7
-        df = df.drop_duplicates(
-            subset=["trading_datetime", "symbol", "field"], keep="last"
-        )
-        df = df.set_index("trading_datetime")
-
-        if period == "Y":
-            """For Yearly fundamental "I_ACCT_TYPE".
-
-            - B use "M_ACCOUNT"
-            - I use "M_ACC_ACCOUNT_12M"
-            - C use "M_ACC_ACCOUNT_12M"
-            """
-            df = df.fillna({"value": df["M_ACCOUNT"]}).drop(columns="M_ACCOUNT")
+        df = df.drop_duplicates(subset=["trade_date", "symbol"], keep="last")
 
         # pivot dataframe
-        df = df.reset_index()
-        df = df.pivot(
-            index=["trading_datetime", "symbol"], columns="field", values="value"
-        )
-        df = df.reset_index("symbol")
-
-        # rename columns
-        df = df.rename(columns={v: k for k, v in fld.FINANCIAL_STAT_STD_FACTOR.items()})
+        df = df.pivot(index="trade_date", columns="symbol", values="value")
 
         return df
 
