@@ -6,6 +6,7 @@ import pytest
 from pandas._testing import assert_frame_equal, assert_index_equal, assert_series_equal
 
 import ezyquant.fields as fld
+from ezyquant.errors import InputError
 from ezyquant.reader import SETDataReader
 
 
@@ -100,6 +101,14 @@ class TestGetTradingDates:
         # Check
         assert isinstance(result, list)
         assert len(result) == 0
+
+    @pytest.mark.parametrize(
+        ("start_date", "end_date"), [(date(2022, 1, 2), date(2022, 1, 1))]
+    )
+    def test_invalid_date(self, sdr: SETDataReader, start_date: date, end_date: date):
+        # Test
+        with pytest.raises(InputError):
+            sdr.get_trading_dates(start_date=start_date, end_date=end_date)
 
 
 @pytest.mark.parametrize(
@@ -241,6 +250,13 @@ class TestGetSymbolInfo:
         self._check(result)
 
         assert result.empty
+
+    @pytest.mark.parametrize(
+        "symbol_list", [["AOT", "AOT"], ["AOT", "AOT", "AOT"], ["aot", "AOT"]]
+    )
+    def test_duplicate_symbol(self, sdr: SETDataReader, symbol_list: List[str]):
+        with pytest.raises(InputError):
+            sdr.get_symbol_info(symbol_list)
 
     @staticmethod
     def _check(result):
@@ -593,6 +609,27 @@ class TestGetDividend:
 
         assert result.empty
 
+    @pytest.mark.parametrize(
+        "symbol_list", [["AOT", "AOT"], ["AOT", "AOT", "AOT"], ["aot", "AOT"]]
+    )
+    def test_duplicate_symbol(self, sdr: SETDataReader, symbol_list: List[str]):
+        with pytest.raises(InputError):
+            sdr.get_dividend(symbol_list)
+
+    @pytest.mark.parametrize(
+        "ca_type_list", [["CD", "CD"], ["CD", "CD", "CD"], ["cd", "CD"]]
+    )
+    def test_duplicate_ca_type(self, sdr: SETDataReader, ca_type_list: List[str]):
+        with pytest.raises(InputError):
+            sdr.get_dividend(ca_type_list=ca_type_list)
+
+    @pytest.mark.parametrize(
+        "adjusted_list", [["SD", "SD"], ["SD", "SD", "SD"], ["sd", "SD"]]
+    )
+    def test_duplicate_adjusted(self, sdr: SETDataReader, adjusted_list: List[str]):
+        with pytest.raises(InputError):
+            sdr.get_dividend(adjusted_list=adjusted_list)
+
     @staticmethod
     def _check(result):
         assert isinstance(result, pd.DataFrame)
@@ -908,6 +945,14 @@ class TestGetSymbolsByIndex:
 
         assert result.empty
 
+    @pytest.mark.parametrize(
+        "index_list",
+        [["SET50", "SET50"], ["SET50", "SET50", "SET50"], ["SET50", "set50"]],
+    )
+    def test_duplicate_index(self, sdr: SETDataReader, index_list: List[str]):
+        with pytest.raises(ValueError):
+            sdr.get_symbols_by_index(index_list)
+
     @staticmethod
     def _check(result):
         assert isinstance(result, pd.DataFrame)
@@ -1179,6 +1224,50 @@ class TestGetDataSymbolDaily:
         self._check(result)
 
         assert result.empty
+
+    @pytest.mark.parametrize(
+        ("symbol_list", "expect_columns"),
+        [
+            ([], []),
+            (["COM7"], ["COM7"]),
+            (["com7"], ["COM7"]),
+            (["True"], ["TRUE"]),
+            (["COM7", "MALEE"], ["COM7", "MALEE"]),
+            (["MALEE", "COM7"], ["MALEE", "COM7"]),
+            # INVALID
+            (["INVALID"], []),
+            (["INVALID", "COM7", "MALEE"], ["COM7", "MALEE"]),
+            (["COM7", "INVALID", "MALEE"], ["COM7", "MALEE"]),
+            (["COM7", "MALEE", "INVALID"], ["COM7", "MALEE"]),
+            # New Symbol
+            (["OR"], []),
+            (["OR", "COM7", "MALEE"], ["COM7", "MALEE"]),
+            (["COM7", "OR", "MALEE"], ["COM7", "MALEE"]),
+            (["COM7", "MALEE", "OR"], ["COM7", "MALEE"]),
+        ],
+    )
+    def test_symbol_column(
+        self, sdr: SETDataReader, symbol_list: List[str], expect_columns: List[str]
+    ):
+        # Test
+        result = sdr.get_data_symbol_daily(
+            "close",
+            symbol_list=symbol_list,
+            start_date=date(2017, 5, 15),
+            end_date=date(2017, 5, 17),
+        )
+        print(result)
+
+        # Check
+        self._check(result)
+        assert result.columns.to_list() == expect_columns
+
+    @pytest.mark.parametrize(
+        "symbol_list", [["AOT", "AOT"], ["AOT", "AOT", "AOT"], ["aot", "AOT"]]
+    )
+    def test_duplicate_symbol(self, sdr: SETDataReader, symbol_list: List[str]):
+        with pytest.raises(InputError):
+            sdr.get_data_symbol_daily("close", symbol_list)
 
     @staticmethod
     def _check(result):
