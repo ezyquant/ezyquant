@@ -1732,7 +1732,6 @@ class TestGetDataIndexDaily:
         return result
 
 
-@pytest.mark.skip("Not impemented")
 class TestGetDataSectorDaily:
     @pytest.mark.parametrize(
         "field", [getattr(fld, i) for i in dir(fld) if i.startswith("D_SECTOR")][::5]

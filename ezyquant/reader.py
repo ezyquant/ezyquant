@@ -1237,8 +1237,6 @@ class SETDataReader:
         --------
         TODO: examples
         """
-        raise NotImplementedError("Not implemented yet")
-
         sector = self._table("SECTOR")
         sector_info = self._table("DAILY_SECTOR_INFO")
         field = field.lower()
@@ -1253,12 +1251,11 @@ class SETDataReader:
                 [
                     sector_info.c.D_TRADE.label("trading_datetime"),
                     func.trim(sector.c.N_SECTOR).label("sector"),
-                    sector_info.c[fld.MKTSTAT_DAILY_INDEX_MAP[field]].label(field),
+                    sector_info.c[fld.DAILY_SECTOR_INFO_MAP[field]].label(field),
                 ]
-            ).select_from(j)
-            # .where(sector.c.F_DATA == "M")
-            # .where(sector.c.D_INDEX_BASE != None)
-            # .order_by(mktstat_daily_index.c.D_TRADE.asc())
+            )
+            .select_from(j)
+            .order_by(sector_info.c.D_TRADE.asc())
         )
 
         sql = self._filter_stmt_by_symbol_and_date(
@@ -1276,8 +1273,17 @@ class SETDataReader:
             index_col="trading_datetime",
             parse_dates="trading_datetime",
         )
+        df.reset_index(inplace=True)
+        df = pd.pivot_table(
+            df, index=["trading_datetime"], columns="sector", values=field
+        )
+        df.columns.name = None
+        df.index.name = None
+        col_notin_sectorlist = [
+            value for value in df.columns.to_list() if value not in fld.SECTOR_LIST
+        ]
+        df = df.drop(col_notin_sectorlist, axis=1)
         return df
-        return pd.DataFrame()
 
     """
     Protected methods
