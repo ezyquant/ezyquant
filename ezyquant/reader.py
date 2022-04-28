@@ -1360,10 +1360,14 @@ class SETDataReader:
         if start_adjust_date == None:
             start_adjust_date = df.index.min().date()
 
+        symbol_list = df.columns.tolist()
+        if len(symbol_list) > 100:
+            symbol_list = None
+
         adjust_factor_df = self._get_pivot_adjust_factor_df(
             min_date=df.index.min().date(),
             max_date=df.index.max().date(),
-            symbol_list=df.columns.tolist(),
+            symbol_list=symbol_list,
             start_date=start_adjust_date,
             ca_type_list=adjusted_list,
         )
@@ -1391,10 +1395,14 @@ class SETDataReader:
         if start_adjust_date == None:
             start_adjust_date = df["ex_date"].min().date()
 
+        symbol_list = df["symbol"].unique().tolist()
+        if len(symbol_list) > 100:
+            symbol_list = None
+
         adjust_factor_df = self._get_pivot_adjust_factor_df(
             min_date=df["ex_date"].min().date(),
             max_date=df["ex_date"].max().date(),
-            symbol_list=df["symbol"].unique().tolist(),
+            symbol_list=symbol_list,
             start_date=start_adjust_date,
             ca_type_list=adjusted_list,
         )
