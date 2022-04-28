@@ -49,6 +49,7 @@ class TestGetTradingDates:
             (date(2022, 1, 7), date(2022, 1, 7)),
             (date(2022, 1, 8), date(2022, 1, 7)),
             (date(2022, 1, 9), date(2022, 1, 7)),
+            (date(2023, 1, 3), date(2023, 1, 3)),
         ],
     )
     def test_end_date(self, sdr: SETDataReader, end_date: date, expect_last_date: date):
@@ -124,6 +125,8 @@ class TestGetTradingDates:
         (date(2022, 1, 8), False),
         (date(2022, 1, 9), False),
         (date(2022, 1, 10), True),
+        (date(2023, 1, 1), False),
+        (date(2023, 1, 3), True),
     ],
 )
 def test_is_trading_date(sdr: SETDataReader, check_date: date, expected: bool):
