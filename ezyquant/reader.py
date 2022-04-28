@@ -1218,6 +1218,8 @@ class SETDataReader:
         --------
         TODO: examples
         """
+        raise NotImplementedError("Not implemented yet")
+
         sector = self._table("SECTOR")
         sector_info = self._table("DAILY_SECTOR_INFO")
         field = field.lower()
