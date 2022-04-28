@@ -974,7 +974,6 @@ class SETDataReader:
         --------
         TODO: examples
         """
-        raise NotImplementedError("Not implemented yet")
         return self._get_fundamental_data(
             symbol_list=symbol_list,
             field=field,
@@ -1571,7 +1570,7 @@ class SETDataReader:
         )
 
         j = financial_stat_std_t.join(
-            security_t, financial_stat_std_t.c.I_SECURITY == security_t.c.I_COMPANY
+            security_t, financial_stat_std_t.c.I_SECURITY == security_t.c.I_SECURITY
         ).join(
             d_trade_subquery,
             and_(
@@ -1580,7 +1579,7 @@ class SETDataReader:
             ),
         )
 
-        # TODO: Yearly data depends on I_ACCT_TYPE
+        # TODO: Yearly value depends on I_ACCT_TYPE
         stmt = (
             select(
                 [
@@ -1616,5 +1615,12 @@ class SETDataReader:
 
         # pivot dataframe
         df = df.pivot(index="trade_date", columns="symbol", values="value")
+
+        # reindex trade_date
+        trade_dates = self.get_trading_dates(df.index[0].date(), df.index[-1].date())  # type: ignore
+        df = df.reindex(pd.DatetimeIndex(trade_dates))  # type: ignore
+
+        df.index.name = None
+        df.columns.name = None
 
         return df

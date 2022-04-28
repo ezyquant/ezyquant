@@ -1285,7 +1285,6 @@ class TestGetDataSymbolDaily:
         return result
 
 
-@pytest.mark.skip("Not impemented")
 class TestGetDataSymbolQuarterly:
     _check = staticmethod(TestGetDataSymbolDaily._check)
 
@@ -1341,7 +1340,7 @@ class TestGetDataSymbolQuarterly:
     ):
         symbol = "TTB"
         start_date = date(2021, 3, 1)
-        end_date = date(2021, 11, 11)
+        end_date = date(2021, 11, 12)
 
         # Test
         result = sdr.get_data_symbol_quarterly(
@@ -1360,10 +1359,12 @@ class TestGetDataSymbolQuarterly:
         expected = pd.DataFrame(
             {symbol: expected_list},
             index=pd.DatetimeIndex(
-                ["2021-03-01", "2021-05-13", "2021-08-27", "2021-11-11"]
+                ["2021-03-01", "2021-05-13", "2021-08-27", "2021-11-12"]
             ),
         )
-        expected = expected.reindex(sdr.get_trading_dates(start_date, end_date))  # type: ignore
+
+        trade_dates = sdr.get_trading_dates(start_date, end_date)
+        expected = expected.reindex(pd.DatetimeIndex(trade_dates))  # type: ignore
 
         assert_frame_equal(result, expected)
 
