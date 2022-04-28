@@ -47,7 +47,8 @@ class SETDataReader:
         List[date]
             list of trading dates
         """
-        _check_date(start_date, end_date)
+        if start_date != None and end_date != None:
+            _check_date(start_date, end_date)
         calendar_t = self._table("CALENDAR")
 
         stmt = select([calendar_t.c.D_TRADE])
