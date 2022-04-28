@@ -1019,7 +1019,13 @@ class SETDataReader:
         --------
         TODO: examples
         """
-        raise NotImplementedError("Not implemented yet")
+        return self._get_fundamental_data(
+            symbol_list=symbol_list,
+            field=field,
+            start_date=start_date,
+            end_date=end_date,
+            period="Y",
+        )
 
     def get_data_symbol_ttm(
         self,
@@ -1061,7 +1067,13 @@ class SETDataReader:
         --------
         TODO: examples
         """
-        raise NotImplementedError("Not implemented yet")
+        return self._get_fundamental_data(
+            symbol_list=symbol_list,
+            field=field,
+            start_date=start_date,
+            end_date=end_date,
+            period="TTM",
+        )
 
     def get_data_symbol_ytd(
         self,
@@ -1104,7 +1116,13 @@ class SETDataReader:
         --------
         TODO: examples
         """
-        raise NotImplementedError("Not implemented yet")
+        return self._get_fundamental_data(
+            symbol_list=symbol_list,
+            field=field,
+            start_date=start_date,
+            end_date=end_date,
+            period="YTD",
+        )
 
     def get_data_index_daily(
         self,
@@ -1444,16 +1462,16 @@ class SETDataReader:
         period = period.upper()
         field = field.lower()
 
-        if field in fld.FINANCIAL_SCREEN_MAP:
-            stmt = self._get_financial_screen_stmt(
+        if field in fld.FINANCIAL_STAT_STD_FACTOR:
+            stmt = self._get_financial_stat_std_stmt(
                 symbol_list=symbol_list,
                 field=field,
                 start_date=start_date,
                 end_date=end_date,
                 period=period,
             )
-        elif field in fld.FINANCIAL_STAT_STD_FACTOR:
-            stmt = self._get_financial_stat_std_stmt(
+        elif field in fld.FINANCIAL_SCREEN_MAP:
+            stmt = self._get_financial_screen_stmt(
                 symbol_list=symbol_list,
                 field=field,
                 start_date=start_date,
