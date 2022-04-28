@@ -1806,7 +1806,7 @@ class TestGetDataSectorDaily:
         assert result.index.is_unique
         assert (result.index == result.index.normalize()).all()  # type: ignore
 
-        assert result.columns.isin(fld.SECTOR_LIST)
+        assert (result.columns.isin(fld.SECTOR_LIST)).all()
 
         return result
 
