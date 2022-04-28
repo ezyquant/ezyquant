@@ -1049,7 +1049,6 @@ class TestGetAdjustFactor:
         return result
 
 
-@pytest.mark.skip("Not impemented")
 class TestGetDataSymbolDaily:
     """source: https://www.tradingview.com/chart/?symbol=SET:COM7"""
 
@@ -1648,7 +1647,6 @@ class TestGetDataSymbolYtd:
         assert result.empty
 
 
-# @pytest.mark.skip("Not impemented")
 class TestGetDataIndexDaily:
     @pytest.mark.parametrize(
         "field", [getattr(fld, i) for i in dir(fld) if i.startswith("D_INDEX")]

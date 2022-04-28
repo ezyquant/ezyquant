@@ -851,12 +851,14 @@ class SETDataReader:
         --------
         TODO: examples
         """
-        raise NotImplementedError("Not implemented yet")
         vld.check_duplicate(adjusted_list, "adjusted_list")
 
         adjusted_list = list(adjusted_list)  # copy to avoid modify original list
 
         field = field.lower()
+        if symbol_list:
+            symbol_list = [i.upper() for i in symbol_list]
+
         security_t = self._table("SECURITY")
 
         if field in fld.DAILY_STOCK_TRADE_MAP:
@@ -935,6 +937,9 @@ class SETDataReader:
             df = self._merge_adjust_factor(
                 df, is_multiply=False, adjusted_list=adjusted_list
             )
+
+        if symbol_list != None:
+            df = df.reindex(columns=[i for i in symbol_list if i in df.columns])  # type: ignore
 
         return df
 
