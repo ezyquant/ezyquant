@@ -1647,7 +1647,7 @@ class TestGetDataSymbolYtd:
         assert result.empty
 
 
-@pytest.mark.skip("Not impemented")
+# @pytest.mark.skip("Not impemented")
 class TestGetDataIndexDaily:
     @pytest.mark.parametrize(
         "field", [getattr(fld, i) for i in dir(fld) if i.startswith("D_INDEX")]
@@ -1664,7 +1664,7 @@ class TestGetDataIndexDaily:
     @pytest.mark.parametrize(
         ["index", "field", "expected"],
         [
-            (fld.INDEX_SET, fld.D_INDEX_HIGH, 1674.10),
+            (fld.INDEX_SET, fld.D_INDEX_HIGH, 1674.19),
             (fld.INDEX_SET, fld.D_INDEX_LOW, 1663.50),
             (fld.INDEX_SET, fld.D_INDEX_CLOSE, 1670.28),
             (fld.INDEX_SET, fld.D_INDEX_TOTAL_VOLUME, 28684980655),

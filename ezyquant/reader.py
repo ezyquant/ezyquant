@@ -1137,8 +1137,6 @@ class SETDataReader:
         --------
         TODO: examples
         """
-        raise NotImplementedError("Not implemented yet")
-
         sector = self._table("SECTOR")
         field = field.lower()
 
@@ -1161,13 +1159,12 @@ class SETDataReader:
             select(
                 [
                     mktstat_daily.c.D_TRADE.label("trading_datetime"),
-                    func.trim(sector.c.N_SECTOR).label("index"),
+                    func.trim(sector.c.N_SECTOR).label("indexs"),
                     field_que,
                 ]
-            ).select_from(j)
-            # .where(sector.c.F_DATA == "M")
-            # .where(sector.c.D_INDEX_BASE != None)
-            # .order_by(mktstat_daily_index.c.D_TRADE.asc())
+            )
+            .select_from(j)
+            .order_by(mktstat_daily.c.D_TRADE.asc())
         )
 
         sql = self._filter_stmt_by_symbol_and_date(
@@ -1185,6 +1182,10 @@ class SETDataReader:
             index_col="trading_datetime",
             parse_dates="trading_datetime",
         )
+        df.reset_index(inplace=True)
+        df = df.pivot(index="trading_datetime", columns="indexs", values=field)
+        df.columns.name = None
+        df.index.name = None
         return df
 
     def get_data_sector_daily(
