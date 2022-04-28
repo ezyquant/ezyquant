@@ -1726,7 +1726,7 @@ class TestGetDataIndexDaily:
         assert result.index.is_unique
         assert (result.index == result.index.normalize()).all()  # type: ignore
 
-        assert result.columns.isin(fld.INDEX_LIST)
+        assert (result.columns.isin(fld.INDEX_LIST)).all()
 
         return result
 
