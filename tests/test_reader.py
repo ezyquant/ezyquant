@@ -1700,7 +1700,7 @@ class TestGetDataIndexDaily:
             result,
             pd.DataFrame(
                 [[expected]],
-                columns=[fld.INDEX_SET],
+                columns=[index],
                 index=pd.DatetimeIndex(["2022-01-04"]),
             ),
         )
