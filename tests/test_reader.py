@@ -1416,12 +1416,12 @@ class TestGetDataSymbolYearly:
             (fld.Q_ROA, [1.6829434061191892]),
             (fld.Q_GROSS_PROFIT_MARGIN, [-float("inf")]),
             # Balance Sheet
-            (fld.Q_CASH, [233127550]),
+            (fld.Q_CASH, [233127550.0]),
             # Income Statement
-            (fld.Q_TOTAL_REVENUE, [89885610]),
-            (fld.Q_COS, [23861086]),
+            (fld.Q_TOTAL_REVENUE, [89885610.0]),
+            (fld.Q_COS, [23861086.0]),
             # Cashflow Statement
-            (fld.Q_NET_CASH_FLOW, [-1889251]),
+            (fld.Q_NET_CASH_FLOW, [-1889251.0]),
         ],
     )
     def test_field_with_expected(

@@ -1,4 +1,5 @@
 from datetime import date
+from functools import lru_cache
 from typing import List, Optional
 
 import numpy as np
@@ -1468,26 +1469,32 @@ class SETDataReader:
         period = period.upper()
         field = field.lower()
 
-        if field in fld.FINANCIAL_STAT_STD_FACTOR:
-            stmt = self._get_financial_stat_std_stmt(
-                symbol_list=symbol_list,
-                field=field,
-                start_date=start_date,
-                end_date=end_date,
-                period=period,
-            )
+        security_t = self._table("SECURITY")
+        d_trade_subquery = self._d_trade_subquery()
+
+        if field in fld.FINANCIAL_STAT_STD_MAP_COMPACT:
+            stmt = self._get_financial_stat_std_stmt(field=field, period=period)
         elif field in fld.FINANCIAL_SCREEN_MAP:
-            stmt = self._get_financial_screen_stmt(
-                symbol_list=symbol_list,
-                field=field,
-                start_date=start_date,
-                end_date=end_date,
-                period=period,
-            )
+            stmt = self._get_financial_screen_stmt(field=field, period=period)
         else:
             raise ValueError(
                 f"{field} not in Data {period} field. Please check psims factor for more details."
             )
+
+        stmt = self._filter_stmt_by_symbol_and_date(
+            stmt=stmt,
+            symbol_column=security_t.c.N_SECURITY,
+            date_column=d_trade_subquery.c.D_TRADE,
+            symbol_list=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+        stmt = stmt.order_by(d_trade_subquery.c.D_TRADE).order_by(
+            security_t.c.I_SECURITY
+        )
+
+        self._d_trade_subquery.cache_clear()
 
         df = pd.read_sql(stmt, self.__engine, parse_dates="trade_date")
 
@@ -1513,137 +1520,76 @@ class SETDataReader:
 
         return df
 
-    def _get_financial_screen_stmt(
-        self,
-        period: str,
-        field: str,
-        symbol_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
-    ) -> Select:
-        """
-        period: str
-            'Q' for Quarter, 'Y' for Year, 'YTD' for Year to date
-        period_type: str
-            'QY', 'QOQ', 'YOY'
-        """
+    def _get_financial_screen_stmt(self, period: str, field: str) -> Select:
         PERIOD_DICT = {
             "Q": ("Q1", "Q2", "Q3", "Q4"),
             "Y": ("YE",),
             "YTD": ("Q1", "6M", "9M", "YE"),
         }
 
-        account_name = fld.FINANCIAL_SCREEN_MAP[field]
-
         financial_screen_t = self._table("FINANCIAL_SCREEN")
         security_t = self._table("SECURITY")
-
         d_trade_subquery = self._d_trade_subquery()
 
-        j = financial_screen_t.join(
-            security_t, financial_screen_t.c.I_SECURITY == security_t.c.I_SECURITY
-        ).join(
-            d_trade_subquery,
-            and_(
-                financial_screen_t.c.I_SECURITY == d_trade_subquery.c.I_SECURITY,
-                func.DATE(financial_screen_t.c.D_AS_OF)
-                == func.DATE(d_trade_subquery.c.D_AS_OF),
-            ),
-        )
+        value_column = financial_screen_t.c[fld.FINANCIAL_SCREEN_MAP[field]]
 
         stmt = (
             select(
                 [
                     d_trade_subquery.c.D_TRADE.label("trade_date"),
                     func.trim(security_t.c.N_SECURITY).label("symbol"),
-                    financial_screen_t.c[account_name].label("value"),
+                    value_column.label("value"),
                 ]
             )
-            .select_from(j)
+            .select_from(self._join_security_and_d_trade_subquery(financial_screen_t))
             .where(func.trim(financial_screen_t.c.I_PERIOD_TYPE) == "QY")
             .where(func.trim(financial_screen_t.c.I_PERIOD).in_(PERIOD_DICT[period]))
-            .order_by(d_trade_subquery.c.D_TRADE)
-            .order_by(security_t.c.I_SECURITY)
-        )
-
-        stmt = self._filter_stmt_by_symbol_and_date(
-            stmt=stmt,
-            symbol_column=security_t.c.N_SECURITY,
-            date_column=d_trade_subquery.c.D_TRADE,
-            symbol_list=symbol_list,
-            start_date=start_date,
-            end_date=end_date,
         )
 
         return stmt
 
-    def _get_financial_stat_std_stmt(
-        self,
-        period: str,
-        field: str,
-        symbol_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
-    ) -> Select:
-        """
-        period: str
-            'Q' for Quarter, 'Y' for Year
-        """
-        PERIOD_DICT = {
-            "Q": "M_ACCOUNT",
-            "Y": "M_ACC_ACCOUNT_12M",
-            "YTD": "M_ACC_ACCOUNT",
-            "AVG": "M_ACCOUNT_AVG",
-            "TTM": "M_ACC_ACCOUNT_12M",
-        }
-
+    def _get_financial_stat_std_stmt(self, period: str, field: str) -> Select:
         financial_stat_std_t = self._table("FINANCIAL_STAT_STD")
         security_t = self._table("SECURITY")
-
         d_trade_subquery = self._d_trade_subquery()
 
-        j = financial_stat_std_t.join(
-            security_t, financial_stat_std_t.c.I_SECURITY == security_t.c.I_SECURITY
-        ).join(
-            d_trade_subquery,
-            and_(
-                financial_stat_std_t.c.I_SECURITY == d_trade_subquery.c.I_SECURITY,
-                func.DATE(financial_stat_std_t.c.D_AS_OF)
-                == func.DATE(d_trade_subquery.c.D_AS_OF),
-            ),
-        )
+        if period == "Q":
+            value_column = financial_stat_std_t.c["M_ACCOUNT"]
+        elif period == "Y":
+            if field in fld.FINANCIAL_STAT_STD_MAP["B"]:
+                value_column = financial_stat_std_t.c["M_ACCOUNT"]
+            else:
+                value_column = financial_stat_std_t.c["M_ACC_ACCOUNT_12M"]
+        elif period == "YTD":
+            value_column = financial_stat_std_t.c["M_ACC_ACCOUNT"]
+        elif period == "AVG":
+            value_column = financial_stat_std_t.c["M_ACCOUNT_AVG"]
+        elif period == "TTM":
+            value_column = financial_stat_std_t.c["M_ACC_ACCOUNT_12M"]
+        else:
+            raise ValueError(f"{period} is not a valid period")
 
-        # TODO: Yearly value depends on I_ACCT_TYPE
         stmt = (
             select(
                 [
                     d_trade_subquery.c.D_TRADE.label("trade_date"),
                     func.trim(security_t.c.N_SECURITY).label("symbol"),
-                    financial_stat_std_t.c[PERIOD_DICT[period]].label("value"),
+                    value_column.label("value"),
                 ]
             )
-            .select_from(j)
+            .select_from(self._join_security_and_d_trade_subquery(financial_stat_std_t))
             .where(
-                financial_stat_std_t.c.N_ACCOUNT == fld.FINANCIAL_STAT_STD_FACTOR[field]
+                func.trim(financial_stat_std_t.c.N_ACCOUNT)
+                == fld.FINANCIAL_STAT_STD_MAP_COMPACT[field]
             )
-            .order_by(d_trade_subquery.c.D_TRADE)
-            .order_by(security_t.c.I_SECURITY)
         )
 
         if period == "Y":
             stmt = stmt.where(financial_stat_std_t.c.I_QUARTER == 9)
 
-        stmt = self._filter_stmt_by_symbol_and_date(
-            stmt=stmt,
-            symbol_column=security_t.c.N_SECURITY,
-            date_column=d_trade_subquery.c.D_TRADE,
-            symbol_list=symbol_list,
-            start_date=start_date,
-            end_date=end_date,
-        )
-
         return stmt
 
+    @lru_cache
     def _d_trade_subquery(self):
         daily_stock_stat_t = self._table("DAILY_STOCK_STAT")
         return (
@@ -1656,4 +1602,18 @@ class SETDataReader:
             )
             .group_by(daily_stock_stat_t.c.I_SECURITY, daily_stock_stat_t.c.D_AS_OF)
             .subquery()
+        )
+
+    def _join_security_and_d_trade_subquery(self, table: Table):
+        security_t = self._table("SECURITY")
+        d_trade_subquery = self._d_trade_subquery()
+
+        return table.join(
+            security_t, table.c.I_SECURITY == security_t.c.I_SECURITY
+        ).join(
+            d_trade_subquery,
+            and_(
+                table.c.I_SECURITY == d_trade_subquery.c.I_SECURITY,
+                func.DATE(table.c.D_AS_OF) == func.DATE(d_trade_subquery.c.D_AS_OF),
+            ),
         )
