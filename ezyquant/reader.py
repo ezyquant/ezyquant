@@ -6,15 +6,14 @@ import pandas as pd
 import sqlalchemy as sa
 from sqlalchemy import Column, MetaData, Table, and_, case, func, select
 from sqlalchemy.sql import Select
-from .errors import InputError
+
 from . import fields as fld
+from .errors import InputError
 
 
 class SETDataReader:
     """SETDataReader read PSIMS data."""
 
-    # TODO
-    # raise value error
     def __init__(self, sqlite_path: str) -> None:
         """SETDataReader constructor.
 
@@ -47,8 +46,8 @@ class SETDataReader:
         List[date]
             list of trading dates
         """
-        if start_date != None and end_date != None:
-            _check_date(start_date, end_date)
+        _check_start_end_date(start_date, end_date)
+
         calendar_t = self._table("CALENDAR")
 
         stmt = select([calendar_t.c.D_TRADE])
@@ -144,7 +143,8 @@ class SETDataReader:
         2        169  THL-U    SET  RESOURC   MINE        S      U
         3       2968  THL-F    SET  RESOURC   MINE        F      F
         """
-        _check_duplicate(symbol_list, "symbol")
+        _check_duplicate(symbol_list, "symbol_list")
+
         security_t = self._table("SECURITY")
         sector_t = self._table("SECTOR")
 
@@ -224,7 +224,8 @@ class SETDataReader:
         0           1    BBL  ธนาคารกรุงเทพ จำกัด (มหาชน)  ...  1/12/1944  เมื่อผลประกอบการของธนาคารมีกำไร (โดยมีเงื่อนไข...  Pays when company has profit (with additional ...
         1         646    PTT    บริษัท ปตท. จำกัด (มหาชน)  ...  1/10/2001  ไม่ต่ำกว่าร้อยละ 25 ของกำไรสุทธิที่เหลือหลังหั...  Not less than 25% of net income after deductio...
         """
-        _check_duplicate(symbol_list, "symbol")
+        _check_duplicate(symbol_list, "symbol_list")
+
         company_t = self._table("COMPANY")
         security_t = self._table("SECURITY")
 
@@ -300,7 +301,6 @@ class SETDataReader:
         4       2794    SMG-WB  2014-08-28    SCSMG-WB     SMG-WB
         5       3375  SMG-W1-R  2014-08-28  SCSMG-W1-R   SMG-W1-R
         """
-        _check_duplicate(symbol_list, "symbol")
         security_t = self._table("SECURITY")
         change_name_t = self._table("CHANGE_NAME_SECURITY")
 
@@ -403,9 +403,9 @@ class SETDataReader:
         1        M  2021-05-10  2021-05-25      CD  0.5
         2        M  2022-05-10  2022-05-25      CD  0.8
         """
-        _check_duplicate(symbol_list, "symbol")
-        _check_duplicate(adjusted_list, "element in adjusted_list")
-        _check_duplicate(ca_type_list, "element in ca_type_list")
+        _check_duplicate(adjusted_list, "adjusted_list")
+        _check_duplicate(ca_type_list, "ca_type_list")
+
         security_t = self._table("SECURITY")
         rights_benefit_t = self._table("RIGHTS_BENEFIT")
 
@@ -486,7 +486,6 @@ class SETDataReader:
         2  CB20220A    2020-02-20
         3  CB20220B    2020-02-20
         """
-        _check_duplicate(symbol_list, "symbol")
         security_t = self._table("SECURITY")
         security_detail_t = self._table("SECURITY_DETAIL")
 
@@ -561,8 +560,8 @@ class SETDataReader:
         0   THAI 2020-11-12   SP
         1   THAI 2021-02-25   SP
         """
-        _check_duplicate(symbol_list, "symbol")
-        _check_duplicate(sign_list, "sign")
+        _check_duplicate(sign_list, "sign_list")
+
         security_t = self._table("SECURITY")
         sign_posting_t = self._table("SIGN_POSTING")
 
@@ -687,7 +686,8 @@ class SETDataReader:
         48 2022-01-04  SET50  INTUCH   49
         49 2022-01-04  SET50     KCE   50
         """
-        _check_duplicate(index_list, "index")
+        _check_duplicate(index_list, "index_list")
+
         security_t = self._table("SECURITY")
         sector_t = self._table("SECTOR")
         security_index_t = self._table("SECURITY_INDEX")
@@ -780,8 +780,8 @@ class SETDataReader:
         0    RAM  2019-06-17      PC           0.05
         1    RAM  2021-11-09      PC           0.20
         """
-        _check_duplicate(symbol_list, "symbol")
-        _check_duplicate(ca_type_list, "element in ca_type_list")
+        _check_duplicate(ca_type_list, "ca_type_list")
+
         security_t = self._table("SECURITY")
         adjust_factor_t = self._table("ADJUST_FACTOR")
 
@@ -849,8 +849,9 @@ class SETDataReader:
         --------
         TODO: examples
         """
-        _check_duplicate(symbol_list, "symbol")
-        _check_duplicate(adjusted_list, "element in adjusted_list")
+        raise NotImplementedError("Not implemented yet")
+        _check_duplicate(adjusted_list, "adjusted_list")
+
         adjusted_list = list(adjusted_list)  # copy to avoid modify original list
 
         field = field.lower()
@@ -972,6 +973,7 @@ class SETDataReader:
         --------
         TODO: examples
         """
+        raise NotImplementedError("Not implemented yet")
         return self._get_fundamental_data(
             symbol_list=symbol_list,
             field=field,
@@ -1017,7 +1019,7 @@ class SETDataReader:
         --------
         TODO: examples
         """
-        return pd.DataFrame()
+        raise NotImplementedError("Not implemented yet")
 
     def get_data_symbol_ttm(
         self,
@@ -1059,7 +1061,7 @@ class SETDataReader:
         --------
         TODO: examples
         """
-        return pd.DataFrame()
+        raise NotImplementedError("Not implemented yet")
 
     def get_data_symbol_ytd(
         self,
@@ -1102,7 +1104,7 @@ class SETDataReader:
         --------
         TODO: examples
         """
-        return pd.DataFrame()
+        raise NotImplementedError("Not implemented yet")
 
     def get_data_index_daily(
         self,
@@ -1135,6 +1137,7 @@ class SETDataReader:
         --------
         TODO: examples
         """
+        raise NotImplementedError("Not implemented yet")
 
         sector = self._table("SECTOR")
         field = field.lower()
@@ -1271,6 +1274,8 @@ class SETDataReader:
         start_date: Optional[date],
         end_date: Optional[date],
     ):
+        _check_start_end_date(start_date, end_date)
+        _check_duplicate(symbol_list, "symbol_list")
 
         if symbol_list != None:
             symbol_list = [i.upper() for i in symbol_list]
@@ -1279,8 +1284,6 @@ class SETDataReader:
             stmt = stmt.where(func.DATE(date_column) >= start_date)
         if end_date != None:
             stmt = stmt.where(func.DATE(date_column) <= end_date)
-        if start_date != None and end_date != None:
-            _check_date(start_date, end_date)
         return stmt
 
     def _get_pivot_adjust_factor_df(
@@ -1633,16 +1636,14 @@ class SETDataReader:
         return df
 
 
-def _check_date(start_date, end_date):
-    if end_date < start_date:
-        raise InputError("start_date is after end_date")
-    if end_date > date.today():
-        raise InputError("end_date is after today")
+def _check_start_end_date(start_date: Optional[date], end_date: Optional[date]):
+    if start_date is not None and end_date is not None:
+        if start_date > end_date:
+            raise InputError("end_date is after today")
 
 
-def _check_duplicate(data_list: Optional[List[str]], list_name: str):
-
+def _check_duplicate(data_list: Optional[List[str]], attr_name: str):
     if data_list != None:
         data_list = [x.upper() for x in data_list]
         if len(data_list) != len(set(data_list)):
-            raise InputError(f"Duplicate {list_name}")
+            raise InputError(f"{attr_name} was duplicate")

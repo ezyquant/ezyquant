@@ -123,8 +123,8 @@ class TestGetTradingDates:
         (date(2022, 1, 8), False),
         (date(2022, 1, 9), False),
         (date(2022, 1, 10), True),
-        (date(2023, 1, 1), False),
-        (date(2023, 1, 3), True),
+        (date(2022, 12, 9), True),
+        (date(2022, 12, 12), False),
     ],
 )
 def test_is_trading_date(sdr: SETDataReader, check_date: date, expected: bool):
@@ -1049,6 +1049,7 @@ class TestGetAdjustFactor:
         return result
 
 
+@pytest.mark.skip("Not impemented")
 class TestGetDataSymbolDaily:
     """source: https://www.tradingview.com/chart/?symbol=SET:COM7"""
 
