@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Iterable, List, Optional
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
@@ -1420,7 +1420,7 @@ class SETDataReader:
         self,
         period: str,
         field: str,
-        symbol_list: Optional[Iterable[str]] = None,
+        symbol_list: Optional[List[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
         is_to_dict: bool = True,
@@ -1461,7 +1461,7 @@ class SETDataReader:
         self,
         period: str,
         field: str,
-        symbol_list: Optional[Iterable[str]] = None,
+        symbol_list: Optional[List[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> pd.DataFrame:
@@ -1524,7 +1524,7 @@ class SETDataReader:
         self,
         period: str,
         field: str,
-        symbol_list: Optional[Iterable[str]] = None,
+        symbol_list: Optional[List[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> pd.DataFrame:
