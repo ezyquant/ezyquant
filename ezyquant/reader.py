@@ -1434,7 +1434,6 @@ class SETDataReader:
         symbol_list: Optional[List[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-        is_to_dict: bool = True,
     ) -> pd.DataFrame:
         """fill nan with -np.inf if is_to_dict.
 
@@ -1442,12 +1441,11 @@ class SETDataReader:
             'Q' for Quarter, 'Y' for Quarter, 'YTD', 'TTM', 'AVG'
         """
         # split field_list for 2 tables
-        screen_field_list = list()
-        stat_field_list = list()
-        df = pd.DataFrame
+        period = period.upper()
         field = field.lower()
-        if field in fld.FINANCIAL_SCREEN_FACTOR:
-            df = self._get_financial_screen(
+
+        if field in fld.FINANCIAL_SCREEN_MAP:
+            stmt = self._get_financial_screen_stmt(
                 symbol_list=symbol_list,
                 field=field,
                 start_date=start_date,
@@ -1455,7 +1453,7 @@ class SETDataReader:
                 period=period,
             )
         elif field in fld.FINANCIAL_STAT_STD_FACTOR:
-            df = self._get_financial_stat_std(
+            stmt = self._get_financial_stat_std_stmt(
                 symbol_list=symbol_list,
                 field=field,
                 start_date=start_date,
@@ -1466,16 +1464,39 @@ class SETDataReader:
             raise ValueError(
                 f"{field} not in Data {period} field. Please check psims factor for more details."
             )
+
+        df = pd.read_sql(stmt, self.__engine, parse_dates="trade_date")
+
+        # duplicate key mostly I_ACCT_FORM 6,7
+        df = df.drop_duplicates(subset=["trade_date", "symbol"], keep="last")
+
+        # Fill nan with -np.inf
+        df = df.fillna(-np.inf)
+
+        # pivot dataframe
+        df = df.pivot(index="trade_date", columns="symbol", values="value")
+
+        # reindex trade_date
+        if not df.empty:
+            trade_dates = self.get_trading_dates(df.index[0].date(), df.index[-1].date())  # type: ignore
+        else:
+            trade_dates = []
+
+        df = df.reindex(pd.DatetimeIndex(trade_dates))  # type: ignore
+
+        df.index.name = None
+        df.columns.name = None
+
         return df
 
-    def _get_financial_screen(
+    def _get_financial_screen_stmt(
         self,
         period: str,
         field: str,
         symbol_list: Optional[List[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-    ) -> pd.DataFrame:
+    ) -> Select:
         """
         period: str
             'Q' for Quarter, 'Y' for Year, 'YTD' for Year to date
@@ -1488,57 +1509,58 @@ class SETDataReader:
             "YTD": ("Q1", "6M", "9M", "YE"),
         }
 
+        account_name = fld.FINANCIAL_SCREEN_MAP[field]
+
         financial_screen_t = self._table("FINANCIAL_SCREEN")
         security_t = self._table("SECURITY")
 
+        d_trade_subquery = self._d_trade_subquery()
+
         j = financial_screen_t.join(
             security_t, financial_screen_t.c.I_SECURITY == security_t.c.I_SECURITY
+        ).join(
+            d_trade_subquery,
+            and_(
+                financial_screen_t.c.I_SECURITY == d_trade_subquery.c.I_SECURITY,
+                func.DATE(financial_screen_t.c.D_AS_OF)
+                == func.DATE(d_trade_subquery.c.D_AS_OF),
+            ),
         )
 
-        sql = (
+        stmt = (
             select(
                 [
-                    financial_screen_t.c.D_AS_OF.label("trading_datetime"),
+                    d_trade_subquery.c.D_TRADE.label("trade_date"),
                     func.trim(security_t.c.N_SECURITY).label("symbol"),
-                    financial_screen_t.c[
-                        fld.FINANCIAL_SCREEN_FACTOR[field.lower()]
-                    ].label(field.lower()),
+                    financial_screen_t.c[account_name].label("value"),
                 ]
             )
-            .where(
-                financial_screen_t.c.I_PERIOD.in_(
-                    PERIOD_DICT.get(period.upper(), tuple())
-                )
-            )
             .select_from(j)
-            .order_by(financial_screen_t.c.D_AS_OF)
-            .order_by(financial_screen_t.c.I_YEAR.asc())
-            .order_by(financial_screen_t.c.I_QUARTER.asc())
+            .where(func.trim(financial_screen_t.c.I_PERIOD_TYPE) == "QY")
+            .where(func.trim(financial_screen_t.c.I_PERIOD).in_(PERIOD_DICT[period]))
+            .order_by(d_trade_subquery.c.D_TRADE)
+            .order_by(security_t.c.I_SECURITY)
         )
 
-        if symbol_list != None:
-            sql = sql.where(
-                security_t.c.N_SECURITY.in_(
-                    ["{:<20}".format(s.upper()) for s in symbol_list]
-                )
-            )
+        stmt = self._filter_stmt_by_symbol_and_date(
+            stmt=stmt,
+            symbol_column=security_t.c.N_SECURITY,
+            date_column=d_trade_subquery.c.D_TRADE,
+            symbol_list=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
+        )
 
-        if not pd.isnull(start_date):
-            sql = sql.where(financial_screen_t.c.D_AS_OF >= start_date)
-        if not pd.isnull(end_date):
-            sql = sql.where(financial_screen_t.c.D_AS_OF <= end_date)
+        return stmt
 
-        df = pd.read_sql(sql, self.__engine, parse_dates="trading_datetime")
-        return df
-
-    def _get_financial_stat_std(
+    def _get_financial_stat_std_stmt(
         self,
         period: str,
         field: str,
         symbol_list: Optional[List[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-    ) -> pd.DataFrame:
+    ) -> Select:
         """
         period: str
             'Q' for Quarter, 'Y' for Year
@@ -1551,24 +1573,10 @@ class SETDataReader:
             "TTM": "M_ACC_ACCOUNT_12M",
         }
 
-        period = period.upper()
-        field = field.lower()
-
         financial_stat_std_t = self._table("FINANCIAL_STAT_STD")
-        daily_stock_stat_t = self._table("DAILY_STOCK_STAT")
         security_t = self._table("SECURITY")
 
-        d_trade_subquery = (
-            select(
-                [
-                    daily_stock_stat_t.c.I_SECURITY,
-                    daily_stock_stat_t.c.D_AS_OF,
-                    func.min(daily_stock_stat_t.c.D_TRADE).label("D_TRADE"),
-                ]
-            )
-            .group_by(daily_stock_stat_t.c.I_SECURITY, daily_stock_stat_t.c.D_AS_OF)
-            .subquery()
-        )
+        d_trade_subquery = self._d_trade_subquery()
 
         j = financial_stat_std_t.join(
             security_t, financial_stat_std_t.c.I_SECURITY == security_t.c.I_SECURITY
@@ -1576,7 +1584,8 @@ class SETDataReader:
             d_trade_subquery,
             and_(
                 financial_stat_std_t.c.I_SECURITY == d_trade_subquery.c.I_SECURITY,
-                financial_stat_std_t.c.D_AS_OF == d_trade_subquery.c.D_AS_OF,
+                func.DATE(financial_stat_std_t.c.D_AS_OF)
+                == func.DATE(d_trade_subquery.c.D_AS_OF),
             ),
         )
 
@@ -1593,7 +1602,7 @@ class SETDataReader:
             .where(
                 financial_stat_std_t.c.N_ACCOUNT == fld.FINANCIAL_STAT_STD_FACTOR[field]
             )
-            .order_by(d_trade_subquery.c.D_TRADE.asc())
+            .order_by(d_trade_subquery.c.D_TRADE)
             .order_by(security_t.c.I_SECURITY)
         )
 
@@ -1609,19 +1618,18 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        df = pd.read_sql(stmt, self.__engine, parse_dates="trade_date")
+        return stmt
 
-        # duplicate key mostly I_ACCT_FORM 6,7
-        df = df.drop_duplicates(subset=["trade_date", "symbol"], keep="last")
-
-        # pivot dataframe
-        df = df.pivot(index="trade_date", columns="symbol", values="value")
-
-        # reindex trade_date
-        trade_dates = self.get_trading_dates(df.index[0].date(), df.index[-1].date())  # type: ignore
-        df = df.reindex(pd.DatetimeIndex(trade_dates))  # type: ignore
-
-        df.index.name = None
-        df.columns.name = None
-
-        return df
+    def _d_trade_subquery(self):
+        daily_stock_stat_t = self._table("DAILY_STOCK_STAT")
+        return (
+            select(
+                [
+                    daily_stock_stat_t.c.I_SECURITY,
+                    daily_stock_stat_t.c.D_AS_OF,
+                    func.min(daily_stock_stat_t.c.D_TRADE).label("D_TRADE"),
+                ]
+            )
+            .group_by(daily_stock_stat_t.c.I_SECURITY, daily_stock_stat_t.c.D_AS_OF)
+            .subquery()
+        )
