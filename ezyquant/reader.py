@@ -8,6 +8,7 @@ from sqlalchemy import Column, MetaData, Table, and_, case, func, select
 from sqlalchemy.sql import Select
 
 from . import fields as fld
+from . import validators as vld
 from .errors import InputError
 
 
@@ -46,7 +47,7 @@ class SETDataReader:
         List[date]
             list of trading dates
         """
-        _check_start_end_date(start_date, end_date)
+        vld.check_start_end_date(start_date, end_date)
 
         calendar_t = self._table("CALENDAR")
 
@@ -143,7 +144,7 @@ class SETDataReader:
         2        169  THL-U    SET  RESOURC   MINE        S      U
         3       2968  THL-F    SET  RESOURC   MINE        F      F
         """
-        _check_duplicate(symbol_list, "symbol_list")
+        vld.check_duplicate(symbol_list, "symbol_list")
 
         security_t = self._table("SECURITY")
         sector_t = self._table("SECTOR")
@@ -224,7 +225,7 @@ class SETDataReader:
         0           1    BBL  ธนาคารกรุงเทพ จำกัด (มหาชน)  ...  1/12/1944  เมื่อผลประกอบการของธนาคารมีกำไร (โดยมีเงื่อนไข...  Pays when company has profit (with additional ...
         1         646    PTT    บริษัท ปตท. จำกัด (มหาชน)  ...  1/10/2001  ไม่ต่ำกว่าร้อยละ 25 ของกำไรสุทธิที่เหลือหลังหั...  Not less than 25% of net income after deductio...
         """
-        _check_duplicate(symbol_list, "symbol_list")
+        vld.check_duplicate(symbol_list, "symbol_list")
 
         company_t = self._table("COMPANY")
         security_t = self._table("SECURITY")
@@ -403,8 +404,8 @@ class SETDataReader:
         1        M  2021-05-10  2021-05-25      CD  0.5
         2        M  2022-05-10  2022-05-25      CD  0.8
         """
-        _check_duplicate(adjusted_list, "adjusted_list")
-        _check_duplicate(ca_type_list, "ca_type_list")
+        vld.check_duplicate(adjusted_list, "adjusted_list")
+        vld.check_duplicate(ca_type_list, "ca_type_list")
 
         security_t = self._table("SECURITY")
         rights_benefit_t = self._table("RIGHTS_BENEFIT")
@@ -560,7 +561,7 @@ class SETDataReader:
         0   THAI 2020-11-12   SP
         1   THAI 2021-02-25   SP
         """
-        _check_duplicate(sign_list, "sign_list")
+        vld.check_duplicate(sign_list, "sign_list")
 
         security_t = self._table("SECURITY")
         sign_posting_t = self._table("SIGN_POSTING")
@@ -686,7 +687,7 @@ class SETDataReader:
         48 2022-01-04  SET50  INTUCH   49
         49 2022-01-04  SET50     KCE   50
         """
-        _check_duplicate(index_list, "index_list")
+        vld.check_duplicate(index_list, "index_list")
 
         security_t = self._table("SECURITY")
         sector_t = self._table("SECTOR")
@@ -780,7 +781,7 @@ class SETDataReader:
         0    RAM  2019-06-17      PC           0.05
         1    RAM  2021-11-09      PC           0.20
         """
-        _check_duplicate(ca_type_list, "ca_type_list")
+        vld.check_duplicate(ca_type_list, "ca_type_list")
 
         security_t = self._table("SECURITY")
         adjust_factor_t = self._table("ADJUST_FACTOR")
@@ -850,7 +851,7 @@ class SETDataReader:
         TODO: examples
         """
         raise NotImplementedError("Not implemented yet")
-        _check_duplicate(adjusted_list, "adjusted_list")
+        vld.check_duplicate(adjusted_list, "adjusted_list")
 
         adjusted_list = list(adjusted_list)  # copy to avoid modify original list
 
@@ -1276,8 +1277,8 @@ class SETDataReader:
         start_date: Optional[date],
         end_date: Optional[date],
     ):
-        _check_start_end_date(start_date, end_date)
-        _check_duplicate(symbol_list, "symbol_list")
+        vld.check_start_end_date(start_date, end_date)
+        vld.check_duplicate(symbol_list, "symbol_list")
 
         if symbol_list != None:
             symbol_list = [i.upper() for i in symbol_list]
@@ -1617,16 +1618,3 @@ class SETDataReader:
         df = df.pivot(index="trade_date", columns="symbol", values="value")
 
         return df
-
-
-def _check_start_end_date(start_date: Optional[date], end_date: Optional[date]):
-    if start_date is not None and end_date is not None:
-        if start_date > end_date:
-            raise InputError("end_date is after today")
-
-
-def _check_duplicate(data_list: Optional[List[str]], attr_name: str):
-    if data_list != None:
-        data_list = [x.upper() for x in data_list]
-        if len(data_list) != len(set(data_list)):
-            raise InputError(f"{attr_name} was duplicate")
