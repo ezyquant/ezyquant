@@ -91,8 +91,6 @@ class TestGetTradingDates:
         [
             (date(2022, 1, 1), date(2022, 1, 1)),
             (date(2022, 1, 3), date(2022, 1, 3)),
-            (date(2022, 1, 4), date(2022, 1, 3)),
-            (date(2022, 1, 8), date(2022, 1, 7)),
         ],
     )
     def test_empty(self, sdr: SETDataReader, start_date: date, end_date: date):
