@@ -1,10 +1,7 @@
 MARKET_SET = "SET"
-MARKET_MAI = "MAI"
+MARKET_MAI = "mai"
 
-MARKET_MAP = {
-    MARKET_SET: "A",
-    MARKET_MAI: "S",
-}
+MARKET_MAP = {MARKET_SET: "A", MARKET_MAI: "S"}
 
 
 """
@@ -27,6 +24,9 @@ INDUSTRY_RESOURC = "RESOURC"
 INDUSTRY_SERVICE = "SERVICE"
 INDUSTRY_TECH = "TECH"
 
+INDUSTRY_LIST = [
+    v for k, v in locals().items() if isinstance(k, str) and k.startswith("INDUSTRY_")
+]
 
 """
 SELECT
@@ -79,7 +79,9 @@ SECTOR_RESOURC = "RESOURC"
 SECTOR_SERVICE = "SERVICE"
 SECTOR_TECH = "TECH"
 
-
+SECTOR_LIST = [
+    v for k, v in locals().items() if isinstance(k, str) and k.startswith("SECTOR_")
+]
 """
 SELECT
     DISTINCT("SECTOR"."N_SECTOR")
@@ -87,13 +89,19 @@ FROM
     "SECURITY_INDEX"
     JOIN "SECTOR" USING("I_SECTOR")
 """
-SYMBOL_INDEX_SETWB = "SETWB"
-SYMBOL_INDEX_SETTHSI = "SETTHSI"
-SYMBOL_INDEX_SETCLMV = "SETCLMV"
-SYMBOL_INDEX_SETHD = "SETHD"
-SYMBOL_INDEX_SSET = "sSET"
-SYMBOL_INDEX_SET100 = "SET100"
-SYMBOL_INDEX_SET50 = "SET50"
+INDEX_SET = "SET"
+INDEX_MAI = "mai"
+INDEX_SETWB = "SETWB"
+INDEX_SETTHSI = "SETTHSI"
+INDEX_SETCLMV = "SETCLMV"
+INDEX_SETHD = "SETHD"
+INDEX_SSET = "sSET"
+INDEX_SET100 = "SET100"
+INDEX_SET50 = "SET50"
+
+INDEX_LIST = [
+    v for k, v in locals().items() if isinstance(k, str) and k.startswith("INDEX_")
+]
 
 D_PRIOR = "prior"  # last_close
 D_OPEN = "open"
@@ -400,7 +408,7 @@ ORDER BY
     "N_ACCOUNT"
 """
 FINANCIAL_STAT_STD_MAP = {
-    "B": {
+    "B": {  # Balance Sheet
         Q_ACCOUNT_PAYABLE: "m_account_payable",
         Q_ACCOUNT_RECEIVABLE: "m_account_receivable",
         Q_ACCRUED_INT_RECEIVE: "m_accrued_int_receive",
@@ -435,7 +443,7 @@ FINANCIAL_STAT_STD_MAP = {
         Q_TOTAL_EQUITY: "m_total_equity",
         Q_TOTAL_LIABILITY: "m_total_liability",
     },
-    "C": {
+    "C": {  # Cashflow Statement
         Q_CHANGE_PPE: "m_change_ppe",
         Q_DIVIDEND: "m_dividend",
         Q_DP: "m_dp",
@@ -444,7 +452,7 @@ FINANCIAL_STAT_STD_MAP = {
         Q_NET_INVESTING: "m_net_investing",
         Q_NET_OPERATING: "m_net_operating",
     },
-    "I": {
+    "I": {  # Income Statement
         Q_BAD_DEBT: "m_bad_debt",
         Q_BROKER_FEE: "m_broker_fee",
         Q_COS: "m_cos",
@@ -517,4 +525,109 @@ DAILY_SECTOR_INFO_MAP = {
     D_SECTOR_BETA: "R_BETA",
     D_SECTOR_TURNOVER_VOLUME: "Q_TURNOVER_VOLUME",
     D_SECTOR_12M_DVD_YIELD: "P_12M_DVD_YIELD",
+}
+FINANCIAL_SCREEN_FACTOR = {
+    # "security": "I_SECURITY",
+    "year": "I_YEAR",
+    "period_type": "I_PERIOD_TYPE",
+    "period": "I_PERIOD",
+    "quarter": "I_QUARTER",
+    "accumulate": "F_ACCUMULATE",
+    "as_of": "D_AS_OF",
+    "total_asset": "M_TOTAL_ASSET",
+    "total_liability": "M_TOTAL_LIABILITY",
+    "shld_equity": "M_SHLD_EQUITY",
+    "total_revenue": "M_TOTAL_REVENUE",
+    "total_expense": "M_TOTAL_EXPENSE",
+    "net_profit": "M_NET_PROFIT",
+    "eps": "R_EPS",
+    "de": "R_DE",
+    "net_profit_margin": "R_NET_PROFIT_MARGIN",
+    "gross_profit_margin": "R_GROSS_PROFIT_MARGIN",
+    "roa": "R_ROA",
+    "roe": "R_ROE",
+    "asset_turnover": "R_ASSET_TURNOVER",
+    "ebit": "M_EBIT",
+    "fix_asset_turnover": "R_FIX_ASSET_TURNOVER",
+    "current_ratio": "R_CURRENT_RATIO",
+    "quick_ratio": "R_QUICK_RATIO",
+    "interest_coverage": "R_INTEREST_COVERAGE",
+    "ar_turnover": "R_AR_TURNOVER",
+    "inventory_turnover": "R_INVENTORY_TURNOVER",
+    "ap_turnover": "R_AP_TURNOVER",
+    "cash_cycle": "Q_CASH_CYCLE",
+    "ebitda": "M_EBITDA",
+    "net_operating": "M_NET_OPERATING",
+    "net_investing": "M_NET_INVESTING",
+    "net_financing": "M_NET_FINANCING",
+    "net_cashflow": "M_NET_CASHFLOW",
+    "dscr": "R_DSCR",
+    "ibde": "R_IBDE",
+}
+
+# 1Q,1Y FACTOR
+FINANCIAL_STAT_STD_FACTOR = {
+    "account_payable": "m_account_payable",
+    "account_receivable": "m_account_receivable",
+    "accrued_int_receive": "m_accrued_int_receive",
+    "allowance": "m_allowance",
+    "bad_debt": "m_bad_debt",
+    "broker_fee": "m_broker_fee",
+    "cap_paidin": "m_cap_paidin",
+    "cap_paidup": "m_cap_paidup",
+    "cash": "m_cash",
+    "change_ppe": "m_change_ppe",
+    "common_share": "m_common_share",
+    "cos": "m_cos",
+    "current_asset": "m_current_asset",
+    "current_liability": "m_current_liability",
+    "deposit": "m_deposit",
+    "dividend": "m_dividend",
+    "dp": "m_dp",
+    "earning_asset": "m_earning_asset",
+    "ebit": "m_ebit",
+    "ebitda": "m_ebitda",
+    "ebt": "m_ebt",
+    "int_bearing_debt": "m_int_bearing_debt",
+    "int_dvd_income": "m_int_dvd_income",
+    "interest_expense": "m_interest_expense",
+    "interest_income": "m_interest_income",
+    "inventory": "m_inventory",
+    "invest_asset": "m_invest_asset",
+    "investment": "m_investment",
+    "invest_sec_rev": "m_invest_sec_rev",
+    "invest_security": "m_invest_security",
+    "loan": "m_loan",
+    "loan_deposit_revenue": "m_loan_deposit_revenue",
+    "loan_from_relatedparty": "m_loan_from_relatedparty",
+    "loan_revenue": "m_loan_revenue",
+    "loan_to_relatedparty": "m_loan_to_relatedparty",
+    "longterm_liability_currentportion": "m_longterm_liability_currentportion",
+    "longterm_liability_net_currentportion": "m_longterm_liability_net_currentportion",
+    "minority_interest": "m_minority_interest",
+    "net_cash_flow": "m_net_cash_flow",
+    "net_financing": "m_net_financing",
+    "net_investing": "m_net_investing",
+    "net_operating": "m_net_operating",
+    "net_premium": "m_net_premium",
+    "net_profit": "m_net_profit",
+    "net_profit_incl_minority": "m_net_profit_incl_minority",
+    "net_profit_ordinary": "m_net_profit_ordinary",
+    "operating_expense": "m_operating_expense",
+    "operating_revenue": "m_operating_revenue",
+    "ppe": "m_ppe",
+    "preferred_share": "m_preferred_share",
+    "retain_earning": "m_retain_earning",
+    "retain_earning_unappropriate": "m_retain_earning_unappropriate",
+    "sale": "m_sale",
+    "selling_admin": "m_selling_admin",
+    "selling_admin_exc_renumuration": "m_selling_admin_exc_renumuration",
+    "shld_equity": "m_shld_equity",
+    "short_invest": "m_short_invest",
+    "total_asset": "m_total_asset",
+    "total_equity": "m_total_equity",
+    "total_expense": "m_total_expense",
+    "total_liability": "m_total_liability",
+    "total_revenue": "m_total_revenue",
+    "eps": "r_eps",
 }
