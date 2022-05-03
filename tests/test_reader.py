@@ -1057,7 +1057,8 @@ class TestGetDataSymbolDaily:
         [
             getattr(fld, i)
             for i in dir(fld)
-            if i.startswith("D_") and not i.startswith(("D_INDEX", "D_SECTOR"))
+            if i.startswith("D_")
+            and not i.startswith(("D_INDEX", "D_SECTOR", "D_INDUSTRY"))
         ][::5],
     )
     def test_field(self, sdr: SETDataReader, field: str):
