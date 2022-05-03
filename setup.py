@@ -12,6 +12,6 @@ setup(
     name="ezyquant",
     version=VERSION,
     packages=find_packages(),
-    python_requires=">=3.6.0",
+    python_requires=">=3.7.0",
     install_requires=requirements("requirements.txt"),
 )
