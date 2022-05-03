@@ -30,9 +30,7 @@ class SETDataReader:
         self.__metadata = MetaData(self.__engine)
 
     def get_trading_dates(
-        self,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        self, start_date: Optional[date] = None, end_date: Optional[date] = None
     ) -> List[date]:
         """Data from table CALENDAR.
 
@@ -57,7 +55,6 @@ class SETDataReader:
             stmt = stmt.where(func.DATE(calendar_t.c.D_TRADE) >= start_date)
         if end_date is not None:
             stmt = stmt.where(func.DATE(calendar_t.c.D_TRADE) <= end_date)
-
         stmt = stmt.order_by(calendar_t.c.D_TRADE)
 
         res = self.__engine.execute(stmt).all()
@@ -133,7 +130,7 @@ class SETDataReader:
         Examples
         --------
         >>> from ezyquant import fields as fld
-        >>> from ezyquant.reader import SETDataReader
+        >>> from ezyquant import SETDataReader
         >>> sdr = SETDataReader("psims.db")
         >>> sdr.get_symbol_info(["BBL"])
            symbol_id symbol market industry sector sec_type native
@@ -150,16 +147,7 @@ class SETDataReader:
         security_t = self._table("SECURITY")
         sector_t = self._table("SECTOR")
 
-        j = security_t.join(
-            sector_t,
-            and_(
-                security_t.c.I_MARKET == sector_t.c.I_MARKET,
-                security_t.c.I_INDUSTRY == sector_t.c.I_INDUSTRY,
-                security_t.c.I_SECTOR == sector_t.c.I_SECTOR,
-                security_t.c.I_SUBSECTOR == sector_t.c.I_SUBSECTOR,
-            ),
-            isouter=True,
-        )
+        j = self._join_sector(security_t, isouter=True)
         stmt = select(
             [
                 security_t.c.I_SECURITY.label("symbol_id"),
@@ -172,15 +160,17 @@ class SETDataReader:
             ]
         ).select_from(j)
 
-        if market != None:
-            stmt = stmt.where(security_t.c.I_MARKET == fld.MARKET_MAP[market])
         if symbol_list != None:
-            stmt = stmt.where(
-                func.trim(security_t.c.N_SECURITY).in_([s.upper() for s in symbol_list])
-            )
+            symbol_list = [s.upper() for s in symbol_list]
+            stmt = stmt.where(func.trim(security_t.c.N_SECURITY).in_(symbol_list))
+        if market != None:
+            market = market.upper()
+            stmt = stmt.where(security_t.c.I_MARKET == fld.MARKET_MAP[market])
         if industry != None:
+            industry = industry.upper()
             stmt = stmt.where(func.trim(sector_t.c.N_INDUSTRY) == industry)
         if sector != None:
+            sector = sector.upper()
             stmt = stmt.where(func.trim(sector_t.c.N_SECTOR) == sector)
 
         res_df = pd.read_sql(stmt, self.__engine)
@@ -219,7 +209,7 @@ class SETDataReader:
 
         Examples
         --------
-        >>> from ezyquant.reader import SETDataReader
+        >>> from ezyquant import SETDataReader
         >>> sdr = SETDataReader("psims.db")
         >>> sdr.get_company_info(symbol_list=["BBL", "PTT"])
            company_id symbol               company_name_t  ...  establish                                       dvd_policy_t                                       dvd_policy_e
@@ -288,7 +278,7 @@ class SETDataReader:
         Examples
         --------
         >>> from datetime import date
-        >>> from ezyquant.reader import SETDataReader
+        >>> from ezyquant import SETDataReader
         >>> sdr = SETDataReader("psims.db")
         >>> sdr.get_change_name(["SMG"])
            symbol_id symbol effect_date symbol_old symbol_new
@@ -347,7 +337,7 @@ class SETDataReader:
         ca_type_list: Optional[List[str]] = None,
         adjusted_list: List[str] = ["  ", "CR", "PC", "RC", "SD", "XR"],
     ) -> pd.DataFrame:
-        """Data from table RIGHTS_BENEFIT. Include only Cash Dividend (CA) and
+        """Data from table RIGHTS_BENEFIT. Include only Cash Dividend (CD) and
         Stock Dividend (SD). Not include Cancelled (F_CANCEL!='C') and dps more
         than 0 (Z_RIGHTS>0). ex_date and pay_date can be null.
 
@@ -378,8 +368,8 @@ class SETDataReader:
 
         Examples
         --------
-        >>> from ezyquant.reader import SETDataReader
-        >>> import datetime
+        >>> from datetime import date
+        >>> from ezyquant import SETDataReader
         >>> sdr = SETDataReader("psims.db")
         >>> sdr.get_dividend(["M"])
            symbol     ex_date    pay_date ca_type  dps
@@ -399,7 +389,7 @@ class SETDataReader:
         13      M  2020-08-24  2020-09-10      CD  0.5
         14      M  2021-05-10  2021-05-25      CD  0.5
         15      M  2022-05-10  2022-05-25      CD  0.8
-        >>> sdr.get_dividend(["M"],start_date=datetime.date(2020, 7, 28),end_date=datetime.date(2022, 5, 11))
+        >>> sdr.get_dividend(["M"], start_date=date(2020, 7, 28), end_date=date(2022, 5, 11))
             symbol     ex_date    pay_date ca_type  dps
         0        M  2020-08-24  2020-09-10      CD  0.5
         1        M  2021-05-10  2021-05-25      CD  0.5
@@ -440,13 +430,11 @@ class SETDataReader:
         )
         if ca_type_list != None:
             if all(ca not in ["CD", "SD"] for ca in ca_type_list):
-                raise InputError(
-                    "invalid ca_type_list, ca_type_list must contain CD or SD"
-                )
+                raise InputError("Invalid ca_type_list, ca_type_list must be CD or SD")
             stmt = stmt.where(rights_benefit_t.c.N_CA_TYPE.in_(ca_type_list))
 
         res_df = pd.read_sql(stmt, self.__engine)
-        # return res_df
+
         res_df = self._merge_adjust_factor_dividend(res_df, adjusted_list=adjusted_list)
 
         return res_df
@@ -479,7 +467,7 @@ class SETDataReader:
         Examples
         --------
         >>> from datetime import date
-        >>> from ezyquant.reader import SETDataReader
+        >>> from ezyquant import SETDataReader
         >>> sdr = SETDataReader("psims.db")
         >>> sdr.get_delisted(start_date=date(2020, 2, 20), end_date=date(2020, 2, 20))
              symbol delisted_date
@@ -555,7 +543,7 @@ class SETDataReader:
         Examples
         --------
         >>> from datetime import date
-        >>> from ezyquant.reader import SETDataReader
+        >>> from ezyquant import SETDataReader
         >>> sdr = SETDataReader("psims.db")
         >>> sdr.get_sign_posting(symbol_list=["THAI"], start_date=date(2020, 11, 12), end_date=date(2021, 2, 25))
           symbol  hold_date sign
@@ -633,7 +621,7 @@ class SETDataReader:
         Examples
         --------
         >>> from datetime import date
-        >>> from ezyquant.reader import SETDataReader
+        >>> from ezyquant import SETDataReader
         >>> sdr = SETDataReader("psims.db")
         >>> sdr.get_symbols_by_index(index_list=["SET50"], start_date=date(2022, 1, 4), end_date=date(2022, 1, 4))
            as_of_date  index  symbol  seq
@@ -694,9 +682,9 @@ class SETDataReader:
         sector_t = self._table("SECTOR")
         security_index_t = self._table("SECURITY_INDEX")
 
-        j = security_index_t.join(
-            sector_t, security_index_t.c.I_SECTOR == sector_t.c.I_SECTOR
-        ).join(security_t, security_t.c.I_SECURITY == security_index_t.c.I_SECURITY)
+        j = self._join_sector(security_index_t).join(
+            security_t, security_t.c.I_SECURITY == security_index_t.c.I_SECURITY
+        )
         stmt = (
             select(
                 [
@@ -775,7 +763,7 @@ class SETDataReader:
 
         Examples
         --------
-        >>> from ezyquant.reader import SETDataReader
+        >>> from ezyquant import SETDataReader
         >>> sdr = SETDataReader("psims.db")
         >>> sdr.get_adjust_factor(symbol_list=["RAM"])
           symbol effect_date ca_type  adjust_factor
@@ -1161,55 +1149,51 @@ class SETDataReader:
         --------
         TODO: examples
         """
-        sector = self._table("SECTOR")
+        sector_t = self._table("SECTOR")
+
         field = field.lower()
-
         if field in fld.MKTSTAT_DAILY_INDEX_MAP:
-            mktstat_daily = self._table("MKTSTAT_DAILY_INDEX")
-            field_que = mktstat_daily.c[fld.MKTSTAT_DAILY_INDEX_MAP[field]].label(field)
-
-        elif field in fld.MKTSTAT_DAILY_MARKET:
-            mktstat_daily = self._table("MKTSTAT_DAILY_MARKET")
-            field_que = mktstat_daily.c[fld.MKTSTAT_DAILY_MARKET[field]].label(field)
-
+            mktstat_daily_t = self._table("MKTSTAT_DAILY_INDEX")
+            field_col = mktstat_daily_t.c[fld.MKTSTAT_DAILY_INDEX_MAP[field]]
+        elif field in fld.MKTSTAT_DAILY_MARKET_MAP:
+            mktstat_daily_t = self._table("MKTSTAT_DAILY_MARKET")
+            field_col = mktstat_daily_t.c[fld.MKTSTAT_DAILY_MARKET_MAP[field]]
         else:
             raise ValueError(
                 f"{field} not in Data 1D field. Please check psims factor for more details."
             )
 
-        j = mktstat_daily.join(sector, mktstat_daily.c.I_SECTOR == sector.c.I_SECTOR)
+        j = self._join_sector(mktstat_daily_t)
 
         sql = (
             select(
                 [
-                    mktstat_daily.c.D_TRADE.label("trading_datetime"),
-                    func.trim(sector.c.N_SECTOR).label("indexs"),
-                    field_que,
+                    mktstat_daily_t.c.D_TRADE.label("trade_date"),
+                    func.trim(sector_t.c.N_SECTOR).label("index"),
+                    field_col.label(field),
                 ]
             )
             .select_from(j)
-            .order_by(mktstat_daily.c.D_TRADE.asc())
+            .order_by(mktstat_daily_t.c.D_TRADE.asc())
         )
 
         sql = self._filter_stmt_by_symbol_and_date(
             stmt=sql,
-            symbol_column=sector.c.N_SECTOR,
-            date_column=mktstat_daily.c.D_TRADE,
+            symbol_column=sector_t.c.N_SECTOR,
+            date_column=mktstat_daily_t.c.D_TRADE,
             symbol_list=index_list,
             start_date=start_date,
             end_date=end_date,
         )
 
         df = pd.read_sql(
-            sql,
-            self.__engine,
-            index_col="trading_datetime",
-            parse_dates="trading_datetime",
+            sql, self.__engine, index_col="trade_date", parse_dates="trade_date"
         )
-        df.reset_index(inplace=True)
-        df = df.pivot(index="trading_datetime", columns="indexs", values=field)
+
+        df = df.pivot(columns="index", values=field)
         df.columns.name = None
         df.index.name = None
+
         return df
 
     def get_data_sector_daily(
@@ -1243,52 +1227,46 @@ class SETDataReader:
         --------
         TODO: examples
         """
-        sector = self._table("SECTOR")
-        sector_info = self._table("DAILY_SECTOR_INFO")
+        sector_t = self._table("SECTOR")
+        daily_sector_info_t = self._table("DAILY_SECTOR_INFO")
+
         field = field.lower()
 
-        j = sector_info.join(
-            sector,
-            sector_info.c.I_SECTOR == sector.c.I_SECTOR,
-        )
+        j = self._join_sector(daily_sector_info_t)
 
         sql = (
             select(
                 [
-                    sector_info.c.D_TRADE.label("trading_datetime"),
-                    func.trim(sector.c.N_SECTOR).label("sector"),
-                    sector_info.c[fld.DAILY_SECTOR_INFO_MAP[field]].label(field),
+                    daily_sector_info_t.c.D_TRADE.label("trade_date"),
+                    func.trim(sector_t.c.N_SECTOR).label("sector"),
+                    daily_sector_info_t.c[fld.DAILY_SECTOR_INFO_MAP[field]].label(
+                        field
+                    ),
                 ]
             )
             .select_from(j)
-            .order_by(sector_info.c.D_TRADE.asc())
+            .where(sector_t.c.F_DATA == "S")  # only sector
+            .order_by(daily_sector_info_t.c.D_TRADE.asc())
         )
 
         sql = self._filter_stmt_by_symbol_and_date(
             stmt=sql,
-            symbol_column=sector.c.N_SECTOR,
-            date_column=sector_info.c.D_TRADE,
+            symbol_column=sector_t.c.N_SECTOR,
+            date_column=daily_sector_info_t.c.D_TRADE,
             symbol_list=sector_list,
             start_date=start_date,
             end_date=end_date,
         )
 
         df = pd.read_sql(
-            sql,
-            self.__engine,
-            index_col="trading_datetime",
-            parse_dates="trading_datetime",
+            sql, self.__engine, index_col="trade_date", parse_dates="trade_date"
         )
-        df.reset_index(inplace=True)
-        df = pd.pivot_table(
-            df, index=["trading_datetime"], columns="sector", values=field
-        )
+
+        df = df.pivot(columns="sector", values=field)
+
         df.columns.name = None
         df.index.name = None
-        col_notin_sectorlist = [
-            value for value in df.columns.to_list() if value not in fld.SECTOR_LIST
-        ]
-        df = df.drop(col_notin_sectorlist, axis=1)
+
         return df
 
     """
@@ -1317,6 +1295,7 @@ class SETDataReader:
             stmt = stmt.where(func.DATE(date_column) >= start_date)
         if end_date != None:
             stmt = stmt.where(func.DATE(date_column) <= end_date)
+
         return stmt
 
     def _get_pivot_adjust_factor_df(
@@ -1612,7 +1591,6 @@ class SETDataReader:
     def _join_security_and_d_trade_subquery(self, table: Table):
         security_t = self._table("SECURITY")
         d_trade_subquery = self._d_trade_subquery()
-
         return table.join(
             security_t, table.c.I_SECURITY == security_t.c.I_SECURITY
         ).join(
@@ -1621,4 +1599,17 @@ class SETDataReader:
                 table.c.I_SECURITY == d_trade_subquery.c.I_SECURITY,
                 func.DATE(table.c.D_AS_OF) == func.DATE(d_trade_subquery.c.D_AS_OF),
             ),
+        )
+
+    def _join_sector(self, table: Table, isouter: bool = False):
+        sector_t = self._table("SECTOR")
+        return table.join(
+            sector_t,
+            and_(
+                table.c.I_MARKET == sector_t.c.I_MARKET,
+                table.c.I_INDUSTRY == sector_t.c.I_INDUSTRY,
+                table.c.I_SECTOR == sector_t.c.I_SECTOR,
+                table.c.I_SUBSECTOR == sector_t.c.I_SUBSECTOR,
+            ),
+            isouter=isouter,
         )
