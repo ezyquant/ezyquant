@@ -1,20 +1,19 @@
-MARKET_SET = "SET"
-MARKET_MAI = "mai"
+MARKET_SET = INDEX_SET = "SET"
+MARKET_MAI = INDEX_MAI = "mai"
 
 MARKET_MAP = {MARKET_SET: "A", MARKET_MAI: "S"}
+MARKET_MAP_UPPER = {k.upper(): v for k, v in MARKET_MAP.items()}
 
+# SELECT
+#     DISTINCT("N_INDUSTRY")
+# FROM
+#     "SECTOR"
+# WHERE
+#     "F_DATA" = 'I'
+#     AND "D_CANCEL" is null
+# ORDER BY
+#     "N_INDUSTRY"
 
-"""
-SELECT
-    DISTINCT("N_INDUSTRY")
-FROM
-    "SECTOR"
-WHERE
-    "F_DATA" = 'I'
-    AND "D_CANCEL" is null
-ORDER BY
-    "N_INDUSTRY"
-"""
 INDUSTRY_AGRO = "AGRO"
 INDUSTRY_CONSUMP = "CONSUMP"
 INDUSTRY_FINCIAL = "FINCIAL"
@@ -28,18 +27,17 @@ INDUSTRY_LIST = [
     v for k, v in locals().items() if isinstance(k, str) and k.startswith("INDUSTRY_")
 ]
 
-"""
-SELECT
-    DISTINCT("N_SECTOR")
-FROM
-    "SECTOR"
-WHERE
-    "F_DATA" = 'S'
-    AND "I_MARKET" in ('A', 'S')
-    AND "D_CANCEL" is null
-ORDER BY
-    "N_SECTOR"
-"""
+# SELECT
+#     DISTINCT("N_SECTOR")
+# FROM
+#     "SECTOR"
+# WHERE
+#     "F_DATA" = 'S'
+#     AND "I_MARKET" in ('A', 'S')
+#     AND "D_CANCEL" is null
+# ORDER BY
+#     "N_SECTOR"
+
 # SET SECTOR
 SECTOR_AGRI = "AGRI"
 SECTOR_AUTO = "AUTO"
@@ -82,15 +80,13 @@ SECTOR_TECH = "TECH"
 SECTOR_LIST = [
     v for k, v in locals().items() if isinstance(k, str) and k.startswith("SECTOR_")
 ]
-"""
-SELECT
-    DISTINCT("SECTOR"."N_SECTOR")
-FROM
-    "SECURITY_INDEX"
-    JOIN "SECTOR" USING("I_SECTOR")
-"""
-INDEX_SET = "SET"
-INDEX_MAI = "mai"
+
+# SELECT
+#     DISTINCT("SECTOR"."N_SECTOR")
+# FROM
+#     "SECURITY_INDEX"
+#     JOIN "SECTOR" USING("I_SECTOR")
+
 INDEX_SETWB = "SETWB"
 INDEX_SETTHSI = "SETTHSI"
 INDEX_SETCLMV = "SETCLMV"
@@ -349,16 +345,15 @@ DAILY_STOCK_STAT_MAP = {
 }
 
 
-"""
-SELECT
-    column_name
-FROM
-    information_schema.columns
-WHERE
-    table_name = 'FINANCIAL_SCREEN'
-ORDER BY
-    ordinal_position
-"""
+# SELECT
+#     column_name
+# FROM
+#     information_schema.columns
+# WHERE
+#     table_name = 'FINANCIAL_SCREEN'
+# ORDER BY
+#     ordinal_position
+
 FINANCIAL_SCREEN_MAP = {
     Q_YEAR: "I_YEAR",
     Q_PERIOD_TYPE: "I_PERIOD_TYPE",
@@ -397,16 +392,15 @@ FINANCIAL_SCREEN_MAP = {
     Q_IBDE: "R_IBDE",
 }
 
-"""
-SELECT
-    DISTINCT "I_ACCT_TYPE",
-    "N_ACCOUNT"
-FROM
-    "FINANCIAL_STAT_STD"
-ORDER BY
-    "I_ACCT_TYPE",
-    "N_ACCOUNT"
-"""
+# SELECT
+#     DISTINCT "I_ACCT_TYPE",
+#     "N_ACCOUNT"
+# FROM
+#     "FINANCIAL_STAT_STD"
+# ORDER BY
+#     "I_ACCT_TYPE",
+#     "N_ACCOUNT"
+
 FINANCIAL_STAT_STD_MAP = {
     "B": {  # Balance Sheet
         Q_ACCOUNT_PAYABLE: "m_account_payable",

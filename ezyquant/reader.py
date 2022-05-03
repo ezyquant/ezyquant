@@ -168,7 +168,7 @@ class SETDataReader:
             stmt = stmt.where(func.trim(security_t.c.N_SECURITY).in_(symbol_list))
         if market != None:
             market = market.upper()
-            stmt = stmt.where(security_t.c.I_MARKET == fld.MARKET_MAP[market])
+            stmt = stmt.where(security_t.c.I_MARKET == fld.MARKET_MAP_UPPER[market])
         if industry != None:
             industry = industry.upper()
             stmt = stmt.where(func.trim(sector_t.c.N_INDUSTRY) == industry)
@@ -276,9 +276,9 @@ class SETDataReader:
         -------
         pd.DataFrame
             change name dataframe contain columns:
-                - effect_date: date - D_EFFECT
                 - symbol_id: int - I_SECURITY
                 - symbol: str - SECURITY.N_SECURITY
+                - effect_date: date - D_EFFECT
                 - symbol_old: str - N_SECURITY_OLD
                 - symbol_new: str - N_SECURITY_NEW
 
@@ -309,9 +309,9 @@ class SETDataReader:
         stmt = (
             select(
                 [
-                    change_name_t.c.D_EFFECT.label("effect_date"),
                     change_name_t.c.I_SECURITY.label("symbol_id"),
                     func.trim(security_t.c.N_SECURITY).label("symbol"),
+                    change_name_t.c.D_EFFECT.label("effect_date"),
                     func.trim(change_name_t.c.N_SECURITY_OLD).label("symbol_old"),
                     func.trim(change_name_t.c.N_SECURITY_NEW).label("symbol_new"),
                 ]
@@ -1188,17 +1188,13 @@ class SETDataReader:
 
         j = self._join_sector_table(mktstat_daily_t)
 
-        sql = (
-            select(
-                [
-                    mktstat_daily_t.c.D_TRADE.label("trade_date"),
-                    func.trim(sector_t.c.N_SECTOR).label("index"),
-                    field_col.label(field),
-                ]
-            )
-            .select_from(j)
-            .order_by(func.DATE(mktstat_daily_t.c.D_TRADE))
-        )
+        sql = select(
+            [
+                mktstat_daily_t.c.D_TRADE.label("trade_date"),
+                func.trim(sector_t.c.N_SECTOR).label("index"),
+                field_col.label(field),
+            ]
+        ).select_from(j)
 
         sql = self._filter_stmt_by_symbol_and_date(
             stmt=sql,
@@ -1225,8 +1221,9 @@ class SETDataReader:
         sector_list: Optional[List[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
+        market: str = fld.MARKET_SET,
     ) -> pd.DataFrame:
-        """Data from table DAILY_SECTOR_INFO.
+        """Data from table DAILY_SECTOR_INFO. Filter only sector data.
 
         Parameters
         ----------
@@ -1250,47 +1247,55 @@ class SETDataReader:
         --------
         TODO: examples
         """
-        sector_t = self._table("SECTOR")
-        daily_sector_info_t = self._table("DAILY_SECTOR_INFO")
-
-        field = field.lower()
-
-        j = self._join_sector_table(daily_sector_info_t)
-
-        sql = (
-            select(
-                [
-                    daily_sector_info_t.c.D_TRADE.label("trade_date"),
-                    func.trim(sector_t.c.N_SECTOR).label("sector"),
-                    daily_sector_info_t.c[fld.DAILY_SECTOR_INFO_MAP[field]].label(
-                        field
-                    ),
-                ]
-            )
-            .select_from(j)
-            .where(sector_t.c.F_DATA == "S")  # only sector
-            .order_by(func.DATE(daily_sector_info_t.c.D_TRADE.asc()))
-        )
-
-        sql = self._filter_stmt_by_symbol_and_date(
-            stmt=sql,
-            symbol_column=sector_t.c.N_SECTOR,
-            date_column=daily_sector_info_t.c.D_TRADE,
-            symbol_list=sector_list,
+        return self._get_daily_sector_info(
+            field=field,
+            sector_list=sector_list,
             start_date=start_date,
             end_date=end_date,
+            market=market,
+            f_data="S",  # sector
         )
 
-        df = pd.read_sql(
-            sql, self.__engine, index_col="trade_date", parse_dates="trade_date"
+    def get_data_industry_daily(
+        self,
+        field: str,
+        industry_list: Optional[List[str]] = None,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
+        market: str = fld.MARKET_SET,
+    ) -> pd.DataFrame:
+        """Data from table DAILY_SECTOR_INFO. Filter only industry data.
+
+        Parameters
+        ----------
+        field : str
+            Filed of data, case insensitive e.g. 'high', 'low', 'close'. More fields can be found in ezyquant.fields
+        industry_list : Optional[List[str]]
+            N_SECTOR in industry_list, case insensitive, by default None. More sector can be found in ezyquant.fields
+        start_date : Optional[date]
+            start of trade_date (D_TRADE), by default None
+        end_date : Optional[date]
+            end of trade_date (D_TRADE), by default None
+
+        Returns
+        -------
+        pd.DataFrame
+            dataframe contain:
+                - industry: str as column
+                - trade_date: date as index
+
+        Examples
+        --------
+        TODO: examples
+        """
+        return self._get_daily_sector_info(
+            field=field,
+            sector_list=industry_list,
+            start_date=start_date,
+            end_date=end_date,
+            market=market,
+            f_data="I",  # industry
         )
-
-        df = df.pivot(columns="sector", values=field)
-
-        df.columns.name = None
-        df.index.name = None
-
-        return df
 
     """
     Protected methods
@@ -1636,3 +1641,62 @@ class SETDataReader:
             ),
             isouter=isouter,
         )
+
+    def _get_daily_sector_info(
+        self,
+        field: str,
+        sector_list: Optional[List[str]],
+        start_date: Optional[date],
+        end_date: Optional[date],
+        market: str,
+        f_data: str,
+    ) -> pd.DataFrame:
+        """Data from table DAILY_SECTOR_INFO.
+
+        Parameters
+        ----------
+            f_data
+        """
+        sector_t = self._table("SECTOR")
+        daily_sector_info_t = self._table("DAILY_SECTOR_INFO")
+
+        field = field.lower()
+
+        j = self._join_sector_table(daily_sector_info_t)
+
+        # N_SECTOR is the industry name in F_DATA = 'I'
+        sql = (
+            select(
+                [
+                    daily_sector_info_t.c.D_TRADE.label("trade_date"),
+                    func.trim(sector_t.c.N_SECTOR).label("sector"),
+                    daily_sector_info_t.c[fld.DAILY_SECTOR_INFO_MAP[field]].label(
+                        field
+                    ),
+                ]
+            )
+            .select_from(j)
+            .where(sector_t.c.F_DATA == f_data)
+            .where(sector_t.c.I_MARKET == fld.MARKET_MAP_UPPER[market])
+            .where(sector_t.c.D_CANCEL == None)
+        )
+
+        sql = self._filter_stmt_by_symbol_and_date(
+            stmt=sql,
+            symbol_column=sector_t.c.N_SECTOR,
+            date_column=daily_sector_info_t.c.D_TRADE,
+            symbol_list=sector_list,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+        df = pd.read_sql(
+            sql, self.__engine, index_col="trade_date", parse_dates="trade_date"
+        )
+
+        df = df.pivot(columns="sector", values=field)
+
+        df.columns.name = None
+        df.index.name = None
+
+        return df
