@@ -1,3 +1,4 @@
+import os.path
 from datetime import date
 from functools import lru_cache
 from typing import List, Optional
@@ -16,18 +17,26 @@ from .errors import InputError
 class SETDataReader:
     """SETDataReader read PSIMS data."""
 
-    def __init__(self, sqlite_path: str) -> None:
+    def __init__(self, sqlite_path: str, ping: bool = True):
         """SETDataReader constructor.
 
         Parameters
         ----------
         sqlite_path : str
             path to sqlite file e.g. /path/to/sqlite.db
+        ping : bool, optional
+            ping database, by default True
         """
         self.__sqlite_path = sqlite_path
 
         self.__engine = sa.create_engine(f"sqlite:///{self.__sqlite_path}")
         self.__metadata = MetaData(self.__engine)
+
+        if ping:
+            if not os.path.isfile(self.__sqlite_path):
+                raise InputError(f"{self.__sqlite_path} is not found")
+
+            self.is_today_trading_date()
 
     def get_trading_dates(
         self, start_date: Optional[date] = None, end_date: Optional[date] = None
