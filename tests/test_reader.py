@@ -1809,6 +1809,85 @@ class TestGetDataSectorDaily:
         return result
 
 
+class TestGetDataIndustryDaily:
+    @pytest.mark.parametrize(
+        "field", [getattr(fld, i) for i in dir(fld) if i.startswith("D_INDUSTRY")][::5]
+    )
+    def test_field(self, sdr: SETDataReader, field: str):
+        # Test
+        result = sdr.get_data_industry_daily(field=field)
+
+        # Check
+        self._check(result)
+
+        assert not result.empty
+
+    @pytest.mark.parametrize(
+        ["field", "expected"],
+        [
+            (fld.D_INDUSTRY_INDEX_OPEN, 481.75),
+            (fld.D_INDUSTRY_INDEX_HIGH, 487.57),
+            (fld.D_INDUSTRY_INDEX_LOW, 480.51),
+            (fld.D_INDUSTRY_INDEX_CLOSE, 485.98),
+            (fld.D_INDUSTRY_VOLUME, 511827513),
+            (fld.D_INDUSTRY_VALUE, 8342552775.82),
+            (fld.D_INDUSTRY_MKT_PE, 26.45),
+            (fld.D_INDUSTRY_MKT_PBV, 2.05),
+            (fld.D_INDUSTRY_MKT_YIELD, 2.55),
+            (fld.D_INDUSTRY_MKT_CAP, 1297058662310.79),
+        ],
+    )
+    def test_field_with_expected(self, sdr: SETDataReader, field: str, expected: float):
+        """source: https://www.tradingview.com/chart/?symbol=SET:AGRO"""
+        start_date = date(2022, 1, 4)
+        end_date = date(2022, 1, 4)
+
+        # Test
+        result = sdr.get_data_industry_daily(
+            field=field,
+            industry_list=[fld.INDUSTRY_AGRO],
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+        # Check
+        self._check(result)
+
+        assert_frame_equal(
+            result,
+            pd.DataFrame(
+                [[expected]],
+                columns=[fld.INDUSTRY_AGRO],
+                index=pd.DatetimeIndex(["2022-01-04"]),
+            ),
+        )
+
+    @pytest.mark.parametrize(
+        "field", [getattr(fld, i) for i in dir(fld) if i.startswith("D_INDUSTRY")]
+    )
+    def test_empty(self, sdr: SETDataReader, field: str):
+        # Test
+        result = sdr.get_data_industry_daily(field=field, industry_list=[])
+
+        # Check
+        self._check(result)
+
+        assert result.empty
+
+    @staticmethod
+    def _check(result):
+        assert isinstance(result, pd.DataFrame)
+
+        assert isinstance(result.index, pd.DatetimeIndex)
+        assert result.index.is_monotonic_increasing
+        assert result.index.is_unique
+        assert (result.index == result.index.normalize()).all()  # type: ignore
+
+        assert (result.columns.isin(fld.INDUSTRY_LIST)).all()
+
+        return result
+
+
 @pytest.mark.parametrize(
     ("df", "expected"),
     [
