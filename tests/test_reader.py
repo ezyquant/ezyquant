@@ -860,7 +860,7 @@ class TestGetSymbolsByIndex:
                         "BBL",
                         "KBANK",
                         "KTB",
-                        "SCB",
+                        "SCBB",
                         "TCAP",
                         "TISCO",
                         "TTB",
