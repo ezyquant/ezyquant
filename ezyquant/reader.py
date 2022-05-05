@@ -150,7 +150,7 @@ class SETDataReader:
         2        169  THL-U    SET  RESOURC   MINE        S      U
         3       2968  THL-F    SET  RESOURC   MINE        F      F
         """
-        vld.check_duplicate(symbol_list, "symbol_list")
+        vld.check_duplicate(symbol_list)
 
         security_t = self._table("SECURITY")
         sector_t = self._table("SECTOR")
@@ -228,7 +228,7 @@ class SETDataReader:
         0           1    BBL  ธนาคารกรุงเทพ จำกัด (มหาชน)  ...  1/12/1944  เมื่อผลประกอบการของธนาคารมีกำไร (โดยมีเงื่อนไข...  Pays when company has profit (with additional ...
         1         646    PTT    บริษัท ปตท. จำกัด (มหาชน)  ...  1/10/2001  ไม่ต่ำกว่าร้อยละ 25 ของกำไรสุทธิที่เหลือหลังหั...  Not less than 25% of net income after deductio...
         """
-        vld.check_duplicate(symbol_list, "symbol_list")
+        vld.check_duplicate(symbol_list)
 
         company_t = self._table("COMPANY")
         security_t = self._table("SECURITY")
@@ -412,8 +412,8 @@ class SETDataReader:
         1        M  2021-05-10  2021-05-25      CD  0.5
         2        M  2022-05-10  2022-05-25      CD  0.8
         """
-        vld.check_duplicate(adjusted_list, "adjusted_list")
-        vld.check_duplicate(ca_type_list, "ca_type_list")
+        vld.check_duplicate(adjusted_list)
+        vld.check_duplicate(ca_type_list)
 
         security_t = self._table("SECURITY")
         rights_benefit_t = self._table("RIGHTS_BENEFIT")
@@ -569,7 +569,7 @@ class SETDataReader:
         0   THAI 2020-11-12   SP
         1   THAI 2021-02-25   SP
         """
-        vld.check_duplicate(sign_list, "sign_list")
+        vld.check_duplicate(sign_list)
 
         security_t = self._table("SECURITY")
         sign_posting_t = self._table("SIGN_POSTING")
@@ -699,7 +699,7 @@ class SETDataReader:
         48 2022-01-04  SET50  INTUCH   49
         49 2022-01-04  SET50     KCE   50
         """
-        vld.check_duplicate(index_list, "index_list")
+        vld.check_duplicate(index_list)
 
         security_t = self._table("SECURITY")
         sector_t = self._table("SECTOR")
@@ -798,7 +798,7 @@ class SETDataReader:
         0    RAM  2019-06-17      PC           0.05
         1    RAM  2021-11-09      PC           0.20
         """
-        vld.check_duplicate(ca_type_list, "ca_type_list")
+        vld.check_duplicate(ca_type_list)
 
         security_t = self._table("SECURITY")
         adjust_factor_t = self._table("ADJUST_FACTOR")
@@ -871,7 +871,7 @@ class SETDataReader:
         --------
         TODO: examples
         """
-        vld.check_duplicate(adjusted_list, "adjusted_list")
+        vld.check_duplicate(adjusted_list)
 
         adjusted_list = list(adjusted_list)  # copy to avoid modify original list
 
@@ -1323,7 +1323,7 @@ class SETDataReader:
         end_date: Optional[date],
     ):
         vld.check_start_end_date(start_date, end_date)
-        vld.check_duplicate(symbol_list, "symbol_list")
+        vld.check_duplicate(symbol_list)
 
         if symbol_list != None:
             symbol_list = [i.upper() for i in symbol_list]
@@ -1483,6 +1483,8 @@ class SETDataReader:
     ) -> pd.DataFrame:
         """fill nan with -np.inf if is_to_dict.
 
+        Parameters
+        ----------
         period: str
             'Q' for Quarter, 'Y' for Quarter, 'YTD', 'TTM', 'AVG'
         """
@@ -1660,12 +1662,6 @@ class SETDataReader:
         market: str,
         f_data: str,
     ) -> pd.DataFrame:
-        """Data from table DAILY_SECTOR_INFO.
-
-        Parameters
-        ----------
-            f_data
-        """
         sector_t = self._table("SECTOR")
         daily_sector_info_t = self._table("DAILY_SECTOR_INFO")
 
