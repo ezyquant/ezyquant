@@ -26,6 +26,8 @@ python -m build
 python -m twine upload dist/*
 ```
 
+More details: https://packaging.python.org/en/latest/tutorials/packaging-projects/
+
 ## Vscode extension for documentation
 
 ```
