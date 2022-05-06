@@ -101,7 +101,7 @@ class SETDataReader:
 
         stmt = select([calendar_t.c.D_TRADE]).order_by(func.DATE(calendar_t.c.D_TRADE))
 
-        self._filter_stmt_by_date(
+        stmt = self._filter_stmt_by_date(
             stmt=stmt,
             column=calendar_t.c.D_TRADE,
             start_date=start_date,
