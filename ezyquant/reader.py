@@ -1719,14 +1719,6 @@ class SETDataReader:
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> pd.DataFrame:
-        """fill nan with -np.inf if is_to_dict.
-
-        Parameters
-        ----------
-        period: str
-            'Q' for Quarter, 'Y' for Quarter, 'YTD', 'TTM', 'AVG'
-        """
-        # split field_list for 2 tables
         period = period.upper()
         field = field.lower()
 
@@ -1735,11 +1727,11 @@ class SETDataReader:
 
         if field in fld.FINANCIAL_STAT_STD_MAP_COMPACT:
             stmt = self._get_financial_stat_std_stmt(field=field, period=period)
-        elif field in fld.FINANCIAL_SCREEN_MAP:
+        elif field in fld.FINANCIAL_SCREEN_MAP and period in ("Q", "Y", "YTD"):
             stmt = self._get_financial_screen_stmt(field=field, period=period)
         else:
             raise ValueError(
-                f"{field} not in Data {period} field. Please check psims factor for more details."
+                f"{field} is not supported for {period}. More field in ezyquant.field"
             )
 
         stmt = self._filter_stmt_by_symbol_and_date(
