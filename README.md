@@ -18,6 +18,14 @@ pip install git+https://github.com/ezyquant/ezyquant
 
 https://drive.google.com/file/d/1Xyc7Tv9FOAdF4w5BK7U0Ruk5O_vgMKNE/view?usp=sharing
 
+## How to upload pypi
+
+```
+pip install --upgrade build twine
+python -m build
+python -m twine upload dist/*
+```
+
 ## Vscode extension for documentation
 
 ```
