@@ -59,6 +59,7 @@ class SETDataReader:
     def last_update(self) -> date:
         """Last database update, checking from last D_TRADE in following
         tables:
+
             - DAILY_STOCK_TRADE
             - DAILY_STOCK_STAT
             - MKTSTAT_DAILY_INDEX
@@ -1481,7 +1482,7 @@ class SETDataReader:
         field : str
             Filed of data, case insensitive e.g. 'high', 'low', 'close'. More fields can be found in ezyquant.fields
         industry_list : Optional[List[str]]
-            N_SECTOR in industry_list, case insensitive, by default None. More sector can be found in ezyquant.fields
+            N_SECTOR in industry_list, case insensitive, by default None. More industry can be found in ezyquant.fields
         start_date : Optional[date]
             start of trade_date (D_TRADE), by default None
         end_date : Optional[date]
