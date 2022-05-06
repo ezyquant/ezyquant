@@ -1,20 +1,19 @@
-MARKET_SET = "SET"
-MARKET_MAI = "mai"
+MARKET_SET = INDEX_SET = "SET"
+MARKET_MAI = INDEX_MAI = "mai"
 
 MARKET_MAP = {MARKET_SET: "A", MARKET_MAI: "S"}
+MARKET_MAP_UPPER = {k.upper(): v for k, v in MARKET_MAP.items()}
 
+# SELECT
+#     DISTINCT("N_INDUSTRY")
+# FROM
+#     "SECTOR"
+# WHERE
+#     "F_DATA" = 'I'
+#     AND "D_CANCEL" is null
+# ORDER BY
+#     "N_INDUSTRY"
 
-"""
-SELECT
-    DISTINCT("N_INDUSTRY")
-FROM
-    "SECTOR"
-WHERE
-    "F_DATA" = 'I'
-    AND "D_CANCEL" is null
-ORDER BY
-    "N_INDUSTRY"
-"""
 INDUSTRY_AGRO = "AGRO"
 INDUSTRY_CONSUMP = "CONSUMP"
 INDUSTRY_FINCIAL = "FINCIAL"
@@ -28,18 +27,17 @@ INDUSTRY_LIST = [
     v for k, v in locals().items() if isinstance(k, str) and k.startswith("INDUSTRY_")
 ]
 
-"""
-SELECT
-    DISTINCT("N_SECTOR")
-FROM
-    "SECTOR"
-WHERE
-    "F_DATA" = 'S'
-    AND "I_MARKET" in ('A', 'S')
-    AND "D_CANCEL" is null
-ORDER BY
-    "N_SECTOR"
-"""
+# SELECT
+#     DISTINCT("N_SECTOR")
+# FROM
+#     "SECTOR"
+# WHERE
+#     "F_DATA" = 'S'
+#     AND "I_MARKET" in ('A', 'S')
+#     AND "D_CANCEL" is null
+# ORDER BY
+#     "N_SECTOR"
+
 # SET SECTOR
 SECTOR_AGRI = "AGRI"
 SECTOR_AUTO = "AUTO"
@@ -82,15 +80,13 @@ SECTOR_TECH = "TECH"
 SECTOR_LIST = [
     v for k, v in locals().items() if isinstance(k, str) and k.startswith("SECTOR_")
 ]
-"""
-SELECT
-    DISTINCT("SECTOR"."N_SECTOR")
-FROM
-    "SECURITY_INDEX"
-    JOIN "SECTOR" USING("I_SECTOR")
-"""
-INDEX_SET = "SET"
-INDEX_MAI = "mai"
+
+# SELECT
+#     DISTINCT("SECTOR"."N_SECTOR")
+# FROM
+#     "SECURITY_INDEX"
+#     JOIN "SECTOR" USING("I_SECTOR")
+
 INDEX_SETWB = "SETWB"
 INDEX_SETTHSI = "SETTHSI"
 INDEX_SETCLMV = "SETCLMV"
@@ -152,108 +148,116 @@ D_12M_DVD_YIELD = "12m_dvd_yield"
 D_PEG = "peg"
 
 
-Q_YEAR = "year"
-Q_PERIOD_TYPE = "period_type"
-Q_PERIOD = "period"
-Q_QUARTER = "quarter"
-Q_ACCUMULATE = "accumulate"
-Q_AS_OF = "as_of"
-Q_TOTAL_ASSET = "total_asset"
-Q_TOTAL_LIABILITY = "total_liability"
-Q_SHLD_EQUITY = "shld_equity"
-Q_TOTAL_REVENUE = "total_revenue"
-Q_TOTAL_EXPENSE = "total_expense"
-Q_NET_PROFIT = "net_profit"
-Q_EPS = "eps"
-Q_DE = "de"
-Q_NET_PROFIT_MARGIN = "net_profit_margin"
-Q_GROSS_PROFIT_MARGIN = "gross_profit_margin"
-Q_ROA = "roa"
-Q_ROE = "roe"
-Q_ASSET_TURNOVER = "asset_turnover"
-Q_EBIT = "ebit"
-Q_FIX_ASSET_TURNOVER = "fix_asset_turnover"
-Q_CURRENT_RATIO = "current_ratio"
-Q_QUICK_RATIO = "quick_ratio"
-Q_INTEREST_COVERAGE = "interest_coverage"
-Q_AR_TURNOVER = "ar_turnover"
-Q_INVENTORY_TURNOVER = "inventory_turnover"
-Q_AP_TURNOVER = "ap_turnover"
-Q_CASH_CYCLE = "cash_cycle"
-Q_EBITDA = "ebitda"
-Q_NET_OPERATING = "net_operating"
-Q_NET_INVESTING = "net_investing"
-Q_NET_FINANCING = "net_financing"
-Q_NET_CASHFLOW = "net_cashflow"
-Q_DSCR = "dscr"
-Q_IBDE = "ibde"
+Q_YEAR = Y_YEAR = "year"
+Q_PERIOD_TYPE = Y_PERIOD_TYPE = "period_type"
+Q_PERIOD = Y_PERIOD = "period"
+Q_QUARTER = Y_QUARTER = "quarter"
+Q_ACCUMULATE = Y_ACCUMULATE = "accumulate"
+Q_AS_OF = Y_AS_OF = "as_of"
+Q_TOTAL_ASSET = Y_TOTAL_ASSET = "total_asset"
+Q_TOTAL_LIABILITY = Y_TOTAL_LIABILITY = "total_liability"
+Q_SHLD_EQUITY = Y_SHLD_EQUITY = "shld_equity"
+Q_TOTAL_REVENUE = Y_TOTAL_REVENUE = "total_revenue"
+Q_TOTAL_EXPENSE = Y_TOTAL_EXPENSE = "total_expense"
+Q_NET_PROFIT = Y_NET_PROFIT = "net_profit"
+Q_EPS = Y_EPS = "eps"
+Q_DE = Y_DE = "de"
+Q_NET_PROFIT_MARGIN = Y_NET_PROFIT_MARGIN = "net_profit_margin"
+Q_GROSS_PROFIT_MARGIN = Y_GROSS_PROFIT_MARGIN = "gross_profit_margin"
+Q_ROA = Y_ROA = "roa"
+Q_ROE = Y_ROE = "roe"
+Q_ASSET_TURNOVER = Y_ASSET_TURNOVER = "asset_turnover"
+Q_EBIT = Y_EBIT = "ebit"
+Q_FIX_ASSET_TURNOVER = Y_FIX_ASSET_TURNOVER = "fix_asset_turnover"
+Q_CURRENT_RATIO = Y_CURRENT_RATIO = "current_ratio"
+Q_QUICK_RATIO = Y_QUICK_RATIO = "quick_ratio"
+Q_INTEREST_COVERAGE = Y_INTEREST_COVERAGE = "interest_coverage"
+Q_AR_TURNOVER = Y_AR_TURNOVER = "ar_turnover"
+Q_INVENTORY_TURNOVER = Y_INVENTORY_TURNOVER = "inventory_turnover"
+Q_AP_TURNOVER = Y_AP_TURNOVER = "ap_turnover"
+Q_CASH_CYCLE = Y_CASH_CYCLE = "cash_cycle"
+Q_EBITDA = Y_EBITDA = "ebitda"
+Q_NET_OPERATING = Y_NET_OPERATING = "net_operating"
+Q_NET_INVESTING = Y_NET_INVESTING = "net_investing"
+Q_NET_FINANCING = Y_NET_FINANCING = "net_financing"
+Q_NET_CASHFLOW = Y_NET_CASHFLOW = "net_cashflow"
+Q_DSCR = Y_DSCR = "dscr"
+Q_IBDE = Y_IBDE = "ibde"
 
-Q_ACCOUNT_PAYABLE = "account_payable"
-Q_ACCOUNT_RECEIVABLE = "account_receivable"
-Q_ACCRUED_INT_RECEIVE = "accrued_int_receive"
-Q_ALLOWANCE = "allowance"
-Q_CAP_PAIDIN = "cap_paidin"
-Q_CAP_PAIDUP = "cap_paidup"
-Q_CASH = "cash"
-Q_COMMON_SHARE = "common_share"
-Q_CURRENT_ASSET = "current_asset"
-Q_CURRENT_LIABILITY = "current_liability"
-Q_DEPOSIT = "deposit"
-Q_EARNING_ASSET = "earning_asset"
-Q_INT_BEARING_DEBT = "int_bearing_debt"
-Q_INVENTORY = "inventory"
-Q_INVEST_ASSET = "invest_asset"
-Q_INVESTMENT = "investment"
-Q_INVEST_SECURITY = "invest_security"
-Q_LOAN = "loan"
-Q_LOAN_FROM_RELATEDPARTY = "loan_from_relatedparty"
-Q_LOAN_REVENUE = "loan_revenue"
-Q_LOAN_TO_RELATEDPARTY = "loan_to_relatedparty"
-Q_LONGTERM_LIABILITY_CURRENTPORTION = "longterm_liability_currentportion"
-Q_LONGTERM_LIABILITY_NET_CURRENTPORTION = "longterm_liability_net_currentportion"
-Q_MINORITY_INTEREST = "minority_interest"
-Q_PPE = "ppe"
-Q_PREFERRED_SHARE = "preferred_share"
-Q_RETAIN_EARNING = "retain_earning"
-Q_RETAIN_EARNING_UNAPPROPRIATE = "retain_earning_unappropriate"
-Q_SHLD_EQUITY = "shld_equity"
-Q_SHORT_INVEST = "short_invest"
-Q_TOTAL_ASSET = "total_asset"
-Q_TOTAL_EQUITY = "total_equity"
-Q_TOTAL_LIABILITY = "total_liability"
+Q_ACCOUNT_PAYABLE = Y_ACCOUNT_PAYABLE = "account_payable"
+Q_ACCOUNT_RECEIVABLE = Y_ACCOUNT_RECEIVABLE = "account_receivable"
+Q_ACCRUED_INT_RECEIVE = Y_ACCRUED_INT_RECEIVE = "accrued_int_receive"
+Q_ALLOWANCE = Y_ALLOWANCE = "allowance"
+Q_CAP_PAIDIN = Y_CAP_PAIDIN = "cap_paidin"
+Q_CAP_PAIDUP = Y_CAP_PAIDUP = "cap_paidup"
+Q_CASH = Y_CASH = "cash"
+Q_COMMON_SHARE = Y_COMMON_SHARE = "common_share"
+Q_CURRENT_ASSET = Y_CURRENT_ASSET = "current_asset"
+Q_CURRENT_LIABILITY = Y_CURRENT_LIABILITY = "current_liability"
+Q_DEPOSIT = Y_DEPOSIT = "deposit"
+Q_EARNING_ASSET = Y_EARNING_ASSET = "earning_asset"
+Q_INT_BEARING_DEBT = Y_INT_BEARING_DEBT = "int_bearing_debt"
+Q_INVENTORY = Y_INVENTORY = "inventory"
+Q_INVEST_ASSET = Y_INVEST_ASSET = "invest_asset"
+Q_INVESTMENT = Y_INVESTMENT = "investment"
+Q_INVEST_SECURITY = Y_INVEST_SECURITY = "invest_security"
+Q_LOAN = Y_LOAN = "loan"
+Q_LOAN_FROM_RELATEDPARTY = Y_LOAN_FROM_RELATEDPARTY = "loan_from_relatedparty"
+Q_LOAN_REVENUE = Y_LOAN_REVENUE = "loan_revenue"
+Q_LOAN_TO_RELATEDPARTY = Y_LOAN_TO_RELATEDPARTY = "loan_to_relatedparty"
+Q_LONGTERM_LIABILITY_CURRENTPORTION = (
+    Y_LONGTERM_LIABILITY_CURRENTPORTION
+) = "longterm_liability_currentportion"
+Q_LONGTERM_LIABILITY_NET_CURRENTPORTION = (
+    Y_LONGTERM_LIABILITY_NET_CURRENTPORTION
+) = "longterm_liability_net_currentportion"
+Q_MINORITY_INTEREST = Y_MINORITY_INTEREST = "minority_interest"
+Q_PPE = Y_PPE = "ppe"
+Q_PREFERRED_SHARE = Y_PREFERRED_SHARE = "preferred_share"
+Q_RETAIN_EARNING = Y_RETAIN_EARNING = "retain_earning"
+Q_RETAIN_EARNING_UNAPPROPRIATE = (
+    Y_RETAIN_EARNING_UNAPPROPRIATE
+) = "retain_earning_unappropriate"
+Q_SHLD_EQUITY = Y_SHLD_EQUITY = "shld_equity"
+Q_SHORT_INVEST = Y_SHORT_INVEST = "short_invest"
+Q_TOTAL_ASSET = Y_TOTAL_ASSET = "total_asset"
+Q_TOTAL_EQUITY = Y_TOTAL_EQUITY = "total_equity"
+Q_TOTAL_LIABILITY = Y_TOTAL_LIABILITY = "total_liability"
 
-Q_CHANGE_PPE = "change_ppe"
-Q_DIVIDEND = "dividend"
-Q_DP = "dp"
-Q_NET_CASH_FLOW = "net_cash_flow"
-Q_NET_FINANCING = "net_financing"
-Q_NET_INVESTING = "net_investing"
-Q_NET_OPERATING = "net_operating"
+Q_CHANGE_PPE = Y_CHANGE_PPE = "change_ppe"
+Q_DIVIDEND = Y_DIVIDEND = "dividend"
+Q_DP = Y_DP = "dp"
+Q_NET_CASH_FLOW = Y_NET_CASH_FLOW = "net_cash_flow"
+Q_NET_FINANCING = Y_NET_FINANCING = "net_financing"
+Q_NET_INVESTING = Y_NET_INVESTING = "net_investing"
+Q_NET_OPERATING = Y_NET_OPERATING = "net_operating"
 
-Q_BAD_DEBT = "bad_debt"
-Q_BROKER_FEE = "broker_fee"
-Q_COS = "cos"
-Q_EBIT = "ebit"
-Q_EBITDA = "ebitda"
-Q_EBT = "ebt"
-Q_INT_DVD_INCOME = "int_dvd_income"
-Q_INTEREST_EXPENSE = "interest_expense"
-Q_INTEREST_INCOME = "interest_income"
-Q_INVEST_SEC_REV = "invest_sec_rev"
-Q_LOAN_DEPOSIT_REVENUE = "loan_deposit_revenue"
-Q_NET_PREMIUM = "net_premium"
-Q_NET_PROFIT = "net_profit"
-Q_NET_PROFIT_INCL_MINORITY = "net_profit_incl_minority"
-Q_NET_PROFIT_ORDINARY = "net_profit_ordinary"
-Q_OPERATING_EXPENSE = "operating_expense"
-Q_OPERATING_REVENUE = "operating_revenue"
-Q_PL_OTHER_ACTIVITIES = "pl_other_activities"
-Q_SALE = "sale"
-Q_SELLING_ADMIN = "selling_admin"
-Q_SELLING_ADMIN_EXC_RENUMURATION = "selling_admin_exc_renumuration"
-Q_TOTAL_EXPENSE = "total_expense"
-Q_TOTAL_REVENUE = "total_revenue"
-Q_EPS = "eps"
+Q_BAD_DEBT = Y_BAD_DEBT = "bad_debt"
+Q_BROKER_FEE = Y_BROKER_FEE = "broker_fee"
+Q_COS = Y_COS = "cos"
+Q_EBIT = Y_EBIT = "ebit"
+Q_EBITDA = Y_EBITDA = "ebitda"
+Q_EBT = Y_EBT = "ebt"
+Q_INT_DVD_INCOME = Y_INT_DVD_INCOME = "int_dvd_income"
+Q_INTEREST_EXPENSE = Y_INTEREST_EXPENSE = "interest_expense"
+Q_INTEREST_INCOME = Y_INTEREST_INCOME = "interest_income"
+Q_INVEST_SEC_REV = Y_INVEST_SEC_REV = "invest_sec_rev"
+Q_LOAN_DEPOSIT_REVENUE = Y_LOAN_DEPOSIT_REVENUE = "loan_deposit_revenue"
+Q_NET_PREMIUM = Y_NET_PREMIUM = "net_premium"
+Q_NET_PROFIT = Y_NET_PROFIT = "net_profit"
+Q_NET_PROFIT_INCL_MINORITY = Y_NET_PROFIT_INCL_MINORITY = "net_profit_incl_minority"
+Q_NET_PROFIT_ORDINARY = Y_NET_PROFIT_ORDINARY = "net_profit_ordinary"
+Q_OPERATING_EXPENSE = Y_OPERATING_EXPENSE = "operating_expense"
+Q_OPERATING_REVENUE = Y_OPERATING_REVENUE = "operating_revenue"
+Q_PL_OTHER_ACTIVITIES = Y_PL_OTHER_ACTIVITIES = "pl_other_activities"
+Q_SALE = Y_SALE = "sale"
+Q_SELLING_ADMIN = Y_SELLING_ADMIN = "selling_admin"
+Q_SELLING_ADMIN_EXC_RENUMURATION = (
+    Y_SELLING_ADMIN_EXC_RENUMURATION
+) = "selling_admin_exc_renumuration"
+Q_TOTAL_EXPENSE = Y_TOTAL_EXPENSE = "total_expense"
+Q_TOTAL_REVENUE = Y_TOTAL_REVENUE = "total_revenue"
+Q_EPS = Y_EPS = "eps"
 
 
 D_INDEX_HIGH = "high"
@@ -278,23 +282,23 @@ D_INDEX_LISTED_COMPANY = "listed_company"
 D_INDEX_LISTED_STOCK = "listed_stock"
 
 
-D_SECTOR_INDEX_PRIOR = "prior"
-D_SECTOR_INDEX_OPEN = "open"
-D_SECTOR_INDEX_HIGH = "high"
-D_SECTOR_INDEX_LOW = "low"
-D_SECTOR_INDEX_CLOSE = "close"
-D_SECTOR_TRANS = "trans"
-D_SECTOR_VOLUME = "volume"
-D_SECTOR_VALUE = "value"
-D_SECTOR_MKT_PE = "mkt_pe"
-D_SECTOR_MKT_PBV = "mkt_pbv"
-D_SECTOR_MKT_YIELD = "mkt_yield"
-D_SECTOR_MKT_CAP = "mkt_cap"
-D_SECTOR_TURNOVER = "turnover"
-D_SECTOR_SHARE_LISTED_AVG = "share_listed_avg"
-D_SECTOR_BETA = "beta"
-D_SECTOR_TURNOVER_VOLUME = "turnover_volume"
-D_SECTOR_12M_DVD_YIELD = "12m_dvd_yield"
+D_SECTOR_PRIOR = D_INDUSTRY_PRIOR = "prior"
+D_SECTOR_OPEN = D_INDUSTRY_OPEN = "open"
+D_SECTOR_HIGH = D_INDUSTRY_HIGH = "high"
+D_SECTOR_LOW = D_INDUSTRY_LOW = "low"
+D_SECTOR_CLOSE = D_INDUSTRY_CLOSE = "close"
+D_SECTOR_TRANS = D_INDUSTRY_TRANS = "trans"
+D_SECTOR_VOLUME = D_INDUSTRY_VOLUME = "volume"
+D_SECTOR_VALUE = D_INDUSTRY_VALUE = "value"
+D_SECTOR_MKT_PE = D_INDUSTRY_MKT_PE = "mkt_pe"
+D_SECTOR_MKT_PBV = D_INDUSTRY_MKT_PBV = "mkt_pbv"
+D_SECTOR_MKT_YIELD = D_INDUSTRY_MKT_YIELD = "mkt_yield"
+D_SECTOR_MKT_CAP = D_INDUSTRY_MKT_CAP = "mkt_cap"
+D_SECTOR_TURNOVER = D_INDUSTRY_TURNOVER = "turnover"
+D_SECTOR_SHARE_LISTED_AVG = D_INDUSTRY_SHARE_LISTED_AVG = "share_listed_avg"
+D_SECTOR_BETA = D_INDUSTRY_BETA = "beta"
+D_SECTOR_TURNOVER_VOLUME = D_INDUSTRY_TURNOVER_VOLUME = "turnover_volume"
+D_SECTOR_12M_DVD_YIELD = D_INDUSTRY_12M_DVD_YIELD = "12m_dvd_yield"
 
 DAILY_STOCK_TRADE_MAP = {
     D_PRIOR: "Z_PRIOR",
@@ -349,16 +353,15 @@ DAILY_STOCK_STAT_MAP = {
 }
 
 
-"""
-SELECT
-    column_name
-FROM
-    information_schema.columns
-WHERE
-    table_name = 'FINANCIAL_SCREEN'
-ORDER BY
-    ordinal_position
-"""
+# SELECT
+#     column_name
+# FROM
+#     information_schema.columns
+# WHERE
+#     table_name = 'FINANCIAL_SCREEN'
+# ORDER BY
+#     ordinal_position
+
 FINANCIAL_SCREEN_MAP = {
     Q_YEAR: "I_YEAR",
     Q_PERIOD_TYPE: "I_PERIOD_TYPE",
@@ -397,16 +400,15 @@ FINANCIAL_SCREEN_MAP = {
     Q_IBDE: "R_IBDE",
 }
 
-"""
-SELECT
-    DISTINCT "I_ACCT_TYPE",
-    "N_ACCOUNT"
-FROM
-    "FINANCIAL_STAT_STD"
-ORDER BY
-    "I_ACCT_TYPE",
-    "N_ACCOUNT"
-"""
+# SELECT
+#     DISTINCT "I_ACCT_TYPE",
+#     "N_ACCOUNT"
+# FROM
+#     "FINANCIAL_STAT_STD"
+# ORDER BY
+#     "I_ACCT_TYPE",
+#     "N_ACCOUNT"
+
 FINANCIAL_STAT_STD_MAP = {
     "B": {  # Balance Sheet
         Q_ACCOUNT_PAYABLE: "m_account_payable",
@@ -479,7 +481,9 @@ FINANCIAL_STAT_STD_MAP = {
         Q_EPS: "r_eps",
     },
 }
-
+FINANCIAL_STAT_STD_MAP_COMPACT = {
+    k: v for i in FINANCIAL_STAT_STD_MAP.values() for k, v in i.items()
+}
 
 MKTSTAT_DAILY_INDEX_MAP = {
     D_INDEX_HIGH: "R_INDEX_HIGH",
@@ -488,7 +492,7 @@ MKTSTAT_DAILY_INDEX_MAP = {
     D_INDEX_TRI: "R_TRI",
 }
 
-MKTSTAT_DAILY_MARKET = {
+MKTSTAT_DAILY_MARKET_MAP = {
     D_INDEX_TOTAL_TRANS: "Q_TOTAL_TRANS",
     D_INDEX_TOTAL_VOLUME: "Q_TOTAL_VOLUME",
     D_INDEX_TOTAL_VALUE: "M_TOTAL_VALUE",
@@ -508,11 +512,11 @@ MKTSTAT_DAILY_MARKET = {
 
 
 DAILY_SECTOR_INFO_MAP = {
-    D_SECTOR_INDEX_PRIOR: "R_INDEX_PRIOR",
-    D_SECTOR_INDEX_OPEN: "R_INDEX_OPEN",
-    D_SECTOR_INDEX_HIGH: "R_INDEX_HIGH",
-    D_SECTOR_INDEX_LOW: "R_INDEX_LOW",
-    D_SECTOR_INDEX_CLOSE: "R_INDEX_CLOSE",
+    D_SECTOR_PRIOR: "R_INDEX_PRIOR",
+    D_SECTOR_OPEN: "R_INDEX_OPEN",
+    D_SECTOR_HIGH: "R_INDEX_HIGH",
+    D_SECTOR_LOW: "R_INDEX_LOW",
+    D_SECTOR_CLOSE: "R_INDEX_CLOSE",
     D_SECTOR_TRANS: "Q_TRANS",
     D_SECTOR_VOLUME: "Q_VOLUME",
     D_SECTOR_VALUE: "M_VALUE",
@@ -525,109 +529,4 @@ DAILY_SECTOR_INFO_MAP = {
     D_SECTOR_BETA: "R_BETA",
     D_SECTOR_TURNOVER_VOLUME: "Q_TURNOVER_VOLUME",
     D_SECTOR_12M_DVD_YIELD: "P_12M_DVD_YIELD",
-}
-FINANCIAL_SCREEN_FACTOR = {
-    # "security": "I_SECURITY",
-    "year": "I_YEAR",
-    "period_type": "I_PERIOD_TYPE",
-    "period": "I_PERIOD",
-    "quarter": "I_QUARTER",
-    "accumulate": "F_ACCUMULATE",
-    "as_of": "D_AS_OF",
-    "total_asset": "M_TOTAL_ASSET",
-    "total_liability": "M_TOTAL_LIABILITY",
-    "shld_equity": "M_SHLD_EQUITY",
-    "total_revenue": "M_TOTAL_REVENUE",
-    "total_expense": "M_TOTAL_EXPENSE",
-    "net_profit": "M_NET_PROFIT",
-    "eps": "R_EPS",
-    "de": "R_DE",
-    "net_profit_margin": "R_NET_PROFIT_MARGIN",
-    "gross_profit_margin": "R_GROSS_PROFIT_MARGIN",
-    "roa": "R_ROA",
-    "roe": "R_ROE",
-    "asset_turnover": "R_ASSET_TURNOVER",
-    "ebit": "M_EBIT",
-    "fix_asset_turnover": "R_FIX_ASSET_TURNOVER",
-    "current_ratio": "R_CURRENT_RATIO",
-    "quick_ratio": "R_QUICK_RATIO",
-    "interest_coverage": "R_INTEREST_COVERAGE",
-    "ar_turnover": "R_AR_TURNOVER",
-    "inventory_turnover": "R_INVENTORY_TURNOVER",
-    "ap_turnover": "R_AP_TURNOVER",
-    "cash_cycle": "Q_CASH_CYCLE",
-    "ebitda": "M_EBITDA",
-    "net_operating": "M_NET_OPERATING",
-    "net_investing": "M_NET_INVESTING",
-    "net_financing": "M_NET_FINANCING",
-    "net_cashflow": "M_NET_CASHFLOW",
-    "dscr": "R_DSCR",
-    "ibde": "R_IBDE",
-}
-
-# 1Q,1Y FACTOR
-FINANCIAL_STAT_STD_FACTOR = {
-    "account_payable": "m_account_payable",
-    "account_receivable": "m_account_receivable",
-    "accrued_int_receive": "m_accrued_int_receive",
-    "allowance": "m_allowance",
-    "bad_debt": "m_bad_debt",
-    "broker_fee": "m_broker_fee",
-    "cap_paidin": "m_cap_paidin",
-    "cap_paidup": "m_cap_paidup",
-    "cash": "m_cash",
-    "change_ppe": "m_change_ppe",
-    "common_share": "m_common_share",
-    "cos": "m_cos",
-    "current_asset": "m_current_asset",
-    "current_liability": "m_current_liability",
-    "deposit": "m_deposit",
-    "dividend": "m_dividend",
-    "dp": "m_dp",
-    "earning_asset": "m_earning_asset",
-    "ebit": "m_ebit",
-    "ebitda": "m_ebitda",
-    "ebt": "m_ebt",
-    "int_bearing_debt": "m_int_bearing_debt",
-    "int_dvd_income": "m_int_dvd_income",
-    "interest_expense": "m_interest_expense",
-    "interest_income": "m_interest_income",
-    "inventory": "m_inventory",
-    "invest_asset": "m_invest_asset",
-    "investment": "m_investment",
-    "invest_sec_rev": "m_invest_sec_rev",
-    "invest_security": "m_invest_security",
-    "loan": "m_loan",
-    "loan_deposit_revenue": "m_loan_deposit_revenue",
-    "loan_from_relatedparty": "m_loan_from_relatedparty",
-    "loan_revenue": "m_loan_revenue",
-    "loan_to_relatedparty": "m_loan_to_relatedparty",
-    "longterm_liability_currentportion": "m_longterm_liability_currentportion",
-    "longterm_liability_net_currentportion": "m_longterm_liability_net_currentportion",
-    "minority_interest": "m_minority_interest",
-    "net_cash_flow": "m_net_cash_flow",
-    "net_financing": "m_net_financing",
-    "net_investing": "m_net_investing",
-    "net_operating": "m_net_operating",
-    "net_premium": "m_net_premium",
-    "net_profit": "m_net_profit",
-    "net_profit_incl_minority": "m_net_profit_incl_minority",
-    "net_profit_ordinary": "m_net_profit_ordinary",
-    "operating_expense": "m_operating_expense",
-    "operating_revenue": "m_operating_revenue",
-    "ppe": "m_ppe",
-    "preferred_share": "m_preferred_share",
-    "retain_earning": "m_retain_earning",
-    "retain_earning_unappropriate": "m_retain_earning_unappropriate",
-    "sale": "m_sale",
-    "selling_admin": "m_selling_admin",
-    "selling_admin_exc_renumuration": "m_selling_admin_exc_renumuration",
-    "shld_equity": "m_shld_equity",
-    "short_invest": "m_short_invest",
-    "total_asset": "m_total_asset",
-    "total_equity": "m_total_equity",
-    "total_expense": "m_total_expense",
-    "total_liability": "m_total_liability",
-    "total_revenue": "m_total_revenue",
-    "eps": "r_eps",
 }
