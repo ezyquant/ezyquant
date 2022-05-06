@@ -1415,10 +1415,10 @@ class SETDataReader:
     def get_data_sector_daily(
         self,
         field: str,
+        market: str = fld.MARKET_SET,
         sector_list: Optional[List[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-        market: str = fld.MARKET_SET,
     ) -> pd.DataFrame:
         """Data from table DAILY_SECTOR_INFO. Filter only sector data.
 
@@ -1426,6 +1426,8 @@ class SETDataReader:
         ----------
         field : str
             Filed of data, case insensitive e.g. 'high', 'low', 'close'. More fields can be found in ezyquant.fields
+        market : str
+            I_MARKET e.g. 'SET', 'mai', by default 'SET'
         sector_list : Optional[List[str]]
             N_SECTOR in sector_list, case insensitive, by default None. More sector can be found in ezyquant.fields
         start_date : Optional[date]
@@ -1470,10 +1472,10 @@ class SETDataReader:
     def get_data_industry_daily(
         self,
         field: str,
+        market: str = fld.MARKET_SET,
         industry_list: Optional[List[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-        market: str = fld.MARKET_SET,
     ) -> pd.DataFrame:
         """Data from table DAILY_SECTOR_INFO. Filter only industry data.
 
@@ -1481,6 +1483,8 @@ class SETDataReader:
         ----------
         field : str
             Filed of data, case insensitive e.g. 'high', 'low', 'close'. More fields can be found in ezyquant.fields
+        market : str
+            I_MARKET e.g. 'SET', 'mai', by default 'SET'
         industry_list : Optional[List[str]]
             N_SECTOR in industry_list, case insensitive, by default None. More industry can be found in ezyquant.fields
         start_date : Optional[date]
@@ -1911,6 +1915,8 @@ class SETDataReader:
         market: str,
         f_data: str,
     ) -> pd.DataFrame:
+        market = market.upper()
+
         sector_t = self._table("SECTOR")
         daily_sector_info_t = self._table("DAILY_SECTOR_INFO")
 
