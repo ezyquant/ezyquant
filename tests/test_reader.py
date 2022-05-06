@@ -1761,10 +1761,10 @@ class TestGetDataSectorDaily:
     @pytest.mark.parametrize(
         ["field", "expected"],
         [
-            (fld.D_SECTOR_INDEX_OPEN, 297.55),
-            (fld.D_SECTOR_INDEX_HIGH, 299.36),
-            (fld.D_SECTOR_INDEX_LOW, 293.34),
-            (fld.D_SECTOR_INDEX_CLOSE, 296.13),
+            (fld.D_SECTOR_OPEN, 297.55),
+            (fld.D_SECTOR_HIGH, 299.36),
+            (fld.D_SECTOR_LOW, 293.34),
+            (fld.D_SECTOR_CLOSE, 296.13),
             (fld.D_SECTOR_VOLUME, 124063453),
             (fld.D_SECTOR_VALUE, 795051373.2),
             (fld.D_SECTOR_MKT_PE, 4.50),
@@ -1840,10 +1840,10 @@ class TestGetDataIndustryDaily:
     @pytest.mark.parametrize(
         ["field", "expected"],
         [
-            (fld.D_INDUSTRY_INDEX_OPEN, 481.75),
-            (fld.D_INDUSTRY_INDEX_HIGH, 487.57),
-            (fld.D_INDUSTRY_INDEX_LOW, 480.51),
-            (fld.D_INDUSTRY_INDEX_CLOSE, 485.98),
+            (fld.D_INDUSTRY_OPEN, 481.75),
+            (fld.D_INDUSTRY_HIGH, 487.57),
+            (fld.D_INDUSTRY_LOW, 480.51),
+            (fld.D_INDUSTRY_CLOSE, 485.98),
             (fld.D_INDUSTRY_VOLUME, 511827513),
             (fld.D_INDUSTRY_VALUE, 8342552775.82),
             (fld.D_INDUSTRY_MKT_PE, 26.45),
