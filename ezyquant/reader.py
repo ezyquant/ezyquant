@@ -36,7 +36,7 @@ class SETDataReader:
             if not os.path.isfile(self.__sqlite_path):
                 raise InputError(f"{self.__sqlite_path} is not found")
 
-            self.is_today_trading_date()
+            self.last_update()
 
     def last_table_update(self, table_name: str) -> date:
         """Last D_TRADE in table.
@@ -55,6 +55,28 @@ class SETDataReader:
         stmt = select([func.max(func.DATE(t.c.D_TRADE))])
         res = self.__engine.execute(stmt).scalar()
         return datetime.strptime(res, "%Y-%m-%d").date()
+
+    def last_update(self) -> date:
+        """Last database update, checking from last D_TRADE in following
+        tables:
+            - DAILY_STOCK_TRADE
+            - DAILY_STOCK_STAT
+            - MKTSTAT_DAILY_INDEX
+            - MKTSTAT_DAILY_MARKET
+            - DAILY_SECTOR_INFO
+
+        Returns
+        -------
+        date
+            last update date
+        """
+        d1 = self.last_table_update("DAILY_STOCK_TRADE")
+        d2 = self.last_table_update("DAILY_STOCK_STAT")
+        d3 = self.last_table_update("MKTSTAT_DAILY_INDEX")
+        d4 = self.last_table_update("MKTSTAT_DAILY_MARKET")
+        d5 = self.last_table_update("DAILY_SECTOR_INFO")
+        assert d1 == d2 == d3 == d4 == d5, "database is not consistent"
+        return d1
 
     def get_trading_dates(
         self, start_date: Optional[date] = None, end_date: Optional[date] = None

@@ -10,12 +10,18 @@ from ezyquant.errors import InputError
 from ezyquant.reader import SETDataReader
 
 
-class TestLastTableUpdate:
-    def test_last_table_update(self, sdr: SETDataReader):
-        # Test
-        result = sdr.last_table_update("MKTSTAT_DAILY_INDEX")
+def test_last_table_update(sdr: SETDataReader):
+    # Test
+    result = sdr.last_table_update("MKTSTAT_DAILY_INDEX")
 
-        assert isinstance(result, date)
+    assert isinstance(result, date)
+
+
+def test_last_update(sdr: SETDataReader):
+    # Test
+    result = sdr.last_update()
+
+    assert isinstance(result, date)
 
 
 class TestGetTradingDates:
