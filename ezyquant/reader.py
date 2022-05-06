@@ -100,10 +100,13 @@ class SETDataReader:
         calendar_t = self._table("CALENDAR")
 
         stmt = select([calendar_t.c.D_TRADE]).order_by(func.DATE(calendar_t.c.D_TRADE))
-        if start_date is not None:
-            stmt = stmt.where(func.DATE(calendar_t.c.D_TRADE) >= start_date)
-        if end_date is not None:
-            stmt = stmt.where(func.DATE(calendar_t.c.D_TRADE) <= end_date)
+
+        self._filter_stmt_by_date(
+            stmt=stmt,
+            column=calendar_t.c.D_TRADE,
+            start_date=start_date,
+            end_date=end_date,
+        )
 
         res = self.__engine.execute(stmt).all()
 
@@ -157,7 +160,7 @@ class SETDataReader:
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, case insensitive, must be unique, by default None
         market : Optional[str]
-            I_MARKET e.g. 'SET', 'MAI', by default None
+            I_MARKET e.g. 'SET', 'mai', by default None
         industry : Optional[str]
             SECTOR.N_INDUSTRY, by default None
         sector : Optional[str]
@@ -212,9 +215,9 @@ class SETDataReader:
             .order_by(security_t.c.I_SECURITY)
         )
 
-        if symbol_list != None:
-            symbol_list = [s.upper() for s in symbol_list]
-            stmt = stmt.where(func.trim(security_t.c.N_SECURITY).in_(symbol_list))
+        stmt = self._filter_str_in_list(
+            stmt=stmt, column=security_t.c.N_SECURITY, values=symbol_list
+        )
         if market != None:
             market = market.upper()
             stmt = stmt.where(security_t.c.I_MARKET == fld.MARKET_MAP_UPPER[market])
@@ -297,9 +300,9 @@ class SETDataReader:
             .order_by(company_t.c.I_COMPANY)
         )
 
-        if symbol_list != None:
-            symbol_list = [s.upper() for s in symbol_list]
-            stmt = stmt.where(func.trim(security_t.c.N_SECURITY).in_(symbol_list))
+        stmt = self._filter_str_in_list(
+            stmt=stmt, column=security_t.c.N_SECURITY, values=symbol_list
+        )
 
         res_df = pd.read_sql(stmt, self.__engine)
         return res_df
@@ -486,10 +489,9 @@ class SETDataReader:
             start_date=start_date,
             end_date=end_date,
         )
-        if ca_type_list != None:
-            if set(ca_type_list) - {"CD", "SD"}:
-                raise InputError("Invalid ca_type_list, ca_type_list must be CD or SD")
-            stmt = stmt.where(rights_benefit_t.c.N_CA_TYPE.in_(ca_type_list))
+        stmt = self._filter_str_in_list(
+            stmt=stmt, column=rights_benefit_t.c.N_CA_TYPE, values=ca_type_list
+        )
 
         res_df = pd.read_sql(stmt, self.__engine)
 
@@ -636,9 +638,9 @@ class SETDataReader:
             start_date=start_date,
             end_date=end_date,
         )
-        if sign_list != None:
-            sign_list = [i.upper() for i in sign_list]
-            stmt = stmt.where(func.trim(sign_posting_t.c.N_SIGN).in_(sign_list))
+        stmt = self._filter_str_in_list(
+            stmt=stmt, column=sign_posting_t.c.N_SIGN, values=sign_list
+        )
 
         res_df = pd.read_sql(stmt, self.__engine)
         return res_df
@@ -866,9 +868,9 @@ class SETDataReader:
             start_date=start_date,
             end_date=end_date,
         )
-        if ca_type_list != None:
-            ca_type_list = [i.upper() for i in ca_type_list]
-            stmt = stmt.where(func.trim(adjust_factor_t.c.N_CA_TYPE).in_(ca_type_list))
+        stmt = self._filter_str_in_list(
+            stmt=stmt, column=adjust_factor_t.c.N_CA_TYPE, values=ca_type_list
+        )
 
         res_df = pd.read_sql(stmt, self.__engine)
 
@@ -947,6 +949,12 @@ class SETDataReader:
             stmt = stmt.where(
                 func.trim(daily_stock_t.c.I_TRADING_METHOD) == "A"
             )  # Auto Matching
+
+        vld.check_start_end_date(
+            start_date=start_date,
+            end_date=end_date,
+            last_update_date=self.last_table_update(daily_stock_t.name),
+        )
         stmt = self._filter_stmt_by_symbol_and_date(
             stmt=stmt,
             symbol_column=security_t.c.N_SECURITY,
@@ -1245,6 +1253,11 @@ class SETDataReader:
             ]
         ).select_from(j)
 
+        vld.check_start_end_date(
+            start_date=start_date,
+            end_date=end_date,
+            last_update_date=self.last_table_update(mktstat_daily_t.name),
+        )
         sql = self._filter_stmt_by_symbol_and_date(
             stmt=sql,
             symbol_column=sector_t.c.N_SECTOR,
@@ -1353,6 +1366,29 @@ class SETDataReader:
     def _table(self, name: str) -> Table:
         return Table(name, self.__metadata, autoload=True)
 
+    def _filter_stmt_by_date(
+        self,
+        stmt: Select,
+        column: Column,
+        start_date: Optional[date],
+        end_date: Optional[date],
+    ):
+        vld.check_start_end_date(start_date, end_date)
+        if start_date != None:
+            stmt = stmt.where(func.DATE(column) >= start_date)
+        if end_date != None:
+            stmt = stmt.where(func.DATE(column) <= end_date)
+        return stmt
+
+    def _filter_str_in_list(
+        self, stmt: Select, column: Column, values: Optional[List[str]]
+    ):
+        vld.check_duplicate(values)
+        if values != None:
+            values = [i.upper() for i in values]
+            stmt = stmt.where(func.upper(func.trim(column)).in_(values))
+        return stmt
+
     def _filter_stmt_by_symbol_and_date(
         self,
         stmt: Select,
@@ -1362,17 +1398,12 @@ class SETDataReader:
         start_date: Optional[date],
         end_date: Optional[date],
     ):
-        vld.check_start_end_date(start_date, end_date)
-        vld.check_duplicate(symbol_list)
-
-        if symbol_list != None:
-            symbol_list = [i.upper() for i in symbol_list]
-            stmt = stmt.where(func.upper(func.trim(symbol_column)).in_(symbol_list))
-        if start_date != None:
-            stmt = stmt.where(func.DATE(date_column) >= start_date)
-        if end_date != None:
-            stmt = stmt.where(func.DATE(date_column) <= end_date)
-
+        stmt = self._filter_str_in_list(
+            stmt=stmt, column=symbol_column, values=symbol_list
+        )
+        stmt = self._filter_stmt_by_date(
+            stmt=stmt, column=date_column, start_date=start_date, end_date=end_date
+        )
         return stmt
 
     def _get_pivot_adjust_factor_df(
@@ -1557,8 +1588,6 @@ class SETDataReader:
             security_t.c.I_SECURITY
         )
 
-        self._d_trade_subquery.cache_clear()
-
         df = pd.read_sql(stmt, self.__engine, parse_dates="trade_date")
 
         # duplicate key mostly I_ACCT_FORM 6,7
@@ -1710,7 +1739,7 @@ class SETDataReader:
         j = self._join_sector_table(daily_sector_info_t)
 
         # N_SECTOR is the industry name in F_DATA = 'I'
-        sql = (
+        stmt = (
             select(
                 [
                     daily_sector_info_t.c.D_TRADE.label("trade_date"),
@@ -1726,8 +1755,13 @@ class SETDataReader:
             .where(sector_t.c.D_CANCEL == None)
         )
 
-        sql = self._filter_stmt_by_symbol_and_date(
-            stmt=sql,
+        vld.check_start_end_date(
+            start_date=start_date,
+            end_date=end_date,
+            last_update_date=self.last_table_update(daily_sector_info_t.name),
+        )
+        stmt = self._filter_stmt_by_symbol_and_date(
+            stmt=stmt,
             symbol_column=sector_t.c.N_SECTOR,
             date_column=daily_sector_info_t.c.D_TRADE,
             symbol_list=sector_list,
@@ -1736,7 +1770,7 @@ class SETDataReader:
         )
 
         df = pd.read_sql(
-            sql, self.__engine, index_col="trade_date", parse_dates="trade_date"
+            stmt, self.__engine, index_col="trade_date", parse_dates="trade_date"
         )
 
         df = df.pivot(columns="sector", values=field)
