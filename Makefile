@@ -1,9 +1,11 @@
 .PHONY: install
 install:
-	pip install -r requirements.txt
+	pip install .
+	pip uninstall ezyquant
 
 .PHONY: test
 test:
+	pip install pytest
 	pytest
 
 .PHONY: format
