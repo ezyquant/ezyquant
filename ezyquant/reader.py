@@ -330,7 +330,6 @@ class SETDataReader:
 
         Examples
         --------
-        >>> from datetime import date
         >>> from ezyquant import SETDataReader
         >>> sdr = SETDataReader("psims.db")
         >>> sdr.get_change_name(["SMG"])
@@ -422,7 +421,6 @@ class SETDataReader:
 
         Examples
         --------
-        >>> from datetime import date
         >>> from ezyquant import SETDataReader
         >>> sdr = SETDataReader("psims.db")
         >>> sdr.get_dividend(["M"])
@@ -517,7 +515,6 @@ class SETDataReader:
 
         Examples
         --------
-        >>> from datetime import date
         >>> from ezyquant import SETDataReader
         >>> sdr = SETDataReader("psims.db")
         >>> sdr.get_delisted(start_date=date(2020, 2, 20), end_date=date(2020, 2, 20))
@@ -594,7 +591,6 @@ class SETDataReader:
 
         Examples
         --------
-        >>> from datetime import date
         >>> from ezyquant import SETDataReader
         >>> sdr = SETDataReader("psims.db")
         >>> sdr.get_sign_posting(symbol_list=["THAI"], start_date=date(2020, 11, 12), end_date=date(2021, 2, 25))
@@ -674,7 +670,6 @@ class SETDataReader:
 
         Examples
         --------
-        >>> from datetime import date
         >>> from ezyquant import SETDataReader
         >>> sdr = SETDataReader("psims.db")
         >>> sdr.get_symbols_by_index(index_list=["SET50"], start_date=date(2022, 1, 4), end_date=date(2022, 1, 4))
@@ -896,7 +891,21 @@ class SETDataReader:
 
         Examples
         --------
-        TODO: examples
+        >>> from ezyquant import SETDataReader
+        >>> from ezyquant import fields as fld
+        >>> sdr = SETDataReader("psims.db")
+        >>> sdr.get_data_symbol_daily(
+        ...    field=fld.D_CLOSE,
+        ...    symbol_list=["COM7", "MALEE"],
+        ...    start_date=date(2022, 1, 1),
+        ...    end_date=date(2022, 1, 10),
+        ... )
+                      COM7  MALEE
+        2022-01-04  41.875   6.55
+        2022-01-05  41.625   6.50
+        2022-01-06  41.500   6.50
+        2022-01-07  41.000   6.40
+        2022-01-10  40.875   6.30
         """
         adjusted_list = list(adjusted_list)  # copy to avoid modify original list
 
@@ -1029,7 +1038,39 @@ class SETDataReader:
 
         Examples
         --------
-        TODO: examples
+        >>> from ezyquant import SETDataReader
+        >>> from ezyquant import fields as fld
+        >>> sdr = SETDataReader("psims.db")
+        >>> sdr.get_data_symbol_quarterly(
+        ...     field=fld.Q_TOTAL_REVENUE,
+        ...     symbol_list=["COM7", "MALEE"],
+        ...     start_date=date(2022, 2, 1),
+        ...     end_date=None,
+        ... )
+                           COM7      MALEE
+        2022-02-01          NaN        NaN
+        2022-02-02          NaN        NaN
+        2022-02-03          NaN        NaN
+        2022-02-04          NaN        NaN
+        2022-02-07          NaN        NaN
+        2022-02-08          NaN        NaN
+        2022-02-09          NaN        NaN
+        2022-02-10          NaN        NaN
+        2022-02-11          NaN        NaN
+        2022-02-14          NaN        NaN
+        2022-02-15          NaN        NaN
+        2022-02-17          NaN        NaN
+        2022-02-18          NaN        NaN
+        2022-02-21          NaN        NaN
+        2022-02-22          NaN        NaN
+        2022-02-23          NaN        NaN
+        2022-02-24          NaN        NaN
+        2022-02-25          NaN        NaN
+        2022-02-28          NaN        NaN
+        2022-03-01          NaN  953995.79
+        2022-03-02          NaN        NaN
+        2022-03-03          NaN        NaN
+        2022-03-04  17573710.66        NaN
         """
         return self._get_fundamental_data(
             symbol_list=symbol_list,
@@ -1074,7 +1115,39 @@ class SETDataReader:
 
         Examples
         --------
-        TODO: examples
+        >>> from ezyquant import SETDataReader
+        >>> from ezyquant import fields as fld
+        >>> sdr = SETDataReader("psims.db")
+        >>> sdr.get_data_symbol_yearly(
+        ...     field=fld.Y_TOTAL_REVENUE,
+        ...     symbol_list=["COM7", "MALEE"],
+        ...     start_date=date(2022, 2, 1),
+        ...     end_date=None,
+        ... )
+                           COM7       MALEE
+        2022-02-01          NaN         NaN
+        2022-02-02          NaN         NaN
+        2022-02-03          NaN         NaN
+        2022-02-04          NaN         NaN
+        2022-02-07          NaN         NaN
+        2022-02-08          NaN         NaN
+        2022-02-09          NaN         NaN
+        2022-02-10          NaN         NaN
+        2022-02-11          NaN         NaN
+        2022-02-14          NaN         NaN
+        2022-02-15          NaN         NaN
+        2022-02-17          NaN         NaN
+        2022-02-18          NaN         NaN
+        2022-02-21          NaN         NaN
+        2022-02-22          NaN         NaN
+        2022-02-23          NaN         NaN
+        2022-02-24          NaN         NaN
+        2022-02-25          NaN         NaN
+        2022-02-28          NaN         NaN
+        2022-03-01          NaN  3488690.79
+        2022-03-02          NaN         NaN
+        2022-03-03          NaN         NaN
+        2022-03-04  51154660.73         NaN
         """
         return self._get_fundamental_data(
             symbol_list=symbol_list,
@@ -1122,7 +1195,39 @@ class SETDataReader:
 
         Examples
         --------
-        TODO: examples
+        >>> from ezyquant import SETDataReader
+        >>> from ezyquant import fields as fld
+        >>> sdr = SETDataReader("psims.db")
+        >>> sdr.get_data_symbol_ttm(
+        ...     field=fld.Q_TOTAL_REVENUE,
+        ...     symbol_list=["COM7", "MALEE"],
+        ...     start_date=date(2022, 2, 1),
+        ...     end_date=None,
+        ... )
+                           COM7       MALEE
+        2022-02-01          NaN         NaN
+        2022-02-02          NaN         NaN
+        2022-02-03          NaN         NaN
+        2022-02-04          NaN         NaN
+        2022-02-07          NaN         NaN
+        2022-02-08          NaN         NaN
+        2022-02-09          NaN         NaN
+        2022-02-10          NaN         NaN
+        2022-02-11          NaN         NaN
+        2022-02-14          NaN         NaN
+        2022-02-15          NaN         NaN
+        2022-02-17          NaN         NaN
+        2022-02-18          NaN         NaN
+        2022-02-21          NaN         NaN
+        2022-02-22          NaN         NaN
+        2022-02-23          NaN         NaN
+        2022-02-24          NaN         NaN
+        2022-02-25          NaN         NaN
+        2022-02-28          NaN         NaN
+        2022-03-01          NaN  3488690.79
+        2022-03-02          NaN         NaN
+        2022-03-03          NaN         NaN
+        2022-03-04  51154660.73         NaN
         """
         return self._get_fundamental_data(
             symbol_list=symbol_list,
@@ -1171,7 +1276,39 @@ class SETDataReader:
 
         Examples
         --------
-        TODO: examples
+        >>> from ezyquant import SETDataReader
+        >>> from ezyquant import fields as fld
+        >>> sdr = SETDataReader("psims.db")
+        >>> sdr.get_data_symbol_ytd(
+        ...     field=fld.Q_TOTAL_REVENUE,
+        ...     symbol_list=["COM7", "MALEE"],
+        ...     start_date=date(2022, 2, 1),
+        ...     end_date=None,
+        ... )
+                           COM7       MALEE
+        2022-02-01          NaN         NaN
+        2022-02-02          NaN         NaN
+        2022-02-03          NaN         NaN
+        2022-02-04          NaN         NaN
+        2022-02-07          NaN         NaN
+        2022-02-08          NaN         NaN
+        2022-02-09          NaN         NaN
+        2022-02-10          NaN         NaN
+        2022-02-11          NaN         NaN
+        2022-02-14          NaN         NaN
+        2022-02-15          NaN         NaN
+        2022-02-17          NaN         NaN
+        2022-02-18          NaN         NaN
+        2022-02-21          NaN         NaN
+        2022-02-22          NaN         NaN
+        2022-02-23          NaN         NaN
+        2022-02-24          NaN         NaN
+        2022-02-25          NaN         NaN
+        2022-02-28          NaN         NaN
+        2022-03-01          NaN  3488690.79
+        2022-03-02          NaN         NaN
+        2022-03-03          NaN         NaN
+        2022-03-04  51154660.73         NaN
         """
         return self._get_fundamental_data(
             symbol_list=symbol_list,
@@ -1210,7 +1347,21 @@ class SETDataReader:
 
         Examples
         --------
-        TODO: examples
+        >>> from ezyquant import SETDataReader
+        >>> from ezyquant import fields as fld
+        >>> sdr = SETDataReader("psims.db")
+        >>> sdr.get_data_index_daily(
+        ...     field=fld.D_INDEX_CLOSE,
+        ...     index_list=[fld.INDEX_SET, fld.INDEX_SET100],
+        ...     start_date=date(2022, 1, 1),
+        ...     end_date=date(2022, 1, 10),
+        ... )
+                        SET   SET100
+        2022-01-04  1670.28  2283.56
+        2022-01-05  1676.79  2291.71
+        2022-01-06  1653.03  2251.78
+        2022-01-07  1657.62  2257.40
+        2022-01-10  1657.06  2256.14
         """
         sector_t = self._table("SECTOR")
 
@@ -1290,7 +1441,21 @@ class SETDataReader:
 
         Examples
         --------
-        TODO: examples
+        >>> from ezyquant import SETDataReader
+        >>> from ezyquant import fields as fld
+        >>> sdr = SETDataReader("psims.db")
+        >>> sdr.get_data_sector_daily(
+        ...     field=fld.D_SECTOR_CLOSE,
+        ...     sector_list=[fld.SECTOR_AGRI, fld.SECTOR_BANK],
+        ...     start_date=date(2022, 1, 1),
+        ...     end_date=date(2022, 1, 10),
+        ... )
+                      AGRI    BANK
+        2022-01-04  296.13  421.31
+        2022-01-05  297.66  423.08
+        2022-01-06  299.85  417.30
+        2022-01-07  300.12  421.00
+        2022-01-10  306.93  423.81
         """
         return self._get_daily_sector_info(
             field=field,
@@ -1331,7 +1496,21 @@ class SETDataReader:
 
         Examples
         --------
-        TODO: examples
+        >>> from ezyquant import SETDataReader
+        >>> from ezyquant import fields as fld
+        >>> sdr = SETDataReader("psims.db")
+        >>> sdr.get_data_industry_daily(
+        ...     field=fld.D_INDUSTRY_CLOSE,
+        ...     industry_list=[fld.INDUSTRY_AGRO, fld.INDUSTRY_CONSUMP],
+        ...     start_date=date(2022, 1, 1),
+        ...     end_date=date(2022, 1, 10),
+        ... )
+                      AGRO  CONSUMP
+        2022-01-04  485.98    92.55
+        2022-01-05  484.98    93.21
+        2022-01-06  482.90    92.96
+        2022-01-07  484.50    93.04
+        2022-01-10  487.10    93.97
         """
         return self._get_daily_sector_info(
             field=field,
