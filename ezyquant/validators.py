@@ -31,9 +31,4 @@ def check_duplicate(data_list: Optional[List[str]]):
     if len(data_list) == len(set(data_list)):
         return
 
-    # get attribute name
-    frame = inspect.getouterframes(inspect.currentframe())[1]
-    code_str = inspect.getframeinfo(frame[0]).code_context[0].strip()  # type: ignore
-    attr_name = re.search(r"\((.*)\)", code_str).group(1)  # type: ignore
-
-    raise InputError(f"{attr_name} was duplicate")
+    raise InputError(f"Input was duplicate ({data_list})")
