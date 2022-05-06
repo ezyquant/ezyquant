@@ -1583,15 +1583,32 @@ class SETDataReader:
         df = df.pivot(index="trade_date", columns="symbol", values="value")
 
         # reindex trade_date
-        if not df.empty:
-            trade_dates = self.get_trading_dates(df.index[0].date(), df.index[-1].date())  # type: ignore
-        else:
-            trade_dates = []
-
-        df = df.reindex(pd.DatetimeIndex(trade_dates))  # type: ignore
+        df = self._reindex_fundamental_data(
+            df=df, start_date=start_date, end_date=end_date
+        )
 
         df.index.name = None
         df.columns.name = None
+
+        return df
+
+    def _reindex_fundamental_data(
+        self,
+        df: pd.DataFrame,
+        start_date: Optional[date],
+        end_date: Optional[date],
+    ) -> pd.DataFrame:
+        if df.empty and (start_date == None or end_date == None):
+            return df
+
+        if start_date == None:
+            start_date = df.index.min().date()
+        if end_date == None:
+            end_date = df.index.max().date()
+
+        trade_dates = self.get_trading_dates(start_date, end_date)
+
+        df = df.reindex(pd.DatetimeIndex(trade_dates))  # type: ignore
 
         return df
 
