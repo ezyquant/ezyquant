@@ -10,6 +10,14 @@ from ezyquant.errors import InputError
 from ezyquant.reader import SETDataReader
 
 
+class TestLastTableUpdate:
+    def test_last_table_update(self, sdr: SETDataReader):
+        # Test
+        result = sdr.last_table_update("MKTSTAT_DAILY_INDEX")
+
+        assert isinstance(result, date)
+
+
 class TestGetTradingDates:
     """source: https://www.bot.or.th/Thai/FinancialInstitutions/FIholiday/Pages/2022.aspx"""
 

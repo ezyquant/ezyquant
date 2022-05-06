@@ -1,5 +1,5 @@
 import os.path
-from datetime import date
+from datetime import date, datetime
 from functools import lru_cache
 from typing import List, Optional
 
@@ -37,6 +37,24 @@ class SETDataReader:
                 raise InputError(f"{self.__sqlite_path} is not found")
 
             self.is_today_trading_date()
+
+    def last_table_update(self, table_name: str) -> date:
+        """Last D_TRADE in table.
+
+        Parameters
+        ----------
+        table_name : str
+            name of table
+
+        Returns
+        -------
+        date
+            last D_TRADE in table
+        """
+        t = self._table(table_name)
+        stmt = select([func.max(func.DATE(t.c.D_TRADE))])
+        res = self.__engine.execute(stmt).scalar()
+        return datetime.strptime(res, "%Y-%m-%d").date()
 
     def get_trading_dates(
         self, start_date: Optional[date] = None, end_date: Optional[date] = None
