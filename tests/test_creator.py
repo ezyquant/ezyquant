@@ -1,7 +1,6 @@
-import numpy as np
 import pandas as pd
 import pytest
-from numpy import nan
+from numpy import inf, nan
 from pandas.testing import assert_frame_equal
 
 import ezyquant.fields as fld
@@ -16,7 +15,7 @@ class TestManipulateDf:
                 pd.DataFrame(
                     {
                         "a": [11, 12, 13, 14, 15, 16, 17, 18, 19],
-                        "b": [21, 22, nan, np.inf, nan, 26, np.inf, nan, 29],
+                        "b": [21, 22, nan, inf, nan, 26, inf, nan, 29],
                         "c": [nan] * 9,
                     }
                 ),
@@ -48,7 +47,7 @@ class TestManipulateDf:
                 pd.DataFrame(
                     {
                         "a": [11, 12, 13, 14, 15, 16, 17, 18, 19],
-                        "b": [21, 22, nan, np.inf, nan, 26, np.inf, nan, 29],
+                        "b": [21, 22, nan, inf, nan, 26, inf, nan, 29],
                         "c": [nan] * 9,
                     }
                 ),
