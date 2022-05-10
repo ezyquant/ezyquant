@@ -1,5 +1,6 @@
 import pytest
 
+from ezyquant.creator import SETSignalCreator
 from ezyquant.reader import SETDataReader
 
 
@@ -11,3 +12,8 @@ def sqlite_path() -> str:
 @pytest.fixture
 def sdr(sqlite_path: str) -> SETDataReader:
     return SETDataReader(sqlite_path)
+
+
+@pytest.fixture
+def ssc() -> SETSignalCreator:
+    return SETSignalCreator()
