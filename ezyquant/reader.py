@@ -1595,7 +1595,7 @@ class SETDataReader:
 
         # reindex trade date
         if not df.empty:
-            max_date = max(max_date, df.index.max())
+            max_date = max(pd.Timestamp(max_date), df.index.max())
         df = df.reindex(
             index=pd.date_range(
                 start=min_date,
