@@ -1768,26 +1768,6 @@ class SETDataReader:
 
         return df
 
-    def _reindex_fundamental_data(
-        self,
-        df: pd.DataFrame,
-        start_date: Optional[date],
-        end_date: Optional[date],
-    ) -> pd.DataFrame:
-        if df.empty and (start_date == None or end_date == None):
-            return df
-
-        if start_date == None:
-            start_date = df.index.min().date()
-        if end_date == None:
-            end_date = df.index.max().date()
-
-        trade_dates = self.get_trading_dates(start_date, end_date)
-
-        df = df.reindex(pd.DatetimeIndex(trade_dates))  # type: ignore
-
-        return df
-
     def _get_financial_screen_stmt(self, period: str, field: str) -> Select:
         PERIOD_DICT = {
             "Q": ("Q1", "Q2", "Q3", "Q4"),
