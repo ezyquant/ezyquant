@@ -1090,9 +1090,6 @@ class TestGetDataSymbolDaily:
 
         # Check
         self._check(result)
-        assert_index_equal(
-            result.index, pd.DatetimeIndex(sdr.get_trading_dates(start_date, end_date))
-        )
 
         assert not result.empty
 
@@ -1226,9 +1223,6 @@ class TestGetDataSymbolDaily:
 
         # Check
         self._check(result)
-        assert_index_equal(
-            result.index, pd.DatetimeIndex(sdr.get_trading_dates(start_date, end_date))
-        )
 
         assert_frame_equal(result, expected)
 
@@ -1321,9 +1315,6 @@ class TestGetDataSymbolQuarterly:
 
         # Check
         self._check(result)
-        assert_index_equal(
-            result.index, pd.DatetimeIndex(sdr.get_trading_dates(start_date, end_date))
-        )
 
         assert not result.empty
 
@@ -1367,9 +1358,6 @@ class TestGetDataSymbolQuarterly:
 
         # Check
         self._check(result)
-        assert_index_equal(
-            result.index, pd.DatetimeIndex(sdr.get_trading_dates(start_date, end_date))
-        )
 
         expected = pd.DataFrame(
             {symbol: expected_list},
@@ -1377,8 +1365,6 @@ class TestGetDataSymbolQuarterly:
                 ["2021-03-01", "2021-05-13", "2021-08-27", "2021-11-12"]
             ),
         )
-
-        trade_dates = sdr.get_trading_dates(start_date, end_date)
 
         assert_frame_equal(result, expected)
 
@@ -1416,9 +1402,6 @@ class TestGetDataSymbolYearly:
 
         # Check
         self._check(result)
-        assert_index_equal(
-            result.index, pd.DatetimeIndex(sdr.get_trading_dates(start_date, end_date))
-        )
 
         assert not result.empty
 
@@ -1454,9 +1437,6 @@ class TestGetDataSymbolYearly:
 
         # Check
         self._check(result)
-        assert_index_equal(
-            result.index, pd.DatetimeIndex(sdr.get_trading_dates(start_date, end_date))
-        )
 
         expected = pd.DataFrame(
             {symbol: expected_list}, index=pd.DatetimeIndex(["2021-03-01"])
@@ -1499,9 +1479,6 @@ class TestGetDataSymbolTtm:
 
         # Check
         self._check(result)
-        assert_index_equal(
-            result.index, pd.DatetimeIndex(sdr.get_trading_dates(start_date, end_date))
-        )
 
         assert not result.empty
 
@@ -1539,9 +1516,6 @@ class TestGetDataSymbolTtm:
 
         # Check
         self._check(result)
-        assert_index_equal(
-            result.index, pd.DatetimeIndex(sdr.get_trading_dates(start_date, end_date))
-        )
 
         expected = pd.DataFrame(
             {symbol: expected_list},
@@ -1549,8 +1523,6 @@ class TestGetDataSymbolTtm:
                 ["2021-03-01", "2021-05-13", "2021-08-27", "2021-11-12"]
             ),
         )
-
-        trade_dates = sdr.get_trading_dates(start_date, end_date)
 
         assert_frame_equal(result, expected)
 
@@ -1586,9 +1558,6 @@ class TestGetDataSymbolYtd:
 
         # Check
         self._check(result)
-        assert_index_equal(
-            result.index, pd.DatetimeIndex(sdr.get_trading_dates(start_date, end_date))
-        )
 
         assert not result.empty
 
@@ -1634,9 +1603,6 @@ class TestGetDataSymbolYtd:
 
         # Check
         self._check(result)
-        assert_index_equal(
-            result.index, pd.DatetimeIndex(sdr.get_trading_dates(start_date, end_date))
-        )
 
         expected = pd.DataFrame(
             {symbol: expected_list},
@@ -1644,8 +1610,6 @@ class TestGetDataSymbolYtd:
                 ["2021-03-01", "2021-05-13", "2021-08-27", "2021-11-12"]
             ),
         )
-
-        trade_dates = sdr.get_trading_dates(start_date, end_date)
 
         assert_frame_equal(result, expected)
 
