@@ -940,7 +940,7 @@ class SETDataReader:
                 ]
             )
             .select_from(j)
-            .order_by(daily_stock_t.c.D_TRADE)
+            .order_by(func.DATE(daily_stock_t.c.D_TRADE))
         )
         if "I_TRADING_METHOD" in daily_stock_t.c:
             stmt = stmt.where(
@@ -1389,7 +1389,7 @@ class SETDataReader:
                 ]
             )
             .select_from(j)
-            .order_by(mktstat_daily_t.c.D_TRADE)
+            .order_by(func.DATE(mktstat_daily_t.c.D_TRADE))
         )
 
         vld.check_start_end_date(
@@ -1748,9 +1748,7 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        stmt = stmt.order_by(d_trade_subquery.c.D_TRADE).order_by(
-            security_t.c.I_SECURITY
-        )
+        stmt = stmt.order_by(func.DATE(d_trade_subquery.c.D_TRADE))
 
         df = pd.read_sql(stmt, self.__engine, parse_dates="trade_date")
 
@@ -1792,7 +1790,7 @@ class SETDataReader:
             .select_from(self._join_security_and_d_trade_subquery(financial_screen_t))
             .where(func.trim(financial_screen_t.c.I_PERIOD_TYPE) == "QY")
             .where(func.trim(financial_screen_t.c.I_PERIOD).in_(PERIOD_DICT[period]))
-            .order_by(d_trade_subquery.c.D_TRADE)
+            .order_by(func.DATE(d_trade_subquery.c.D_TRADE))
         )
 
         return stmt
@@ -1831,7 +1829,7 @@ class SETDataReader:
                 func.trim(financial_stat_std_t.c.N_ACCOUNT)
                 == fld.FINANCIAL_STAT_STD_MAP_COMPACT[field]
             )
-            .order_by(d_trade_subquery.c.D_TRADE)
+            .order_by(func.DATE(d_trade_subquery.c.D_TRADE))
         )
 
         if period == "Y":
@@ -1913,7 +1911,7 @@ class SETDataReader:
             .where(sector_t.c.F_DATA == f_data)
             .where(sector_t.c.I_MARKET == fld.MARKET_MAP_UPPER[market])
             .where(sector_t.c.D_CANCEL == None)
-            .order_by(daily_sector_info_t.c.D_TRADE)
+            .order_by(func.DATE(daily_sector_info_t.c.D_TRADE))
         )
 
         vld.check_start_end_date(
