@@ -1379,7 +1379,6 @@ class TestGetDataSymbolQuarterly:
         )
 
         trade_dates = sdr.get_trading_dates(start_date, end_date)
-        expected = expected.reindex(pd.DatetimeIndex(trade_dates))  # type: ignore
 
         assert_frame_equal(result, expected)
 
@@ -1552,7 +1551,6 @@ class TestGetDataSymbolTtm:
         )
 
         trade_dates = sdr.get_trading_dates(start_date, end_date)
-        expected = expected.reindex(pd.DatetimeIndex(trade_dates))  # type: ignore
 
         assert_frame_equal(result, expected)
 
@@ -1648,7 +1646,6 @@ class TestGetDataSymbolYtd:
         )
 
         trade_dates = sdr.get_trading_dates(start_date, end_date)
-        expected = expected.reindex(pd.DatetimeIndex(trade_dates))  # type: ignore
 
         assert_frame_equal(result, expected)
 

@@ -1763,11 +1763,6 @@ class SETDataReader:
         # pivot dataframe
         df = df.pivot(index="trade_date", columns="symbol", values="value")
 
-        # reindex trade_date
-        df = self._reindex_fundamental_data(
-            df=df, start_date=start_date, end_date=end_date
-        )
-
         df.index.name = None
         df.columns.name = None
 
