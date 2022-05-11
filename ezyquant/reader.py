@@ -613,8 +613,8 @@ class SETDataReader:
                     func.trim(sign_posting_t.c.N_SIGN).label("sign"),
                 ]
             )
-            .order_by(func.DATE(sign_posting_t.c.D_HOLD))
             .select_from(j)
+            .order_by(func.DATE(sign_posting_t.c.D_HOLD))
         )
         stmt = self._filter_stmt_by_symbol_and_date(
             stmt=stmt,
@@ -931,13 +931,17 @@ class SETDataReader:
             security_t, daily_stock_t.c.I_SECURITY == security_t.c.I_SECURITY
         )
 
-        stmt = select(
-            [
-                daily_stock_t.c.D_TRADE.label("trade_date"),
-                func.trim(security_t.c.N_SECURITY).label("symbol"),
-                field_col,
-            ]
-        ).select_from(j)
+        stmt = (
+            select(
+                [
+                    daily_stock_t.c.D_TRADE.label("trade_date"),
+                    func.trim(security_t.c.N_SECURITY).label("symbol"),
+                    field_col,
+                ]
+            )
+            .select_from(j)
+            .order_by(daily_stock_t.c.D_TRADE)
+        )
         if "I_TRADING_METHOD" in daily_stock_t.c:
             stmt = stmt.where(
                 func.trim(daily_stock_t.c.I_TRADING_METHOD) == "A"
@@ -1380,13 +1384,17 @@ class SETDataReader:
 
         j = self._join_sector_table(mktstat_daily_t)
 
-        sql = select(
-            [
-                mktstat_daily_t.c.D_TRADE.label("trade_date"),
-                func.trim(sector_t.c.N_SECTOR).label("index"),
-                field_col.label(field),
-            ]
-        ).select_from(j)
+        sql = (
+            select(
+                [
+                    mktstat_daily_t.c.D_TRADE.label("trade_date"),
+                    func.trim(sector_t.c.N_SECTOR).label("index"),
+                    field_col.label(field),
+                ]
+            )
+            .select_from(j)
+            .order_by(mktstat_daily_t.c.D_TRADE)
+        )
 
         vld.check_start_end_date(
             start_date=start_date,
@@ -1812,6 +1820,7 @@ class SETDataReader:
             .select_from(self._join_security_and_d_trade_subquery(financial_screen_t))
             .where(func.trim(financial_screen_t.c.I_PERIOD_TYPE) == "QY")
             .where(func.trim(financial_screen_t.c.I_PERIOD).in_(PERIOD_DICT[period]))
+            .order_by(d_trade_subquery.c.D_TRADE)
         )
 
         return stmt
@@ -1850,6 +1859,7 @@ class SETDataReader:
                 func.trim(financial_stat_std_t.c.N_ACCOUNT)
                 == fld.FINANCIAL_STAT_STD_MAP_COMPACT[field]
             )
+            .order_by(d_trade_subquery.c.D_TRADE)
         )
 
         if period == "Y":
@@ -1931,6 +1941,7 @@ class SETDataReader:
             .where(sector_t.c.F_DATA == f_data)
             .where(sector_t.c.I_MARKET == fld.MARKET_MAP_UPPER[market])
             .where(sector_t.c.D_CANCEL == None)
+            .order_by(daily_sector_info_t.c.D_TRADE)
         )
 
         vld.check_start_end_date(
