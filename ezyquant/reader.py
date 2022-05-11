@@ -1020,8 +1020,7 @@ class SETDataReader:
         FINANCIAL_STAT_STD using data from column M_ACCOUNT. FINANCIAL_SCREEN
         filter by I_PERIOD_TYPE='QY' and I_PERIOD in ('Q1','Q2','Q3','Q4').
         Index date is trade date (DAILY_STOCK_STAT.D_TRADE). Data is showing at
-        first trade date which join on D_AS_OF. Null data in database will be
-        filled with -inf.
+        first trade date which join on D_AS_OF.
 
         Parameters
         ----------
@@ -1097,8 +1096,7 @@ class SETDataReader:
         FINANCIAL_STAT_STD filter by "I_QUARTER"='9' and using data from column
         M_ACCOUNT. FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and
         I_PERIOD='YE'. Index date is trade date (DAILY_STOCK_STAT.D_TRADE).
-        Data is showing at first trade date which join on D_AS_OF. Null data in
-        database will be filled with -inf.
+        Data is showing at first trade date which join on D_AS_OF.
 
         Parameters
         ----------
@@ -1177,8 +1175,7 @@ class SETDataReader:
         FINANCIAL_SCREEN will be used. FINANCIAL_STAT_STD filter by using data
         from column M_ACC_ACCOUNT_12M. FINANCIAL_SCREEN don't have TTM data.
         Index date is trade date (DAILY_STOCK_STAT.D_TRADE). Data is showing at
-        first trade date which join on D_AS_OF. Null data in database will be
-        filled with -inf.
+        first trade date which join on D_AS_OF.
 
         Parameters
         ----------
@@ -1258,8 +1255,7 @@ class SETDataReader:
         column M_ACC_ACCOUNT. FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and
         I_PERIOD in ('Q1','6M','9M','YE'). Index date is trade date
         (DAILY_STOCK_STAT.D_TRADE). Data is showing at first
-        DAILY_STOCK_STAT.D_TRADE which join on D_AS_OF. Null data in database
-        will be filled with -inf.
+        DAILY_STOCK_STAT.D_TRADE which join on D_AS_OF.
 
         Parameters
         ----------
@@ -1726,6 +1722,7 @@ class SETDataReader:
         symbol_list: Optional[List[str]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
+        fillna_value=None,
     ) -> pd.DataFrame:
         period = period.upper()
         field = field.lower()
@@ -1760,8 +1757,8 @@ class SETDataReader:
         # duplicate key mostly I_ACCT_FORM 6,7
         df = df.drop_duplicates(subset=["trade_date", "symbol"], keep="last")
 
-        # Fill nan with -np.inf
-        df = df.fillna(-np.inf)
+        if fillna_value != None:
+            df = df.fillna(fillna_value)
 
         # pivot dataframe
         df = df.pivot(index="trade_date", columns="symbol", values="value")

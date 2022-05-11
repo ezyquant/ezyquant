@@ -1340,7 +1340,7 @@ class TestGetDataSymbolQuarterly:
                     1.3672515432689933,
                 ],
             ),
-            (fld.Q_GROSS_PROFIT_MARGIN, [-float("inf")] * 4),
+            (fld.Q_GROSS_PROFIT_MARGIN, [-float("nan")] * 4),
             # Balance Sheet
             (fld.Q_CASH, [233127550, 231865550, 185736074, 168533280]),
             # Income Statement
@@ -1428,7 +1428,7 @@ class TestGetDataSymbolYearly:
         [
             # Financial Ratio
             (fld.Q_ROA, [1.6829434061191892]),
-            (fld.Q_GROSS_PROFIT_MARGIN, [-float("inf")]),
+            (fld.Q_GROSS_PROFIT_MARGIN, [-float("nan")]),
             # Balance Sheet
             (fld.Q_CASH, [233127550.0]),
             # Income Statement
@@ -1511,11 +1511,11 @@ class TestGetDataSymbolTtm:
         [
             # Financial Ratio
             # Financial Ratio no TTM can be any result
-            # (fld.Q_ROA, [-float("inf")] * 4),
-            # (fld.Q_GROSS_PROFIT_MARGIN, [-float("inf")] * 4),
+            # (fld.Q_ROA, [-float("nan")] * 4),
+            # (fld.Q_GROSS_PROFIT_MARGIN, [-float("nan")] * 4),
             # Balance Sheet
             # Balance Sheet no TTM can be any result
-            # (fld.Q_CASH, [-float("inf")] * 4),
+            # (fld.Q_CASH, [-float("nan")] * 4),
             # Income Statement
             (fld.Q_TOTAL_REVENUE, [89885610.0, 86495188.0, 84669125.0, 82786475.0]),
             (fld.Q_COS, [23861086.0, 21442714.0, 19895590.0, 18991330.0]),
@@ -1608,10 +1608,10 @@ class TestGetDataSymbolYtd:
             #         1.46001638580354,
             #     ],
             # ),
-            # (fld.Q_GROSS_PROFIT_MARGIN, [-float("inf")] * 4),
+            # (fld.Q_GROSS_PROFIT_MARGIN, [-float("nan")] * 4),
             # Balance Sheet
             # Balance Sheet no YTD can be any result
-            # (fld.Q_CASH, [-float("inf")] * 4),
+            # (fld.Q_CASH, [-float("nan")] * 4),
             # Income Statement
             (fld.Q_TOTAL_REVENUE, [89885610, 21069316, 41039535, 60766625]),
             (fld.Q_COS, [23861086, 4767026, 9418355, 13917921]),
