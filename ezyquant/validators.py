@@ -1,13 +1,12 @@
-from datetime import date
 from typing import List, Optional
 
 from .errors import InputError
 
 
 def check_start_end_date(
-    start_date: Optional[date],
-    end_date: Optional[date],
-    last_update_date: Optional[date] = None,
+    start_date: Optional[str],
+    end_date: Optional[str],
+    last_update_date: Optional[str] = None,
 ):
     if start_date is not None and end_date is not None:
         if start_date > end_date:

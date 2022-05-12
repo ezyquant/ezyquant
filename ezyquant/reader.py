@@ -38,7 +38,7 @@ class SETDataReader:
 
             self.last_update()
 
-    def last_table_update(self, table_name: str) -> date:
+    def last_table_update(self, table_name: str) -> str:
         """Last D_TRADE in table.
 
         Parameters
@@ -48,15 +48,14 @@ class SETDataReader:
 
         Returns
         -------
-        date
-            last D_TRADE in table
+        str
+            string with format YYYY-MM-DD
         """
         t = self._table(table_name)
         stmt = select([func.max(func.DATE(t.c.D_TRADE))])
-        res = self.__engine.execute(stmt).scalar()
-        return datetime.strptime(res, "%Y-%m-%d").date()
+        return self.__engine.execute(stmt).scalar()
 
-    def last_update(self) -> date:
+    def last_update(self) -> str:
         """Last database update, checking from last D_TRADE in following
         tables:
 
@@ -68,8 +67,8 @@ class SETDataReader:
 
         Returns
         -------
-        date
-            last update date
+        str
+            string with format YYYY-MM-DD
         """
         d1 = self.last_table_update("DAILY_STOCK_TRADE")
         d2 = self.last_table_update("DAILY_STOCK_STAT")
@@ -80,21 +79,21 @@ class SETDataReader:
         return d1
 
     def get_trading_dates(
-        self, start_date: Optional[date] = None, end_date: Optional[date] = None
-    ) -> List[date]:
+        self, start_date: Optional[str] = None, end_date: Optional[str] = None
+    ) -> List[str]:
         """Data from table CALENDAR.
 
         Parameters
         ----------
-        start_date : Optional[date]
+        start_date : Optional[str]
             start of D_TRADE, by default None
-        end_date : Optional[date]
+        end_date : Optional[str]
             end of D_TRADE, by default None
 
         Returns
         -------
-        List[date]
-            list of trading dates
+        List[str]
+            list of string with format YYYY-MM-DD
         """
         calendar_t = self._table("CALENDAR")
 
@@ -113,13 +112,13 @@ class SETDataReader:
 
         return [i[0] for i in res]
 
-    def is_trading_date(self, check_date: date) -> bool:
+    def is_trading_date(self, check_date: str) -> bool:
         """Data from table CALENDAR.
 
         Parameters
         ----------
-        check_date : date
-            D_TRADE
+        check_date : str
+            string with format YYYY-MM-DD
 
         Returns
         -------
@@ -145,7 +144,7 @@ class SETDataReader:
         bool
             is today trading date
         """
-        return self.is_trading_date(date.today())
+        return self.is_trading_date(date.today().strftime("%Y-%m-%d"))
 
     def get_symbol_info(
         self,
@@ -307,8 +306,8 @@ class SETDataReader:
     def get_change_name(
         self,
         symbol_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
     ) -> pd.DataFrame:
         """Data from table CHANGE_NAME_SECURITY.
 
@@ -316,9 +315,9 @@ class SETDataReader:
         ----------
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, case insensitive, must be unique, by default None
-        start_date : Optional[date]
+        start_date : Optional[str]
             start of effect_date (D_EFFECT), by default None
-        end_date : Optional[date]
+        end_date : Optional[str]
             end of effect_date (D_EFFECT), by default None
 
         Returns
@@ -388,8 +387,8 @@ class SETDataReader:
     def get_dividend(
         self,
         symbol_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
         ca_type_list: Optional[List[str]] = None,
         adjusted_list: List[str] = ["  ", "CR", "PC", "RC", "SD", "XR"],
     ) -> pd.DataFrame:
@@ -401,9 +400,9 @@ class SETDataReader:
         ----------
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, case insensitive, must be unique, by default None
-        start_date : Optional[date]
+        start_date : Optional[str]
             start of ex_date (D_SIGN), by default None
-        end_date : Optional[date]
+        end_date : Optional[str]
             end of ex_date (D_SIGN), by default None
         ca_type_list : Optional[List[str]]
             Coperatie action type (N_CA_TYPE), by default None
@@ -494,8 +493,8 @@ class SETDataReader:
     def get_delisted(
         self,
         symbol_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
     ) -> pd.DataFrame:
         """Data from table SECURITY_DETAIL. Filter delisted by D_DELISTED !=
         None.
@@ -504,9 +503,9 @@ class SETDataReader:
         ----------
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, case insensitive, must be unique, by default None
-        start_date : Optional[date]
+        start_date : Optional[str]
             start of delisted_date (D_DELISTED), by default None
-        end_date : Optional[date]
+        end_date : Optional[str]
             end of delisted_date (D_DELISTED), by default None
 
         Returns
@@ -559,8 +558,8 @@ class SETDataReader:
     def get_sign_posting(
         self,
         symbol_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
         sign_list: Optional[List[str]] = None,
     ) -> pd.DataFrame:
         """Data from table SIGN_POSTING.
@@ -569,9 +568,9 @@ class SETDataReader:
         ----------
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, case insensitive, must be unique, by default None
-        start_date : Optional[date]
+        start_date : Optional[str]
             start of hold_date (D_HOLD), by default None
-        end_date : Optional[date]
+        end_date : Optional[str]
             end of hold_date (D_HOLD), by default None
         sign_list : Optional[List[str]]
             N_SIGN in sign_list, by default None
@@ -636,8 +635,8 @@ class SETDataReader:
     def get_symbols_by_index(
         self,
         index_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
     ) -> pd.DataFrame:
         """Data from table SECURITY_INDEX.
 
@@ -652,9 +651,9 @@ class SETDataReader:
                 - sSET
                 - SET100
                 - SET50
-        start_date : Optional[date]
+        start_date : Optional[str]
             start of as_of_date (D_AS_OF), by default None
-        end_date : Optional[date]
+        end_date : Optional[str]
             end of as_of_date (D_AS_OF), by default None
 
         Returns
@@ -784,8 +783,8 @@ class SETDataReader:
     def get_adjust_factor(
         self,
         symbol_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
         ca_type_list: Optional[List[str]] = None,
     ) -> pd.DataFrame:
         """Data from table ADJUST_FACTOR.
@@ -794,9 +793,9 @@ class SETDataReader:
         ----------
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, case insensitive, must be unique, by default None
-        start_date : Optional[date]
+        start_date : Optional[str]
             start of effect_date (D_EFFECT), by default None
-        end_date : Optional[date]
+        end_date : Optional[str]
             end of effect_date (D_EFFECT), by default None
         ca_type_list : Optional[List[str]]
             Coperatie action type (N_CA_TYPE), by default None
@@ -863,8 +862,8 @@ class SETDataReader:
         self,
         field: str,
         symbol_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
         adjusted_list: List[str] = ["  ", "CR", "PC", "RC", "SD", "XR"],
     ) -> pd.DataFrame:
         """Data from table DAILY_STOCK_TRADE, DAILY_STOCK_STAT. Filter only
@@ -878,9 +877,9 @@ class SETDataReader:
             Filed of data, case insensitive e.g. 'open', 'high', 'low', 'close', 'volume'. More fields can be found in ezyquant.fields
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, case insensitive, must be unique, by default None
-        start_date : Optional[date]
+        start_date : Optional[str]
             start of trade_date (D_TRADE), by default None
-        end_date : Optional[date]
+        end_date : Optional[str]
             end of trade_date (D_TRADE), by default None
         adjusted_list : List[str]
             Adjust data by ca_type, empty list for no adjust, by default ["  ", "CR", "PC", "RC", "SD", "XR"]
@@ -1014,8 +1013,8 @@ class SETDataReader:
         self,
         field: str,
         symbol_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
     ) -> pd.DataFrame:
         """Data from tables FINANCIAL_STAT_STD and FINANCIAL_SCREEN. If field
         is in both table, the data from FINANCIAL_STAT_STD will be used.
@@ -1030,9 +1029,9 @@ class SETDataReader:
             Filed of data, case insensitive e.g. 'roe', 'roa', 'eps'. More fields can be found in ezyquant.fields
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, case insensitive, must be unique, by default None
-        start_date : Optional[date]
+        start_date : Optional[str]
             start of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
-        end_date : Optional[date]
+        end_date : Optional[str]
             end of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
 
         Returns
@@ -1090,8 +1089,8 @@ class SETDataReader:
         self,
         field: str,
         symbol_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
     ) -> pd.DataFrame:
         """Data from table FINANCIAL_STAT_STD and FINANCIAL_SCREEN. If field is
         in both table, the data from FINANCIAL_STAT_STD will be used.
@@ -1106,9 +1105,9 @@ class SETDataReader:
             Filed of data, case insensitive e.g. 'roe', 'roa', 'eps'. More fields can be found in ezyquant.fields
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, case insensitive, must be unique, by default None
-        start_date : Optional[date]
+        start_date : Optional[str]
             start of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
-        end_date : Optional[date]
+        end_date : Optional[str]
             end of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
 
         Returns
@@ -1166,8 +1165,8 @@ class SETDataReader:
         self,
         field: str,
         symbol_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
     ) -> pd.DataFrame:
         """Trailing 12 months (TTM) is a term used to describe the past 12
         consecutive months of a company's performance data. TTM can be
@@ -1185,9 +1184,9 @@ class SETDataReader:
             Filed of data, case insensitive e.g. 'roe', 'roa', 'eps'. More fields can be found in ezyquant.fields
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, case insensitive, must be unique, by default None
-        start_date : Optional[date]
+        start_date : Optional[str]
             start of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
-        end_date : Optional[date]
+        end_date : Optional[str]
             end of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
 
         Returns
@@ -1245,8 +1244,8 @@ class SETDataReader:
         self,
         field: str,
         symbol_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
     ) -> pd.DataFrame:
         """Year to date (YTD) refers to the period of time beginning the first
         day of the current calendar year or fiscal year up to the current date.
@@ -1265,9 +1264,9 @@ class SETDataReader:
             Filed of data, case insensitive e.g. 'roe', 'roa', 'eps'. More fields can be found in ezyquant.fields
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, case insensitive, must be unique, by default None
-        start_date : Optional[date]
+        start_date : Optional[str]
             start of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
-        end_date : Optional[date]
+        end_date : Optional[str]
             end of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
 
         Returns
@@ -1325,8 +1324,8 @@ class SETDataReader:
         self,
         field: str,
         index_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
     ) -> pd.DataFrame:
         """Data from table MKTSTAT_DAILY_INDEX, MKTSTAT_DAILY_MARKET.
 
@@ -1336,9 +1335,9 @@ class SETDataReader:
             Filed of data, case insensitive e.g. 'high', 'low', 'close'. More fields can be found in ezyquant.fields
         index_list : Optional[List[str]]
             N_SECTOR in index_list, case insensitive, by default None. More index can be found in ezyquant.fields
-        start_date : Optional[date]
+        start_date : Optional[str]
             start of trade_date (D_TRADE), by default None
-        end_date : Optional[date]
+        end_date : Optional[str]
             end of trade_date (D_TRADE), by default None
 
         Returns
@@ -1423,8 +1422,8 @@ class SETDataReader:
         field: str,
         market: str = fld.MARKET_SET,
         sector_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
     ) -> pd.DataFrame:
         """Data from table DAILY_SECTOR_INFO. Filter only sector data.
 
@@ -1436,9 +1435,9 @@ class SETDataReader:
             I_MARKET e.g. 'SET', 'mai', by default 'SET'
         sector_list : Optional[List[str]]
             N_SECTOR in sector_list, case insensitive, by default None. More sector can be found in ezyquant.fields
-        start_date : Optional[date]
+        start_date : Optional[str]
             start of trade_date (D_TRADE), by default None
-        end_date : Optional[date]
+        end_date : Optional[str]
             end of trade_date (D_TRADE), by default None
 
         Returns
@@ -1480,8 +1479,8 @@ class SETDataReader:
         field: str,
         market: str = fld.MARKET_SET,
         industry_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
     ) -> pd.DataFrame:
         """Data from table DAILY_SECTOR_INFO. Filter only industry data.
 
@@ -1493,9 +1492,9 @@ class SETDataReader:
             I_MARKET e.g. 'SET', 'mai', by default 'SET'
         industry_list : Optional[List[str]]
             N_SECTOR in industry_list, case insensitive, by default None. More industry can be found in ezyquant.fields
-        start_date : Optional[date]
+        start_date : Optional[str]
             start of trade_date (D_TRADE), by default None
-        end_date : Optional[date]
+        end_date : Optional[str]
             end of trade_date (D_TRADE), by default None
 
         Returns
@@ -1543,18 +1542,15 @@ class SETDataReader:
         self,
         stmt: Select,
         column: Column,
-        start_date: Optional[date],
-        end_date: Optional[date],
+        start_date: Optional[str],
+        end_date: Optional[str],
     ):
-        s = pd.Timestamp(start_date) if start_date else None
-        e = pd.Timestamp(end_date) if end_date else None
+        vld.check_start_end_date(start_date, end_date)
 
-        vld.check_start_end(s, e)
-
-        if s != None:
-            stmt = stmt.where(func.DATE(column) >= func.DATE(s.strftime("%Y-%m-%d")))
-        if e != None:
-            stmt = stmt.where(func.DATE(column) <= func.DATE(e.strftime("%Y-%m-%d")))
+        if start_date != None:
+            stmt = stmt.where(func.DATE(column) >= func.DATE(start_date))
+        if end_date != None:
+            stmt = stmt.where(func.DATE(column) <= func.DATE(end_date))
 
         return stmt
 
@@ -1573,8 +1569,8 @@ class SETDataReader:
         symbol_column: Column,
         date_column: Column,
         symbol_list: Optional[List[str]],
-        start_date: Optional[date],
-        end_date: Optional[date],
+        start_date: Optional[str],
+        end_date: Optional[str],
     ):
         stmt = self._filter_str_in_list(
             stmt=stmt, column=symbol_column, values=symbol_list
@@ -1589,7 +1585,7 @@ class SETDataReader:
         min_date: date,
         max_date: date,
         symbol_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
+        start_date: Optional[str] = None,
         ca_type_list: Optional[List[str]] = None,
     ) -> pd.DataFrame:
         df = self.get_adjust_factor(
@@ -1629,7 +1625,7 @@ class SETDataReader:
         self,
         df: pd.DataFrame,
         is_multiply: bool = True,
-        start_adjust_date: Optional[date] = None,
+        start_adjust_date: Optional[str] = None,
         adjusted_list: Optional[List[str]] = None,
     ) -> pd.DataFrame:
         """Adjust dataframe by adjust_factor.
@@ -1640,7 +1636,7 @@ class SETDataReader:
             index must be trade_date and columns must be symbol
         is_multiply : bool, optional
             is multiply by adjust factor (adjust factor usually less than 1), by default True
-        start_adjust_date : Optional[date], optional
+        start_adjust_date : Optional[str], optional
             start of get adjust factor effect date, by default None
         adjusted_list : Optional[List[str]], optional
             n_ca_type list, by default None
@@ -1682,7 +1678,7 @@ class SETDataReader:
     def _merge_adjust_factor_dividend(
         self,
         df: pd.DataFrame,
-        start_adjust_date: Optional[date] = None,
+        start_adjust_date: Optional[str] = None,
         adjusted_list: Optional[List[str]] = None,
     ) -> pd.DataFrame:
         if df.empty:
@@ -1727,8 +1723,8 @@ class SETDataReader:
         period: str,
         field: str,
         symbol_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
         fillna_value=None,
     ) -> pd.DataFrame:
         period = period.upper()
@@ -1889,8 +1885,8 @@ class SETDataReader:
         self,
         field: str,
         sector_list: Optional[List[str]],
-        start_date: Optional[date],
-        end_date: Optional[date],
+        start_date: Optional[str],
+        end_date: Optional[str],
         market: str,
         f_data: str,
     ) -> pd.DataFrame:
