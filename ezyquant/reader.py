@@ -339,7 +339,7 @@ class SETDataReader:
            symbol_id symbol effect_date symbol_old symbol_new
         0        220    SMG  2006-07-31        SMG      SCSMG
         1        220    SMG  2014-08-28      SCSMG        SMG
-        >>> sdr.get_change_name(start_date=date(2014, 8, 28), end_date=date(2014, 8, 29))
+        >>> sdr.get_change_name(start_date="2014-08-28", end_date="2014-08-29")
            symbol_id    symbol effect_date  symbol_old symbol_new
         0        220       SMG  2014-08-28       SCSMG        SMG
         1        221     SMG-F  2014-08-28     SCSMG-F      SMG-F
@@ -444,7 +444,7 @@ class SETDataReader:
         13      M  2020-08-24  2020-09-10      CD  0.5
         14      M  2021-05-10  2021-05-25      CD  0.5
         15      M  2022-05-10  2022-05-25      CD  0.8
-        >>> sdr.get_dividend(["M"], start_date=date(2020, 7, 28), end_date=date(2022, 5, 11))
+        >>> sdr.get_dividend(["M"], start_date="2020-07-28", end_date="2022-05-11")
             symbol     ex_date    pay_date ca_type  dps
         0        M  2020-08-24  2020-09-10      CD  0.5
         1        M  2021-05-10  2021-05-25      CD  0.5
@@ -520,7 +520,7 @@ class SETDataReader:
         --------
         >>> from ezyquant import SETDataReader
         >>> sdr = SETDataReader("psims.db")
-        >>> sdr.get_delisted(start_date=date(2020, 2, 20), end_date=date(2020, 2, 20))
+        >>> sdr.get_delisted(start_date="2020-02-20", end_date="2020-02-20")
              symbol delisted_date
         0    ROBINS    2020-02-20
         1    KK202A    2020-02-20
@@ -596,7 +596,7 @@ class SETDataReader:
         --------
         >>> from ezyquant import SETDataReader
         >>> sdr = SETDataReader("psims.db")
-        >>> sdr.get_sign_posting(symbol_list=["THAI"], start_date=date(2020, 11, 12), end_date=date(2021, 2, 25))
+        >>> sdr.get_sign_posting(symbol_list=["THAI"], start_date="2020-11-12", end_date="2021-02-25")
           symbol  hold_date sign
         0   THAI 2020-11-12   SP
         1   THAI 2021-02-25   SP
@@ -675,7 +675,7 @@ class SETDataReader:
         --------
         >>> from ezyquant import SETDataReader
         >>> sdr = SETDataReader("psims.db")
-        >>> sdr.get_symbols_by_index(index_list=["SET50"], start_date=date(2022, 1, 4), end_date=date(2022, 1, 4))
+        >>> sdr.get_symbols_by_index(index_list=["SET50"], start_date="2022-01-04", end_date="2022-01-04")
            as_of_date  index  symbol  seq
         0  2022-01-04  SET50     OSP    1
         1  2022-01-04  SET50     CBG    2
@@ -900,8 +900,8 @@ class SETDataReader:
         >>> sdr.get_data_symbol_daily(
         ...    field=fld.D_CLOSE,
         ...    symbol_list=["COM7", "MALEE"],
-        ...    start_date=date(2022, 1, 1),
-        ...    end_date=date(2022, 1, 10),
+        ...    start_date="2022-01-01",
+        ...    end_date="2022-01-10",
         ... )
                       COM7  MALEE
         2022-01-04  41.875   6.55
@@ -1050,7 +1050,7 @@ class SETDataReader:
         >>> sdr.get_data_symbol_quarterly(
         ...     field=fld.Q_TOTAL_REVENUE,
         ...     symbol_list=["COM7", "MALEE"],
-        ...     start_date=date(2022, 2, 1),
+        ...     start_date="2022-02-01",
         ...     end_date=None,
         ... )
                            COM7      MALEE
@@ -1126,7 +1126,7 @@ class SETDataReader:
         >>> sdr.get_data_symbol_yearly(
         ...     field=fld.Y_TOTAL_REVENUE,
         ...     symbol_list=["COM7", "MALEE"],
-        ...     start_date=date(2022, 2, 1),
+        ...     start_date="2022-02-01",
         ...     end_date=None,
         ... )
                            COM7       MALEE
@@ -1205,7 +1205,7 @@ class SETDataReader:
         >>> sdr.get_data_symbol_ttm(
         ...     field=fld.Q_TOTAL_REVENUE,
         ...     symbol_list=["COM7", "MALEE"],
-        ...     start_date=date(2022, 2, 1),
+        ...     start_date="2022-02-01",
         ...     end_date=None,
         ... )
                            COM7       MALEE
@@ -1285,7 +1285,7 @@ class SETDataReader:
         >>> sdr.get_data_symbol_ytd(
         ...     field=fld.Q_TOTAL_REVENUE,
         ...     symbol_list=["COM7", "MALEE"],
-        ...     start_date=date(2022, 2, 1),
+        ...     start_date="2022-02-01",
         ...     end_date=None,
         ... )
                            COM7       MALEE
@@ -1356,8 +1356,8 @@ class SETDataReader:
         >>> sdr.get_data_index_daily(
         ...     field=fld.D_INDEX_CLOSE,
         ...     index_list=[fld.INDEX_SET, fld.INDEX_SET100],
-        ...     start_date=date(2022, 1, 1),
-        ...     end_date=date(2022, 1, 10),
+        ...     start_date="2022-01-01",
+        ...     end_date="2022-01-10",
         ... )
                         SET   SET100
         2022-01-04  1670.28  2283.56
@@ -1456,8 +1456,8 @@ class SETDataReader:
         >>> sdr.get_data_sector_daily(
         ...     field=fld.D_SECTOR_CLOSE,
         ...     sector_list=[fld.SECTOR_AGRI, fld.SECTOR_BANK],
-        ...     start_date=date(2022, 1, 1),
-        ...     end_date=date(2022, 1, 10),
+        ...     start_date="2022-01-01",
+        ...     end_date="2022-01-10",
         ... )
                       AGRI    BANK
         2022-01-04  296.13  421.31
@@ -1513,8 +1513,8 @@ class SETDataReader:
         >>> sdr.get_data_industry_daily(
         ...     field=fld.D_INDUSTRY_CLOSE,
         ...     industry_list=[fld.INDUSTRY_AGRO, fld.INDUSTRY_CONSUMP],
-        ...     start_date=date(2022, 1, 1),
-        ...     end_date=date(2022, 1, 10),
+        ...     start_date="2022-01-01",
+        ...     end_date="2022-01-10",
         ... )
                       AGRO  CONSUMP
         2022-01-04  485.98    92.55
