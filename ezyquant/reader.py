@@ -1599,7 +1599,7 @@ class SETDataReader:
         df = df.pivot(index="effect_date", columns="symbol", values="adjust_factor")
 
         # reverse cumulate product adjust factor
-        df = df.iloc[::-1].cumprod(skipna=True).iloc[::-1]  # type: ignore
+        df = df.iloc[::-1].cumprod(skipna=True).iloc[::-1]
 
         # reindex trade date
         if not df.empty:
@@ -1610,8 +1610,8 @@ class SETDataReader:
                 end=max_date,
                 normalize=True,
                 name="effect_date",
-            ),
-            columns=symbol_list,
+            ),  # type: ignore
+            columns=symbol_list,  # type: ignore
         )
 
         # shift back 1 day
@@ -1755,7 +1755,7 @@ class SETDataReader:
         stmt = stmt.order_by(func.DATE(d_trade_subquery.c.D_TRADE))
 
         df = pd.read_sql_query(
-            stmt, self.__engine, parse_dates="trade_date", dtype={"value": np.float64}
+            stmt, self.__engine, parse_dates="trade_date", dtype={"value": np.float64}  # type: ignore
         )
 
         # duplicate key mostly I_ACCT_FORM 6,7
