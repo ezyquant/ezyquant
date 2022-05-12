@@ -1,4 +1,3 @@
-from datetime import date
 from typing import List, Optional
 
 import pandas as pd
@@ -14,14 +13,14 @@ def test_last_table_update(sdr: SETDataReader):
     # Test
     result = sdr.last_table_update("MKTSTAT_DAILY_INDEX")
 
-    assert isinstance(result, date)
+    assert isinstance(result, str)
 
 
 def test_last_update(sdr: SETDataReader):
     # Test
     result = sdr.last_update()
 
-    assert isinstance(result, date)
+    assert isinstance(result, str)
 
 
 class TestGetTradingDates:
@@ -34,18 +33,18 @@ class TestGetTradingDates:
         # Check
         assert isinstance(result, list)
         assert len(result) > 0
-        assert isinstance(result[0], date)
+        assert isinstance(result[0], str)
 
     @pytest.mark.parametrize(
         ("start_date", "expect_first_date"),
         [
-            (date(2022, 1, 1), date(2022, 1, 4)),
-            (date(2022, 1, 4), date(2022, 1, 4)),
-            (date(2022, 1, 5), date(2022, 1, 5)),
+            ("2022-01-01", "2022-01-04"),
+            ("2022-01-04", "2022-01-04"),
+            ("2022-01-05", "2022-01-05"),
         ],
     )
     def test_start_date(
-        self, sdr: SETDataReader, start_date: date, expect_first_date: date
+        self, sdr: SETDataReader, start_date: str, expect_first_date: str
     ):
         # Test
         result = sdr.get_trading_dates(start_date=start_date)
@@ -53,46 +52,46 @@ class TestGetTradingDates:
         # Check
         assert isinstance(result, list)
         assert len(result) > 0
-        assert isinstance(result[0], date)
+        assert isinstance(result[0], str)
         assert result[0] == expect_first_date
 
     @pytest.mark.parametrize(
         ("end_date", "expect_last_date"),
         [
-            (date(2022, 1, 6), date(2022, 1, 6)),
-            (date(2022, 1, 7), date(2022, 1, 7)),
-            (date(2022, 1, 8), date(2022, 1, 7)),
-            (date(2022, 1, 9), date(2022, 1, 7)),
-            (date(2022, 12, 12), date(2022, 12, 9)),
+            ("2022-01-06", "2022-01-06"),
+            ("2022-01-07", "2022-01-07"),
+            ("2022-01-08", "2022-01-07"),
+            ("2022-01-09", "2022-01-07"),
+            ("2022-12-12", "2022-12-09"),
         ],
     )
-    def test_end_date(self, sdr: SETDataReader, end_date: date, expect_last_date: date):
+    def test_end_date(self, sdr: SETDataReader, end_date: str, expect_last_date: str):
         # Test
         result = sdr.get_trading_dates(end_date=end_date)
 
         # Check
         assert isinstance(result, list)
         assert len(result) > 0
-        assert isinstance(result[0], date)
+        assert isinstance(result[0], str)
         assert result[-1] == expect_last_date
 
     @pytest.mark.parametrize(
         ("start_date", "end_date", "expect_dates"),
         [
-            (date(2022, 1, 1), date(2022, 1, 4), [date(2022, 1, 4)]),
-            (date(2022, 1, 3), date(2022, 1, 4), [date(2022, 1, 4)]),
-            (date(2022, 1, 4), date(2022, 1, 4), [date(2022, 1, 4)]),
-            (date(2022, 1, 1), date(2022, 1, 5), [date(2022, 1, 4), date(2022, 1, 5)]),
-            (date(2022, 1, 3), date(2022, 1, 5), [date(2022, 1, 4), date(2022, 1, 5)]),
-            (date(2022, 1, 4), date(2022, 1, 5), [date(2022, 1, 4), date(2022, 1, 5)]),
+            ("2022-01-01", "2022-01-04", ["2022-01-04"]),
+            ("2022-01-03", "2022-01-04", ["2022-01-04"]),
+            ("2022-01-04", "2022-01-04", ["2022-01-04"]),
+            ("2022-01-01", "2022-01-05", ["2022-01-04", "2022-01-05"]),
+            ("2022-01-03", "2022-01-05", ["2022-01-04", "2022-01-05"]),
+            ("2022-01-04", "2022-01-05", ["2022-01-04", "2022-01-05"]),
         ],
     )
     def test_start_end_date(
         self,
         sdr: SETDataReader,
-        start_date: date,
-        end_date: date,
-        expect_dates: List[date],
+        start_date: str,
+        end_date: str,
+        expect_dates: List[str],
     ):
         # Test
         result = sdr.get_trading_dates(start_date=start_date, end_date=end_date)
@@ -103,11 +102,11 @@ class TestGetTradingDates:
     @pytest.mark.parametrize(
         ("start_date", "end_date"),
         [
-            (date(2022, 1, 1), date(2022, 1, 1)),
-            (date(2022, 1, 3), date(2022, 1, 3)),
+            ("2022-01-01", "2022-01-01"),
+            ("2022-01-03", "2022-01-03"),
         ],
     )
-    def test_empty(self, sdr: SETDataReader, start_date: date, end_date: date):
+    def test_empty(self, sdr: SETDataReader, start_date: str, end_date: str):
         # Test
         result = sdr.get_trading_dates(start_date=start_date, end_date=end_date)
 
@@ -115,10 +114,10 @@ class TestGetTradingDates:
         assert isinstance(result, list)
         assert len(result) == 0
 
-    @pytest.mark.parametrize(
-        ("start_date", "end_date"), [(date(2022, 1, 2), date(2022, 1, 1))]
-    )
-    def test_invalid_date(self, sdr: SETDataReader, start_date: date, end_date: date):
+    @pytest.mark.parametrize(("start_date", "end_date"), [("2022-01-02", "2022-01-01")])
+    def test_invalid_start_after_end(
+        self, sdr: SETDataReader, start_date: str, end_date: str
+    ):
         # Test
         with pytest.raises(InputError):
             sdr.get_trading_dates(start_date=start_date, end_date=end_date)
@@ -127,21 +126,21 @@ class TestGetTradingDates:
 @pytest.mark.parametrize(
     ("check_date", "expected"),
     [
-        (date(2022, 1, 1), False),
-        (date(2022, 1, 2), False),
-        (date(2022, 1, 3), False),
-        (date(2022, 1, 4), True),
-        (date(2022, 1, 5), True),
-        (date(2022, 1, 6), True),
-        (date(2022, 1, 7), True),
-        (date(2022, 1, 8), False),
-        (date(2022, 1, 9), False),
-        (date(2022, 1, 10), True),
-        (date(2022, 12, 9), True),
-        (date(2022, 12, 12), False),
+        ("2022-01-01", False),
+        ("2022-01-02", False),
+        ("2022-01-03", False),
+        ("2022-01-04", True),
+        ("2022-01-05", True),
+        ("2022-01-06", True),
+        ("2022-01-07", True),
+        ("2022-01-08", False),
+        ("2022-01-09", False),
+        ("2022-01-10", True),
+        ("2022-12-09", True),
+        ("2022-12-12", False),
     ],
 )
-def test_is_trading_date(sdr: SETDataReader, check_date: date, expected: bool):
+def test_is_trading_date(sdr: SETDataReader, check_date: str, expected: bool):
     # Test
     result = sdr.is_trading_date(check_date)
 
@@ -419,14 +418,14 @@ class TestGetChangeName:
         assert not result.empty
 
     @pytest.mark.parametrize("symbol_list", [["TTB"], ["ttb"]])
-    @pytest.mark.parametrize("start_date", [date(2021, 5, 12), None])
-    @pytest.mark.parametrize("end_date", [date(2021, 5, 12), None])
+    @pytest.mark.parametrize("start_date", ["2021-05-12", None])
+    @pytest.mark.parametrize("end_date", ["2021-05-12", None])
     def test_one(
         self,
         sdr: SETDataReader,
         symbol_list: List[str],
-        start_date: Optional[date],
-        end_date: Optional[date],
+        start_date: Optional[str],
+        end_date: Optional[str],
     ):
         # Test
         result = sdr.get_change_name(
@@ -498,15 +497,15 @@ class TestGetDividend:
         assert not result.empty
 
     @pytest.mark.parametrize("symbol_list", [["PTC"], ["ptc"]])
-    @pytest.mark.parametrize("start_date", [date(2022, 3, 15), None])
-    @pytest.mark.parametrize("end_date", [date(2022, 3, 15), None])
+    @pytest.mark.parametrize("start_date", ["2022-03-15", None])
+    @pytest.mark.parametrize("end_date", ["2022-03-15", None])
     @pytest.mark.parametrize("ca_type_list", [["CD"], None])
     def test_one(
         self,
         sdr: SETDataReader,
         symbol_list: Optional[List[str]],
-        start_date: Optional[date],
-        end_date: Optional[date],
+        start_date: Optional[str],
+        end_date: Optional[str],
         ca_type_list: Optional[List[str]],
     ):
         # Test
@@ -541,7 +540,7 @@ class TestGetDividend:
         """source: https://www.tradingview.com/chart/?symbol=SET:COM7"""
         # Test
         result = sdr.get_dividend(
-            ["COM7"], ca_type_list=["CD"], start_date=date(2020, 1, 1)
+            ["COM7"], ca_type_list=["CD"], start_date="2020-01-01"
         )
 
         # Check
@@ -684,14 +683,14 @@ class TestGetDelisted:
         assert not result.empty
 
     @pytest.mark.parametrize("symbol_list", [["ROBINS"], ["robins"]])
-    @pytest.mark.parametrize("start_date", [date(2020, 2, 20), None])
-    @pytest.mark.parametrize("end_date", [date(2020, 2, 20), None])
+    @pytest.mark.parametrize("start_date", ["2020-02-20", None])
+    @pytest.mark.parametrize("end_date", ["2020-02-20", None])
     def test_one(
         self,
         sdr: SETDataReader,
         symbol_list: Optional[List[str]],
-        start_date: Optional[date],
-        end_date: Optional[date],
+        start_date: Optional[str],
+        end_date: Optional[str],
     ):
         # Test
         result = sdr.get_delisted(
@@ -751,15 +750,15 @@ class TestGetSignPosting:
         assert not result.empty
 
     @pytest.mark.parametrize("symbol_list", [["TAPAC"], ["tapac"]])
-    @pytest.mark.parametrize("start_date", [date(2022, 1, 5), None])
-    @pytest.mark.parametrize("end_date", [date(2022, 1, 5), None])
+    @pytest.mark.parametrize("start_date", ["2022-01-05", None])
+    @pytest.mark.parametrize("end_date", ["2022-01-05", None])
     @pytest.mark.parametrize("sign_list", [["SP"], ["sp"], None])
     def test_one(
         self,
         sdr: SETDataReader,
         symbol_list: Optional[List[str]],
-        start_date: Optional[date],
-        end_date: Optional[date],
+        start_date: Optional[str],
+        end_date: Optional[str],
         sign_list: Optional[List[str]],
     ):
         # Test
@@ -840,14 +839,14 @@ class TestGetSymbolsByIndex:
         assert not result.empty
 
     @pytest.mark.parametrize("index_list", [["SET50"], ["set50"]])
-    @pytest.mark.parametrize("start_date", [date(2012, 1, 3), date(2012, 1, 4)])
-    @pytest.mark.parametrize("end_date", [date(2012, 1, 4), date(2012, 1, 5)])
+    @pytest.mark.parametrize("start_date", ["2012-01-03", "2012-01-04"])
+    @pytest.mark.parametrize("end_date", ["2012-01-04", "2012-01-05"])
     def test_filter(
         self,
         sdr: SETDataReader,
         index_list: Optional[List[str]],
-        start_date: Optional[date],
-        end_date: Optional[date],
+        start_date: Optional[str],
+        end_date: Optional[str],
     ):
         # Test
         result = sdr.get_symbols_by_index(
@@ -924,14 +923,14 @@ class TestGetSymbolsByIndex:
         )
 
     @pytest.mark.parametrize("index_list", [["sSET"], ["SSET"], ["sset"]])
-    @pytest.mark.parametrize("start_date", [date(2022, 1, 3), date(2022, 1, 4)])
-    @pytest.mark.parametrize("end_date", [date(2022, 1, 4), date(2022, 1, 5)])
+    @pytest.mark.parametrize("start_date", ["2022-01-03", "2022-01-04"])
+    @pytest.mark.parametrize("end_date", ["2022-01-04", "2022-01-05"])
     def test_sset(
         self,
         sdr: SETDataReader,
         index_list: Optional[List[str]],
-        start_date: Optional[date],
-        end_date: Optional[date],
+        start_date: Optional[str],
+        end_date: Optional[str],
     ):
         """sSET is not upper"""
         # Test
@@ -997,15 +996,15 @@ class TestGetAdjustFactor:
         assert not result.empty
 
     @pytest.mark.parametrize("symbol_list", [["COM7"], ["com7"]])
-    @pytest.mark.parametrize("start_date", [date(2022, 3, 11), None])
-    @pytest.mark.parametrize("end_date", [date(2022, 3, 11), None])
+    @pytest.mark.parametrize("start_date", ["2022-03-11", None])
+    @pytest.mark.parametrize("end_date", ["2022-03-11", None])
     @pytest.mark.parametrize("ca_type_list", [["SD"], ["sd"], None])
     def test_one(
         self,
         sdr: SETDataReader,
         symbol_list: Optional[List[str]],
-        start_date: Optional[date],
-        end_date: Optional[date],
+        start_date: Optional[str],
+        end_date: Optional[str],
         ca_type_list: Optional[List[str]],
     ):
         # Test
@@ -1077,8 +1076,8 @@ class TestGetDataSymbolDaily:
     )
     def test_field(self, sdr: SETDataReader, field: str):
         symbol_list = ["COM7"]
-        start_date = date(2022, 3, 10)
-        end_date = date(2022, 3, 10)
+        start_date = "2022-03-10"
+        end_date = "2022-03-10"
 
         # Test
         result = sdr.get_data_symbol_daily(
@@ -1100,8 +1099,8 @@ class TestGetDataSymbolDaily:
                 # adjust close 1 time
                 "close",
                 "COM7",
-                date(2022, 3, 10),
-                date(2022, 3, 14),
+                "2022-03-10",
+                "2022-03-14",
                 True,
                 pd.DataFrame(
                     {"COM7": [41.75, 42.25, 40.75]},
@@ -1116,8 +1115,8 @@ class TestGetDataSymbolDaily:
                 # adjust close 2 time (first)
                 "close",
                 "MALEE",
-                date(2013, 4, 17),
-                date(2013, 4, 19),
+                "2013-04-17",
+                "2013-04-19",
                 True,
                 pd.DataFrame(
                     {"MALEE": [36.75, 37.125, 36.875]},
@@ -1132,8 +1131,8 @@ class TestGetDataSymbolDaily:
                 # adjust close 2 time (last)
                 "close",
                 "MALEE",
-                date(2017, 5, 15),
-                date(2017, 5, 17),
+                "2017-05-15",
+                "2017-05-17",
                 True,
                 pd.DataFrame(
                     {"MALEE": [50.75, 53.25, 54.0]},
@@ -1148,8 +1147,8 @@ class TestGetDataSymbolDaily:
                 # not adjust close
                 "close",
                 "COM7",
-                date(2022, 3, 10),
-                date(2022, 3, 14),
+                "2022-03-10",
+                "2022-03-14",
                 False,
                 pd.DataFrame(
                     {"COM7": [83.50, 42.25, 40.75]},
@@ -1164,8 +1163,8 @@ class TestGetDataSymbolDaily:
                 # adjust volume 1 time
                 "volume",
                 "COM7",
-                date(2022, 3, 10),
-                date(2022, 3, 14),
+                "2022-03-10",
+                "2022-03-14",
                 True,
                 pd.DataFrame(
                     {"COM7": [41811200.0, 35821300.0, 23099500.0]},
@@ -1180,8 +1179,8 @@ class TestGetDataSymbolDaily:
                 # not adjust volume
                 "volume",
                 "COM7",
-                date(2022, 3, 10),
-                date(2022, 3, 14),
+                "2022-03-10",
+                "2022-03-14",
                 False,
                 pd.DataFrame(
                     {"COM7": [20905600.0, 35821300.0, 23099500.0]},
@@ -1199,8 +1198,8 @@ class TestGetDataSymbolDaily:
         sdr: SETDataReader,
         field: str,
         symbol: str,
-        start_date: date,
-        end_date: date,
+        start_date: str,
+        end_date: str,
         is_adjust: bool,
         expected: pd.DataFrame,
     ):
@@ -1263,8 +1262,8 @@ class TestGetDataSymbolDaily:
         result = sdr.get_data_symbol_daily(
             "close",
             symbol_list=symbol_list,
-            start_date=date(2017, 5, 15),
-            end_date=date(2017, 5, 17),
+            start_date="2017-05-15",
+            end_date="2017-05-17",
         )
         print(result)
 
@@ -1302,8 +1301,8 @@ class TestGetDataSymbolQuarterly:
     )
     def test_field(self, sdr: SETDataReader, field: str):
         symbol_list = ["TTB"]
-        start_date = date(2021, 3, 1)
-        end_date = date(2021, 11, 12)
+        start_date = "2021-03-01"
+        end_date = "2021-11-12"
 
         # Test
         result = sdr.get_data_symbol_quarterly(
@@ -1345,8 +1344,8 @@ class TestGetDataSymbolQuarterly:
         self, sdr: SETDataReader, field: str, expected_list: List[float]
     ):
         symbol = "TTB"
-        start_date = date(2021, 3, 1)
-        end_date = date(2021, 11, 12)
+        start_date = "2021-03-01"
+        end_date = "2021-11-12"
 
         # Test
         result = sdr.get_data_symbol_quarterly(
@@ -1389,8 +1388,8 @@ class TestGetDataSymbolYearly:
     )
     def test_field(self, sdr: SETDataReader, field: str):
         symbol_list = ["TTB"]
-        start_date = date(2021, 3, 1)
-        end_date = date(2021, 11, 12)
+        start_date = "2021-03-01"
+        end_date = "2021-11-12"
 
         # Test
         result = sdr.get_data_symbol_yearly(
@@ -1424,8 +1423,8 @@ class TestGetDataSymbolYearly:
         self, sdr: SETDataReader, field: str, expected_list: List[float]
     ):
         symbol = "TTB"
-        start_date = date(2021, 3, 1)
-        end_date = date(2021, 3, 1)
+        start_date = "2021-03-01"
+        end_date = "2021-03-01"
 
         # Test
         result = sdr.get_data_symbol_yearly(
@@ -1466,8 +1465,8 @@ class TestGetDataSymbolTtm:
     )
     def test_field(self, sdr: SETDataReader, field: str):
         symbol_list = ["TTB"]
-        start_date = date(2021, 3, 1)
-        end_date = date(2021, 11, 12)
+        start_date = "2021-03-01"
+        end_date = "2021-11-12"
 
         # Test
         result = sdr.get_data_symbol_ttm(
@@ -1503,8 +1502,8 @@ class TestGetDataSymbolTtm:
         self, sdr: SETDataReader, field: str, expected_list: List[float]
     ):
         symbol = "TTB"
-        start_date = date(2021, 3, 1)
-        end_date = date(2021, 11, 12)
+        start_date = "2021-03-01"
+        end_date = "2021-11-12"
 
         # Test
         result = sdr.get_data_symbol_ttm(
@@ -1545,8 +1544,8 @@ class TestGetDataSymbolYtd:
     )
     def test_field(self, sdr: SETDataReader, field: str):
         symbol_list = ["TTB"]
-        start_date = date(2021, 3, 1)
-        end_date = date(2021, 11, 12)
+        start_date = "2021-03-01"
+        end_date = "2021-11-12"
 
         # Test
         result = sdr.get_data_symbol_ytd(
@@ -1590,8 +1589,8 @@ class TestGetDataSymbolYtd:
         self, sdr: SETDataReader, field: str, expected_list: List[float]
     ):
         symbol = "TTB"
-        start_date = date(2021, 3, 1)
-        end_date = date(2021, 11, 12)
+        start_date = "2021-03-01"
+        end_date = "2021-11-12"
 
         # Test
         result = sdr.get_data_symbol_ytd(
@@ -1657,8 +1656,8 @@ class TestGetDataIndexDaily:
         self, sdr: SETDataReader, index: str, field: str, expected: float
     ):
         """source: https://www.tradingview.com/chart/?symbol=SET:SET"""
-        start_date = date(2022, 1, 4)
-        end_date = date(2022, 1, 4)
+        start_date = "2022-01-04"
+        end_date = "2022-01-04"
 
         # Test
         result = sdr.get_data_index_daily(
@@ -1736,8 +1735,8 @@ class TestGetDataSectorDaily:
     )
     def test_field_with_expected(self, sdr: SETDataReader, field: str, expected: float):
         """source: https://www.tradingview.com/chart/?symbol=SET:AGRI"""
-        start_date = date(2022, 1, 4)
-        end_date = date(2022, 1, 4)
+        start_date = "2022-01-04"
+        end_date = "2022-01-04"
 
         # Test
         result = sdr.get_data_sector_daily(
@@ -1815,8 +1814,8 @@ class TestGetDataIndustryDaily:
     )
     def test_field_with_expected(self, sdr: SETDataReader, field: str, expected: float):
         """source: https://www.tradingview.com/chart/?symbol=SET:AGRO"""
-        start_date = date(2022, 1, 4)
-        end_date = date(2022, 1, 4)
+        start_date = "2022-01-04"
+        end_date = "2022-01-04"
 
         # Test
         result = sdr.get_data_industry_daily(
