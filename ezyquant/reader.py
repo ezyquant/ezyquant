@@ -1583,8 +1583,8 @@ class SETDataReader:
 
     def _get_pivot_adjust_factor_df(
         self,
-        min_date: date,
-        max_date: date,
+        min_date: str,
+        max_date: str,
         symbol_list: Optional[List[str]] = None,
         start_date: Optional[str] = None,
         ca_type_list: Optional[List[str]] = None,
@@ -1603,7 +1603,7 @@ class SETDataReader:
 
         # reindex trade date
         if not df.empty:
-            max_date = max(pd.Timestamp(max_date), df.index.max())
+            max_date = max(max_date, utils.date_to_str(df.index.max()))
         df = df.reindex(
             index=pd.date_range(
                 start=min_date,
@@ -1658,8 +1658,8 @@ class SETDataReader:
             symbol_list = None
 
         adjust_factor_df = self._get_pivot_adjust_factor_df(
-            min_date=df.index.min().date(),
-            max_date=df.index.max().date(),
+            min_date=utils.date_to_str(df.index.min().date()),
+            max_date=utils.date_to_str(df.index.max().date()),
             symbol_list=symbol_list,
             start_date=start_adjust_date,
             ca_type_list=adjusted_list,
@@ -1693,8 +1693,8 @@ class SETDataReader:
             symbol_list = None
 
         adjust_factor_df = self._get_pivot_adjust_factor_df(
-            min_date=df["ex_date"].min().date(),
-            max_date=df["ex_date"].max().date(),
+            min_date=utils.date_to_str(df["ex_date"].min()),
+            max_date=utils.date_to_str(df["ex_date"].max()),
             symbol_list=symbol_list,
             start_date=start_adjust_date,
             ca_type_list=adjusted_list,
