@@ -1,3 +1,5 @@
+from typing import List
+
 import numpy as np
 import pandas as pd
 
@@ -6,8 +8,94 @@ from .reader import SETDataReader
 
 
 class SETSignalCreator:
-    def __init__(self):
-        pass
+    def __init__(
+        self,
+        index_list: List[str],
+        symbol_list: List[str],
+        sector_list: List[str],
+        industry_list: List[str],
+        start_date: str,
+        end_date: str,
+    ):
+        self._index_list = index_list
+        self._symbol_list = symbol_list
+        self._sector_list = sector_list
+        self._industry_list = industry_list
+        self._start_date = start_date
+        self._end_date = end_date
+
+        self._sdr = SETDataReader("psims.db")
+
+    def get_data(
+        self,
+        field: str,
+        timeframe: str,
+        value_by: str,
+        method: str,
+        period: int,
+        shift: int,
+        row_trading_date: bool,
+    ) -> pd.DataFrame:
+        if value_by == fld.VALUE_BY_STOCK:
+            if timeframe == fld.TIMEFRAME_DAILY:
+                df = self._sdr.get_data_symbol_daily(
+                    field=field,
+                    symbol_list=self._symbol_list,
+                    start_date=self._start_date,
+                    end_date=self._end_date,
+                )
+            elif timeframe in (
+                fld.TIMEFRAME_QUARTERLY,
+                fld.TIMEFRAME_YEARLY,
+                fld.TIMEFRAME_TTM,
+                fld.TIMEFRAME_YTD,
+            ):
+                df = self._sdr._get_fundamental_data(
+                    symbol_list=self._symbol_list,
+                    field=field,
+                    start_date=self._start_date,
+                    end_date=self._end_date,
+                    period=timeframe,
+                    fillna_value=np.inf,
+                )
+            else:
+                raise ValueError("Invalid timeframe")
+        elif value_by == fld.VALUE_BY_INDEX:
+            if timeframe == fld.TIMEFRAME_DAILY:
+                df = self._sdr.get_data_index_daily(
+                    field=field,
+                    index_list=self._index_list,
+                    start_date=self._start_date,
+                    end_date=self._end_date,
+                )
+            else:
+                raise ValueError("Invalid timeframe")
+        elif value_by == fld.VALUE_BY_SECTOR:
+            if timeframe == fld.TIMEFRAME_DAILY:
+                df = self._sdr.get_data_sector_daily(
+                    field=field,
+                    sector_list=self._sector_list,
+                    start_date=self._start_date,
+                    end_date=self._end_date,
+                )
+            else:
+                raise ValueError("Invalid timeframe")
+        elif value_by == fld.VALUE_BY_INDUSTRY:
+            if timeframe == fld.TIMEFRAME_DAILY:
+                df = self._sdr.get_data_industry_daily(
+                    field=field,
+                    industry_list=self._industry_list,
+                    start_date=self._start_date,
+                    end_date=self._end_date,
+                )
+            else:
+                raise ValueError("Invalid timeframe")
+        else:
+            raise ValueError("value_by is not supported")
+
+        df = self._manipulate_df(df=df, method=method, period=period, shift=shift)
+
+        return df
 
     @staticmethod
     def _manipulate_df(df: pd.DataFrame, method: str, period: int, shift: int):
