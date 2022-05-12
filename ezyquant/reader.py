@@ -227,7 +227,7 @@ class SETDataReader:
             sector = sector.upper()
             stmt = stmt.where(func.trim(sector_t.c.N_SECTOR) == sector)
 
-        res_df = pd.read_sql(stmt, self.__engine)
+        res_df = pd.read_sql_query(stmt, self.__engine)
 
         map_market = {v: k for k, v in fld.MARKET_MAP.items()}
         res_df["market"] = res_df["market"].replace(map_market)
@@ -301,7 +301,7 @@ class SETDataReader:
             stmt=stmt, column=security_t.c.N_SECURITY, values=symbol_list
         )
 
-        res_df = pd.read_sql(stmt, self.__engine)
+        res_df = pd.read_sql_query(stmt, self.__engine)
         return res_df
 
     def get_change_name(
@@ -381,7 +381,7 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        res_df = pd.read_sql(stmt, self.__engine)
+        res_df = pd.read_sql_query(stmt, self.__engine)
         res_df = res_df.drop_duplicates(ignore_index=True)
         return res_df
 
@@ -485,7 +485,7 @@ class SETDataReader:
             stmt=stmt, column=rights_benefit_t.c.N_CA_TYPE, values=ca_type_list
         )
 
-        res_df = pd.read_sql(stmt, self.__engine)
+        res_df = pd.read_sql_query(stmt, self.__engine)
 
         res_df = self._merge_adjust_factor_dividend(res_df, adjusted_list=adjusted_list)
 
@@ -553,7 +553,7 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        res_df = pd.read_sql(stmt, self.__engine)
+        res_df = pd.read_sql_query(stmt, self.__engine)
         return res_df
 
     def get_sign_posting(
@@ -630,7 +630,7 @@ class SETDataReader:
             stmt=stmt, column=sign_posting_t.c.N_SIGN, values=sign_list
         )
 
-        res_df = pd.read_sql(stmt, self.__engine)
+        res_df = pd.read_sql_query(stmt, self.__engine)
         return res_df
 
     def get_symbols_by_index(
@@ -777,7 +777,7 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        res_df = pd.read_sql(stmt, self.__engine)
+        res_df = pd.read_sql_query(stmt, self.__engine)
 
         return res_df
 
@@ -855,7 +855,7 @@ class SETDataReader:
             stmt=stmt, column=adjust_factor_t.c.N_CA_TYPE, values=ca_type_list
         )
 
-        res_df = pd.read_sql(stmt, self.__engine)
+        res_df = pd.read_sql_query(stmt, self.__engine)
 
         return res_df
 
@@ -963,7 +963,7 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        df = pd.read_sql(
+        df = pd.read_sql_query(
             stmt, self.__engine, index_col="trade_date", parse_dates="trade_date"
         )
 
@@ -1408,7 +1408,7 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        df = pd.read_sql(
+        df = pd.read_sql_query(
             sql, self.__engine, index_col="trade_date", parse_dates="trade_date"
         )
 
@@ -1754,7 +1754,9 @@ class SETDataReader:
 
         stmt = stmt.order_by(func.DATE(d_trade_subquery.c.D_TRADE))
 
-        df = pd.read_sql(stmt, self.__engine, parse_dates="trade_date")
+        df = pd.read_sql_query(
+            stmt, self.__engine, parse_dates="trade_date", dtype={"value": np.float64}
+        )
 
         # duplicate key mostly I_ACCT_FORM 6,7
         df = df.drop_duplicates(subset=["trade_date", "symbol"], keep="last")
@@ -1932,7 +1934,7 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        df = pd.read_sql(
+        df = pd.read_sql_query(
             stmt, self.__engine, index_col="trade_date", parse_dates="trade_date"
         )
 
