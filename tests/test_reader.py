@@ -1332,12 +1332,12 @@ class TestGetDataSymbolQuarterly:
             ),
             (fld.Q_GROSS_PROFIT_MARGIN, [-float("nan")] * 4),
             # Balance Sheet
-            (fld.Q_CASH, [233127550, 231865550, 185736074, 168533280]),
+            (fld.Q_CASH, [233127550.0, 231865550.0, 185736074.0, 168533280.0]),
             # Income Statement
-            (fld.Q_TOTAL_REVENUE, [22019850, 21069316, 19970220, 19727090]),
-            (fld.Q_COS, [5073409, 4767026, 4651329, 4499566]),
+            (fld.Q_TOTAL_REVENUE, [22019850.0, 21069316.0, 19970220.0, 19727090.0]),
+            (fld.Q_COS, [5073409.0, 4767026.0, 4651329.0, 4499566.0]),
             # Cashflow Statement
-            (fld.Q_NET_CASH_FLOW, [3042325, -3732755, -2142246, -1378998]),
+            (fld.Q_NET_CASH_FLOW, [3042325.0, -3732755.0, -2142246.0, -1378998.0]),
         ],
     )
     def test_field_with_expected(
@@ -1579,10 +1579,10 @@ class TestGetDataSymbolYtd:
             # Balance Sheet no YTD can be any result
             # (fld.Q_CASH, [-float("nan")] * 4),
             # Income Statement
-            (fld.Q_TOTAL_REVENUE, [89885610, 21069316, 41039535, 60766625]),
-            (fld.Q_COS, [23861086, 4767026, 9418355, 13917921]),
+            (fld.Q_TOTAL_REVENUE, [89885610.0, 21069316.0, 41039535.0, 60766625.0]),
+            (fld.Q_COS, [23861086.0, 4767026.0, 9418355.0, 13917921.0]),
             # Cashflow Statement
-            (fld.Q_NET_CASH_FLOW, [-1889251, -3732755, -5875001, -7253999]),
+            (fld.Q_NET_CASH_FLOW, [-1889251.0, -3732755.0, -5875001.0, -7253999.0]),
         ],
     )
     def test_field_with_expected(
