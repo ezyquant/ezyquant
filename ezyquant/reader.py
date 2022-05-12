@@ -949,6 +949,11 @@ class SETDataReader:
                 func.trim(daily_stock_t.c.I_TRADING_METHOD) == "A"
             )  # Auto Matching
 
+        vld.check_start_end_date(
+            start_date=start_date,
+            end_date=end_date,
+            last_update_date=self.last_table_update(daily_stock_t.name),
+        )
         stmt = self._filter_stmt_by_symbol_and_date(
             stmt=stmt,
             symbol_column=security_t.c.N_SECURITY,
@@ -1389,6 +1394,11 @@ class SETDataReader:
             .order_by(func.DATE(mktstat_daily_t.c.D_TRADE))
         )
 
+        vld.check_start_end_date(
+            start_date=start_date,
+            end_date=end_date,
+            last_update_date=self.last_table_update(mktstat_daily_t.name),
+        )
         sql = self._filter_stmt_by_symbol_and_date(
             stmt=sql,
             symbol_column=sector_t.c.N_SECTOR,
@@ -1911,6 +1921,11 @@ class SETDataReader:
             .order_by(func.DATE(daily_sector_info_t.c.D_TRADE))
         )
 
+        vld.check_start_end_date(
+            start_date=start_date,
+            end_date=end_date,
+            last_update_date=self.last_table_update(daily_sector_info_t.name),
+        )
         stmt = self._filter_stmt_by_symbol_and_date(
             stmt=stmt,
             symbol_column=sector_t.c.N_SECTOR,
