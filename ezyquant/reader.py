@@ -1250,12 +1250,11 @@ class SETDataReader:
     ) -> pd.DataFrame:
         """Year to date (YTD) refers to the period of time beginning the first
         day of the current calendar year or fiscal year up to the current date.
-        YTD can be calculate only Income Statement and Cashflow, but not
-        Financial Ratio and Balance Sheet. Data from table FINANCIAL_STAT_STD
-        and FINANCIAL_SCREEN. If field is in both table, the data from
-        FINANCIAL_STAT_STD will be used. FINANCIAL_STAT_STD using data from
-        column M_ACC_ACCOUNT. FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and
-        I_PERIOD in ('Q1','6M','9M','YE'). Index date is trade date
+        Data from table FINANCIAL_STAT_STD and FINANCIAL_SCREEN. If field is in
+        both table, the data from FINANCIAL_STAT_STD will be used.
+        FINANCIAL_STAT_STD using data from column M_ACC_ACCOUNT.
+        FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and I_PERIOD in
+        ('Q1','6M','9M','YE'). Index date is trade date
         (DAILY_STOCK_STAT.D_TRADE). Data is showing at first
         DAILY_STOCK_STAT.D_TRADE which join on D_AS_OF.
 
