@@ -15,19 +15,13 @@ def check_start_end_date(
 
     if s is not None and e is not None:
         if s > e:
-            raise InputError(
-                f"Start date {start_date} is greater than end date {end_date}"
-            )
+            raise InputError(f"Start date {s} is greater than end date {e}")
 
     if l is not None:
         if s is not None and s > l:
-            raise InputError(
-                f"Start date {start_date} is greater than last update date {last_update_date}"
-            )
+            raise InputError(f"Start date {s} is greater than last update date {l}")
         if e is not None and e > l:
-            raise InputError(
-                f"End date {end_date} is greater than last update date {last_update_date}"
-            )
+            raise InputError(f"End date {e} is greater than last update date {l}")
 
 
 def check_duplicate(data_list: Optional[List[str]]):
