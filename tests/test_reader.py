@@ -1262,7 +1262,6 @@ class TestGetDataSymbolDaily:
             start_date="2017-05-15",
             end_date="2017-05-17",
         )
-        print(result)
 
         # Check
         self._check(result)

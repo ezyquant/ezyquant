@@ -1,5 +1,5 @@
 import os.path
-from datetime import date, datetime
+from datetime import date
 from functools import lru_cache
 from typing import List, Optional
 
@@ -1751,8 +1751,6 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        stmt = stmt.order_by(func.DATE(d_trade_subquery.c.D_TRADE))
-
         df = pd.read_sql_query(
             stmt, self.__engine, parse_dates="trade_date", dtype={"value": np.float64}  # type: ignore
         )
@@ -1795,7 +1793,6 @@ class SETDataReader:
             .select_from(self._join_security_and_d_trade_subquery(financial_screen_t))
             .where(func.trim(financial_screen_t.c.I_PERIOD_TYPE) == "QY")
             .where(func.trim(financial_screen_t.c.I_PERIOD).in_(PERIOD_DICT[period]))
-            .order_by(func.DATE(d_trade_subquery.c.D_TRADE))
         )
 
         return stmt
@@ -1834,7 +1831,6 @@ class SETDataReader:
                 func.trim(financial_stat_std_t.c.N_ACCOUNT)
                 == fld.FINANCIAL_STAT_STD_MAP_COMPACT[field]
             )
-            .order_by(func.DATE(d_trade_subquery.c.D_TRADE))
         )
 
         if period == "Y":
@@ -1850,10 +1846,12 @@ class SETDataReader:
                 [
                     daily_stock_stat_t.c.I_SECURITY,
                     daily_stock_stat_t.c.D_AS_OF,
-                    func.min(daily_stock_stat_t.c.D_TRADE).label("D_TRADE"),
+                    func.min(func.DATE(daily_stock_stat_t).c.D_TRADE).label("D_TRADE"),
                 ]
             )
-            .group_by(daily_stock_stat_t.c.I_SECURITY, daily_stock_stat_t.c.D_AS_OF)
+            .group_by(
+                daily_stock_stat_t.c.I_SECURITY, func.DATE(daily_stock_stat_t.c.D_AS_OF)
+            )
             .subquery()
         )
 
