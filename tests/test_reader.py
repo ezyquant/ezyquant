@@ -1219,9 +1219,12 @@ class TestGetDataSymbolDaily:
 
         assert_frame_equal(result, expected)
 
-    def test_empty(self, sdr: SETDataReader):
+    @pytest.mark.parametrize(
+        "field", [fld.D_AVERAGE, fld.D_VALUE, fld.D_TURNOVER, fld.D_12M_DVD_YIELD]
+    )
+    def test_empty(self, sdr: SETDataReader, field: str):
         # Test
-        result = sdr.get_data_symbol_daily("close", symbol_list=[])
+        result = sdr.get_data_symbol_daily(field, symbol_list=[])
 
         # Check
         self._check(result)
@@ -1478,7 +1481,6 @@ class TestGetDataSymbolTtm:
     @pytest.mark.parametrize(
         "field",
         [
-            fld.Q_ROE,  # Financial Ratio
             fld.Q_TOTAL_ASSET,  # Balance Sheet
             fld.Q_EBITDA,  # Income Statement
             fld.Q_NET_FINANCING,  # Cashflow Statement
