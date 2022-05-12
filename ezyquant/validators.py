@@ -4,20 +4,16 @@ from typing import List, Optional
 from .errors import InputError
 
 
-def check_start_end_date(
-    start_date: Optional[date],
-    end_date: Optional[date],
-    last_update_date: Optional[date] = None,
-):
-    if start_date is not None and end_date is not None:
-        if start_date > end_date:
-            raise InputError("end_date is after today")
+def check_start_end(start, end, last_update=None):
+    if start is not None and end is not None:
+        if start > end:
+            raise InputError(f"start {start} is after end {end}")
 
-    if last_update_date is not None:
-        if start_date is not None and start_date > last_update_date:
-            raise InputError("start_date is after last_update_date")
-        if end_date is not None and end_date > last_update_date:
-            raise InputError("end_date is after last_update_date")
+    if last_update is not None:
+        if start is not None and start > last_update:
+            raise InputError(f"start {start} is after last update {last_update}")
+        if end is not None and end > last_update:
+            raise InputError(f"end {end} is after last update {last_update}")
 
 
 def check_duplicate(data_list: Optional[List[str]]):

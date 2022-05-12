@@ -98,7 +98,9 @@ class SETDataReader:
         """
         calendar_t = self._table("CALENDAR")
 
-        stmt = select([calendar_t.c.D_TRADE]).order_by(func.DATE(calendar_t.c.D_TRADE))
+        stmt = select([func.DATE(calendar_t.c.D_TRADE)]).order_by(
+            func.DATE(calendar_t.c.D_TRADE)
+        )
 
         stmt = self._filter_stmt_by_date(
             stmt=stmt,
@@ -109,7 +111,7 @@ class SETDataReader:
 
         res = self.__engine.execute(stmt).all()
 
-        return [i[0].date() for i in res]
+        return [i[0] for i in res]
 
     def is_trading_date(self, check_date: date) -> bool:
         """Data from table CALENDAR.
@@ -947,11 +949,6 @@ class SETDataReader:
                 func.trim(daily_stock_t.c.I_TRADING_METHOD) == "A"
             )  # Auto Matching
 
-        vld.check_start_end_date(
-            start_date=start_date,
-            end_date=end_date,
-            last_update_date=self.last_table_update(daily_stock_t.name),
-        )
         stmt = self._filter_stmt_by_symbol_and_date(
             stmt=stmt,
             symbol_column=security_t.c.N_SECURITY,
@@ -1392,11 +1389,6 @@ class SETDataReader:
             .order_by(func.DATE(mktstat_daily_t.c.D_TRADE))
         )
 
-        vld.check_start_end_date(
-            start_date=start_date,
-            end_date=end_date,
-            last_update_date=self.last_table_update(mktstat_daily_t.name),
-        )
         sql = self._filter_stmt_by_symbol_and_date(
             stmt=sql,
             symbol_column=sector_t.c.N_SECTOR,
@@ -1544,11 +1536,16 @@ class SETDataReader:
         start_date: Optional[date],
         end_date: Optional[date],
     ):
-        vld.check_start_end_date(start_date, end_date)
-        if start_date != None:
-            stmt = stmt.where(func.DATE(column) >= start_date)
-        if end_date != None:
-            stmt = stmt.where(func.DATE(column) <= end_date)
+        s = pd.Timestamp(start_date) if start_date else None
+        e = pd.Timestamp(end_date) if end_date else None
+
+        vld.check_start_end(s, e)
+
+        if s != None:
+            stmt = stmt.where(func.DATE(column) >= func.DATE(s.strftime("%Y-%m-%d")))
+        if e != None:
+            stmt = stmt.where(func.DATE(column) <= func.DATE(e.strftime("%Y-%m-%d")))
+
         return stmt
 
     def _filter_str_in_list(
@@ -1914,11 +1911,6 @@ class SETDataReader:
             .order_by(func.DATE(daily_sector_info_t.c.D_TRADE))
         )
 
-        vld.check_start_end_date(
-            start_date=start_date,
-            end_date=end_date,
-            last_update_date=self.last_table_update(daily_sector_info_t.name),
-        )
         stmt = self._filter_stmt_by_symbol_and_date(
             stmt=stmt,
             symbol_column=sector_t.c.N_SECTOR,
