@@ -10,6 +10,7 @@ from sqlalchemy import Column, MetaData, Table, and_, case, func, select
 from sqlalchemy.sql import Select
 
 from . import fields as fld
+from . import utils
 from . import validators as vld
 from .errors import InputError
 
@@ -144,7 +145,7 @@ class SETDataReader:
         bool
             is today trading date
         """
-        return self.is_trading_date(date.today().strftime("%Y-%m-%d"))
+        return self.is_trading_date(utils.date_to_str(date.today()))
 
     def get_symbol_info(
         self,
