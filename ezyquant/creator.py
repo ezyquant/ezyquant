@@ -17,6 +17,7 @@ class SETSignalCreator:
         industry_list: List[str],
         start_date: str,
         end_date: str,
+        sqlite_path: str,
     ):
         self._index_list = index_list
         self._symbol_list = symbol_list
@@ -24,8 +25,9 @@ class SETSignalCreator:
         self._industry_list = industry_list
         self._start_date = start_date
         self._end_date = end_date
+        self._sqlite_path = sqlite_path
 
-        self._sdr = SETDataReader("psims.db")
+        self._sdr = SETDataReader(self._sqlite_path)
 
     def get_data(
         self,
