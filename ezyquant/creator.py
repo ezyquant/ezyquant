@@ -1,3 +1,4 @@
+from functools import lru_cache
 from typing import List
 
 import numpy as np
@@ -37,7 +38,6 @@ class SETSignalCreator:
         method: str,
         period: int,
         shift: int,
-        row_trading_date: bool,
     ) -> pd.DataFrame:
         if value_by == fld.VALUE_BY_STOCK:
             if timeframe == fld.TIMEFRAME_DAILY:
@@ -47,6 +47,32 @@ class SETSignalCreator:
                     start_date=self._start_date,
                     end_date=self._end_date,
                 )
+
+                df = self._reindex_trading_dates(df)
+
+                if field in {
+                    fld.D_PRIOR,
+                    fld.D_OPEN,
+                    fld.D_HIGH,
+                    fld.D_LOW,
+                    fld.D_CLOSE,
+                    fld.D_AVERAGE,
+                    fld.D_LAST_BID,
+                    fld.D_LAST_OFFER,
+                }:
+                    prior_df = self._sdr.get_data_symbol_daily(
+                        field=fld.D_PRIOR,
+                        symbol_list=self._symbol_list,
+                        start_date=self._start_date,
+                        end_date=self._end_date,
+                    )
+                    prior_df = self._reindex_trading_dates(prior_df)
+                    prior_df = prior_df.replace(0, np.nan)
+                    prior_df = prior_df.fillna(method="ffill")
+
+                    df = df.replace(0, np.nan)
+                    df = df.fillna(prior_df)
+
             elif timeframe in (
                 fld.TIMEFRAME_QUARTERLY,
                 fld.TIMEFRAME_YEARLY,
@@ -61,6 +87,8 @@ class SETSignalCreator:
                     period=timeframe,
                     fillna_value=np.inf,
                 )
+
+                df = self._reindex_trading_dates(df)
             else:
                 raise InputError("Invalid timeframe")
         elif value_by == fld.VALUE_BY_INDEX:
@@ -96,11 +124,6 @@ class SETSignalCreator:
         else:
             raise InputError("Invalid value_by")
 
-        if row_trading_date:
-            df = self._reindex_tradeing_dates(
-                df=df, start_date=self._start_date, end_date=self._end_date
-            )
-
         df = self._manipulate_df(df=df, method=method, period=period, shift=shift)
 
         return df
@@ -109,10 +132,14 @@ class SETSignalCreator:
     Protected methods
     """
 
-    def _reindex_tradeing_dates(
-        self, df: pd.DataFrame, start_date: str, end_date: str
-    ) -> pd.DataFrame:
-        trade_dates = self._sdr.get_trading_dates(start_date, end_date)
+    @lru_cache
+    def _get_trading_dates(self) -> List[str]:
+        return self._sdr.get_trading_dates(
+            start_date=self._start_date, end_date=self._end_date
+        )
+
+    def _reindex_trading_dates(self, df: pd.DataFrame) -> pd.DataFrame:
+        trade_dates = self._get_trading_dates()
         df = df.reindex(pd.DatetimeIndex(trade_dates))  # type: ignore
         return df
 
