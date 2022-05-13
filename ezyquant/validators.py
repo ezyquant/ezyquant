@@ -1,23 +1,27 @@
-from datetime import date
 from typing import List, Optional
 
+from . import utils
 from .errors import InputError
 
 
 def check_start_end_date(
-    start_date: Optional[date],
-    end_date: Optional[date],
-    last_update_date: Optional[date] = None,
+    start_date: Optional[str],
+    end_date: Optional[str],
+    last_update_date: Optional[str] = None,
 ):
-    if start_date is not None and end_date is not None:
-        if start_date > end_date:
-            raise InputError("end_date is after today")
+    s = utils.str_to_date(start_date) if start_date else None
+    e = utils.str_to_date(end_date) if end_date else None
+    l = utils.str_to_date(last_update_date) if last_update_date else None
 
-    if last_update_date is not None:
-        if start_date is not None and start_date > last_update_date:
-            raise InputError("start_date is after last_update_date")
-        if end_date is not None and end_date > last_update_date:
-            raise InputError("end_date is after last_update_date")
+    if s is not None and e is not None:
+        if s > e:
+            raise InputError(f"Start date {s} is after end date {e}")
+
+    if l is not None:
+        if s is not None and s > l:
+            raise InputError(f"Start date {s} is after last update date {l}")
+        if e is not None and e > l:
+            raise InputError(f"End date {e} is after last update date {l}")
 
 
 def check_duplicate(data_list: Optional[List[str]]):

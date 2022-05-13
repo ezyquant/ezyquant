@@ -1,5 +1,5 @@
 import os.path
-from datetime import date, datetime
+from datetime import date
 from functools import lru_cache
 from typing import List, Optional
 
@@ -10,6 +10,7 @@ from sqlalchemy import Column, MetaData, Table, and_, case, func, select
 from sqlalchemy.sql import Select
 
 from . import fields as fld
+from . import utils
 from . import validators as vld
 from .errors import InputError
 
@@ -38,7 +39,7 @@ class SETDataReader:
 
             self.last_update()
 
-    def last_table_update(self, table_name: str) -> date:
+    def last_table_update(self, table_name: str) -> str:
         """Last D_TRADE in table.
 
         Parameters
@@ -48,15 +49,14 @@ class SETDataReader:
 
         Returns
         -------
-        date
-            last D_TRADE in table
+        str
+            string with format YYYY-MM-DD
         """
         t = self._table(table_name)
         stmt = select([func.max(func.DATE(t.c.D_TRADE))])
-        res = self.__engine.execute(stmt).scalar()
-        return datetime.strptime(res, "%Y-%m-%d").date()
+        return self.__engine.execute(stmt).scalar()
 
-    def last_update(self) -> date:
+    def last_update(self) -> str:
         """Last database update, checking from last D_TRADE in following
         tables:
 
@@ -68,8 +68,8 @@ class SETDataReader:
 
         Returns
         -------
-        date
-            last update date
+        str
+            string with format YYYY-MM-DD
         """
         d1 = self.last_table_update("DAILY_STOCK_TRADE")
         d2 = self.last_table_update("DAILY_STOCK_STAT")
@@ -80,25 +80,27 @@ class SETDataReader:
         return d1
 
     def get_trading_dates(
-        self, start_date: Optional[date] = None, end_date: Optional[date] = None
-    ) -> List[date]:
+        self, start_date: Optional[str] = None, end_date: Optional[str] = None
+    ) -> List[str]:
         """Data from table CALENDAR.
 
         Parameters
         ----------
-        start_date : Optional[date]
+        start_date : Optional[str]
             start of D_TRADE, by default None
-        end_date : Optional[date]
+        end_date : Optional[str]
             end of D_TRADE, by default None
 
         Returns
         -------
-        List[date]
-            list of trading dates
+        List[str]
+            list of string with format YYYY-MM-DD
         """
         calendar_t = self._table("CALENDAR")
 
-        stmt = select([calendar_t.c.D_TRADE]).order_by(func.DATE(calendar_t.c.D_TRADE))
+        stmt = select([func.DATE(calendar_t.c.D_TRADE)]).order_by(
+            func.DATE(calendar_t.c.D_TRADE)
+        )
 
         stmt = self._filter_stmt_by_date(
             stmt=stmt,
@@ -109,15 +111,15 @@ class SETDataReader:
 
         res = self.__engine.execute(stmt).all()
 
-        return [i[0].date() for i in res]
+        return [i[0] for i in res]
 
-    def is_trading_date(self, check_date: date) -> bool:
+    def is_trading_date(self, check_date: str) -> bool:
         """Data from table CALENDAR.
 
         Parameters
         ----------
-        check_date : date
-            D_TRADE
+        check_date : str
+            string with format YYYY-MM-DD
 
         Returns
         -------
@@ -143,7 +145,7 @@ class SETDataReader:
         bool
             is today trading date
         """
-        return self.is_trading_date(date.today())
+        return self.is_trading_date(utils.date_to_str(date.today()))
 
     def get_symbol_info(
         self,
@@ -225,7 +227,7 @@ class SETDataReader:
             sector = sector.upper()
             stmt = stmt.where(func.trim(sector_t.c.N_SECTOR) == sector)
 
-        res_df = pd.read_sql(stmt, self.__engine)
+        res_df = pd.read_sql_query(stmt, self.__engine)
 
         map_market = {v: k for k, v in fld.MARKET_MAP.items()}
         res_df["market"] = res_df["market"].replace(map_market)
@@ -299,14 +301,14 @@ class SETDataReader:
             stmt=stmt, column=security_t.c.N_SECURITY, values=symbol_list
         )
 
-        res_df = pd.read_sql(stmt, self.__engine)
+        res_df = pd.read_sql_query(stmt, self.__engine)
         return res_df
 
     def get_change_name(
         self,
         symbol_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
     ) -> pd.DataFrame:
         """Data from table CHANGE_NAME_SECURITY.
 
@@ -314,9 +316,9 @@ class SETDataReader:
         ----------
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, case insensitive, must be unique, by default None
-        start_date : Optional[date]
+        start_date : Optional[str]
             start of effect_date (D_EFFECT), by default None
-        end_date : Optional[date]
+        end_date : Optional[str]
             end of effect_date (D_EFFECT), by default None
 
         Returns
@@ -337,7 +339,7 @@ class SETDataReader:
            symbol_id symbol effect_date symbol_old symbol_new
         0        220    SMG  2006-07-31        SMG      SCSMG
         1        220    SMG  2014-08-28      SCSMG        SMG
-        >>> sdr.get_change_name(start_date=date(2014, 8, 28), end_date=date(2014, 8, 29))
+        >>> sdr.get_change_name(start_date="2014-08-28", end_date="2014-08-29")
            symbol_id    symbol effect_date  symbol_old symbol_new
         0        220       SMG  2014-08-28       SCSMG        SMG
         1        221     SMG-F  2014-08-28     SCSMG-F      SMG-F
@@ -379,15 +381,15 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        res_df = pd.read_sql(stmt, self.__engine)
+        res_df = pd.read_sql_query(stmt, self.__engine)
         res_df = res_df.drop_duplicates(ignore_index=True)
         return res_df
 
     def get_dividend(
         self,
         symbol_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
         ca_type_list: Optional[List[str]] = None,
         adjusted_list: List[str] = ["  ", "CR", "PC", "RC", "SD", "XR"],
     ) -> pd.DataFrame:
@@ -399,9 +401,9 @@ class SETDataReader:
         ----------
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, case insensitive, must be unique, by default None
-        start_date : Optional[date]
+        start_date : Optional[str]
             start of ex_date (D_SIGN), by default None
-        end_date : Optional[date]
+        end_date : Optional[str]
             end of ex_date (D_SIGN), by default None
         ca_type_list : Optional[List[str]]
             Coperatie action type (N_CA_TYPE), by default None
@@ -442,7 +444,7 @@ class SETDataReader:
         13      M  2020-08-24  2020-09-10      CD  0.5
         14      M  2021-05-10  2021-05-25      CD  0.5
         15      M  2022-05-10  2022-05-25      CD  0.8
-        >>> sdr.get_dividend(["M"], start_date=date(2020, 7, 28), end_date=date(2022, 5, 11))
+        >>> sdr.get_dividend(["M"], start_date="2020-07-28", end_date="2022-05-11")
             symbol     ex_date    pay_date ca_type  dps
         0        M  2020-08-24  2020-09-10      CD  0.5
         1        M  2021-05-10  2021-05-25      CD  0.5
@@ -483,7 +485,7 @@ class SETDataReader:
             stmt=stmt, column=rights_benefit_t.c.N_CA_TYPE, values=ca_type_list
         )
 
-        res_df = pd.read_sql(stmt, self.__engine)
+        res_df = pd.read_sql_query(stmt, self.__engine)
 
         res_df = self._merge_adjust_factor_dividend(res_df, adjusted_list=adjusted_list)
 
@@ -492,8 +494,8 @@ class SETDataReader:
     def get_delisted(
         self,
         symbol_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
     ) -> pd.DataFrame:
         """Data from table SECURITY_DETAIL. Filter delisted by D_DELISTED !=
         None.
@@ -502,9 +504,9 @@ class SETDataReader:
         ----------
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, case insensitive, must be unique, by default None
-        start_date : Optional[date]
+        start_date : Optional[str]
             start of delisted_date (D_DELISTED), by default None
-        end_date : Optional[date]
+        end_date : Optional[str]
             end of delisted_date (D_DELISTED), by default None
 
         Returns
@@ -518,7 +520,7 @@ class SETDataReader:
         --------
         >>> from ezyquant import SETDataReader
         >>> sdr = SETDataReader("psims.db")
-        >>> sdr.get_delisted(start_date=date(2020, 2, 20), end_date=date(2020, 2, 20))
+        >>> sdr.get_delisted(start_date="2020-02-20", end_date="2020-02-20")
              symbol delisted_date
         0    ROBINS    2020-02-20
         1    KK202A    2020-02-20
@@ -551,14 +553,14 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        res_df = pd.read_sql(stmt, self.__engine)
+        res_df = pd.read_sql_query(stmt, self.__engine)
         return res_df
 
     def get_sign_posting(
         self,
         symbol_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
         sign_list: Optional[List[str]] = None,
     ) -> pd.DataFrame:
         """Data from table SIGN_POSTING.
@@ -567,9 +569,9 @@ class SETDataReader:
         ----------
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, case insensitive, must be unique, by default None
-        start_date : Optional[date]
+        start_date : Optional[str]
             start of hold_date (D_HOLD), by default None
-        end_date : Optional[date]
+        end_date : Optional[str]
             end of hold_date (D_HOLD), by default None
         sign_list : Optional[List[str]]
             N_SIGN in sign_list, by default None
@@ -594,7 +596,7 @@ class SETDataReader:
         --------
         >>> from ezyquant import SETDataReader
         >>> sdr = SETDataReader("psims.db")
-        >>> sdr.get_sign_posting(symbol_list=["THAI"], start_date=date(2020, 11, 12), end_date=date(2021, 2, 25))
+        >>> sdr.get_sign_posting(symbol_list=["THAI"], start_date="2020-11-12", end_date="2021-02-25")
           symbol  hold_date sign
         0   THAI 2020-11-12   SP
         1   THAI 2021-02-25   SP
@@ -613,8 +615,8 @@ class SETDataReader:
                     func.trim(sign_posting_t.c.N_SIGN).label("sign"),
                 ]
             )
-            .order_by(func.DATE(sign_posting_t.c.D_HOLD))
             .select_from(j)
+            .order_by(func.DATE(sign_posting_t.c.D_HOLD))
         )
         stmt = self._filter_stmt_by_symbol_and_date(
             stmt=stmt,
@@ -628,14 +630,14 @@ class SETDataReader:
             stmt=stmt, column=sign_posting_t.c.N_SIGN, values=sign_list
         )
 
-        res_df = pd.read_sql(stmt, self.__engine)
+        res_df = pd.read_sql_query(stmt, self.__engine)
         return res_df
 
     def get_symbols_by_index(
         self,
         index_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
     ) -> pd.DataFrame:
         """Data from table SECURITY_INDEX.
 
@@ -650,9 +652,9 @@ class SETDataReader:
                 - sSET
                 - SET100
                 - SET50
-        start_date : Optional[date]
+        start_date : Optional[str]
             start of as_of_date (D_AS_OF), by default None
-        end_date : Optional[date]
+        end_date : Optional[str]
             end of as_of_date (D_AS_OF), by default None
 
         Returns
@@ -673,7 +675,7 @@ class SETDataReader:
         --------
         >>> from ezyquant import SETDataReader
         >>> sdr = SETDataReader("psims.db")
-        >>> sdr.get_symbols_by_index(index_list=["SET50"], start_date=date(2022, 1, 4), end_date=date(2022, 1, 4))
+        >>> sdr.get_symbols_by_index(index_list=["SET50"], start_date="2022-01-04", end_date="2022-01-04")
            as_of_date  index  symbol  seq
         0  2022-01-04  SET50     OSP    1
         1  2022-01-04  SET50     CBG    2
@@ -775,15 +777,15 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        res_df = pd.read_sql(stmt, self.__engine)
+        res_df = pd.read_sql_query(stmt, self.__engine)
 
         return res_df
 
     def get_adjust_factor(
         self,
         symbol_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
         ca_type_list: Optional[List[str]] = None,
     ) -> pd.DataFrame:
         """Data from table ADJUST_FACTOR.
@@ -792,9 +794,9 @@ class SETDataReader:
         ----------
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, case insensitive, must be unique, by default None
-        start_date : Optional[date]
+        start_date : Optional[str]
             start of effect_date (D_EFFECT), by default None
-        end_date : Optional[date]
+        end_date : Optional[str]
             end of effect_date (D_EFFECT), by default None
         ca_type_list : Optional[List[str]]
             Coperatie action type (N_CA_TYPE), by default None
@@ -853,7 +855,7 @@ class SETDataReader:
             stmt=stmt, column=adjust_factor_t.c.N_CA_TYPE, values=ca_type_list
         )
 
-        res_df = pd.read_sql(stmt, self.__engine)
+        res_df = pd.read_sql_query(stmt, self.__engine)
 
         return res_df
 
@@ -861,8 +863,8 @@ class SETDataReader:
         self,
         field: str,
         symbol_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
         adjusted_list: List[str] = ["  ", "CR", "PC", "RC", "SD", "XR"],
     ) -> pd.DataFrame:
         """Data from table DAILY_STOCK_TRADE, DAILY_STOCK_STAT. Filter only
@@ -876,9 +878,9 @@ class SETDataReader:
             Filed of data, case insensitive e.g. 'open', 'high', 'low', 'close', 'volume'. More fields can be found in ezyquant.fields
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, case insensitive, must be unique, by default None
-        start_date : Optional[date]
+        start_date : Optional[str]
             start of trade_date (D_TRADE), by default None
-        end_date : Optional[date]
+        end_date : Optional[str]
             end of trade_date (D_TRADE), by default None
         adjusted_list : List[str]
             Adjust data by ca_type, empty list for no adjust, by default ["  ", "CR", "PC", "RC", "SD", "XR"]
@@ -898,8 +900,8 @@ class SETDataReader:
         >>> sdr.get_data_symbol_daily(
         ...    field=fld.D_CLOSE,
         ...    symbol_list=["COM7", "MALEE"],
-        ...    start_date=date(2022, 1, 1),
-        ...    end_date=date(2022, 1, 10),
+        ...    start_date="2022-01-01",
+        ...    end_date="2022-01-10",
         ... )
                       COM7  MALEE
         2022-01-04  41.875   6.55
@@ -931,13 +933,17 @@ class SETDataReader:
             security_t, daily_stock_t.c.I_SECURITY == security_t.c.I_SECURITY
         )
 
-        stmt = select(
-            [
-                daily_stock_t.c.D_TRADE.label("trade_date"),
-                func.trim(security_t.c.N_SECURITY).label("symbol"),
-                field_col,
-            ]
-        ).select_from(j)
+        stmt = (
+            select(
+                [
+                    daily_stock_t.c.D_TRADE.label("trade_date"),
+                    func.trim(security_t.c.N_SECURITY).label("symbol"),
+                    field_col,
+                ]
+            )
+            .select_from(j)
+            .order_by(func.DATE(daily_stock_t.c.D_TRADE))
+        )
         if "I_TRADING_METHOD" in daily_stock_t.c:
             stmt = stmt.where(
                 func.trim(daily_stock_t.c.I_TRADING_METHOD) == "A"
@@ -957,22 +963,9 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        df = pd.read_sql(
+        df = pd.read_sql_query(
             stmt, self.__engine, index_col="trade_date", parse_dates="trade_date"
         )
-
-        # replace 0 with nan
-        if field in {
-            fld.D_PRIOR,
-            fld.D_OPEN,
-            fld.D_HIGH,
-            fld.D_LOW,
-            fld.D_CLOSE,
-            fld.D_AVERAGE,
-            fld.D_LAST_BID,
-            fld.D_LAST_OFFER,
-        }:
-            df = df.replace(0, np.nan)
 
         df = df.pivot(columns="symbol", values=field)
 
@@ -988,13 +981,17 @@ class SETDataReader:
             fld.D_AVERAGE,
             fld.D_LAST_BID,
             fld.D_LAST_OFFER,
-            fld.D_EPS,
             fld.D_DPS,
+            fld.D_EPS,
+            fld.D_ACC_DPS,
         }:
             df = self._merge_adjust_factor(
                 df, is_multiply=True, adjusted_list=adjusted_list
             )
-        elif field in {fld.D_VOLUME}:
+        elif field in {
+            fld.D_VOLUME,
+            fld.D_TOTAL_VOLUME,
+        }:
             df = self._merge_adjust_factor(
                 df, is_multiply=False, adjusted_list=adjusted_list
             )
@@ -1008,16 +1005,15 @@ class SETDataReader:
         self,
         field: str,
         symbol_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
     ) -> pd.DataFrame:
         """Data from tables FINANCIAL_STAT_STD and FINANCIAL_SCREEN. If field
         is in both table, the data from FINANCIAL_STAT_STD will be used.
         FINANCIAL_STAT_STD using data from column M_ACCOUNT. FINANCIAL_SCREEN
         filter by I_PERIOD_TYPE='QY' and I_PERIOD in ('Q1','Q2','Q3','Q4').
         Index date is trade date (DAILY_STOCK_STAT.D_TRADE). Data is showing at
-        first trade date which join on D_AS_OF. Null data in database will be
-        filled with -inf.
+        first trade date which join on D_AS_OF.
 
         Parameters
         ----------
@@ -1025,9 +1021,9 @@ class SETDataReader:
             Filed of data, case insensitive e.g. 'roe', 'roa', 'eps'. More fields can be found in ezyquant.fields
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, case insensitive, must be unique, by default None
-        start_date : Optional[date]
+        start_date : Optional[str]
             start of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
-        end_date : Optional[date]
+        end_date : Optional[str]
             end of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
 
         Returns
@@ -1045,7 +1041,7 @@ class SETDataReader:
         >>> sdr.get_data_symbol_quarterly(
         ...     field=fld.Q_TOTAL_REVENUE,
         ...     symbol_list=["COM7", "MALEE"],
-        ...     start_date=date(2022, 2, 1),
+        ...     start_date="2022-02-01",
         ...     end_date=None,
         ... )
                            COM7      MALEE
@@ -1085,16 +1081,15 @@ class SETDataReader:
         self,
         field: str,
         symbol_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
     ) -> pd.DataFrame:
         """Data from table FINANCIAL_STAT_STD and FINANCIAL_SCREEN. If field is
         in both table, the data from FINANCIAL_STAT_STD will be used.
         FINANCIAL_STAT_STD filter by "I_QUARTER"='9' and using data from column
         M_ACCOUNT. FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and
         I_PERIOD='YE'. Index date is trade date (DAILY_STOCK_STAT.D_TRADE).
-        Data is showing at first trade date which join on D_AS_OF. Null data in
-        database will be filled with -inf.
+        Data is showing at first trade date which join on D_AS_OF.
 
         Parameters
         ----------
@@ -1102,9 +1097,9 @@ class SETDataReader:
             Filed of data, case insensitive e.g. 'roe', 'roa', 'eps'. More fields can be found in ezyquant.fields
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, case insensitive, must be unique, by default None
-        start_date : Optional[date]
+        start_date : Optional[str]
             start of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
-        end_date : Optional[date]
+        end_date : Optional[str]
             end of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
 
         Returns
@@ -1122,7 +1117,7 @@ class SETDataReader:
         >>> sdr.get_data_symbol_yearly(
         ...     field=fld.Y_TOTAL_REVENUE,
         ...     symbol_list=["COM7", "MALEE"],
-        ...     start_date=date(2022, 2, 1),
+        ...     start_date="2022-02-01",
         ...     end_date=None,
         ... )
                            COM7       MALEE
@@ -1162,8 +1157,8 @@ class SETDataReader:
         self,
         field: str,
         symbol_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
     ) -> pd.DataFrame:
         """Trailing 12 months (TTM) is a term used to describe the past 12
         consecutive months of a company's performance data. TTM can be
@@ -1173,8 +1168,7 @@ class SETDataReader:
         FINANCIAL_SCREEN will be used. FINANCIAL_STAT_STD filter by using data
         from column M_ACC_ACCOUNT_12M. FINANCIAL_SCREEN don't have TTM data.
         Index date is trade date (DAILY_STOCK_STAT.D_TRADE). Data is showing at
-        first trade date which join on D_AS_OF. Null data in database will be
-        filled with -inf.
+        first trade date which join on D_AS_OF.
 
         Parameters
         ----------
@@ -1182,9 +1176,9 @@ class SETDataReader:
             Filed of data, case insensitive e.g. 'roe', 'roa', 'eps'. More fields can be found in ezyquant.fields
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, case insensitive, must be unique, by default None
-        start_date : Optional[date]
+        start_date : Optional[str]
             start of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
-        end_date : Optional[date]
+        end_date : Optional[str]
             end of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
 
         Returns
@@ -1202,7 +1196,7 @@ class SETDataReader:
         >>> sdr.get_data_symbol_ttm(
         ...     field=fld.Q_TOTAL_REVENUE,
         ...     symbol_list=["COM7", "MALEE"],
-        ...     start_date=date(2022, 2, 1),
+        ...     start_date="2022-02-01",
         ...     end_date=None,
         ... )
                            COM7       MALEE
@@ -1242,20 +1236,18 @@ class SETDataReader:
         self,
         field: str,
         symbol_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
     ) -> pd.DataFrame:
         """Year to date (YTD) refers to the period of time beginning the first
         day of the current calendar year or fiscal year up to the current date.
-        YTD can be calculate only Income Statement and Cashflow, but not
-        Financial Ratio and Balance Sheet. Data from table FINANCIAL_STAT_STD
-        and FINANCIAL_SCREEN. If field is in both table, the data from
-        FINANCIAL_STAT_STD will be used. FINANCIAL_STAT_STD using data from
-        column M_ACC_ACCOUNT. FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and
-        I_PERIOD in ('Q1','6M','9M','YE'). Index date is trade date
+        Data from table FINANCIAL_STAT_STD and FINANCIAL_SCREEN. If field is in
+        both table, the data from FINANCIAL_STAT_STD will be used.
+        FINANCIAL_STAT_STD using data from column M_ACC_ACCOUNT.
+        FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and I_PERIOD in
+        ('Q1','6M','9M','YE'). Index date is trade date
         (DAILY_STOCK_STAT.D_TRADE). Data is showing at first
-        DAILY_STOCK_STAT.D_TRADE which join on D_AS_OF. Null data in database
-        will be filled with -inf.
+        DAILY_STOCK_STAT.D_TRADE which join on D_AS_OF.
 
         Parameters
         ----------
@@ -1263,9 +1255,9 @@ class SETDataReader:
             Filed of data, case insensitive e.g. 'roe', 'roa', 'eps'. More fields can be found in ezyquant.fields
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, case insensitive, must be unique, by default None
-        start_date : Optional[date]
+        start_date : Optional[str]
             start of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
-        end_date : Optional[date]
+        end_date : Optional[str]
             end of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
 
         Returns
@@ -1283,7 +1275,7 @@ class SETDataReader:
         >>> sdr.get_data_symbol_ytd(
         ...     field=fld.Q_TOTAL_REVENUE,
         ...     symbol_list=["COM7", "MALEE"],
-        ...     start_date=date(2022, 2, 1),
+        ...     start_date="2022-02-01",
         ...     end_date=None,
         ... )
                            COM7       MALEE
@@ -1323,8 +1315,8 @@ class SETDataReader:
         self,
         field: str,
         index_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
     ) -> pd.DataFrame:
         """Data from table MKTSTAT_DAILY_INDEX, MKTSTAT_DAILY_MARKET.
 
@@ -1334,9 +1326,9 @@ class SETDataReader:
             Filed of data, case insensitive e.g. 'high', 'low', 'close'. More fields can be found in ezyquant.fields
         index_list : Optional[List[str]]
             N_SECTOR in index_list, case insensitive, by default None. More index can be found in ezyquant.fields
-        start_date : Optional[date]
+        start_date : Optional[str]
             start of trade_date (D_TRADE), by default None
-        end_date : Optional[date]
+        end_date : Optional[str]
             end of trade_date (D_TRADE), by default None
 
         Returns
@@ -1354,8 +1346,8 @@ class SETDataReader:
         >>> sdr.get_data_index_daily(
         ...     field=fld.D_INDEX_CLOSE,
         ...     index_list=[fld.INDEX_SET, fld.INDEX_SET100],
-        ...     start_date=date(2022, 1, 1),
-        ...     end_date=date(2022, 1, 10),
+        ...     start_date="2022-01-01",
+        ...     end_date="2022-01-10",
         ... )
                         SET   SET100
         2022-01-04  1670.28  2283.56
@@ -1380,13 +1372,17 @@ class SETDataReader:
 
         j = self._join_sector_table(mktstat_daily_t)
 
-        sql = select(
-            [
-                mktstat_daily_t.c.D_TRADE.label("trade_date"),
-                func.trim(sector_t.c.N_SECTOR).label("index"),
-                field_col.label(field),
-            ]
-        ).select_from(j)
+        sql = (
+            select(
+                [
+                    mktstat_daily_t.c.D_TRADE.label("trade_date"),
+                    func.trim(sector_t.c.N_SECTOR).label("index"),
+                    field_col.label(field),
+                ]
+            )
+            .select_from(j)
+            .order_by(func.DATE(mktstat_daily_t.c.D_TRADE))
+        )
 
         vld.check_start_end_date(
             start_date=start_date,
@@ -1402,7 +1398,7 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        df = pd.read_sql(
+        df = pd.read_sql_query(
             sql, self.__engine, index_col="trade_date", parse_dates="trade_date"
         )
 
@@ -1415,10 +1411,10 @@ class SETDataReader:
     def get_data_sector_daily(
         self,
         field: str,
-        sector_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
         market: str = fld.MARKET_SET,
+        sector_list: Optional[List[str]] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
     ) -> pd.DataFrame:
         """Data from table DAILY_SECTOR_INFO. Filter only sector data.
 
@@ -1426,11 +1422,13 @@ class SETDataReader:
         ----------
         field : str
             Filed of data, case insensitive e.g. 'high', 'low', 'close'. More fields can be found in ezyquant.fields
+        market : str
+            I_MARKET e.g. 'SET', 'mai', by default 'SET'
         sector_list : Optional[List[str]]
             N_SECTOR in sector_list, case insensitive, by default None. More sector can be found in ezyquant.fields
-        start_date : Optional[date]
+        start_date : Optional[str]
             start of trade_date (D_TRADE), by default None
-        end_date : Optional[date]
+        end_date : Optional[str]
             end of trade_date (D_TRADE), by default None
 
         Returns
@@ -1448,8 +1446,8 @@ class SETDataReader:
         >>> sdr.get_data_sector_daily(
         ...     field=fld.D_SECTOR_CLOSE,
         ...     sector_list=[fld.SECTOR_AGRI, fld.SECTOR_BANK],
-        ...     start_date=date(2022, 1, 1),
-        ...     end_date=date(2022, 1, 10),
+        ...     start_date="2022-01-01",
+        ...     end_date="2022-01-10",
         ... )
                       AGRI    BANK
         2022-01-04  296.13  421.31
@@ -1470,10 +1468,10 @@ class SETDataReader:
     def get_data_industry_daily(
         self,
         field: str,
-        industry_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
         market: str = fld.MARKET_SET,
+        industry_list: Optional[List[str]] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
     ) -> pd.DataFrame:
         """Data from table DAILY_SECTOR_INFO. Filter only industry data.
 
@@ -1481,11 +1479,13 @@ class SETDataReader:
         ----------
         field : str
             Filed of data, case insensitive e.g. 'high', 'low', 'close'. More fields can be found in ezyquant.fields
+        market : str
+            I_MARKET e.g. 'SET', 'mai', by default 'SET'
         industry_list : Optional[List[str]]
             N_SECTOR in industry_list, case insensitive, by default None. More industry can be found in ezyquant.fields
-        start_date : Optional[date]
+        start_date : Optional[str]
             start of trade_date (D_TRADE), by default None
-        end_date : Optional[date]
+        end_date : Optional[str]
             end of trade_date (D_TRADE), by default None
 
         Returns
@@ -1503,8 +1503,8 @@ class SETDataReader:
         >>> sdr.get_data_industry_daily(
         ...     field=fld.D_INDUSTRY_CLOSE,
         ...     industry_list=[fld.INDUSTRY_AGRO, fld.INDUSTRY_CONSUMP],
-        ...     start_date=date(2022, 1, 1),
-        ...     end_date=date(2022, 1, 10),
+        ...     start_date="2022-01-01",
+        ...     end_date="2022-01-10",
         ... )
                       AGRO  CONSUMP
         2022-01-04  485.98    92.55
@@ -1533,14 +1533,16 @@ class SETDataReader:
         self,
         stmt: Select,
         column: Column,
-        start_date: Optional[date],
-        end_date: Optional[date],
+        start_date: Optional[str],
+        end_date: Optional[str],
     ):
         vld.check_start_end_date(start_date, end_date)
+
         if start_date != None:
-            stmt = stmt.where(func.DATE(column) >= start_date)
+            stmt = stmt.where(func.DATE(column) >= func.DATE(start_date))
         if end_date != None:
-            stmt = stmt.where(func.DATE(column) <= end_date)
+            stmt = stmt.where(func.DATE(column) <= func.DATE(end_date))
+
         return stmt
 
     def _filter_str_in_list(
@@ -1558,8 +1560,8 @@ class SETDataReader:
         symbol_column: Column,
         date_column: Column,
         symbol_list: Optional[List[str]],
-        start_date: Optional[date],
-        end_date: Optional[date],
+        start_date: Optional[str],
+        end_date: Optional[str],
     ):
         stmt = self._filter_str_in_list(
             stmt=stmt, column=symbol_column, values=symbol_list
@@ -1571,10 +1573,10 @@ class SETDataReader:
 
     def _get_pivot_adjust_factor_df(
         self,
-        min_date: date,
-        max_date: date,
+        min_date: str,
+        max_date: str,
         symbol_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
+        start_date: Optional[str] = None,
         ca_type_list: Optional[List[str]] = None,
     ) -> pd.DataFrame:
         df = self.get_adjust_factor(
@@ -1587,19 +1589,19 @@ class SETDataReader:
         df = df.pivot(index="effect_date", columns="symbol", values="adjust_factor")
 
         # reverse cumulate product adjust factor
-        df = df.iloc[::-1].cumprod(skipna=True).iloc[::-1]  # type: ignore
+        df = df.iloc[::-1].cumprod(skipna=True).iloc[::-1]
 
         # reindex trade date
         if not df.empty:
-            max_date = max(max_date, df.index.max())
+            max_date = max(max_date, utils.date_to_str(df.index.max()))
         df = df.reindex(
             index=pd.date_range(
                 start=min_date,
                 end=max_date,
                 normalize=True,
                 name="effect_date",
-            ),
-            columns=symbol_list,
+            ),  # type: ignore
+            columns=symbol_list,  # type: ignore
         )
 
         # shift back 1 day
@@ -1614,7 +1616,7 @@ class SETDataReader:
         self,
         df: pd.DataFrame,
         is_multiply: bool = True,
-        start_adjust_date: Optional[date] = None,
+        start_adjust_date: Optional[str] = None,
         adjusted_list: Optional[List[str]] = None,
     ) -> pd.DataFrame:
         """Adjust dataframe by adjust_factor.
@@ -1625,7 +1627,7 @@ class SETDataReader:
             index must be trade_date and columns must be symbol
         is_multiply : bool, optional
             is multiply by adjust factor (adjust factor usually less than 1), by default True
-        start_adjust_date : Optional[date], optional
+        start_adjust_date : Optional[str], optional
             start of get adjust factor effect date, by default None
         adjusted_list : Optional[List[str]], optional
             n_ca_type list, by default None
@@ -1639,15 +1641,15 @@ class SETDataReader:
             return df
 
         if start_adjust_date == None:
-            start_adjust_date = df.index.min().date()
+            start_adjust_date = utils.date_to_str(df.index.min())
 
         symbol_list = df.columns.tolist()
         if len(symbol_list) > 100:
             symbol_list = None
 
         adjust_factor_df = self._get_pivot_adjust_factor_df(
-            min_date=df.index.min().date(),
-            max_date=df.index.max().date(),
+            min_date=utils.date_to_str(df.index.min()),
+            max_date=utils.date_to_str(df.index.max()),
             symbol_list=symbol_list,
             start_date=start_adjust_date,
             ca_type_list=adjusted_list,
@@ -1667,22 +1669,22 @@ class SETDataReader:
     def _merge_adjust_factor_dividend(
         self,
         df: pd.DataFrame,
-        start_adjust_date: Optional[date] = None,
+        start_adjust_date: Optional[str] = None,
         adjusted_list: Optional[List[str]] = None,
     ) -> pd.DataFrame:
         if df.empty:
             return df
 
         if start_adjust_date == None:
-            start_adjust_date = df["ex_date"].min().date()
+            start_adjust_date = utils.date_to_str(df["ex_date"].min())
 
         symbol_list = df["symbol"].unique().tolist()
         if len(symbol_list) > 100:
             symbol_list = None
 
         adjust_factor_df = self._get_pivot_adjust_factor_df(
-            min_date=df["ex_date"].min().date(),
-            max_date=df["ex_date"].max().date(),
+            min_date=utils.date_to_str(df["ex_date"].min()),
+            max_date=utils.date_to_str(df["ex_date"].max()),
             symbol_list=symbol_list,
             start_date=start_adjust_date,
             ca_type_list=adjusted_list,
@@ -1712,17 +1714,10 @@ class SETDataReader:
         period: str,
         field: str,
         symbol_list: Optional[List[str]] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+        fillna_value=None,
     ) -> pd.DataFrame:
-        """fill nan with -np.inf if is_to_dict.
-
-        Parameters
-        ----------
-        period: str
-            'Q' for Quarter, 'Y' for Quarter, 'YTD', 'TTM', 'AVG'
-        """
-        # split field_list for 2 tables
         period = period.upper()
         field = field.lower()
 
@@ -1731,11 +1726,11 @@ class SETDataReader:
 
         if field in fld.FINANCIAL_STAT_STD_MAP_COMPACT:
             stmt = self._get_financial_stat_std_stmt(field=field, period=period)
-        elif field in fld.FINANCIAL_SCREEN_MAP:
+        elif field in fld.FINANCIAL_SCREEN_MAP and period in ("Q", "Y", "YTD"):
             stmt = self._get_financial_screen_stmt(field=field, period=period)
         else:
             raise ValueError(
-                f"{field} not in Data {period} field. Please check psims factor for more details."
+                f"{field} is not supported for {period}. More field in ezyquant.field"
             )
 
         stmt = self._filter_stmt_by_symbol_and_date(
@@ -1747,48 +1742,21 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        stmt = stmt.order_by(d_trade_subquery.c.D_TRADE).order_by(
-            security_t.c.I_SECURITY
+        df = pd.read_sql_query(
+            stmt, self.__engine, parse_dates="trade_date", dtype={"value": np.float64}  # type: ignore
         )
-
-        df = pd.read_sql(stmt, self.__engine, parse_dates="trade_date")
 
         # duplicate key mostly I_ACCT_FORM 6,7
         df = df.drop_duplicates(subset=["trade_date", "symbol"], keep="last")
 
-        # Fill nan with -np.inf
-        df = df.fillna(-np.inf)
+        if fillna_value != None:
+            df = df.fillna(fillna_value)
 
         # pivot dataframe
         df = df.pivot(index="trade_date", columns="symbol", values="value")
 
-        # reindex trade_date
-        df = self._reindex_fundamental_data(
-            df=df, start_date=start_date, end_date=end_date
-        )
-
         df.index.name = None
         df.columns.name = None
-
-        return df
-
-    def _reindex_fundamental_data(
-        self,
-        df: pd.DataFrame,
-        start_date: Optional[date],
-        end_date: Optional[date],
-    ) -> pd.DataFrame:
-        if df.empty and (start_date == None or end_date == None):
-            return df
-
-        if start_date == None:
-            start_date = df.index.min().date()
-        if end_date == None:
-            end_date = df.index.max().date()
-
-        trade_dates = self.get_trading_dates(start_date, end_date)
-
-        df = df.reindex(pd.DatetimeIndex(trade_dates))  # type: ignore
 
         return df
 
@@ -1869,10 +1837,12 @@ class SETDataReader:
                 [
                     daily_stock_stat_t.c.I_SECURITY,
                     daily_stock_stat_t.c.D_AS_OF,
-                    func.min(daily_stock_stat_t.c.D_TRADE).label("D_TRADE"),
+                    func.min(func.DATE(daily_stock_stat_t.c.D_TRADE)).label("D_TRADE"),
                 ]
             )
-            .group_by(daily_stock_stat_t.c.I_SECURITY, daily_stock_stat_t.c.D_AS_OF)
+            .group_by(
+                daily_stock_stat_t.c.I_SECURITY, func.DATE(daily_stock_stat_t.c.D_AS_OF)
+            )
             .subquery()
         )
 
@@ -1906,11 +1876,13 @@ class SETDataReader:
         self,
         field: str,
         sector_list: Optional[List[str]],
-        start_date: Optional[date],
-        end_date: Optional[date],
+        start_date: Optional[str],
+        end_date: Optional[str],
         market: str,
         f_data: str,
     ) -> pd.DataFrame:
+        market = market.upper()
+
         sector_t = self._table("SECTOR")
         daily_sector_info_t = self._table("DAILY_SECTOR_INFO")
 
@@ -1933,6 +1905,7 @@ class SETDataReader:
             .where(sector_t.c.F_DATA == f_data)
             .where(sector_t.c.I_MARKET == fld.MARKET_MAP_UPPER[market])
             .where(sector_t.c.D_CANCEL == None)
+            .order_by(func.DATE(daily_sector_info_t.c.D_TRADE))
         )
 
         vld.check_start_end_date(
@@ -1949,7 +1922,7 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        df = pd.read_sql(
+        df = pd.read_sql_query(
             stmt, self.__engine, index_col="trade_date", parse_dates="trade_date"
         )
 
