@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 
 from . import fields as fld
+from .errors import InputError
 from .reader import SETDataReader
 
 
@@ -51,15 +52,15 @@ class SETSignalCreator:
                 fld.TIMEFRAME_YTD,
             ):
                 df = self._sdr._get_fundamental_data(
-                    symbol_list=self._symbol_list,
                     field=field,
+                    symbol_list=self._symbol_list,
                     start_date=self._start_date,
                     end_date=self._end_date,
                     period=timeframe,
                     fillna_value=np.inf,
                 )
             else:
-                raise ValueError("Invalid timeframe")
+                raise InputError("Invalid timeframe")
         elif value_by == fld.VALUE_BY_INDEX:
             if timeframe == fld.TIMEFRAME_DAILY:
                 df = self._sdr.get_data_index_daily(
@@ -69,7 +70,7 @@ class SETSignalCreator:
                     end_date=self._end_date,
                 )
             else:
-                raise ValueError("Invalid timeframe")
+                raise InputError("Invalid timeframe")
         elif value_by == fld.VALUE_BY_SECTOR:
             if timeframe == fld.TIMEFRAME_DAILY:
                 df = self._sdr.get_data_sector_daily(
@@ -79,7 +80,7 @@ class SETSignalCreator:
                     end_date=self._end_date,
                 )
             else:
-                raise ValueError("Invalid timeframe")
+                raise InputError("Invalid timeframe")
         elif value_by == fld.VALUE_BY_INDUSTRY:
             if timeframe == fld.TIMEFRAME_DAILY:
                 df = self._sdr.get_data_industry_daily(
@@ -89,12 +90,28 @@ class SETSignalCreator:
                     end_date=self._end_date,
                 )
             else:
-                raise ValueError("Invalid timeframe")
+                raise InputError("Invalid timeframe")
         else:
-            raise ValueError("value_by is not supported")
+            raise InputError("Invalid value_by")
+
+        if row_trading_date:
+            df = self._reindex_tradeing_dates(
+                df=df, start_date=self._start_date, end_date=self._end_date
+            )
 
         df = self._manipulate_df(df=df, method=method, period=period, shift=shift)
 
+        return df
+
+    """
+    Protected methods
+    """
+
+    def _reindex_tradeing_dates(
+        self, df: pd.DataFrame, start_date: str, end_date: str
+    ) -> pd.DataFrame:
+        trade_dates = self._sdr.get_trading_dates(start_date, end_date)
+        df = df.reindex(pd.DatetimeIndex(trade_dates))  # type: ignore
         return df
 
     @staticmethod
@@ -123,7 +140,7 @@ class SETSignalCreator:
         elif method == fld.METHOD_MEAN:
             out = roll.mean()
         else:
-            raise ValueError(f"Unknown method: {method}")
+            raise InputError("Invalid method")
 
         out = out.mask(np.isinf(series), np.inf)
         out = out.fillna(method="ffill")
