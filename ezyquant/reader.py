@@ -981,13 +981,17 @@ class SETDataReader:
             fld.D_AVERAGE,
             fld.D_LAST_BID,
             fld.D_LAST_OFFER,
-            fld.D_EPS,
             fld.D_DPS,
+            fld.D_EPS,
+            fld.D_ACC_DPS,
         }:
             df = self._merge_adjust_factor(
                 df, is_multiply=True, adjusted_list=adjusted_list
             )
-        elif field in {fld.D_VOLUME}:
+        elif field in {
+            fld.D_VOLUME,
+            fld.D_TOTAL_VOLUME,
+        }:
             df = self._merge_adjust_factor(
                 df, is_multiply=False, adjusted_list=adjusted_list
             )
