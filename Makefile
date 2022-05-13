@@ -18,3 +18,8 @@ format:
 .PHONY: docs
 docs:
 	pdoc --docformat numpy ezyquant
+
+.PHONY: mkdocs
+mkdocs:
+	pip install mkdocs mkdocs-material
+	mkdocs serve
