@@ -967,19 +967,6 @@ class SETDataReader:
             stmt, self.__engine, index_col="trade_date", parse_dates="trade_date"
         )
 
-        # replace 0 with nan
-        if field in {
-            fld.D_PRIOR,
-            fld.D_OPEN,
-            fld.D_HIGH,
-            fld.D_LOW,
-            fld.D_CLOSE,
-            fld.D_AVERAGE,
-            fld.D_LAST_BID,
-            fld.D_LAST_OFFER,
-        }:
-            df = df.replace(0, np.nan)
-
         df = df.pivot(columns="symbol", values=field)
 
         df.index.name = None
