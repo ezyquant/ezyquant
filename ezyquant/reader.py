@@ -165,7 +165,7 @@ class SETDataReader:
         Parameters
         ----------
         symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
+            N_SECURITY in symbol_list, must be unique, by default None
         market : Optional[str]
             I_MARKET e.g. 'SET', 'mai', by default None
         industry : Optional[str]
@@ -246,7 +246,7 @@ class SETDataReader:
         Parameters
         ----------
         symbol_list : Optional[List[str]]
-            SECURITY.N_SECURITY in symbol_list, case insensitive, must be unique, by default None
+            SECURITY.N_SECURITY in symbol_list, must be unique, by default None
 
         Returns
         -------
@@ -321,7 +321,7 @@ class SETDataReader:
         Parameters
         ----------
         symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
+            N_SECURITY in symbol_list, must be unique, by default None
         start_date : Optional[str]
             start of effect_date (D_EFFECT), by default None
         end_date : Optional[str]
@@ -406,7 +406,7 @@ class SETDataReader:
         Parameters
         ----------
         symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
+            N_SECURITY in symbol_list, must be unique, by default None
         start_date : Optional[str]
             start of ex_date (D_SIGN), by default None
         end_date : Optional[str]
@@ -509,7 +509,7 @@ class SETDataReader:
         Parameters
         ----------
         symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
+            N_SECURITY in symbol_list, must be unique, by default None
         start_date : Optional[str]
             start of delisted_date (D_DELISTED), by default None
         end_date : Optional[str]
@@ -574,7 +574,7 @@ class SETDataReader:
         Parameters
         ----------
         symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
+            N_SECURITY in symbol_list, must be unique, by default None
         start_date : Optional[str]
             start of hold_date (D_HOLD), by default None
         end_date : Optional[str]
@@ -650,7 +650,7 @@ class SETDataReader:
         Parameters
         ----------
         index_list : Optional[List[str]]
-            index (SECTOR.N_SECTOR), case insensitive
+            index (SECTOR.N_SECTOR)
                 - SETWB
                 - SETTHSI
                 - SETCLMV
@@ -799,7 +799,7 @@ class SETDataReader:
         Parameters
         ----------
         symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
+            N_SECURITY in symbol_list, must be unique, by default None
         start_date : Optional[str]
             start of effect_date (D_EFFECT), by default None
         end_date : Optional[str]
@@ -873,17 +873,16 @@ class SETDataReader:
         end_date: Optional[str] = None,
         adjusted_list: List[str] = ["  ", "CR", "PC", "RC", "SD", "XR"],
     ) -> pd.DataFrame:
-        """Data from table DAILY_STOCK_TRADE, DAILY_STOCK_STAT. Filter only
-        Auto Matching (I_TRADING_METHOD='A'). Replace 0 with NaN in following
-        field e.g. prior, open, high, low, close, average, last_bid,
-        last_offer.
+        """Data from table DAILY_STOCK_TRADE, DAILY_STOCK_STAT.
+
+        Filter only Auto Matching (I_TRADING_METHOD='A').
 
         Parameters
         ----------
         field : str
-            Filed of data, case insensitive e.g. 'open', 'high', 'low', 'close', 'volume'. More fields can be found in ezyquant.fields
+            Filed of data e.g. 'open', 'high', 'low', 'close', 'volume'. More fields can be found in ezyquant.fields
         symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
+            N_SECURITY in symbol_list, must be unique, by default None
         start_date : Optional[str]
             start of trade_date (D_TRADE), by default None
         end_date : Optional[str]
@@ -1017,18 +1016,16 @@ class SETDataReader:
         """Data from tables FINANCIAL_STAT_STD and FINANCIAL_SCREEN.If field is
         in both table, the data from FINANCIAL_STAT_STD will be used.
 
-        FINANCIAL_STAT_STD using data from column M_ACCOUNT. FINANCIAL_SCREEN
-        filter by I_PERIOD_TYPE='QY' and I_PERIOD in ('Q1','Q2','Q3','Q4').
+        FINANCIAL_STAT_STD using data from column M_ACCOUNT. FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and I_PERIOD in ('Q1','Q2','Q3','Q4').
 
-        Index date is trade date (DAILY_STOCK_STAT.D_TRADE). Data is showing at
-        first trade date which join on D_AS_OF.
+        Index date is trade date (DAILY_STOCK_STAT.D_TRADE). Data is showing at first trade date which join on D_AS_OF.
 
         Parameters
         ----------
         field : str
-            Filed of data, case insensitive e.g. 'roe', 'roa', 'eps'. More fields can be found in ezyquant.fields
+            Filed of data e.g. 'roe', 'roa', 'eps'. More fields can be found in ezyquant.fields
         symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
+            N_SECURITY in symbol_list, must be unique, by default None
         start_date : Optional[str]
             start of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
         end_date : Optional[str]
@@ -1074,19 +1071,16 @@ class SETDataReader:
         """Data from table FINANCIAL_STAT_STD and FINANCIAL_SCREEN. If field is
         in both table, the data from FINANCIAL_STAT_STD will be used.
 
-        FINANCIAL_STAT_STD filter by "I_QUARTER"='9' and using data from column
-        M_ACCOUNT. FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and
-        I_PERIOD='YE'.
+        FINANCIAL_STAT_STD filter by "I_QUARTER"='9' and using data from column M_ACCOUNT. FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and I_PERIOD='YE'.
 
-         Index date is trade date (DAILY_STOCK_STAT.D_TRADE).
-        Data is showing at first trade date which join on D_AS_OF.
+        Index date is trade date (DAILY_STOCK_STAT.D_TRADE). Data is showing at first trade date which join on D_AS_OF.
 
         Parameters
         ----------
         field : str
-            Filed of data, case insensitive e.g. 'roe', 'roa', 'eps'. More fields can be found in ezyquant.fields
+            Filed of data e.g. 'roe', 'roa', 'eps'. More fields can be found in ezyquant.fields
         symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
+            N_SECURITY in symbol_list, must be unique, by default None
         start_date : Optional[str]
             start of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
         end_date : Optional[str]
@@ -1132,26 +1126,20 @@ class SETDataReader:
         """Trailing 12 months (TTM) is a term used to describe the past 12
         consecutive months of a company's performance data.
 
-        TTM can be
-        calculate only Income Statement and Cashflow, but not Financial Ratio
-        and Balance Sheet.
+        TTM can be calculate only Income Statement and Cashflow, but not Financial Ratio and Balance Sheet.
 
-         Data from table FINANCIAL_STAT_STD,
-        FINANCIAL_SCREEN. If field is in both table, the data from
-        FINANCIAL_SCREEN will be used.
+        Data from table FINANCIAL_STAT_STD, FINANCIAL_SCREEN. If field is in both table, the data from FINANCIAL_SCREEN will be used.
 
-        FINANCIAL_STAT_STD filter by using data
-        from column M_ACC_ACCOUNT_12M. FINANCIAL_SCREEN don't have TTM data.
+        FINANCIAL_STAT_STD filter by using data from column M_ACC_ACCOUNT_12M. FINANCIAL_SCREEN don't have TTM data.
 
-        Index date is trade date (DAILY_STOCK_STAT.D_TRADE). Data is showing at
-        first trade date which join on D_AS_OF.
+        Index date is trade date (DAILY_STOCK_STAT.D_TRADE). Data is showing at first trade date which join on D_AS_OF.
 
         Parameters
         ----------
         field : str
-            Filed of data, case insensitive e.g. 'roe', 'roa', 'eps'. More fields can be found in ezyquant.fields
+            Filed of data e.g. 'roe', 'roa', 'eps'. More fields can be found in ezyquant.fields
         symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
+            N_SECURITY in symbol_list, must be unique, by default None
         start_date : Optional[str]
             start of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
         end_date : Optional[str]
@@ -1197,23 +1185,18 @@ class SETDataReader:
         """Year to date (YTD) refers to the period of time beginning the first
         day of the current calendar year or fiscal year up to the current date.
 
-        Data from table FINANCIAL_STAT_STD and FINANCIAL_SCREEN. If field is in
-        both table, the data from FINANCIAL_STAT_STD will be used.
+        Data from table FINANCIAL_STAT_STD and FINANCIAL_SCREEN. If field is in both table, the data from FINANCIAL_STAT_STD will be used.
 
-        FINANCIAL_STAT_STD using data from column M_ACC_ACCOUNT.
-        FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and I_PERIOD in
-        ('Q1','6M','9M','YE').
+        FINANCIAL_STAT_STD using data from column M_ACC_ACCOUNT. FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and I_PERIOD in ('Q1','6M','9M','YE').
 
-        Index date is trade date
-        (DAILY_STOCK_STAT.D_TRADE). Data is showing at first
-        DAILY_STOCK_STAT.D_TRADE which join on D_AS_OF.
+        Index date is trade date (DAILY_STOCK_STAT.D_TRADE). Data is showing at first DAILY_STOCK_STAT.D_TRADE which join on D_AS_OF.
 
         Parameters
         ----------
         field : str
-            Filed of data, case insensitive e.g. 'roe', 'roa', 'eps'. More fields can be found in ezyquant.fields
+            Filed of data e.g. 'roe', 'roa', 'eps'. More fields can be found in ezyquant.fields
         symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
+            N_SECURITY in symbol_list, must be unique, by default None
         start_date : Optional[str]
             start of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
         end_date : Optional[str]
@@ -1261,9 +1244,9 @@ class SETDataReader:
         Parameters
         ----------
         field : str
-            Filed of data, case insensitive e.g. 'high', 'low', 'close'. More fields can be found in ezyquant.fields
+            Filed of data e.g. 'high', 'low', 'close'. More fields can be found in ezyquant.fields
         index_list : Optional[List[str]]
-            N_SECTOR in index_list, case insensitive, by default None. More index can be found in ezyquant.fields
+            N_SECTOR in index_list, by default None. More index can be found in ezyquant.fields
         start_date : Optional[str]
             start of trade_date (D_TRADE), by default None
         end_date : Optional[str]
@@ -1359,11 +1342,11 @@ class SETDataReader:
         Parameters
         ----------
         field : str
-            Filed of data, case insensitive e.g. 'high', 'low', 'close'. More fields can be found in ezyquant.fields
+            Filed of data e.g. 'high', 'low', 'close'. More fields can be found in ezyquant.fields
         market : str
             I_MARKET e.g. 'SET', 'mai', by default 'SET'
         sector_list : Optional[List[str]]
-            N_SECTOR in sector_list, case insensitive, by default None. More sector can be found in ezyquant.fields
+            N_SECTOR in sector_list, by default None. More sector can be found in ezyquant.fields
         start_date : Optional[str]
             start of trade_date (D_TRADE), by default None
         end_date : Optional[str]
@@ -1416,11 +1399,11 @@ class SETDataReader:
         Parameters
         ----------
         field : str
-            Filed of data, case insensitive e.g. 'high', 'low', 'close'. More fields can be found in ezyquant.fields
+            Filed of data e.g. 'high', 'low', 'close'. More fields can be found in ezyquant.fields
         market : str
             I_MARKET e.g. 'SET', 'mai', by default 'SET'
         industry_list : Optional[List[str]]
-            N_SECTOR in industry_list, case insensitive, by default None. More industry can be found in ezyquant.fields
+            N_SECTOR in industry_list, by default None. More industry can be found in ezyquant.fields
         start_date : Optional[str]
             start of trade_date (D_TRADE), by default None
         end_date : Optional[str]
