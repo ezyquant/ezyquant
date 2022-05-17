@@ -15,8 +15,8 @@ format:
 
 	docformatter -i ezyquant/reader.py
 
-.PHONY: docs
-docs:
+.PHONY: pdoc
+pdoc:
 	pdoc --docformat numpy ezyquant
 
 .PHONY: mkdocs
