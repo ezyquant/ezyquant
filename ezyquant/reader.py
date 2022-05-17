@@ -932,7 +932,7 @@ class SETDataReader:
             field_col = daily_stock_t.c[fld.DAILY_STOCK_STAT_MAP[field]].label(field)
         else:
             raise InputError(
-                f"{field} is not a valid field. More fields can be found in ezyquant.fields"
+                f"{field} is invalid field. Please read document to check valid field."
             )
 
         j = daily_stock_t.join(
@@ -1389,7 +1389,7 @@ class SETDataReader:
             field_col = mktstat_daily_t.c[fld.MKTSTAT_DAILY_MARKET_MAP[field]]
         else:
             raise InputError(
-                f"{field} is not a valid field. More fields can be found in ezyquant.fields"
+                f"{field} is invalid field. Please read document to check valid field."
             )
 
         j = self._join_sector_table(mktstat_daily_t)
@@ -1752,7 +1752,7 @@ class SETDataReader:
             stmt = self._get_financial_screen_stmt(field=field, period=period)
         else:
             raise InputError(
-                f"{field} is not a valid field. More fields can be found in ezyquant.fields"
+                f"{field} is invalid field. Please read document to check valid field."
             )
 
         stmt = self._filter_stmt_by_symbol_and_date(
@@ -1916,7 +1916,7 @@ class SETDataReader:
             field_col = daily_sector_info_t.c[fld.DAILY_SECTOR_INFO_MAP[field]]
         except KeyError:
             raise InputError(
-                f"{field} is not a valid field. More fields can be found in ezyquant.fields"
+                f"{field} is invalid field. Please read document to check valid field."
             )
 
         # N_SECTOR is the industry name in F_DATA = 'I'
