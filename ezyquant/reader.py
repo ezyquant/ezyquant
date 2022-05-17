@@ -1074,7 +1074,7 @@ class SETDataReader:
             field=field,
             start_date=start_date,
             end_date=end_date,
-            period="Q",
+            timeframe=fld.TIMEFRAME_QUARTERLY,
         )
 
     def get_data_symbol_yearly(
@@ -1088,7 +1088,7 @@ class SETDataReader:
         in both table, the data from FINANCIAL_STAT_STD will be used.
         FINANCIAL_STAT_STD filter by "I_QUARTER"='9' and using data from column
         M_ACCOUNT. FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and
-        I_PERIOD='YE'. Index date is trade date (DAILY_STOCK_STAT.D_TRADE).
+        I_timeframe='YE'. Index date is trade date (DAILY_STOCK_STAT.D_TRADE).
         Data is showing at first trade date which join on D_AS_OF.
 
         Parameters
@@ -1150,7 +1150,7 @@ class SETDataReader:
             field=field,
             start_date=start_date,
             end_date=end_date,
-            period="Y",
+            timeframe=fld.TIMEFRAME_YEARLY,
         )
 
     def get_data_symbol_ttm(
@@ -1229,7 +1229,7 @@ class SETDataReader:
             field=field,
             start_date=start_date,
             end_date=end_date,
-            period="TTM",
+            timeframe=fld.TIMEFRAME_TTM,
         )
 
     def get_data_symbol_ytd(
@@ -1308,7 +1308,7 @@ class SETDataReader:
             field=field,
             start_date=start_date,
             end_date=end_date,
-            period="YTD",
+            timeframe=fld.TIMEFRAME_YTD,
         )
 
     def get_data_index_daily(
@@ -1711,26 +1711,30 @@ class SETDataReader:
 
     def _get_fundamental_data(
         self,
-        period: str,
+        timeframe: str,
         field: str,
         symbol_list: Optional[List[str]] = None,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
         fillna_value=None,
     ) -> pd.DataFrame:
-        period = period.upper()
+        timeframe = timeframe.lower()
         field = field.lower()
 
         security_t = self._table("SECURITY")
         d_trade_subquery = self._d_trade_subquery()
 
         if field in fld.FINANCIAL_STAT_STD_MAP_COMPACT:
-            stmt = self._get_financial_stat_std_stmt(field=field, period=period)
-        elif field in fld.FINANCIAL_SCREEN_MAP and period in ("Q", "Y", "YTD"):
-            stmt = self._get_financial_screen_stmt(field=field, period=period)
+            stmt = self._get_financial_stat_std_stmt(field=field, timeframe=timeframe)
+        elif field in fld.FINANCIAL_SCREEN_MAP and timeframe in (
+            fld.TIMEFRAME_QUARTERLY,
+            fld.TIMEFRAME_YEARLY,
+            fld.TIMEFRAME_YTD,
+        ):
+            stmt = self._get_financial_screen_stmt(field=field, timeframe=timeframe)
         else:
             raise ValueError(
-                f"{field} is not supported for {period}. More field in ezyquant.field"
+                f"{field} is not supported for {timeframe}. More field in ezyquant.field"
             )
 
         stmt = self._filter_stmt_by_symbol_and_date(
@@ -1760,11 +1764,11 @@ class SETDataReader:
 
         return df
 
-    def _get_financial_screen_stmt(self, period: str, field: str) -> Select:
-        PERIOD_DICT = {
-            "Q": ("Q1", "Q2", "Q3", "Q4"),
-            "Y": ("YE",),
-            "YTD": ("Q1", "6M", "9M", "YE"),
+    def _get_financial_screen_stmt(self, timeframe: str, field: str) -> Select:
+        TIMEFRAME_MAP = {
+            fld.TIMEFRAME_QUARTERLY: ("Q1", "Q2", "Q3", "Q4"),
+            fld.TIMEFRAME_YEARLY: ("YE",),
+            fld.TIMEFRAME_YTD: ("Q1", "6M", "9M", "YE"),
         }
 
         financial_screen_t = self._table("FINANCIAL_SCREEN")
@@ -1783,31 +1787,33 @@ class SETDataReader:
             )
             .select_from(self._join_security_and_d_trade_subquery(financial_screen_t))
             .where(func.trim(financial_screen_t.c.I_PERIOD_TYPE) == "QY")
-            .where(func.trim(financial_screen_t.c.I_PERIOD).in_(PERIOD_DICT[period]))
+            .where(
+                func.trim(financial_screen_t.c.I_PERIOD).in_(TIMEFRAME_MAP[timeframe])
+            )
         )
 
         return stmt
 
-    def _get_financial_stat_std_stmt(self, period: str, field: str) -> Select:
+    def _get_financial_stat_std_stmt(self, timeframe: str, field: str) -> Select:
         financial_stat_std_t = self._table("FINANCIAL_STAT_STD")
         security_t = self._table("SECURITY")
         d_trade_subquery = self._d_trade_subquery()
 
-        if period == "Q":
+        if timeframe == fld.TIMEFRAME_QUARTERLY:
             value_column = financial_stat_std_t.c["M_ACCOUNT"]
-        elif period == "Y":
+        elif timeframe == fld.TIMEFRAME_YEARLY:
             if field in fld.FINANCIAL_STAT_STD_MAP["B"]:
                 value_column = financial_stat_std_t.c["M_ACCOUNT"]
             else:
                 value_column = financial_stat_std_t.c["M_ACC_ACCOUNT_12M"]
-        elif period == "YTD":
+        elif timeframe == fld.TIMEFRAME_YTD:
             value_column = financial_stat_std_t.c["M_ACC_ACCOUNT"]
-        elif period == "AVG":
+        elif timeframe == "average":
             value_column = financial_stat_std_t.c["M_ACCOUNT_AVG"]
-        elif period == "TTM":
+        elif timeframe == fld.TIMEFRAME_TTM:
             value_column = financial_stat_std_t.c["M_ACC_ACCOUNT_12M"]
         else:
-            raise ValueError(f"{period} is not a valid period")
+            raise ValueError(f"{timeframe} is not a valid timeframe")
 
         stmt = (
             select(
@@ -1824,7 +1830,7 @@ class SETDataReader:
             )
         )
 
-        if period == "Y":
+        if timeframe == fld.TIMEFRAME_YEARLY:
             stmt = stmt.where(financial_stat_std_t.c.I_QUARTER == 9)
 
         return stmt
