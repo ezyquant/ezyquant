@@ -1890,15 +1890,20 @@ class SETDataReader:
 
         j = self._join_sector_table(daily_sector_info_t)
 
+        try:
+            field_col = daily_sector_info_t.c[fld.DAILY_SECTOR_INFO_MAP[field]]
+        except KeyError:
+            raise InputError(
+                f"{field} is not a valid field. More fields can be found in ezyquant.fields"
+            )
+
         # N_SECTOR is the industry name in F_DATA = 'I'
         stmt = (
             select(
                 [
                     daily_sector_info_t.c.D_TRADE.label("trade_date"),
                     func.trim(sector_t.c.N_SECTOR).label("sector"),
-                    daily_sector_info_t.c[fld.DAILY_SECTOR_INFO_MAP[field]].label(
-                        field
-                    ),
+                    field_col.label(field),
                 ]
             )
             .select_from(j)
