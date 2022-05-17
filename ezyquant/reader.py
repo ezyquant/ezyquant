@@ -1729,8 +1729,8 @@ class SETDataReader:
         elif field in fld.FINANCIAL_SCREEN_MAP and period in ("Q", "Y", "YTD"):
             stmt = self._get_financial_screen_stmt(field=field, period=period)
         else:
-            raise ValueError(
-                f"{field} is not supported for {period}. More field in ezyquant.field"
+            raise InputError(
+                f"{field} is not a valid field. More fields can be found in ezyquant.fields"
             )
 
         stmt = self._filter_stmt_by_symbol_and_date(
