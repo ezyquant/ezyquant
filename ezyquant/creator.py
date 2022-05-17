@@ -103,9 +103,9 @@ class SETSignalCreator:
             df = df.shift(shift)
 
             if method != fld.METHOD_CONSTANT:
-                r = df.rolling(period)
+                roll = df.rolling(period)
                 try:
-                    df = getattr(r, method)()
+                    df = getattr(roll, method)()
                 except AttributeError:
                     raise InputError("Invalid method")
 
@@ -121,22 +121,25 @@ class SETSignalCreator:
                     symbol_list=self._symbol_list,
                     start_date=self._start_date,
                     end_date=self._end_date,
-                    period=timeframe,
+                    timeframe=timeframe,
                     fillna_value=np.inf,
                 )
 
                 df = self._reindex_trade_date(df)
 
-                df = self._manipulate_df(
-                    df=df, method=method, period=period, shift=shift
+                df = df.apply(
+                    lambda x: self._rolling_skip_na_keep_inf(
+                        x, method=method, period=period, shift=shift
+                    ),
+                    axis=0,
                 )
+                df = df.fillna(method="ffill")
+                df = df.replace(np.inf, np.nan)
             else:
                 raise InputError("Invalid value_by")
 
         else:
-            raise InputError("Invalid timeframe")
-
-        assert isinstance(df, pd.DataFrame)
+            raise InputError("Invalid timeframe {}".format(timeframe))
 
         return df
 
@@ -156,35 +159,22 @@ class SETSignalCreator:
         return df
 
     @staticmethod
-    def _manipulate_df(df: pd.DataFrame, method: str, period: int, shift: int):
-        if method != fld.METHOD_CONSTANT:
-            df = df.apply(
-                lambda x: SETSignalCreator._rolling_skip_na_keep_inf(
-                    x, method=method, period=period, shift=shift
-                ),
-                axis=0,
-            )
-        df = df.fillna(method="ffill")
-        df = df.replace(np.inf, np.nan)
-        return df
-
-    @staticmethod
     def _rolling_skip_na_keep_inf(
         series: pd.Series, method: str, period: int, shift: int
     ) -> pd.Series:
         series = series.dropna().shift(shift)
+        is_inf = np.isinf(series)
 
-        roll = series.rolling(period)
+        if method != fld.METHOD_CONSTANT:
+            roll = series.rolling(period)
 
-        if method == fld.METHOD_SUM:
-            out = roll.sum()
-        elif method == fld.METHOD_MEAN:
-            out = roll.mean()
-        else:
-            raise InputError("Invalid method")
+            try:
+                series = getattr(roll, method)()
+            except AttributeError:
+                raise InputError("Invalid method")
 
-        out = out.mask(np.isinf(series), np.inf)
-        out = out.fillna(method="ffill")
+            series = series.mask(is_inf, np.inf)
 
-        assert isinstance(out, pd.Series)
-        return out
+        series = series.fillna(method="ffill")
+
+        return series
