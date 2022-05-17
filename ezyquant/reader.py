@@ -1053,28 +1053,7 @@ class SETDataReader:
         ...     end_date=None,
         ... )
                            COM7      MALEE
-        2022-02-01          NaN        NaN
-        2022-02-02          NaN        NaN
-        2022-02-03          NaN        NaN
-        2022-02-04          NaN        NaN
-        2022-02-07          NaN        NaN
-        2022-02-08          NaN        NaN
-        2022-02-09          NaN        NaN
-        2022-02-10          NaN        NaN
-        2022-02-11          NaN        NaN
-        2022-02-14          NaN        NaN
-        2022-02-15          NaN        NaN
-        2022-02-17          NaN        NaN
-        2022-02-18          NaN        NaN
-        2022-02-21          NaN        NaN
-        2022-02-22          NaN        NaN
-        2022-02-23          NaN        NaN
-        2022-02-24          NaN        NaN
-        2022-02-25          NaN        NaN
-        2022-02-28          NaN        NaN
         2022-03-01          NaN  953995.79
-        2022-03-02          NaN        NaN
-        2022-03-03          NaN        NaN
         2022-03-04  17573710.66        NaN
         """
         return self._get_fundamental_data(
@@ -1132,28 +1111,7 @@ class SETDataReader:
         ...     end_date=None,
         ... )
                            COM7       MALEE
-        2022-02-01          NaN         NaN
-        2022-02-02          NaN         NaN
-        2022-02-03          NaN         NaN
-        2022-02-04          NaN         NaN
-        2022-02-07          NaN         NaN
-        2022-02-08          NaN         NaN
-        2022-02-09          NaN         NaN
-        2022-02-10          NaN         NaN
-        2022-02-11          NaN         NaN
-        2022-02-14          NaN         NaN
-        2022-02-15          NaN         NaN
-        2022-02-17          NaN         NaN
-        2022-02-18          NaN         NaN
-        2022-02-21          NaN         NaN
-        2022-02-22          NaN         NaN
-        2022-02-23          NaN         NaN
-        2022-02-24          NaN         NaN
-        2022-02-25          NaN         NaN
-        2022-02-28          NaN         NaN
         2022-03-01          NaN  3488690.79
-        2022-03-02          NaN         NaN
-        2022-03-03          NaN         NaN
         2022-03-04  51154660.73         NaN
         """
         return self._get_fundamental_data(
@@ -1218,28 +1176,7 @@ class SETDataReader:
         ...     end_date=None,
         ... )
                            COM7       MALEE
-        2022-02-01          NaN         NaN
-        2022-02-02          NaN         NaN
-        2022-02-03          NaN         NaN
-        2022-02-04          NaN         NaN
-        2022-02-07          NaN         NaN
-        2022-02-08          NaN         NaN
-        2022-02-09          NaN         NaN
-        2022-02-10          NaN         NaN
-        2022-02-11          NaN         NaN
-        2022-02-14          NaN         NaN
-        2022-02-15          NaN         NaN
-        2022-02-17          NaN         NaN
-        2022-02-18          NaN         NaN
-        2022-02-21          NaN         NaN
-        2022-02-22          NaN         NaN
-        2022-02-23          NaN         NaN
-        2022-02-24          NaN         NaN
-        2022-02-25          NaN         NaN
-        2022-02-28          NaN         NaN
         2022-03-01          NaN  3488690.79
-        2022-03-02          NaN         NaN
-        2022-03-03          NaN         NaN
         2022-03-04  51154660.73         NaN
         """
         return self._get_fundamental_data(
@@ -1301,28 +1238,7 @@ class SETDataReader:
         ...     end_date=None,
         ... )
                            COM7       MALEE
-        2022-02-01          NaN         NaN
-        2022-02-02          NaN         NaN
-        2022-02-03          NaN         NaN
-        2022-02-04          NaN         NaN
-        2022-02-07          NaN         NaN
-        2022-02-08          NaN         NaN
-        2022-02-09          NaN         NaN
-        2022-02-10          NaN         NaN
-        2022-02-11          NaN         NaN
-        2022-02-14          NaN         NaN
-        2022-02-15          NaN         NaN
-        2022-02-17          NaN         NaN
-        2022-02-18          NaN         NaN
-        2022-02-21          NaN         NaN
-        2022-02-22          NaN         NaN
-        2022-02-23          NaN         NaN
-        2022-02-24          NaN         NaN
-        2022-02-25          NaN         NaN
-        2022-02-28          NaN         NaN
         2022-03-01          NaN  3488690.79
-        2022-03-02          NaN         NaN
-        2022-03-03          NaN         NaN
         2022-03-04  51154660.73         NaN
         """
         return self._get_fundamental_data(
