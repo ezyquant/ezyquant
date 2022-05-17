@@ -19,6 +19,7 @@ class SETSignalCreator:
         start_date: str,
         end_date: str,
         sqlite_path: str,
+        ping: bool = True,
     ):
         self._index_list = index_list
         self._symbol_list = symbol_list
@@ -28,7 +29,10 @@ class SETSignalCreator:
         self._end_date = end_date
         self._sqlite_path = sqlite_path
 
-        self._sdr = SETDataReader(self._sqlite_path)
+        self._sdr = SETDataReader(self._sqlite_path, ping=False)
+
+        if ping:
+            self._get_trading_dates()
 
     def get_data(
         self,
@@ -98,16 +102,14 @@ class SETSignalCreator:
                     end_date=self._end_date,
                 )
             else:
-                raise InputError("Invalid value_by")
+                raise InputError(
+                    f"{value_by} is invalid value_by. Please read document to check valid value_by."
+                )
 
             df = df.shift(shift)
 
             if method != fld.METHOD_CONSTANT:
-                roll = df.rolling(period)
-                try:
-                    df = getattr(roll, method)()
-                except AttributeError:
-                    raise InputError("Invalid method")
+                df = self._rolling(df, method=method, period=period)
 
         elif timeframe in (
             fld.TIMEFRAME_QUARTERLY,
@@ -136,10 +138,14 @@ class SETSignalCreator:
                 df = df.fillna(method="ffill")
                 df = df.replace(np.inf, np.nan)
             else:
-                raise InputError("Invalid value_by")
+                raise InputError(
+                    f"{value_by} is invalid value_by. Please read document to check valid value_by."
+                )
 
         else:
-            raise InputError("Invalid timeframe {}".format(timeframe))
+            raise InputError(
+                f"{timeframe} is invalid timeframe. Please read document to check valid timeframe."
+            )
 
         return df
 
@@ -158,23 +164,27 @@ class SETSignalCreator:
         df = df.reindex(pd.DatetimeIndex(trade_dates))  # type: ignore
         return df
 
-    @staticmethod
     def _rolling_skip_na_keep_inf(
-        series: pd.Series, method: str, period: int, shift: int
+        self, series: pd.Series, method: str, period: int, shift: int
     ) -> pd.Series:
         series = series.dropna().shift(shift)
+
         is_inf = np.isinf(series)
 
         if method != fld.METHOD_CONSTANT:
-            roll = series.rolling(period)
-
-            try:
-                series = getattr(roll, method)()
-            except AttributeError:
-                raise InputError("Invalid method")
-
+            series = self._rolling(series, method=method, period=period)
             series = series.mask(is_inf, np.inf)
 
         series = series.fillna(method="ffill")
 
         return series
+
+    def _rolling(self, data, method: str, period: int):
+        roll = data.rolling(period)
+        try:
+            data = getattr(roll, method)()
+        except AttributeError:
+            raise InputError(
+                f"{method} is invalid method. Please read document to check valid method."
+            )
+        return data
