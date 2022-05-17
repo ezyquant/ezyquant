@@ -880,7 +880,52 @@ class SETDataReader:
         Parameters
         ----------
         field : str
-            Filed of data e.g. 'open', 'high', 'low', 'close', 'volume'. More fields can be found in ezyquant.fields
+            - prior
+            - open
+            - high
+            - low
+            - close
+            - average
+            - last_bid
+            - last_offer
+            - trans
+            - volume
+            - value
+            - pe
+            - pb
+            - par
+            - dps
+            - dvd_yield
+            - mkt_cap
+            - eps
+            - book_value
+            - quarter_fin
+            - month_dvd
+            - as_of
+            - dividend
+            - status
+            - benefit
+            - share_listed
+            - turnover
+            - share_index
+            - npg
+            - total_volume
+            - total_value
+            - beta
+            - roi
+            - acc_dps
+            - dvd_payment
+            - dvd_payout
+            - earning
+            - iv
+            - delta
+            - notice
+            - non_compliance
+            - stabilization
+            - call_market
+            - caution
+            - 12m_dvd_yield
+            - peg
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, must be unique, by default None
         start_date : Optional[str]
@@ -1023,7 +1068,105 @@ class SETDataReader:
         Parameters
         ----------
         field : str
-            Filed of data e.g. 'roe', 'roa', 'eps'. More fields can be found in ezyquant.fields
+            - year
+            - period_type
+            - period
+            - quarter
+            - accumulate
+            - as_of
+            - total_asset
+            - total_liability
+            - shld_equity
+            - total_revenue
+            - total_expense
+            - net_profit
+            - eps
+            - de
+            - net_profit_margin
+            - gross_profit_margin
+            - roa
+            - roe
+            - asset_turnover
+            - ebit
+            - fix_asset_turnover
+            - current_ratio
+            - quick_ratio
+            - interest_coverage
+            - ar_turnover
+            - inventory_turnover
+            - ap_turnover
+            - cash_cycle
+            - ebitda
+            - net_operating
+            - net_investing
+            - net_financing
+            - net_cashflow
+            - dscr
+            - ibde
+            - account_payable
+            - account_receivable
+            - accrued_int_receive
+            - allowance
+            - cap_paidin
+            - cap_paidup
+            - cash
+            - common_share
+            - current_asset
+            - current_liability
+            - deposit
+            - earning_asset
+            - int_bearing_debt
+            - inventory
+            - invest_asset
+            - investment
+            - invest_security
+            - loan
+            - loan_from_relatedparty
+            - loan_revenue
+            - loan_to_relatedparty
+            - longterm_liability_currentportion
+            - longterm_liability_net_currentportion
+            - minority_interest
+            - ppe
+            - preferred_share
+            - retain_earning
+            - retain_earning_unappropriate
+            - shld_equity
+            - short_invest
+            - total_asset
+            - total_equity
+            - total_liability
+            - change_ppe
+            - dividend
+            - dp
+            - net_cash_flow
+            - net_financing
+            - net_investing
+            - net_operating
+            - bad_debt
+            - broker_fee
+            - cos
+            - ebit
+            - ebitda
+            - ebt
+            - int_dvd_income
+            - interest_expense
+            - interest_income
+            - invest_sec_rev
+            - loan_deposit_revenue
+            - net_premium
+            - net_profit
+            - net_profit_incl_minority
+            - net_profit_ordinary
+            - operating_expense
+            - operating_revenue
+            - pl_other_activities
+            - sale
+            - selling_admin
+            - selling_admin_exc_renumuration
+            - total_expense
+            - total_revenue
+            - eps
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, must be unique, by default None
         start_date : Optional[str]
@@ -1078,7 +1221,105 @@ class SETDataReader:
         Parameters
         ----------
         field : str
-            Filed of data e.g. 'roe', 'roa', 'eps'. More fields can be found in ezyquant.fields
+            - year
+            - period_type
+            - period
+            - quarter
+            - accumulate
+            - as_of
+            - total_asset
+            - total_liability
+            - shld_equity
+            - total_revenue
+            - total_expense
+            - net_profit
+            - eps
+            - de
+            - net_profit_margin
+            - gross_profit_margin
+            - roa
+            - roe
+            - asset_turnover
+            - ebit
+            - fix_asset_turnover
+            - current_ratio
+            - quick_ratio
+            - interest_coverage
+            - ar_turnover
+            - inventory_turnover
+            - ap_turnover
+            - cash_cycle
+            - ebitda
+            - net_operating
+            - net_investing
+            - net_financing
+            - net_cashflow
+            - dscr
+            - ibde
+            - account_payable
+            - account_receivable
+            - accrued_int_receive
+            - allowance
+            - cap_paidin
+            - cap_paidup
+            - cash
+            - common_share
+            - current_asset
+            - current_liability
+            - deposit
+            - earning_asset
+            - int_bearing_debt
+            - inventory
+            - invest_asset
+            - investment
+            - invest_security
+            - loan
+            - loan_from_relatedparty
+            - loan_revenue
+            - loan_to_relatedparty
+            - longterm_liability_currentportion
+            - longterm_liability_net_currentportion
+            - minority_interest
+            - ppe
+            - preferred_share
+            - retain_earning
+            - retain_earning_unappropriate
+            - shld_equity
+            - short_invest
+            - total_asset
+            - total_equity
+            - total_liability
+            - change_ppe
+            - dividend
+            - dp
+            - net_cash_flow
+            - net_financing
+            - net_investing
+            - net_operating
+            - bad_debt
+            - broker_fee
+            - cos
+            - ebit
+            - ebitda
+            - ebt
+            - int_dvd_income
+            - interest_expense
+            - interest_income
+            - invest_sec_rev
+            - loan_deposit_revenue
+            - net_premium
+            - net_profit
+            - net_profit_incl_minority
+            - net_profit_ordinary
+            - operating_expense
+            - operating_revenue
+            - pl_other_activities
+            - sale
+            - selling_admin
+            - selling_admin_exc_renumuration
+            - total_expense
+            - total_revenue
+            - eps
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, must be unique, by default None
         start_date : Optional[str]
@@ -1128,16 +1369,46 @@ class SETDataReader:
 
         TTM can be calculate only Income Statement and Cashflow, but not Financial Ratio and Balance Sheet.
 
-        Data from table FINANCIAL_STAT_STD, FINANCIAL_SCREEN. If field is in both table, the data from FINANCIAL_SCREEN will be used.
+        Data from table FINANCIAL_SCREEN.
 
-        FINANCIAL_STAT_STD filter by using data from column M_ACC_ACCOUNT_12M. FINANCIAL_SCREEN don't have TTM data.
+        FINANCIAL_STAT_STD filter by using data from column M_ACC_ACCOUNT_12M.
 
         Index date is trade date (DAILY_STOCK_STAT.D_TRADE). Data is showing at first trade date which join on D_AS_OF.
 
         Parameters
         ----------
         field : str
-            Filed of data e.g. 'roe', 'roa', 'eps'. More fields can be found in ezyquant.fields
+            - change_ppe
+            - dividend
+            - dp
+            - net_cash_flow
+            - net_financing
+            - net_investing
+            - net_operating
+            - bad_debt
+            - broker_fee
+            - cos
+            - ebit
+            - ebitda
+            - ebt
+            - int_dvd_income
+            - interest_expense
+            - interest_income
+            - invest_sec_rev
+            - loan_deposit_revenue
+            - net_premium
+            - net_profit
+            - net_profit_incl_minority
+            - net_profit_ordinary
+            - operating_expense
+            - operating_revenue
+            - pl_other_activities
+            - sale
+            - selling_admin
+            - selling_admin_exc_renumuration
+            - total_expense
+            - total_revenue
+            - eps
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, must be unique, by default None
         start_date : Optional[str]
@@ -1194,7 +1465,105 @@ class SETDataReader:
         Parameters
         ----------
         field : str
-            Filed of data e.g. 'roe', 'roa', 'eps'. More fields can be found in ezyquant.fields
+            - year
+            - period_type
+            - period
+            - quarter
+            - accumulate
+            - as_of
+            - total_asset
+            - total_liability
+            - shld_equity
+            - total_revenue
+            - total_expense
+            - net_profit
+            - eps
+            - de
+            - net_profit_margin
+            - gross_profit_margin
+            - roa
+            - roe
+            - asset_turnover
+            - ebit
+            - fix_asset_turnover
+            - current_ratio
+            - quick_ratio
+            - interest_coverage
+            - ar_turnover
+            - inventory_turnover
+            - ap_turnover
+            - cash_cycle
+            - ebitda
+            - net_operating
+            - net_investing
+            - net_financing
+            - net_cashflow
+            - dscr
+            - ibde
+            - account_payable
+            - account_receivable
+            - accrued_int_receive
+            - allowance
+            - cap_paidin
+            - cap_paidup
+            - cash
+            - common_share
+            - current_asset
+            - current_liability
+            - deposit
+            - earning_asset
+            - int_bearing_debt
+            - inventory
+            - invest_asset
+            - investment
+            - invest_security
+            - loan
+            - loan_from_relatedparty
+            - loan_revenue
+            - loan_to_relatedparty
+            - longterm_liability_currentportion
+            - longterm_liability_net_currentportion
+            - minority_interest
+            - ppe
+            - preferred_share
+            - retain_earning
+            - retain_earning_unappropriate
+            - shld_equity
+            - short_invest
+            - total_asset
+            - total_equity
+            - total_liability
+            - change_ppe
+            - dividend
+            - dp
+            - net_cash_flow
+            - net_financing
+            - net_investing
+            - net_operating
+            - bad_debt
+            - broker_fee
+            - cos
+            - ebit
+            - ebitda
+            - ebt
+            - int_dvd_income
+            - interest_expense
+            - interest_income
+            - invest_sec_rev
+            - loan_deposit_revenue
+            - net_premium
+            - net_profit
+            - net_profit_incl_minority
+            - net_profit_ordinary
+            - operating_expense
+            - operating_revenue
+            - pl_other_activities
+            - sale
+            - selling_admin
+            - selling_admin_exc_renumuration
+            - total_expense
+            - total_revenue
+            - eps
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, must be unique, by default None
         start_date : Optional[str]
@@ -1244,7 +1613,25 @@ class SETDataReader:
         Parameters
         ----------
         field : str
-            Filed of data e.g. 'high', 'low', 'close'. More fields can be found in ezyquant.fields
+            - high
+            - low
+            - close
+            - tri
+            - total_trans
+            - total_volume
+            - total_value
+            - mkt_pe
+            - mkt_pbv
+            - mkt_yield
+            - mkt_cap
+            - mkt_par_value
+            - trading_day
+            - new_company
+            - delisted_company
+            - move_in_company
+            - move_out_company
+            - listed_company
+            - listed_stock
         index_list : Optional[List[str]]
             N_SECTOR in index_list, by default None. More index can be found in ezyquant.fields
         start_date : Optional[str]
@@ -1342,7 +1729,23 @@ class SETDataReader:
         Parameters
         ----------
         field : str
-            Filed of data e.g. 'high', 'low', 'close'. More fields can be found in ezyquant.fields
+            - prior
+            - open
+            - high
+            - low
+            - close
+            - trans
+            - volume
+            - value
+            - mkt_pe
+            - mkt_pbv
+            - mkt_yield
+            - mkt_cap
+            - turnover
+            - share_listed_avg
+            - beta
+            - turnover_volume
+            - 12m_dvd_yield
         market : str
             I_MARKET e.g. 'SET', 'mai', by default 'SET'
         sector_list : Optional[List[str]]
@@ -1399,7 +1802,23 @@ class SETDataReader:
         Parameters
         ----------
         field : str
-            Filed of data e.g. 'high', 'low', 'close'. More fields can be found in ezyquant.fields
+            - prior
+            - open
+            - high
+            - low
+            - close
+            - trans
+            - volume
+            - value
+            - mkt_pe
+            - mkt_pbv
+            - mkt_yield
+            - mkt_cap
+            - turnover
+            - share_listed_avg
+            - beta
+            - turnover_volume
+            - 12m_dvd_yield
         market : str
             I_MARKET e.g. 'SET', 'mai', by default 'SET'
         industry_list : Optional[List[str]]
