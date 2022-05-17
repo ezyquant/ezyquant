@@ -6,10 +6,13 @@ from numpy import inf, nan
 from pandas.testing import assert_frame_equal
 
 import ezyquant.fields as fld
+import tests.utils as utils
 from ezyquant.creator import SETSignalCreator
 
 
 class TestGetData:
+    _check = staticmethod(utils.check_data_symbol_daily)
+
     @pytest.mark.parametrize(
         "df",
         [
@@ -85,8 +88,7 @@ class TestGetData:
         expected: pd.DataFrame,
     ):
         # Mock
-        end = df.shape[0]
-        ssc._reindex_trade_date = lambda df: df.reindex(pd.RangeIndex(end))  # type: ignore
+        ssc._reindex_trade_date = lambda df: df
         ssc._sdr._get_fundamental_data = Mock(return_value=df)
 
         # Test
@@ -105,7 +107,72 @@ class TestGetData:
             symbol_list=ANY,
             start_date=ANY,
             end_date=ANY,
-            period=fld.TIMEFRAME_QUARTERLY,
+            timeframe=fld.TIMEFRAME_QUARTERLY,
             fillna_value=inf,
         )
         assert_frame_equal(result, expected)
+
+    @pytest.mark.parametrize(
+        ("field", "timeframe", "value_by"),
+        [
+            # symbol daily
+            (fld.D_CLOSE, fld.TIMEFRAME_DAILY, fld.VALUE_BY_STOCK),
+            (fld.D_PE, fld.TIMEFRAME_DAILY, fld.VALUE_BY_STOCK),
+            # symbol quarterly
+            (fld.Q_ROE, fld.TIMEFRAME_QUARTERLY, fld.VALUE_BY_STOCK),
+            (fld.Q_TOTAL_ASSET, fld.TIMEFRAME_QUARTERLY, fld.VALUE_BY_STOCK),
+            (fld.Q_EBITDA, fld.TIMEFRAME_QUARTERLY, fld.VALUE_BY_STOCK),
+            (fld.Q_NET_FINANCING, fld.TIMEFRAME_QUARTERLY, fld.VALUE_BY_STOCK),
+            # symbol yearly
+            (fld.Q_ROE, fld.TIMEFRAME_YEARLY, fld.VALUE_BY_STOCK),
+            (fld.Q_TOTAL_ASSET, fld.TIMEFRAME_YEARLY, fld.VALUE_BY_STOCK),
+            (fld.Q_EBITDA, fld.TIMEFRAME_YEARLY, fld.VALUE_BY_STOCK),
+            (fld.Q_NET_FINANCING, fld.TIMEFRAME_YEARLY, fld.VALUE_BY_STOCK),
+            # symbol ttm
+            (fld.Q_EBITDA, fld.TIMEFRAME_TTM, fld.VALUE_BY_STOCK),
+            (fld.Q_NET_FINANCING, fld.TIMEFRAME_TTM, fld.VALUE_BY_STOCK),
+            # symbol ytd
+            (fld.Q_ROE, fld.TIMEFRAME_YTD, fld.VALUE_BY_STOCK),
+            (fld.Q_TOTAL_ASSET, fld.TIMEFRAME_YTD, fld.VALUE_BY_STOCK),
+            (fld.Q_EBITDA, fld.TIMEFRAME_YTD, fld.VALUE_BY_STOCK),
+            (fld.Q_NET_FINANCING, fld.TIMEFRAME_YTD, fld.VALUE_BY_STOCK),
+            # index daily
+            (fld.D_INDEX_CLOSE, fld.TIMEFRAME_DAILY, fld.VALUE_BY_INDEX),
+            (fld.D_INDEX_MKT_PE, fld.TIMEFRAME_DAILY, fld.VALUE_BY_INDEX),
+            # sector daily
+            (fld.D_SECTOR_CLOSE, fld.TIMEFRAME_DAILY, fld.VALUE_BY_SECTOR),
+            (fld.D_SECTOR_MKT_PE, fld.TIMEFRAME_DAILY, fld.VALUE_BY_SECTOR),
+            # industry daily
+            (fld.D_SECTOR_CLOSE, fld.TIMEFRAME_DAILY, fld.VALUE_BY_INDUSTRY),
+            (fld.D_SECTOR_MKT_PE, fld.TIMEFRAME_DAILY, fld.VALUE_BY_INDUSTRY),
+        ],
+    )
+    @pytest.mark.parametrize("period", [1, 2, 1000])
+    @pytest.mark.parametrize("shift", [0, 1, 2, 1000])
+    @pytest.mark.parametrize(
+        "method", [fld.METHOD_CONSTANT, fld.METHOD_SUM, fld.METHOD_MEAN]
+    )
+    def test_empty(
+        self,
+        ssc: SETSignalCreator,
+        field: str,
+        timeframe: str,
+        value_by: str,
+        method: str,
+        period: int,
+        shift: int,
+    ):
+        # Test
+        result = ssc.get_data(
+            field=field,
+            timeframe=timeframe,
+            value_by=value_by,
+            method=method,
+            period=period,
+            shift=shift,
+        )
+
+        # Check
+        self._check(result)
+
+        assert result.empty

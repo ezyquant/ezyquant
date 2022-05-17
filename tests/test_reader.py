@@ -5,6 +5,7 @@ import pytest
 from pandas._testing import assert_frame_equal, assert_index_equal, assert_series_equal
 
 import ezyquant.fields as fld
+import tests.utils as utils
 from ezyquant.errors import InputError
 from ezyquant.reader import SETDataReader
 
@@ -1065,6 +1066,8 @@ class TestGetAdjustFactor:
 class TestGetDataSymbolDaily:
     """source: https://www.tradingview.com/chart/?symbol=SET:COM7"""
 
+    _check = staticmethod(utils.check_data_symbol_daily)
+
     @pytest.mark.parametrize(
         "field", [fld.D_AVERAGE, fld.D_VALUE, fld.D_TURNOVER, fld.D_12M_DVD_YIELD]
     )
@@ -1274,22 +1277,9 @@ class TestGetDataSymbolDaily:
         with pytest.raises(InputError):
             sdr.get_data_symbol_daily("close", symbol_list)
 
-    @staticmethod
-    def _check(result):
-        assert isinstance(result, pd.DataFrame)
-
-        assert isinstance(result.index, pd.DatetimeIndex)
-        assert result.index.is_monotonic_increasing
-        assert result.index.is_unique
-        assert (result.index == result.index.normalize()).all()  # type: ignore
-
-        assert (result.columns == result.columns.str.upper()).all()
-
-        return result
-
 
 class TestGetDataSymbolQuarterly:
-    _check = staticmethod(TestGetDataSymbolDaily._check)
+    _check = staticmethod(utils.check_data_symbol_daily)
 
     @pytest.mark.parametrize(
         "field",
@@ -1387,7 +1377,7 @@ class TestGetDataSymbolQuarterly:
 
 
 class TestGetDataSymbolYearly:
-    _check = staticmethod(TestGetDataSymbolDaily._check)
+    _check = staticmethod(utils.check_data_symbol_daily)
 
     @pytest.mark.parametrize(
         "field",
@@ -1475,7 +1465,7 @@ class TestGetDataSymbolYearly:
 
 
 class TestGetDataSymbolTtm:
-    _check = staticmethod(TestGetDataSymbolDaily._check)
+    _check = staticmethod(utils.check_data_symbol_daily)
 
     @pytest.mark.parametrize(
         "field",
@@ -1551,7 +1541,7 @@ class TestGetDataSymbolTtm:
 
 
 class TestGetDataSymbolYtd:
-    _check = staticmethod(TestGetDataSymbolDaily._check)
+    _check = staticmethod(utils.check_data_symbol_daily)
 
     @pytest.mark.parametrize(
         "field",

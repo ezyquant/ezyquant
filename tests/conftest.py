@@ -14,7 +14,7 @@ def sdr(sqlite_path: str) -> SETDataReader:
     return SETDataReader(sqlite_path, ping=False)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def ssc(sqlite_path: str) -> SETSignalCreator:
     return SETSignalCreator(
         index_list=[],
@@ -24,4 +24,5 @@ def ssc(sqlite_path: str) -> SETSignalCreator:
         start_date="2010-01-01",
         end_date="2020-01-01",
         sqlite_path=sqlite_path,
+        ping=False,
     )
