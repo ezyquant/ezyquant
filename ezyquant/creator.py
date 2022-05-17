@@ -51,9 +51,9 @@ class SETSignalCreator:
                     start_date=self._start_date,
                     end_date=self._end_date,
                 )
-
                 df = self._reindex_trade_date(df)
 
+                # Forward fill 0 and NaN with prior
                 if field in {
                     fld.D_OPEN,
                     fld.D_HIGH,
@@ -75,8 +75,6 @@ class SETSignalCreator:
 
                     df = df.replace(0, np.nan)
                     df = df.fillna(prior_df)
-
-                df = df.fillna(method="ffill")
 
             elif value_by == fld.VALUE_BY_INDEX:
                 df = self._sdr.get_data_index_daily(
