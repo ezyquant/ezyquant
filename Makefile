@@ -5,7 +5,7 @@ install:
 
 .PHONY: test
 test:
-	pip install pytest
+	pip install pytest --upgrade
 	pytest
 
 .PHONY: format
@@ -17,9 +17,10 @@ format:
 
 .PHONY: pdoc
 pdoc:
+	pip install pdoc --upgrade
 	pdoc --docformat numpy ezyquant
 
 .PHONY: mkdocs
 mkdocs:
-	pip install mkdocs mkdocs-material
+	pip install mkdocs mkdocs-material --upgrade
 	mkdocs serve
