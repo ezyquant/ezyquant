@@ -7,6 +7,20 @@ import ezyquant.fields as fld
 from ezyquant.creator import SETSignalCreator
 
 
+class TestGetData:
+    def test_industry(self, ssc: SETSignalCreator):
+        ssc._industry_list = [fld.INDUSTRY_AGRO, fld.INDUSTRY_CONSUMP]
+
+        result = ssc.get_data(
+            field=fld.D_INDUSTRY_CLOSE,
+            timeframe=fld.TIMEFRAME_DAILY,
+            value_by=fld.VALUE_BY_INDUSTRY,
+            method=fld.METHOD_CONSTANT,
+            period=0,
+            shift=0,
+        )
+
+
 class TestManipulateDf:
     @pytest.mark.parametrize(
         ("df", "expected"),

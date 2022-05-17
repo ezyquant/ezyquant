@@ -39,90 +39,78 @@ class SETSignalCreator:
         period: int,
         shift: int,
     ) -> pd.DataFrame:
-        if value_by == fld.VALUE_BY_STOCK:
-            if timeframe == fld.TIMEFRAME_DAILY:
-                df = self._sdr.get_data_symbol_daily(
-                    field=field,
+        if value_by == fld.VALUE_BY_STOCK and timeframe == fld.TIMEFRAME_DAILY:
+            df = self._sdr.get_data_symbol_daily(
+                field=field,
+                symbol_list=self._symbol_list,
+                start_date=self._start_date,
+                end_date=self._end_date,
+            )
+
+            df = self._reindex_trading_dates(df)
+
+            if field in {
+                fld.D_PRIOR,
+                fld.D_OPEN,
+                fld.D_HIGH,
+                fld.D_LOW,
+                fld.D_CLOSE,
+                fld.D_AVERAGE,
+                fld.D_LAST_BID,
+                fld.D_LAST_OFFER,
+            }:
+                prior_df = self._sdr.get_data_symbol_daily(
+                    field=fld.D_PRIOR,
                     symbol_list=self._symbol_list,
                     start_date=self._start_date,
                     end_date=self._end_date,
                 )
+                prior_df = self._reindex_trading_dates(prior_df)
+                prior_df = prior_df.replace(0, np.nan)
+                prior_df = prior_df.fillna(method="ffill")
 
-                df = self._reindex_trading_dates(df)
+                df = df.replace(0, np.nan)
+                df = df.fillna(prior_df)
 
-                if field in {
-                    fld.D_PRIOR,
-                    fld.D_OPEN,
-                    fld.D_HIGH,
-                    fld.D_LOW,
-                    fld.D_CLOSE,
-                    fld.D_AVERAGE,
-                    fld.D_LAST_BID,
-                    fld.D_LAST_OFFER,
-                }:
-                    prior_df = self._sdr.get_data_symbol_daily(
-                        field=fld.D_PRIOR,
-                        symbol_list=self._symbol_list,
-                        start_date=self._start_date,
-                        end_date=self._end_date,
-                    )
-                    prior_df = self._reindex_trading_dates(prior_df)
-                    prior_df = prior_df.replace(0, np.nan)
-                    prior_df = prior_df.fillna(method="ffill")
+        elif value_by == fld.VALUE_BY_STOCK and timeframe in (
+            fld.TIMEFRAME_QUARTERLY,
+            fld.TIMEFRAME_YEARLY,
+            fld.TIMEFRAME_TTM,
+            fld.TIMEFRAME_YTD,
+        ):
+            df = self._sdr._get_fundamental_data(
+                field=field,
+                symbol_list=self._symbol_list,
+                start_date=self._start_date,
+                end_date=self._end_date,
+                period=timeframe,
+                fillna_value=np.inf,
+            )
 
-                    df = df.replace(0, np.nan)
-                    df = df.fillna(prior_df)
-
-            elif timeframe in (
-                fld.TIMEFRAME_QUARTERLY,
-                fld.TIMEFRAME_YEARLY,
-                fld.TIMEFRAME_TTM,
-                fld.TIMEFRAME_YTD,
-            ):
-                df = self._sdr._get_fundamental_data(
-                    field=field,
-                    symbol_list=self._symbol_list,
-                    start_date=self._start_date,
-                    end_date=self._end_date,
-                    period=timeframe,
-                    fillna_value=np.inf,
-                )
-
-                df = self._reindex_trading_dates(df)
-            else:
-                raise InputError("Invalid timeframe")
-        elif value_by == fld.VALUE_BY_INDEX:
-            if timeframe == fld.TIMEFRAME_DAILY:
-                df = self._sdr.get_data_index_daily(
-                    field=field,
-                    index_list=self._index_list,
-                    start_date=self._start_date,
-                    end_date=self._end_date,
-                )
-            else:
-                raise InputError("Invalid timeframe")
-        elif value_by == fld.VALUE_BY_SECTOR:
-            if timeframe == fld.TIMEFRAME_DAILY:
-                df = self._sdr.get_data_sector_daily(
-                    field=field,
-                    sector_list=self._sector_list,
-                    start_date=self._start_date,
-                    end_date=self._end_date,
-                )
-            else:
-                raise InputError("Invalid timeframe")
-        elif value_by == fld.VALUE_BY_INDUSTRY:
-            if timeframe == fld.TIMEFRAME_DAILY:
-                df = self._sdr.get_data_industry_daily(
-                    field=field,
-                    industry_list=self._industry_list,
-                    start_date=self._start_date,
-                    end_date=self._end_date,
-                )
-            else:
-                raise InputError("Invalid timeframe")
+            df = self._reindex_trading_dates(df)
+        elif value_by == fld.VALUE_BY_INDEX and timeframe == fld.TIMEFRAME_DAILY:
+            df = self._sdr.get_data_index_daily(
+                field=field,
+                index_list=self._index_list,
+                start_date=self._start_date,
+                end_date=self._end_date,
+            )
+        elif value_by == fld.VALUE_BY_SECTOR and timeframe == fld.TIMEFRAME_DAILY:
+            df = self._sdr.get_data_sector_daily(
+                field=field,
+                sector_list=self._sector_list,
+                start_date=self._start_date,
+                end_date=self._end_date,
+            )
+        elif value_by == fld.VALUE_BY_INDUSTRY and timeframe == fld.TIMEFRAME_DAILY:
+            df = self._sdr.get_data_industry_daily(
+                field=field,
+                industry_list=self._industry_list,
+                start_date=self._start_date,
+                end_date=self._end_date,
+            )
         else:
-            raise InputError("Invalid value_by")
+            raise InputError("Invalid timeframe or value_by")
 
         df = self._manipulate_df(df=df, method=method, period=period, shift=shift)
 
