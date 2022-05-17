@@ -931,8 +931,8 @@ class SETDataReader:
             daily_stock_t = self._table("DAILY_STOCK_STAT")
             field_col = daily_stock_t.c[fld.DAILY_STOCK_STAT_MAP[field]].label(field)
         else:
-            raise ValueError(
-                f"Invalid field ({field}). Please check field in ezyquant.fields"
+            raise InputError(
+                f"{field} is not a valid field. More fields can be found in ezyquant.fields"
             )
 
         j = daily_stock_t.join(
