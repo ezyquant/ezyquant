@@ -1366,8 +1366,8 @@ class SETDataReader:
             mktstat_daily_t = self._table("MKTSTAT_DAILY_MARKET")
             field_col = mktstat_daily_t.c[fld.MKTSTAT_DAILY_MARKET_MAP[field]]
         else:
-            raise ValueError(
-                f"{field} not in Data 1D field. Please check psims factor for more details."
+            raise InputError(
+                f"{field} is not a valid field. More fields can be found in ezyquant.fields"
             )
 
         j = self._join_sector_table(mktstat_daily_t)
