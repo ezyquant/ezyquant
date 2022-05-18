@@ -1,7 +1,7 @@
 .PHONY: install
 install:
 	pip install .
-	pip uninstall ezyquant
+	pip uninstall ezyquant -y
 
 .PHONY: test
 test:
