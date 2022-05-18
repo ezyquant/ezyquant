@@ -21,6 +21,27 @@ class SETSignalCreator:
         sqlite_path: str,
         ping: bool = True,
     ):
+        """Initialize SETSignalCreator.
+
+        Parameters
+        ----------
+        index_list : List[str]
+            List of index name.
+        symbol_list : List[str]
+            List of symbol name.
+        sector_list : List[str]
+            List of sector name.
+        industry_list : List[str]
+            List of industry name.
+        start_date : str
+            Start date of data.
+        end_date : str
+            End date of data.
+        sqlite_path : str
+            Path of sqlite file.
+        ping : bool, optional
+            Ping database or not, by default True
+        """
         self._index_list = index_list
         self._symbol_list = symbol_list
         self._sector_list = sector_list
@@ -43,6 +64,108 @@ class SETSignalCreator:
         period: int,
         shift: int,
     ) -> pd.DataFrame:
+        """_summary_
+
+        Parameters
+        ----------
+        field : str
+            Name of data field.
+        timeframe : str
+            - daily
+            - quarterly
+            - yearly
+            - ttm
+            - ytd
+        value_by : str
+            - stock
+            - index
+            - industry
+            - sector
+        method : str
+            - constant
+            - count
+            - sum
+            - mean
+            - median
+            - var
+            - std
+            - min
+            - max
+            - corr
+            - cov
+            - skew
+            - kurt
+            - apply
+            - aggregate
+            - quantile
+            - sem
+            - rank
+        period : int
+            Number of observations used for each window.
+        shift : int
+            Number of periods to shift. Can be positive or negative.
+
+        Returns
+        -------
+        pd.DataFrame
+            - symbol : str as column
+            - trade date : date as index
+
+        Examples
+        --------
+        >>> from ezyquant import SETSignalCreator
+        >>> from ezyquant import fields as fld
+        >>> ssc = SETSignalCreator(
+        ...     index_list=[],
+        ...     symbol_list=["COM7", "MALEE"],
+        ...     sector_list=[],
+        ...     industry_list=[],
+        ...     start_date="2022-01-01",
+        ...     end_date="2022-01-10",
+        ...     sqlite_path="psims.db",
+        ... )
+        >>> ssc.get_data(
+        ...     field=fld.D_CLOSE,
+        ...     timeframe=fld.TIMEFRAME_DAILY,
+        ...     value_by=fld.VALUE_BY_STOCK,
+        ...     method=fld.METHOD_CONSTANT,
+        ...     period=0,
+        ...     shift=0,
+        ... )
+                      COM7  MALEE
+        2022-01-04  41.875   6.55
+        2022-01-05  41.625   6.50
+        2022-01-06  41.500   6.50
+        2022-01-07  41.000   6.40
+        2022-01-10  40.875   6.30
+        ...            ...    ...
+        2022-03-28  42.750   5.75
+        2022-03-29  41.500   5.75
+        2022-03-30  42.250   5.70
+        2022-03-31  43.000   5.70
+        2022-04-01  42.500   5.70
+
+        >>> ssc.get_data(
+        ...     field=fld.Q_CASH,
+        ...     timeframe=fld.TIMEFRAME_QUARTERLY,
+        ...     value_by=fld.VALUE_BY_STOCK,
+        ...     method=fld.METHOD_CONSTANT,
+        ...     period=0,
+        ...     shift=0,
+        ... )
+                          COM7     MALEE
+        2022-01-04         NaN       NaN
+        2022-01-05         NaN       NaN
+        2022-01-06         NaN       NaN
+        2022-01-07         NaN       NaN
+        2022-01-10         NaN       NaN
+        ...                ...       ...
+        2022-03-28  1656882.22  80321.08
+        2022-03-29  1656882.22  80321.08
+        2022-03-30  1656882.22  80321.08
+        2022-03-31  1656882.22  80321.08
+        2022-04-01  1656882.22  80321.08
+        """
         timeframe = timeframe.lower()
         value_by = value_by.lower()
         method = method.lower()
@@ -129,14 +252,13 @@ class SETSignalCreator:
                     fillna_value=np.inf,
                 )
 
-                df = self._reindex_trade_date(df)
-
                 df = df.apply(
                     lambda x: self._rolling_skip_na_keep_inf(
                         x, method=method, period=period, shift=shift
                     ),
                     axis=0,
                 )
+                df = self._reindex_trade_date(df)
                 df = df.fillna(method="ffill")
                 df = df.replace(np.inf, np.nan)
             else:
@@ -164,8 +286,8 @@ class SETSignalCreator:
         )
 
     def _reindex_trade_date(self, df: pd.DataFrame) -> pd.DataFrame:
-        trade_dates = self._get_trading_dates()
-        df = df.reindex(pd.DatetimeIndex(trade_dates, freq=None))  # type: ignore
+        td = self._get_trading_dates()
+        df = df.reindex(pd.DatetimeIndex(td))  # type: ignore
         return df
 
     def _rolling_skip_na_keep_inf(

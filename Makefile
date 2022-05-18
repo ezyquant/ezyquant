@@ -10,10 +10,11 @@ test:
 
 .PHONY: format
 format:
-	isort .
+	isort . --skip-gitignore
 	black .
 
 	docformatter -i ezyquant/reader.py
+	docformatter -i ezyquant/creator.py
 
 .PHONY: docs
 docs:

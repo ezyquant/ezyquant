@@ -21,7 +21,8 @@ dt_idx = pd.DatetimeIndex(
         "2020-01-13",
         "2020-01-14",
         "2020-01-15",
-    ]
+    ],
+    freq=None,
 )
 
 
@@ -78,7 +79,7 @@ class TestGetData:
         assert_frame_equal(result, expect)
 
     @pytest.mark.parametrize(
-        "df",
+        "data",
         [
             pd.DataFrame(
                 {
@@ -150,7 +151,7 @@ class TestGetData:
     def test_fundamental_mock(
         self,
         ssc: SETSignalCreator,
-        df: pd.DataFrame,
+        data: pd.DataFrame,
         method: str,
         period: int,
         shift: int,
@@ -158,7 +159,7 @@ class TestGetData:
     ):
         # Mock
         ssc._reindex_trade_date = lambda df: df
-        ssc._sdr._get_fundamental_data = Mock(return_value=df)
+        ssc._sdr._get_fundamental_data = Mock(return_value=data)
 
         # Test
         result = ssc.get_data(
