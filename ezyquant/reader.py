@@ -1088,7 +1088,7 @@ class SETDataReader:
         in both table, the data from FINANCIAL_STAT_STD will be used.
         FINANCIAL_STAT_STD filter by "I_QUARTER"='9' and using data from column
         M_ACCOUNT. FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and
-        I_timeframe='YE'. Index date is trade date (DAILY_STOCK_STAT.D_TRADE).
+        I_PERIOD='YE'. Index date is trade date (DAILY_STOCK_STAT.D_TRADE).
         Data is showing at first trade date which join on D_AS_OF.
 
         Parameters
