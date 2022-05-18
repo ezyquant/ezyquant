@@ -10,6 +10,8 @@ test:
 
 .PHONY: format
 format:
+	pip install isort black docformatter --upgrade
+
 	isort .
 	black .
 
