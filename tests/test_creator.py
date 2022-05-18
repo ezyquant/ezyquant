@@ -2,11 +2,11 @@ from unittest.mock import ANY, Mock
 
 import pandas as pd
 import pytest
+import utils
 from numpy import inf, nan
 from pandas.testing import assert_frame_equal
 
 import ezyquant.fields as fld
-import tests.utils as utils
 from ezyquant.creator import SETSignalCreator
 
 dt_idx = pd.DatetimeIndex(

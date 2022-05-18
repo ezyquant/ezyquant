@@ -2,10 +2,10 @@ from typing import List, Optional
 
 import pandas as pd
 import pytest
+import utils
 from pandas._testing import assert_frame_equal, assert_index_equal, assert_series_equal
 
 import ezyquant.fields as fld
-import tests.utils as utils
 from ezyquant.errors import InputError
 from ezyquant.reader import SETDataReader
 
