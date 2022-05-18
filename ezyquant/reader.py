@@ -938,9 +938,8 @@ class SETDataReader:
         Returns
         -------
         pd.DataFrame
-            dataframe contain:
-                - symbol(N_SECURITY): str as column
-                - trade_date(D_TRADE): date as index
+            - symbol(N_SECURITY): str as column
+            - trade_date(D_TRADE): date as index
 
         Examples
         --------
@@ -1177,9 +1176,8 @@ class SETDataReader:
         Returns
         -------
         pd.DataFrame
-            dataframe contain:
-                - symbol(N_SECURITY): str as column
-                - trade date(DAILY_STOCK_STAT.D_TRADE): date as index
+            - symbol(N_SECURITY): str as column
+            - trade date(DAILY_STOCK_STAT.D_TRADE): date as index
 
         Examples
         --------
@@ -1330,9 +1328,8 @@ class SETDataReader:
         Returns
         -------
         pd.DataFrame
-            dataframe contain:
-                - symbol(N_SECURITY): str as column
-                - trade date(DAILY_STOCK_STAT.D_TRADE): date as index
+            - symbol(N_SECURITY): str as column
+            - trade date(DAILY_STOCK_STAT.D_TRADE): date as index
 
         Examples
         --------
@@ -1419,9 +1416,8 @@ class SETDataReader:
         Returns
         -------
         pd.DataFrame
-            dataframe contain:
-                - symbol(N_SECURITY): str as column
-                - trade date(DAILY_STOCK_STAT.D_TRADE): date as index
+            - symbol(N_SECURITY): str as column
+            - trade date(DAILY_STOCK_STAT.D_TRADE): date as index
 
         Examples
         --------
@@ -1574,9 +1570,8 @@ class SETDataReader:
         Returns
         -------
         pd.DataFrame
-            dataframe contain:
-                - symbol(N_SECURITY): str as column
-                - trade date(DAILY_STOCK_STAT.D_TRADE): date as index
+            - symbol(N_SECURITY): str as column
+            - trade date(DAILY_STOCK_STAT.D_TRADE): date as index
 
         Examples
         --------
@@ -1642,9 +1637,8 @@ class SETDataReader:
         Returns
         -------
         pd.DataFrame
-            dataframe contain:
-                - index: str as column
-                - trade_date: date as index
+            - index: str as column
+            - trade_date: date as index
 
         Examples
         --------
@@ -1758,9 +1752,8 @@ class SETDataReader:
         Returns
         -------
         pd.DataFrame
-            dataframe contain:
-                - sector: str as column
-                - trade_date: date as index
+            - sector: str as column
+            - trade_date: date as index
 
         Examples
         --------
@@ -1831,9 +1824,8 @@ class SETDataReader:
         Returns
         -------
         pd.DataFrame
-            dataframe contain:
-                - industry: str as column
-                - trade_date: date as index
+            - industry: str as column
+            - trade_date: date as index
 
         Examples
         --------
