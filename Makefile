@@ -17,7 +17,6 @@ format:
 
 .PHONY: docs
 docs:
-	pip install pdoc
 	pdoc --docformat numpy ezyquant
 
 .PHONY: mkdocs
