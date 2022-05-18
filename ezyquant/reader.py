@@ -964,7 +964,7 @@ class SETDataReader:
         )
 
         df = pd.read_sql_query(
-            stmt, self.__engine, index_col="trade_date", parse_dates="trade_date"
+            stmt, self.__engine, index_col="trade_date", parse_dates="trade_date", dtype={field: np.float64}  # type: ignore
         )
 
         df = df.pivot(columns="symbol", values=field)
@@ -1399,7 +1399,7 @@ class SETDataReader:
         )
 
         df = pd.read_sql_query(
-            sql, self.__engine, index_col="trade_date", parse_dates="trade_date"
+            sql, self.__engine, index_col="trade_date", parse_dates="trade_date", dtype={field: np.float64}  # type: ignore
         )
 
         df = df.pivot(columns="index", values=field)
@@ -1929,7 +1929,7 @@ class SETDataReader:
         )
 
         df = pd.read_sql_query(
-            stmt, self.__engine, index_col="trade_date", parse_dates="trade_date"
+            stmt, self.__engine, index_col="trade_date", parse_dates="trade_date", dtype={field: np.float64}  # type: ignore
         )
 
         df = df.pivot(columns="sector", values=field)
