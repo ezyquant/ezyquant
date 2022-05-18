@@ -55,7 +55,6 @@ class SETSignalCreator:
                     start_date=self._start_date,
                     end_date=self._end_date,
                 )
-                df = self._reindex_trade_date(df)
 
                 # Forward fill 0 and NaN with prior
                 if field in {
@@ -77,6 +76,7 @@ class SETSignalCreator:
                     prior_df = prior_df.replace(0, np.nan)
                     prior_df = prior_df.fillna(method="ffill")
 
+                    df = self._reindex_trade_date(df)
                     df = df.replace(0, np.nan)
                     df = df.fillna(prior_df)
 
@@ -105,6 +105,8 @@ class SETSignalCreator:
                 raise InputError(
                     f"{value_by} is invalid value_by. Please read document to check valid value_by."
                 )
+
+            df = self._reindex_trade_date(df)
 
             df = df.shift(shift)
 
@@ -147,6 +149,8 @@ class SETSignalCreator:
                 f"{timeframe} is invalid timeframe. Please read document to check valid timeframe."
             )
 
+        df.index.freq = None  # type: ignore
+
         return df
 
     """
@@ -161,7 +165,7 @@ class SETSignalCreator:
 
     def _reindex_trade_date(self, df: pd.DataFrame) -> pd.DataFrame:
         trade_dates = self._get_trading_dates()
-        df = df.reindex(pd.DatetimeIndex(trade_dates))  # type: ignore
+        df = df.reindex(pd.DatetimeIndex(trade_dates, freq=None))  # type: ignore
         return df
 
     def _rolling_skip_na_keep_inf(
@@ -169,9 +173,8 @@ class SETSignalCreator:
     ) -> pd.Series:
         series = series.dropna().shift(shift)
 
-        is_inf = np.isinf(series)
-
         if method != fld.METHOD_CONSTANT:
+            is_inf = np.isinf(series)
             series = self._rolling(series, method=method, period=period)
             series = series.mask(is_inf, np.inf)
 

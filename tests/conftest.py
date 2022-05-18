@@ -21,8 +21,8 @@ def ssc(sqlite_path: str) -> SETSignalCreator:
         symbol_list=[],
         sector_list=[],
         industry_list=[],
-        start_date="2010-01-01",
-        end_date="2020-01-01",
+        start_date="2020-01-01",
+        end_date="2022-01-01",
         sqlite_path=sqlite_path,
         ping=False,
     )
