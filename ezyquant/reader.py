@@ -2269,3 +2269,22 @@ class SETDataReader:
         df.index.name = None
 
         return df
+
+    def _get_prior_as_of_date_symbol_index(
+        self, index_name: str, current_date: Optional[str] = None
+    ) -> str:
+        sector_t = self._table("SECTOR")
+        security_index_t = self._table("SECURITY_INDEX")
+
+        j = self._join_sector_table(security_index_t)
+        stmt = select(func.max(func.DATE(security_index_t.c.D_AS_OF))).select_from(j)
+        stmt = self._filter_stmt_by_symbol_and_date(
+            stmt=stmt,
+            symbol_column=sector_t.c.N_SECTOR,
+            date_column=security_index_t.c.D_AS_OF,
+            symbol_list=[index_name],
+            start_date=None,
+            end_date=current_date,
+        )
+
+        return self.__engine.execute(stmt).scalar()
