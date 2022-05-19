@@ -21,5 +21,4 @@ def ssc(sqlite_path: str) -> SETSignalCreator:
         start_date="2020-01-01",
         end_date="2021-12-31",
         sqlite_path=sqlite_path,
-        ping=False,
     )
