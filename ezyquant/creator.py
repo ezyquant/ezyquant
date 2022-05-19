@@ -15,7 +15,6 @@ class SETSignalCreator:
         start_date: str,
         end_date: str,
         sqlite_path: str,
-        ping: bool = True,
     ):
         """Initialize SETSignalCreator.
 
@@ -31,8 +30,6 @@ class SETSignalCreator:
             End date of data.
         sqlite_path : str
             Path of sqlite file.
-        ping : bool, optional
-            Ping database or not, by default True
         """
         self._index_list = [i.upper() for i in index_list]
         self._symbol_list = [i.upper() for i in symbol_list]
@@ -40,7 +37,7 @@ class SETSignalCreator:
         self._end_date = end_date
         self._sqlite_path = sqlite_path
 
-        self._sdr = SETDataReader(self._sqlite_path, ping=ping)
+        self._sdr = SETDataReader(self._sqlite_path, ping=False)
 
     """ 
     Protected methods
