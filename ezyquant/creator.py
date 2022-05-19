@@ -20,16 +20,25 @@ class SETSignalCreator:
 
         Parameters
         ----------
-        index_list : List[str]
-            List of index name.
-        symbol_list : List[str]
-            List of symbol name.
+        sqlite_path : str
+            path to sqlite file e.g. /path/to/sqlite.db
         start_date : str
             Start date of data.
         end_date : str
             End date of data.
-        sqlite_path : str
-            Path of sqlite file.
+        index_list : List[str]
+            List of index name. by default ['SET100']
+                - SET
+                - mai
+                - SETWB
+                - SETTHSI
+                - SETCLMV
+                - SETHD
+                - sSET
+                - SET100
+                - SET50
+        symbol_list : List[str]
+            List of symbol name. by default []
         """
         self._index_list = [i.upper() for i in index_list]
         self._symbol_list = [i.upper() for i in symbol_list]
