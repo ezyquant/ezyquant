@@ -10,7 +10,7 @@ def sqlite_path() -> str:
 
 @pytest.fixture(scope="session")
 def sdr(sqlite_path: str) -> SETDataReader:
-    return SETDataReader(sqlite_path, ping=False)
+    return SETDataReader(sqlite_path)
 
 
 @pytest.fixture

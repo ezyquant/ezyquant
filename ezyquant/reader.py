@@ -18,26 +18,22 @@ from .errors import InputError
 class SETDataReader:
     """SETDataReader read PSIMS data."""
 
-    def __init__(self, sqlite_path: str, ping: bool = True):
+    def __init__(self, sqlite_path: str):
         """SETDataReader constructor.
 
         Parameters
         ----------
         sqlite_path : str
             path to sqlite file e.g. /path/to/sqlite.db
-        ping : bool, optional
-            check database connection, by default True
         """
         self.__sqlite_path = sqlite_path
 
         self.__engine = sa.create_engine(f"sqlite:///{self.__sqlite_path}")
         self.__metadata = MetaData(self.__engine)
 
-        if ping:
-            if not os.path.isfile(self.__sqlite_path):
-                raise InputError(f"{self.__sqlite_path} is not found")
-
-            self.last_update()
+        if not os.path.isfile(self.__sqlite_path):
+            raise InputError(f"{self.__sqlite_path} is not found")
+        self._table("SECURITY")
 
     def last_table_update(self, table_name: str) -> str:
         """Last D_TRADE in table.
