@@ -37,7 +37,7 @@ class SETSignalCreator:
         self._end_date = end_date
         self._sqlite_path = sqlite_path
 
-        self._sdr = SETDataReader(self._sqlite_path, ping=False)
+        self._sdr = SETDataReader(self._sqlite_path)
 
     """ 
     Protected methods
