@@ -8,7 +8,7 @@ test:
 
 .PHONY: format
 format:
-	isort . --skip-gitignore
+	isort .
 	black .
 
 	docformatter -i ezyquant/reader.py

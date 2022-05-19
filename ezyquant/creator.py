@@ -1,4 +1,7 @@
+from functools import lru_cache
 from typing import List
+
+import pandas as pd
 
 from . import fields as fld
 from .reader import SETDataReader
@@ -39,32 +42,44 @@ class SETSignalCreator:
 
         self._sdr = SETDataReader(self._sqlite_path, ping=ping)
 
-    @property
-    def symbol_list(self):
-        out = set(self._symbol_list)
+    """ 
+    Protected methods
+    """
 
+    @lru_cache
+    def _get_symbol_in_universe(self) -> List[str]:
+        out = set()
+        if self._symbol_list:
+            df = self._sdr.get_symbol_info(symbol_list=self._symbol_list)
+            out.update(df["symbol"].tolist())
         if fld.MARKET_SET in self._index_list:
             df = self._sdr.get_symbol_info(market=fld.MARKET_SET)
             out.update(df["symbol"].tolist())
         if fld.MARKET_MAI.upper() in self._index_list:
             df = self._sdr.get_symbol_info(market=fld.MARKET_MAI)
             out.update(df["symbol"].tolist())
-
-        df = self._get_symbols_by_index()
-        out.update(df["symbol"].tolist())
-
+        if self._index_list:
+            df = self._get_symbols_by_index()
+            out.update(df["symbol"].tolist())
         return list(out)
 
-    """ 
-    Protected methods
-    """
-
     def _get_symbol_info(self):
-        return self._sdr.get_symbol_info(symbol_list=self.symbol_list)
+        s = self._get_symbol_in_universe()
+        return self._sdr.get_symbol_info(symbol_list=s)
 
     def _get_symbols_by_index(self):
-        return self._sdr.get_symbols_by_index(
-            index_list=self._index_list,
-            start_date=self._start_date,
-            end_date=self._end_date,
-        )
+        l = []
+        for i in self._index_list:
+            start_date = self._sdr._get_prior_as_of_date_symbol_index(
+                index_name=i, current_date=self._start_date
+            )
+
+            df = self._sdr.get_symbols_by_index(
+                index_list=[i],
+                start_date=start_date,
+                end_date=self._end_date,
+            )
+
+            l.append(df)
+
+        return pd.concat(l)
