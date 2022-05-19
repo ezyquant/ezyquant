@@ -13,7 +13,7 @@ class SETSignalCreator:
         sqlite_path: str,
         start_date: str,
         end_date: str,
-        index_list: List[str] = [fld.INDEX_SET100],
+        index_list: List[str] = ["SET100"],
         symbol_list: List[str] = [],
     ):
         """Initialize SETSignalCreator.
