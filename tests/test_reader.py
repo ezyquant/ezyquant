@@ -1897,10 +1897,10 @@ class TestGetPriorAsOfDateSymbolIndex:
             (fld.INDEX_SSET, "2022-01-04", "2022-01-04"),
             (fld.INDEX_SET100, "2022-01-04", "2022-01-04"),
             (fld.INDEX_SET50, "2022-01-04", "2022-01-04"),
-            (fld.INDEX_SETHD, "2022-04-04", "2022-01-04"),
-            (fld.INDEX_SSET, "2022-04-04", "2022-01-04"),
-            (fld.INDEX_SET100, "2022-04-04", "2022-01-04"),
-            (fld.INDEX_SET50, "2022-04-04", "2022-01-04"),
+            (fld.INDEX_SETHD, "2022-03-01", "2022-01-04"),
+            (fld.INDEX_SSET, "2022-03-01", "2022-01-04"),
+            (fld.INDEX_SET100, "2022-03-01", "2022-01-04"),
+            (fld.INDEX_SET50, "2022-03-01", "2022-01-04"),
         ],
     )
     def test_with_expect(
