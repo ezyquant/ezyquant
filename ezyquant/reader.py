@@ -45,7 +45,13 @@ class SETDataReader:
         Parameters
         ----------
         table_name : str
-            name of table
+            name of table:
+            - DAILY_STOCK_TRADE
+            - DAILY_STOCK_STAT
+            - MKTSTAT_DAILY_INDEX
+            - MKTSTAT_DAILY_MARKET
+            - DAILY_SECTOR_INFO
+
 
         Returns
         -------
@@ -60,11 +66,11 @@ class SETDataReader:
         """Last database update, checking from last D_TRADE in following
         tables:
 
-            - DAILY_STOCK_TRADE
-            - DAILY_STOCK_STAT
-            - MKTSTAT_DAILY_INDEX
-            - MKTSTAT_DAILY_MARKET
-            - DAILY_SECTOR_INFO
+        - DAILY_STOCK_TRADE
+        - DAILY_STOCK_STAT
+        - MKTSTAT_DAILY_INDEX
+        - MKTSTAT_DAILY_MARKET
+        - DAILY_SECTOR_INFO
 
         Returns
         -------
@@ -159,7 +165,7 @@ class SETDataReader:
         Parameters
         ----------
         symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
+            N_SECURITY in symbol_list, must be unique, by default None
         market : Optional[str]
             I_MARKET e.g. 'SET', 'mai', by default None
         industry : Optional[str]
@@ -240,7 +246,7 @@ class SETDataReader:
         Parameters
         ----------
         symbol_list : Optional[List[str]]
-            SECURITY.N_SECURITY in symbol_list, case insensitive, must be unique, by default None
+            SECURITY.N_SECURITY in symbol_list, must be unique, by default None
 
         Returns
         -------
@@ -315,7 +321,7 @@ class SETDataReader:
         Parameters
         ----------
         symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
+            N_SECURITY in symbol_list, must be unique, by default None
         start_date : Optional[str]
             start of effect_date (D_EFFECT), by default None
         end_date : Optional[str]
@@ -400,7 +406,7 @@ class SETDataReader:
         Parameters
         ----------
         symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
+            N_SECURITY in symbol_list, must be unique, by default None
         start_date : Optional[str]
             start of ex_date (D_SIGN), by default None
         end_date : Optional[str]
@@ -503,7 +509,7 @@ class SETDataReader:
         Parameters
         ----------
         symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
+            N_SECURITY in symbol_list, must be unique, by default None
         start_date : Optional[str]
             start of delisted_date (D_DELISTED), by default None
         end_date : Optional[str]
@@ -568,7 +574,7 @@ class SETDataReader:
         Parameters
         ----------
         symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
+            N_SECURITY in symbol_list, must be unique, by default None
         start_date : Optional[str]
             start of hold_date (D_HOLD), by default None
         end_date : Optional[str]
@@ -644,7 +650,7 @@ class SETDataReader:
         Parameters
         ----------
         index_list : Optional[List[str]]
-            index (SECTOR.N_SECTOR), case insensitive
+            index (SECTOR.N_SECTOR)
                 - SETWB
                 - SETTHSI
                 - SETCLMV
@@ -793,7 +799,7 @@ class SETDataReader:
         Parameters
         ----------
         symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
+            N_SECURITY in symbol_list, must be unique, by default None
         start_date : Optional[str]
             start of effect_date (D_EFFECT), by default None
         end_date : Optional[str]
@@ -867,17 +873,61 @@ class SETDataReader:
         end_date: Optional[str] = None,
         adjusted_list: List[str] = ["  ", "CR", "PC", "RC", "SD", "XR"],
     ) -> pd.DataFrame:
-        """Data from table DAILY_STOCK_TRADE, DAILY_STOCK_STAT. Filter only
-        Auto Matching (I_TRADING_METHOD='A'). Replace 0 with NaN in following
-        field e.g. prior, open, high, low, close, average, last_bid,
-        last_offer.
+        """Data from table DAILY_STOCK_TRADE, DAILY_STOCK_STAT.
+
+        Filter only Auto Matching (I_TRADING_METHOD='A').
 
         Parameters
         ----------
         field : str
-            Filed of data, case insensitive e.g. 'open', 'high', 'low', 'close', 'volume'. More fields can be found in ezyquant.fields
+            - prior
+            - open
+            - high
+            - low
+            - close
+            - average
+            - last_bid
+            - last_offer
+            - trans
+            - volume
+            - value
+            - pe
+            - pb
+            - par
+            - dps
+            - dvd_yield
+            - mkt_cap
+            - eps
+            - book_value
+            - quarter_fin
+            - month_dvd
+            - as_of
+            - dividend
+            - status
+            - benefit
+            - share_listed
+            - turnover
+            - share_index
+            - npg
+            - total_volume
+            - total_value
+            - beta
+            - roi
+            - acc_dps
+            - dvd_payment
+            - dvd_payout
+            - earning
+            - iv
+            - delta
+            - notice
+            - non_compliance
+            - stabilization
+            - call_market
+            - caution
+            - 12m_dvd_yield
+            - peg
         symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
+            N_SECURITY in symbol_list, must be unique, by default None
         start_date : Optional[str]
             start of trade_date (D_TRADE), by default None
         end_date : Optional[str]
@@ -888,9 +938,8 @@ class SETDataReader:
         Returns
         -------
         pd.DataFrame
-            dataframe contain:
-                - symbol(N_SECURITY): str as column
-                - trade_date(D_TRADE): date as index
+            - symbol(N_SECURITY): str as column
+            - trade_date(D_TRADE): date as index
 
         Examples
         --------
@@ -925,8 +974,8 @@ class SETDataReader:
             daily_stock_t = self._table("DAILY_STOCK_STAT")
             field_col = daily_stock_t.c[fld.DAILY_STOCK_STAT_MAP[field]].label(field)
         else:
-            raise ValueError(
-                f"Invalid field ({field}). Please check field in ezyquant.fields"
+            raise InputError(
+                f"{field} is invalid field. Please read document to check valid field."
             )
 
         j = daily_stock_t.join(
@@ -1008,19 +1057,117 @@ class SETDataReader:
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
     ) -> pd.DataFrame:
-        """Data from tables FINANCIAL_STAT_STD and FINANCIAL_SCREEN. If field
-        is in both table, the data from FINANCIAL_STAT_STD will be used.
-        FINANCIAL_STAT_STD using data from column M_ACCOUNT. FINANCIAL_SCREEN
-        filter by I_PERIOD_TYPE='QY' and I_PERIOD in ('Q1','Q2','Q3','Q4').
-        Index date is trade date (DAILY_STOCK_STAT.D_TRADE). Data is showing at
-        first trade date which join on D_AS_OF.
+        """Data from tables FINANCIAL_STAT_STD and FINANCIAL_SCREEN.If field is
+        in both table, the data from FINANCIAL_STAT_STD will be used.
+
+        FINANCIAL_STAT_STD using data from column M_ACCOUNT. FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and I_PERIOD in ('Q1','Q2','Q3','Q4').
+
+        Index date is trade date (DAILY_STOCK_STAT.D_TRADE). Data is showing at first trade date which join on D_AS_OF.
 
         Parameters
         ----------
         field : str
-            Filed of data, case insensitive e.g. 'roe', 'roa', 'eps'. More fields can be found in ezyquant.fields
+            - year
+            - period_type
+            - period
+            - quarter
+            - accumulate
+            - as_of
+            - total_asset
+            - total_liability
+            - shld_equity
+            - total_revenue
+            - total_expense
+            - net_profit
+            - eps
+            - de
+            - net_profit_margin
+            - gross_profit_margin
+            - roa
+            - roe
+            - asset_turnover
+            - ebit
+            - fix_asset_turnover
+            - current_ratio
+            - quick_ratio
+            - interest_coverage
+            - ar_turnover
+            - inventory_turnover
+            - ap_turnover
+            - cash_cycle
+            - ebitda
+            - net_operating
+            - net_investing
+            - net_financing
+            - net_cashflow
+            - dscr
+            - ibde
+            - account_payable
+            - account_receivable
+            - accrued_int_receive
+            - allowance
+            - cap_paidin
+            - cap_paidup
+            - cash
+            - common_share
+            - current_asset
+            - current_liability
+            - deposit
+            - earning_asset
+            - int_bearing_debt
+            - inventory
+            - invest_asset
+            - investment
+            - invest_security
+            - loan
+            - loan_from_relatedparty
+            - loan_revenue
+            - loan_to_relatedparty
+            - longterm_liability_currentportion
+            - longterm_liability_net_currentportion
+            - minority_interest
+            - ppe
+            - preferred_share
+            - retain_earning
+            - retain_earning_unappropriate
+            - shld_equity
+            - short_invest
+            - total_asset
+            - total_equity
+            - total_liability
+            - change_ppe
+            - dividend
+            - dp
+            - net_cash_flow
+            - net_financing
+            - net_investing
+            - net_operating
+            - bad_debt
+            - broker_fee
+            - cos
+            - ebit
+            - ebitda
+            - ebt
+            - int_dvd_income
+            - interest_expense
+            - interest_income
+            - invest_sec_rev
+            - loan_deposit_revenue
+            - net_premium
+            - net_profit
+            - net_profit_incl_minority
+            - net_profit_ordinary
+            - operating_expense
+            - operating_revenue
+            - pl_other_activities
+            - sale
+            - selling_admin
+            - selling_admin_exc_renumuration
+            - total_expense
+            - total_revenue
+            - eps
         symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
+            N_SECURITY in symbol_list, must be unique, by default None
         start_date : Optional[str]
             start of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
         end_date : Optional[str]
@@ -1029,9 +1176,8 @@ class SETDataReader:
         Returns
         -------
         pd.DataFrame
-            dataframe contain:
-                - symbol(N_SECURITY): str as column
-                - trade date(DAILY_STOCK_STAT.D_TRADE): date as index
+            - symbol(N_SECURITY): str as column
+            - trade date(DAILY_STOCK_STAT.D_TRADE): date as index
 
         Examples
         --------
@@ -1045,28 +1191,7 @@ class SETDataReader:
         ...     end_date=None,
         ... )
                            COM7      MALEE
-        2022-02-01          NaN        NaN
-        2022-02-02          NaN        NaN
-        2022-02-03          NaN        NaN
-        2022-02-04          NaN        NaN
-        2022-02-07          NaN        NaN
-        2022-02-08          NaN        NaN
-        2022-02-09          NaN        NaN
-        2022-02-10          NaN        NaN
-        2022-02-11          NaN        NaN
-        2022-02-14          NaN        NaN
-        2022-02-15          NaN        NaN
-        2022-02-17          NaN        NaN
-        2022-02-18          NaN        NaN
-        2022-02-21          NaN        NaN
-        2022-02-22          NaN        NaN
-        2022-02-23          NaN        NaN
-        2022-02-24          NaN        NaN
-        2022-02-25          NaN        NaN
-        2022-02-28          NaN        NaN
         2022-03-01          NaN  953995.79
-        2022-03-02          NaN        NaN
-        2022-03-03          NaN        NaN
         2022-03-04  17573710.66        NaN
         """
         return self._get_fundamental_data(
@@ -1086,17 +1211,115 @@ class SETDataReader:
     ) -> pd.DataFrame:
         """Data from table FINANCIAL_STAT_STD and FINANCIAL_SCREEN. If field is
         in both table, the data from FINANCIAL_STAT_STD will be used.
-        FINANCIAL_STAT_STD filter by "I_QUARTER"='9' and using data from column
-        M_ACCOUNT. FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and
-        I_PERIOD='YE'. Index date is trade date (DAILY_STOCK_STAT.D_TRADE).
-        Data is showing at first trade date which join on D_AS_OF.
+
+        FINANCIAL_STAT_STD filter by "I_QUARTER"='9' and using data from column M_ACCOUNT. FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and I_PERIOD='YE'.
+
+        Index date is trade date (DAILY_STOCK_STAT.D_TRADE). Data is showing at first trade date which join on D_AS_OF.
 
         Parameters
         ----------
         field : str
-            Filed of data, case insensitive e.g. 'roe', 'roa', 'eps'. More fields can be found in ezyquant.fields
+            - year
+            - period_type
+            - period
+            - quarter
+            - accumulate
+            - as_of
+            - total_asset
+            - total_liability
+            - shld_equity
+            - total_revenue
+            - total_expense
+            - net_profit
+            - eps
+            - de
+            - net_profit_margin
+            - gross_profit_margin
+            - roa
+            - roe
+            - asset_turnover
+            - ebit
+            - fix_asset_turnover
+            - current_ratio
+            - quick_ratio
+            - interest_coverage
+            - ar_turnover
+            - inventory_turnover
+            - ap_turnover
+            - cash_cycle
+            - ebitda
+            - net_operating
+            - net_investing
+            - net_financing
+            - net_cashflow
+            - dscr
+            - ibde
+            - account_payable
+            - account_receivable
+            - accrued_int_receive
+            - allowance
+            - cap_paidin
+            - cap_paidup
+            - cash
+            - common_share
+            - current_asset
+            - current_liability
+            - deposit
+            - earning_asset
+            - int_bearing_debt
+            - inventory
+            - invest_asset
+            - investment
+            - invest_security
+            - loan
+            - loan_from_relatedparty
+            - loan_revenue
+            - loan_to_relatedparty
+            - longterm_liability_currentportion
+            - longterm_liability_net_currentportion
+            - minority_interest
+            - ppe
+            - preferred_share
+            - retain_earning
+            - retain_earning_unappropriate
+            - shld_equity
+            - short_invest
+            - total_asset
+            - total_equity
+            - total_liability
+            - change_ppe
+            - dividend
+            - dp
+            - net_cash_flow
+            - net_financing
+            - net_investing
+            - net_operating
+            - bad_debt
+            - broker_fee
+            - cos
+            - ebit
+            - ebitda
+            - ebt
+            - int_dvd_income
+            - interest_expense
+            - interest_income
+            - invest_sec_rev
+            - loan_deposit_revenue
+            - net_premium
+            - net_profit
+            - net_profit_incl_minority
+            - net_profit_ordinary
+            - operating_expense
+            - operating_revenue
+            - pl_other_activities
+            - sale
+            - selling_admin
+            - selling_admin_exc_renumuration
+            - total_expense
+            - total_revenue
+            - eps
         symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
+            N_SECURITY in symbol_list, must be unique, by default None
         start_date : Optional[str]
             start of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
         end_date : Optional[str]
@@ -1105,9 +1328,8 @@ class SETDataReader:
         Returns
         -------
         pd.DataFrame
-            dataframe contain:
-                - symbol(N_SECURITY): str as column
-                - trade date(DAILY_STOCK_STAT.D_TRADE): date as index
+            - symbol(N_SECURITY): str as column
+            - trade date(DAILY_STOCK_STAT.D_TRADE): date as index
 
         Examples
         --------
@@ -1121,28 +1343,7 @@ class SETDataReader:
         ...     end_date=None,
         ... )
                            COM7       MALEE
-        2022-02-01          NaN         NaN
-        2022-02-02          NaN         NaN
-        2022-02-03          NaN         NaN
-        2022-02-04          NaN         NaN
-        2022-02-07          NaN         NaN
-        2022-02-08          NaN         NaN
-        2022-02-09          NaN         NaN
-        2022-02-10          NaN         NaN
-        2022-02-11          NaN         NaN
-        2022-02-14          NaN         NaN
-        2022-02-15          NaN         NaN
-        2022-02-17          NaN         NaN
-        2022-02-18          NaN         NaN
-        2022-02-21          NaN         NaN
-        2022-02-22          NaN         NaN
-        2022-02-23          NaN         NaN
-        2022-02-24          NaN         NaN
-        2022-02-25          NaN         NaN
-        2022-02-28          NaN         NaN
         2022-03-01          NaN  3488690.79
-        2022-03-02          NaN         NaN
-        2022-03-03          NaN         NaN
         2022-03-04  51154660.73         NaN
         """
         return self._get_fundamental_data(
@@ -1161,21 +1362,52 @@ class SETDataReader:
         end_date: Optional[str] = None,
     ) -> pd.DataFrame:
         """Trailing 12 months (TTM) is a term used to describe the past 12
-        consecutive months of a company's performance data. TTM can be
-        calculate only Income Statement and Cashflow, but not Financial Ratio
-        and Balance Sheet. Data from table FINANCIAL_STAT_STD,
-        FINANCIAL_SCREEN. If field is in both table, the data from
-        FINANCIAL_SCREEN will be used. FINANCIAL_STAT_STD filter by using data
-        from column M_ACC_ACCOUNT_12M. FINANCIAL_SCREEN don't have TTM data.
-        Index date is trade date (DAILY_STOCK_STAT.D_TRADE). Data is showing at
-        first trade date which join on D_AS_OF.
+        consecutive months of a company's performance data.
+
+        TTM can be calculate only Income Statement and Cashflow, but not Financial Ratio and Balance Sheet.
+
+        Data from table FINANCIAL_SCREEN.
+
+        FINANCIAL_STAT_STD filter by using data from column M_ACC_ACCOUNT_12M.
+
+        Index date is trade date (DAILY_STOCK_STAT.D_TRADE). Data is showing at first trade date which join on D_AS_OF.
 
         Parameters
         ----------
         field : str
-            Filed of data, case insensitive e.g. 'roe', 'roa', 'eps'. More fields can be found in ezyquant.fields
+            - change_ppe
+            - dividend
+            - dp
+            - net_cash_flow
+            - net_financing
+            - net_investing
+            - net_operating
+            - bad_debt
+            - broker_fee
+            - cos
+            - ebit
+            - ebitda
+            - ebt
+            - int_dvd_income
+            - interest_expense
+            - interest_income
+            - invest_sec_rev
+            - loan_deposit_revenue
+            - net_premium
+            - net_profit
+            - net_profit_incl_minority
+            - net_profit_ordinary
+            - operating_expense
+            - operating_revenue
+            - pl_other_activities
+            - sale
+            - selling_admin
+            - selling_admin_exc_renumuration
+            - total_expense
+            - total_revenue
+            - eps
         symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
+            N_SECURITY in symbol_list, must be unique, by default None
         start_date : Optional[str]
             start of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
         end_date : Optional[str]
@@ -1184,9 +1416,8 @@ class SETDataReader:
         Returns
         -------
         pd.DataFrame
-            dataframe contain:
-                - symbol(N_SECURITY): str as column
-                - trade date(DAILY_STOCK_STAT.D_TRADE): date as index
+            - symbol(N_SECURITY): str as column
+            - trade date(DAILY_STOCK_STAT.D_TRADE): date as index
 
         Examples
         --------
@@ -1200,28 +1431,7 @@ class SETDataReader:
         ...     end_date=None,
         ... )
                            COM7       MALEE
-        2022-02-01          NaN         NaN
-        2022-02-02          NaN         NaN
-        2022-02-03          NaN         NaN
-        2022-02-04          NaN         NaN
-        2022-02-07          NaN         NaN
-        2022-02-08          NaN         NaN
-        2022-02-09          NaN         NaN
-        2022-02-10          NaN         NaN
-        2022-02-11          NaN         NaN
-        2022-02-14          NaN         NaN
-        2022-02-15          NaN         NaN
-        2022-02-17          NaN         NaN
-        2022-02-18          NaN         NaN
-        2022-02-21          NaN         NaN
-        2022-02-22          NaN         NaN
-        2022-02-23          NaN         NaN
-        2022-02-24          NaN         NaN
-        2022-02-25          NaN         NaN
-        2022-02-28          NaN         NaN
         2022-03-01          NaN  3488690.79
-        2022-03-02          NaN         NaN
-        2022-03-03          NaN         NaN
         2022-03-04  51154660.73         NaN
         """
         return self._get_fundamental_data(
@@ -1241,20 +1451,117 @@ class SETDataReader:
     ) -> pd.DataFrame:
         """Year to date (YTD) refers to the period of time beginning the first
         day of the current calendar year or fiscal year up to the current date.
-        Data from table FINANCIAL_STAT_STD and FINANCIAL_SCREEN. If field is in
-        both table, the data from FINANCIAL_STAT_STD will be used.
-        FINANCIAL_STAT_STD using data from column M_ACC_ACCOUNT.
-        FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and I_PERIOD in
-        ('Q1','6M','9M','YE'). Index date is trade date
-        (DAILY_STOCK_STAT.D_TRADE). Data is showing at first
-        DAILY_STOCK_STAT.D_TRADE which join on D_AS_OF.
+
+        Data from table FINANCIAL_STAT_STD and FINANCIAL_SCREEN. If field is in both table, the data from FINANCIAL_STAT_STD will be used.
+
+        FINANCIAL_STAT_STD using data from column M_ACC_ACCOUNT. FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and I_PERIOD in ('Q1','6M','9M','YE').
+
+        Index date is trade date (DAILY_STOCK_STAT.D_TRADE). Data is showing at first DAILY_STOCK_STAT.D_TRADE which join on D_AS_OF.
 
         Parameters
         ----------
         field : str
-            Filed of data, case insensitive e.g. 'roe', 'roa', 'eps'. More fields can be found in ezyquant.fields
+            - year
+            - period_type
+            - period
+            - quarter
+            - accumulate
+            - as_of
+            - total_asset
+            - total_liability
+            - shld_equity
+            - total_revenue
+            - total_expense
+            - net_profit
+            - eps
+            - de
+            - net_profit_margin
+            - gross_profit_margin
+            - roa
+            - roe
+            - asset_turnover
+            - ebit
+            - fix_asset_turnover
+            - current_ratio
+            - quick_ratio
+            - interest_coverage
+            - ar_turnover
+            - inventory_turnover
+            - ap_turnover
+            - cash_cycle
+            - ebitda
+            - net_operating
+            - net_investing
+            - net_financing
+            - net_cashflow
+            - dscr
+            - ibde
+            - account_payable
+            - account_receivable
+            - accrued_int_receive
+            - allowance
+            - cap_paidin
+            - cap_paidup
+            - cash
+            - common_share
+            - current_asset
+            - current_liability
+            - deposit
+            - earning_asset
+            - int_bearing_debt
+            - inventory
+            - invest_asset
+            - investment
+            - invest_security
+            - loan
+            - loan_from_relatedparty
+            - loan_revenue
+            - loan_to_relatedparty
+            - longterm_liability_currentportion
+            - longterm_liability_net_currentportion
+            - minority_interest
+            - ppe
+            - preferred_share
+            - retain_earning
+            - retain_earning_unappropriate
+            - shld_equity
+            - short_invest
+            - total_asset
+            - total_equity
+            - total_liability
+            - change_ppe
+            - dividend
+            - dp
+            - net_cash_flow
+            - net_financing
+            - net_investing
+            - net_operating
+            - bad_debt
+            - broker_fee
+            - cos
+            - ebit
+            - ebitda
+            - ebt
+            - int_dvd_income
+            - interest_expense
+            - interest_income
+            - invest_sec_rev
+            - loan_deposit_revenue
+            - net_premium
+            - net_profit
+            - net_profit_incl_minority
+            - net_profit_ordinary
+            - operating_expense
+            - operating_revenue
+            - pl_other_activities
+            - sale
+            - selling_admin
+            - selling_admin_exc_renumuration
+            - total_expense
+            - total_revenue
+            - eps
         symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, case insensitive, must be unique, by default None
+            N_SECURITY in symbol_list, must be unique, by default None
         start_date : Optional[str]
             start of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
         end_date : Optional[str]
@@ -1263,9 +1570,8 @@ class SETDataReader:
         Returns
         -------
         pd.DataFrame
-            dataframe contain:
-                - symbol(N_SECURITY): str as column
-                - trade date(DAILY_STOCK_STAT.D_TRADE): date as index
+            - symbol(N_SECURITY): str as column
+            - trade date(DAILY_STOCK_STAT.D_TRADE): date as index
 
         Examples
         --------
@@ -1279,28 +1585,7 @@ class SETDataReader:
         ...     end_date=None,
         ... )
                            COM7       MALEE
-        2022-02-01          NaN         NaN
-        2022-02-02          NaN         NaN
-        2022-02-03          NaN         NaN
-        2022-02-04          NaN         NaN
-        2022-02-07          NaN         NaN
-        2022-02-08          NaN         NaN
-        2022-02-09          NaN         NaN
-        2022-02-10          NaN         NaN
-        2022-02-11          NaN         NaN
-        2022-02-14          NaN         NaN
-        2022-02-15          NaN         NaN
-        2022-02-17          NaN         NaN
-        2022-02-18          NaN         NaN
-        2022-02-21          NaN         NaN
-        2022-02-22          NaN         NaN
-        2022-02-23          NaN         NaN
-        2022-02-24          NaN         NaN
-        2022-02-25          NaN         NaN
-        2022-02-28          NaN         NaN
         2022-03-01          NaN  3488690.79
-        2022-03-02          NaN         NaN
-        2022-03-03          NaN         NaN
         2022-03-04  51154660.73         NaN
         """
         return self._get_fundamental_data(
@@ -1323,9 +1608,27 @@ class SETDataReader:
         Parameters
         ----------
         field : str
-            Filed of data, case insensitive e.g. 'high', 'low', 'close'. More fields can be found in ezyquant.fields
+            - high
+            - low
+            - close
+            - tri
+            - total_trans
+            - total_volume
+            - total_value
+            - mkt_pe
+            - mkt_pbv
+            - mkt_yield
+            - mkt_cap
+            - mkt_par_value
+            - trading_day
+            - new_company
+            - delisted_company
+            - move_in_company
+            - move_out_company
+            - listed_company
+            - listed_stock
         index_list : Optional[List[str]]
-            N_SECTOR in index_list, case insensitive, by default None. More index can be found in ezyquant.fields
+            N_SECTOR in index_list, by default None. More index can be found in ezyquant.fields
         start_date : Optional[str]
             start of trade_date (D_TRADE), by default None
         end_date : Optional[str]
@@ -1334,9 +1637,8 @@ class SETDataReader:
         Returns
         -------
         pd.DataFrame
-            dataframe contain:
-                - index: str as column
-                - trade_date: date as index
+            - index: str as column
+            - trade_date: date as index
 
         Examples
         --------
@@ -1366,8 +1668,8 @@ class SETDataReader:
             mktstat_daily_t = self._table("MKTSTAT_DAILY_MARKET")
             field_col = mktstat_daily_t.c[fld.MKTSTAT_DAILY_MARKET_MAP[field]]
         else:
-            raise ValueError(
-                f"{field} not in Data 1D field. Please check psims factor for more details."
+            raise InputError(
+                f"{field} is invalid field. Please read document to check valid field."
             )
 
         j = self._join_sector_table(mktstat_daily_t)
@@ -1421,11 +1723,27 @@ class SETDataReader:
         Parameters
         ----------
         field : str
-            Filed of data, case insensitive e.g. 'high', 'low', 'close'. More fields can be found in ezyquant.fields
+            - prior
+            - open
+            - high
+            - low
+            - close
+            - trans
+            - volume
+            - value
+            - mkt_pe
+            - mkt_pbv
+            - mkt_yield
+            - mkt_cap
+            - turnover
+            - share_listed_avg
+            - beta
+            - turnover_volume
+            - 12m_dvd_yield
         market : str
             I_MARKET e.g. 'SET', 'mai', by default 'SET'
         sector_list : Optional[List[str]]
-            N_SECTOR in sector_list, case insensitive, by default None. More sector can be found in ezyquant.fields
+            N_SECTOR in sector_list, by default None. More sector can be found in ezyquant.fields
         start_date : Optional[str]
             start of trade_date (D_TRADE), by default None
         end_date : Optional[str]
@@ -1434,9 +1752,8 @@ class SETDataReader:
         Returns
         -------
         pd.DataFrame
-            dataframe contain:
-                - sector: str as column
-                - trade_date: date as index
+            - sector: str as column
+            - trade_date: date as index
 
         Examples
         --------
@@ -1478,11 +1795,27 @@ class SETDataReader:
         Parameters
         ----------
         field : str
-            Filed of data, case insensitive e.g. 'high', 'low', 'close'. More fields can be found in ezyquant.fields
+            - prior
+            - open
+            - high
+            - low
+            - close
+            - trans
+            - volume
+            - value
+            - mkt_pe
+            - mkt_pbv
+            - mkt_yield
+            - mkt_cap
+            - turnover
+            - share_listed_avg
+            - beta
+            - turnover_volume
+            - 12m_dvd_yield
         market : str
             I_MARKET e.g. 'SET', 'mai', by default 'SET'
         industry_list : Optional[List[str]]
-            N_SECTOR in industry_list, case insensitive, by default None. More industry can be found in ezyquant.fields
+            N_SECTOR in industry_list, by default None. More industry can be found in ezyquant.fields
         start_date : Optional[str]
             start of trade_date (D_TRADE), by default None
         end_date : Optional[str]
@@ -1491,9 +1824,8 @@ class SETDataReader:
         Returns
         -------
         pd.DataFrame
-            dataframe contain:
-                - industry: str as column
-                - trade_date: date as index
+            - industry: str as column
+            - trade_date: date as index
 
         Examples
         --------
@@ -1729,8 +2061,8 @@ class SETDataReader:
         elif field in fld.FINANCIAL_SCREEN_MAP and period in ("Q", "Y", "YTD"):
             stmt = self._get_financial_screen_stmt(field=field, period=period)
         else:
-            raise ValueError(
-                f"{field} is not supported for {period}. More field in ezyquant.field"
+            raise InputError(
+                f"{field} is invalid field. Please read document to check valid field."
             )
 
         stmt = self._filter_stmt_by_symbol_and_date(
@@ -1890,15 +2222,20 @@ class SETDataReader:
 
         j = self._join_sector_table(daily_sector_info_t)
 
+        try:
+            field_col = daily_sector_info_t.c[fld.DAILY_SECTOR_INFO_MAP[field]]
+        except KeyError:
+            raise InputError(
+                f"{field} is invalid field. Please read document to check valid field."
+            )
+
         # N_SECTOR is the industry name in F_DATA = 'I'
         stmt = (
             select(
                 [
                     daily_sector_info_t.c.D_TRADE.label("trade_date"),
                     func.trim(sector_t.c.N_SECTOR).label("sector"),
-                    daily_sector_info_t.c[fld.DAILY_SECTOR_INFO_MAP[field]].label(
-                        field
-                    ),
+                    field_col.label(field),
                 ]
             )
             .select_from(j)
