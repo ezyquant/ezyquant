@@ -10,11 +10,11 @@ from .reader import SETDataReader
 class SETSignalCreator:
     def __init__(
         self,
-        index_list: List[str],
-        symbol_list: List[str],
+        sqlite_path: str,
         start_date: str,
         end_date: str,
-        sqlite_path: str,
+        index_list: List[str] = [fld.INDEX_SET100],
+        symbol_list: List[str] = [],
     ):
         """Initialize SETSignalCreator.
 
