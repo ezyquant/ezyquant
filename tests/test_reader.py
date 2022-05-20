@@ -5,6 +5,7 @@ import pytest
 from pandas._testing import assert_frame_equal, assert_index_equal, assert_series_equal
 
 import ezyquant.fields as fld
+from ezyquant import utils
 from ezyquant.errors import InputError
 from ezyquant.reader import SETDataReader
 
@@ -1870,6 +1871,46 @@ class TestGetDataIndustryDaily:
         assert (result.columns.isin(fld.INDUSTRY_LIST)).all()
 
         return result
+
+
+class TestGetPriorAsOfDateSymbolIndex:
+    @pytest.mark.parametrize(
+        "index_name",
+        [
+            fld.INDEX_SETHD,
+            fld.INDEX_SSET,
+            fld.INDEX_SET100,
+            fld.INDEX_SET50,
+        ],
+    )
+    def test_none(self, sdr: SETDataReader, index_name: str):
+        # Test
+        result = sdr._get_prior_as_of_date_symbol_index(index_name)
+
+        # Check
+        utils.str_to_date(result)
+
+    @pytest.mark.parametrize(
+        ("index_name", "current_date", "expected"),
+        [
+            (fld.INDEX_SETHD, "2022-01-04", "2022-01-04"),
+            (fld.INDEX_SSET, "2022-01-04", "2022-01-04"),
+            (fld.INDEX_SET100, "2022-01-04", "2022-01-04"),
+            (fld.INDEX_SET50, "2022-01-04", "2022-01-04"),
+            (fld.INDEX_SETHD, "2022-03-01", "2022-01-04"),
+            (fld.INDEX_SSET, "2022-03-01", "2022-01-04"),
+            (fld.INDEX_SET100, "2022-03-01", "2022-01-04"),
+            (fld.INDEX_SET50, "2022-03-01", "2022-01-04"),
+        ],
+    )
+    def test_with_expect(
+        self, sdr: SETDataReader, index_name: str, current_date: str, expected: str
+    ):
+        # Test
+        result = sdr._get_prior_as_of_date_symbol_index(index_name, current_date)
+
+        # Check
+        assert result == expected
 
 
 def is_df_unique(df):

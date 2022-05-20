@@ -1,0 +1,10 @@
+pandas
+sqlalchemy
+
+pytest
+isort
+black
+docformatter
+pdoc
+mkdocs
+mkdocs-material

@@ -18,26 +18,22 @@ from .errors import InputError
 class SETDataReader:
     """SETDataReader read PSIMS data."""
 
-    def __init__(self, sqlite_path: str, ping: bool = True):
+    def __init__(self, sqlite_path: str):
         """SETDataReader constructor.
 
         Parameters
         ----------
         sqlite_path : str
             path to sqlite file e.g. /path/to/sqlite.db
-        ping : bool, optional
-            check database connection, by default True
         """
         self.__sqlite_path = sqlite_path
 
         self.__engine = sa.create_engine(f"sqlite:///{self.__sqlite_path}")
         self.__metadata = MetaData(self.__engine)
 
-        if ping:
-            if not os.path.isfile(self.__sqlite_path):
-                raise InputError(f"{self.__sqlite_path} is not found")
-
-            self.last_update()
+        if not os.path.isfile(self.__sqlite_path):
+            raise InputError(f"{self.__sqlite_path} is not found")
+        self._table("SECURITY")
 
     def last_table_update(self, table_name: str) -> str:
         """Last D_TRADE in table.
@@ -2269,3 +2265,22 @@ class SETDataReader:
         df.index.name = None
 
         return df
+
+    def _get_prior_as_of_date_symbol_index(
+        self, index_name: str, current_date: Optional[str] = None
+    ) -> str:
+        sector_t = self._table("SECTOR")
+        security_index_t = self._table("SECURITY_INDEX")
+
+        j = self._join_sector_table(security_index_t)
+        stmt = select(func.max(func.DATE(security_index_t.c.D_AS_OF))).select_from(j)
+        stmt = self._filter_stmt_by_symbol_and_date(
+            stmt=stmt,
+            symbol_column=sector_t.c.N_SECTOR,
+            date_column=security_index_t.c.D_AS_OF,
+            symbol_list=[index_name],
+            start_date=None,
+            end_date=current_date,
+        )
+
+        return self.__engine.execute(stmt).scalar()
