@@ -546,7 +546,6 @@ TIMEFRAME_TTM = "ttm"
 TIMEFRAME_YTD = "ytd"
 
 VALUE_BY_STOCK = "stock"
-VALUE_BY_INDEX = "index"
 VALUE_BY_INDUSTRY = "industry"
 VALUE_BY_SECTOR = "sector"
 

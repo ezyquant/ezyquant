@@ -64,7 +64,7 @@ class SETSignalCreator:
         Parameters
         ----------
         field : str
-            Name of data field.
+            Name of data field depends on timeframe and value_by.
         timeframe : str
             - daily
             - quarterly
@@ -198,13 +198,6 @@ class SETSignalCreator:
                     df = df.replace(0, np.nan)
                     df = df.fillna(prior_df)
 
-            elif value_by == fld.VALUE_BY_INDEX:
-                df = self._sdr.get_data_index_daily(
-                    field=field,
-                    index_list=self._index_list,
-                    start_date=self._start_date,
-                    end_date=self._end_date,
-                )
             elif value_by == fld.VALUE_BY_SECTOR:
                 df = self._sdr.get_data_sector_daily(
                     field=field,
@@ -280,35 +273,7 @@ class SETSignalCreator:
             start_date=self._start_date, end_date=self._end_date
         )
 
-    def _reindex_trade_date(self, df: pd.DataFrame) -> pd.DataFrame:
-        td = self._get_trading_dates()
-        df = df.reindex(pd.DatetimeIndex(td))  # type: ignore
-        return df
-
-    def _rolling_skip_na_keep_inf(
-        self, series: pd.Series, method: str, period: int, shift: int
-    ) -> pd.Series:
-        series = series.dropna().shift(shift)
-
-        if method != fld.METHOD_CONSTANT:
-            is_inf = np.isinf(series)
-            series = self._rolling(series, method=method, period=period)
-            series = series.mask(is_inf, np.inf)
-
-        series = series.fillna(method="ffill")
-
-        return series
-
-    def _rolling(self, data, method: str, period: int):
-        roll = data.rolling(period)
-        try:
-            data = getattr(roll, method)()
-        except AttributeError:
-            raise InputError(
-                f"{method} is invalid method. Please read document to check valid method."
-            )
-        return data
-
+    @lru_cache
     def _get_symbol_in_universe(self) -> List[str]:
         out = set()
         if self._symbol_list:
@@ -325,11 +290,41 @@ class SETSignalCreator:
             out.update(df["symbol"].tolist())
         return list(out)
 
-    def _get_symbol_info(self):
+    @lru_cache
+    def _get_symbol_info(self) -> pd.DataFrame:
         s = self._get_symbol_in_universe()
         return self._sdr.get_symbol_info(symbol_list=s)
 
-    def _get_symbols_by_index(self):
+    def _reindex_trade_date(self, df: pd.DataFrame) -> pd.DataFrame:
+        td = self._get_trading_dates()
+        df = df.reindex(pd.DatetimeIndex(td))  # type: ignore
+        return df
+
+    def _rolling(self, data, method: str, period: int):
+        roll = data.rolling(period)
+        try:
+            data = getattr(roll, method)()
+        except AttributeError:
+            raise InputError(
+                f"{method} is invalid method. Please read document to check valid method."
+            )
+        return data
+
+    def _rolling_skip_na_keep_inf(
+        self, series: pd.Series, method: str, period: int, shift: int
+    ) -> pd.Series:
+        series = series.dropna().shift(shift)
+
+        if method != fld.METHOD_CONSTANT:
+            is_inf = np.isinf(series)
+            series = self._rolling(series, method=method, period=period)
+            series = series.mask(is_inf, np.inf)
+
+        series = series.fillna(method="ffill")
+
+        return series
+
+    def _get_symbols_by_index(self) -> pd.DataFrame:
         l = []
         for i in self._index_list:
             start_date = self._sdr._get_prior_as_of_date_symbol_index(
@@ -344,4 +339,6 @@ class SETSignalCreator:
 
             l.append(df)
 
-        return pd.concat(l)
+        df = pd.concat(l)
+        assert isinstance(df, pd.DataFrame)
+        return df

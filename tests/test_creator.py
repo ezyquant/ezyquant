@@ -273,7 +273,6 @@ class TestGetData:
             (fld.Q_EBITDA, fld.TIMEFRAME_YEARLY, fld.VALUE_BY_STOCK),
             (fld.Q_EBITDA, fld.TIMEFRAME_TTM, fld.VALUE_BY_STOCK),
             (fld.Q_EBITDA, fld.TIMEFRAME_YTD, fld.VALUE_BY_STOCK),
-            (fld.D_INDEX_CLOSE, fld.TIMEFRAME_DAILY, fld.VALUE_BY_INDEX),
             (fld.D_SECTOR_CLOSE, fld.TIMEFRAME_DAILY, fld.VALUE_BY_SECTOR),
             (fld.D_SECTOR_CLOSE, fld.TIMEFRAME_DAILY, fld.VALUE_BY_INDUSTRY),
         ],
