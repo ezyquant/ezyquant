@@ -965,8 +965,8 @@ class SETDataReader:
         2022-01-10  40.875   6.30
         """
         adjusted_list = list(adjusted_list)  # copy to avoid modify original list
-
         field = field.lower()
+
         if symbol_list:
             symbol_list = [i.upper() for i in symbol_list]
 
@@ -1661,9 +1661,10 @@ class SETDataReader:
         2022-01-07  1657.62  2257.40
         2022-01-10  1657.06  2256.14
         """
+        field = field.lower()
+
         sector_t = self._table("SECTOR")
 
-        field = field.lower()
         if field in fld.MKTSTAT_DAILY_INDEX_MAP:
             mktstat_daily_t = self._table("MKTSTAT_DAILY_INDEX")
             field_col = mktstat_daily_t.c[fld.MKTSTAT_DAILY_INDEX_MAP[field]]
@@ -1863,7 +1864,7 @@ class SETDataReader:
         return Table(name, self._metadata, autoload=True)
 
     def _execute(self, stmt: Select):
-        return self._execute(stmt).scalar()
+        return self._engine.execute(stmt)
 
     def _read_sql_query(
         self, stmt: Select, index_col: Optional[str] = None
@@ -1926,6 +1927,49 @@ class SETDataReader:
             stmt=stmt, column=date_column, start_date=start_date, end_date=end_date
         )
         return stmt
+
+    @lru_cache
+    def _d_trade_subquery(self):
+        daily_stock_stat_t = self._table("DAILY_STOCK_STAT")
+        return (
+            select(
+                [
+                    daily_stock_stat_t.c.I_SECURITY,
+                    daily_stock_stat_t.c.D_AS_OF,
+                    func.min(func.DATE(daily_stock_stat_t.c.D_TRADE)).label("D_TRADE"),
+                ]
+            )
+            .group_by(
+                daily_stock_stat_t.c.I_SECURITY, func.DATE(daily_stock_stat_t.c.D_AS_OF)
+            )
+            .subquery()
+        )
+
+    def _join_security_and_d_trade_subquery(self, table: Table):
+        security_t = self._table("SECURITY")
+        d_trade_subquery = self._d_trade_subquery()
+        return table.join(
+            security_t, table.c.I_SECURITY == security_t.c.I_SECURITY
+        ).join(
+            d_trade_subquery,
+            and_(
+                table.c.I_SECURITY == d_trade_subquery.c.I_SECURITY,
+                func.DATE(table.c.D_AS_OF) == func.DATE(d_trade_subquery.c.D_AS_OF),
+            ),
+        )
+
+    def _join_sector_table(self, table: Table, isouter: bool = False):
+        sector_t = self._table("SECTOR")
+        return table.join(
+            sector_t,
+            and_(
+                table.c.I_MARKET == sector_t.c.I_MARKET,
+                table.c.I_INDUSTRY == sector_t.c.I_INDUSTRY,
+                table.c.I_SECTOR == sector_t.c.I_SECTOR,
+                table.c.I_SUBSECTOR == sector_t.c.I_SUBSECTOR,
+            ),
+            isouter=isouter,
+        )
 
     def _get_pivot_adjust_factor_df(
         self,
@@ -2102,7 +2146,7 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        df = self._read_sql_query(stmt, index_col=TRADE_DATE)
+        df = self._read_sql_query(stmt)
 
         # duplicate key mostly I_ACCT_FORM 6,7
         df = df.drop_duplicates(subset=[TRADE_DATE, NAME], keep="last")
@@ -2189,49 +2233,6 @@ class SETDataReader:
 
         return stmt
 
-    @lru_cache
-    def _d_trade_subquery(self):
-        daily_stock_stat_t = self._table("DAILY_STOCK_STAT")
-        return (
-            select(
-                [
-                    daily_stock_stat_t.c.I_SECURITY,
-                    daily_stock_stat_t.c.D_AS_OF,
-                    func.min(func.DATE(daily_stock_stat_t.c.D_TRADE)).label("D_TRADE"),
-                ]
-            )
-            .group_by(
-                daily_stock_stat_t.c.I_SECURITY, func.DATE(daily_stock_stat_t.c.D_AS_OF)
-            )
-            .subquery()
-        )
-
-    def _join_security_and_d_trade_subquery(self, table: Table):
-        security_t = self._table("SECURITY")
-        d_trade_subquery = self._d_trade_subquery()
-        return table.join(
-            security_t, table.c.I_SECURITY == security_t.c.I_SECURITY
-        ).join(
-            d_trade_subquery,
-            and_(
-                table.c.I_SECURITY == d_trade_subquery.c.I_SECURITY,
-                func.DATE(table.c.D_AS_OF) == func.DATE(d_trade_subquery.c.D_AS_OF),
-            ),
-        )
-
-    def _join_sector_table(self, table: Table, isouter: bool = False):
-        sector_t = self._table("SECTOR")
-        return table.join(
-            sector_t,
-            and_(
-                table.c.I_MARKET == sector_t.c.I_MARKET,
-                table.c.I_INDUSTRY == sector_t.c.I_INDUSTRY,
-                table.c.I_SECTOR == sector_t.c.I_SECTOR,
-                table.c.I_SUBSECTOR == sector_t.c.I_SUBSECTOR,
-            ),
-            isouter=isouter,
-        )
-
     def _get_daily_sector_info(
         self,
         field: str,
@@ -2242,11 +2243,10 @@ class SETDataReader:
         f_data: str,
     ) -> pd.DataFrame:
         market = market.upper()
+        field = field.lower()
 
         sector_t = self._table("SECTOR")
         daily_sector_info_t = self._table("DAILY_SECTOR_INFO")
-
-        field = field.lower()
 
         j = self._join_sector_table(daily_sector_info_t)
 
