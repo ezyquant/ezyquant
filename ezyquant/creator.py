@@ -208,14 +208,14 @@ class SETSignalCreator:
             elif value_by == fld.VALUE_BY_SECTOR:
                 df = self._sdr.get_data_sector_daily(
                     field=field,
-                    sector_list=self._sector_list,
+                    sector_list=[],
                     start_date=self._start_date,
                     end_date=self._end_date,
                 )
             elif value_by == fld.VALUE_BY_INDUSTRY:
                 df = self._sdr.get_data_industry_daily(
                     field=field,
-                    industry_list=self._industry_list,
+                    industry_list=[],
                     start_date=self._start_date,
                     end_date=self._end_date,
                 )

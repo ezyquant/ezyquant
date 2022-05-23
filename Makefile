@@ -8,11 +8,15 @@ test:
 
 .PHONY: format
 format:
-	isort . --skip-gitignore
+	isort .
 	black .
 
 	docformatter -i ezyquant/reader.py
 	docformatter -i ezyquant/creator.py
+
+.PHONY: venv
+venv:
+	python -m venv venv
 
 .PHONY: pdoc
 pdoc:

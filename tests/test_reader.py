@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List, Optional
 
 import pandas as pd
@@ -6,7 +7,6 @@ import utils
 from pandas._testing import assert_frame_equal, assert_index_equal, assert_series_equal
 
 import ezyquant.fields as fld
-from ezyquant import utils
 from ezyquant.errors import InputError
 from ezyquant.reader import SETDataReader
 
@@ -1878,7 +1878,7 @@ class TestGetPriorAsOfDateSymbolIndex:
         result = sdr._get_prior_as_of_date_symbol_index(index_name)
 
         # Check
-        utils.str_to_date(result)
+        datetime.strptime(result, "%Y-%m-%d")
 
     @pytest.mark.parametrize(
         ("index_name", "current_date", "expected"),
