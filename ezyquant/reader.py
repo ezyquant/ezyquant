@@ -164,6 +164,8 @@ class SETDataReader:
         market: Optional[str] = None,
         industry: Optional[str] = None,
         sector: Optional[str] = None,
+        sec_type: Optional[str] = None,
+        native: Optional[str] = None,
     ) -> pd.DataFrame:
         """Data from table SECURITY.
 
@@ -177,6 +179,32 @@ class SETDataReader:
             SECTOR.N_INDUSTRY, by default None
         sector : Optional[str]
             SECTOR.N_SECTOR, by default None
+        sec_type : Optional[str]
+            Security type, by default None
+                - S: Common
+                - F: Common Foreign
+                - P: Preferred
+                - Q: Preferred Foreign
+                - U: Unit Trusts
+                - T: Unit Trusts Foreign
+                - W: Warrant
+                - X: Depository Receipts
+                - Y: Depository Receipts Foreign
+                - L: ETFs
+                - O: Index Options
+                - D: Debenture
+                - C: Convertible Debenture
+                - I: Index Warrant
+                - V: Derivatives Warrant
+                - R: Transferable Subscription Right
+                - G: Government Bond
+                - J: Convertible Preferred
+        native : Optional[str]
+            I_NATIVE, by default None
+                - L: Local
+                - F: Foreign
+                - U: Thai Trust Fund
+                - R: NVDR
 
         Returns
         -------
@@ -237,6 +265,12 @@ class SETDataReader:
         if sector != None:
             sector = sector.upper()
             stmt = stmt.where(func.trim(sector_t.c.N_SECTOR) == sector)
+        if sec_type != None:
+            sec_type = sec_type.upper()
+            stmt = stmt.where(security_t.c.I_SEC_TYPE == sec_type)
+        if native != None:
+            native = native.upper()
+            stmt = stmt.where(security_t.c.I_NATIVE == native)
 
         df = self._read_sql_query(stmt)
 

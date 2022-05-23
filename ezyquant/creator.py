@@ -277,13 +277,19 @@ class SETSignalCreator:
     def _get_symbol_in_universe(self) -> List[str]:
         out = set()
         if self._symbol_list:
-            df = self._sdr.get_symbol_info(symbol_list=self._symbol_list)
+            df = self._sdr.get_symbol_info(
+                symbol_list=self._symbol_list, sec_type="S", native="L"
+            )
             out.update(df["symbol"].tolist())
         if fld.MARKET_SET in self._index_list:
-            df = self._sdr.get_symbol_info(market=fld.MARKET_SET)
+            df = self._sdr.get_symbol_info(
+                market=fld.MARKET_SET, sec_type="S", native="L"
+            )
             out.update(df["symbol"].tolist())
         if fld.MARKET_MAI.upper() in self._index_list:
-            df = self._sdr.get_symbol_info(market=fld.MARKET_MAI)
+            df = self._sdr.get_symbol_info(
+                market=fld.MARKET_MAI, sec_type="S", native="L"
+            )
             out.update(df["symbol"].tolist())
         if self._index_list:
             df = self._get_symbols_by_index()
@@ -293,7 +299,7 @@ class SETSignalCreator:
     @lru_cache
     def _get_symbol_info(self) -> pd.DataFrame:
         s = self._get_symbol_in_universe()
-        return self._sdr.get_symbol_info(symbol_list=s)
+        return self._sdr.get_symbol_info(symbol_list=s, sec_type="S", native="L")
 
     def _reindex_trade_date(self, df: pd.DataFrame) -> pd.DataFrame:
         td = self._get_trading_dates()
