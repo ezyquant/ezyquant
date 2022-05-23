@@ -1,7 +1,6 @@
 import pytest
 
-from ezyquant.creator import SETSignalCreator
-from ezyquant.reader import SETDataReader
+from ezyquant import SETDataReader, SETSignalCreator
 
 
 @pytest.fixture(scope="session")
@@ -11,18 +10,15 @@ def sqlite_path() -> str:
 
 @pytest.fixture(scope="session")
 def sdr(sqlite_path: str) -> SETDataReader:
-    return SETDataReader(sqlite_path, ping=False)
+    return SETDataReader(sqlite_path)
 
 
-@pytest.fixture()
+@pytest.fixture
 def ssc(sqlite_path: str) -> SETSignalCreator:
     return SETSignalCreator(
         index_list=[],
         symbol_list=[],
-        sector_list=[],
-        industry_list=[],
         start_date="2020-01-01",
-        end_date="2022-01-01",
+        end_date="2021-12-31",
         sqlite_path=sqlite_path,
-        ping=False,
     )

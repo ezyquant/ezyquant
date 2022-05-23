@@ -1,11 +1,9 @@
 .PHONY: install
 install:
-	pip install .
-	pip uninstall ezyquant
+	pip install -U -r requirements.txt
 
 .PHONY: test
 test:
-	pip install pytest
 	pytest
 
 .PHONY: format
@@ -16,11 +14,10 @@ format:
 	docformatter -i ezyquant/reader.py
 	docformatter -i ezyquant/creator.py
 
-.PHONY: docs
-docs:
+.PHONY: pdoc
+pdoc:
 	pdoc --docformat numpy ezyquant
 
 .PHONY: mkdocs
 mkdocs:
-	pip install mkdocs mkdocs-material
 	mkdocs serve
