@@ -9,6 +9,7 @@ import sqlalchemy as sa
 from sqlalchemy import Column, MetaData, Table, and_, case, func, select
 from sqlalchemy.exc import DatabaseError
 from sqlalchemy.sql import Select
+from sqlalchemy.sql.selectable import Select
 
 from . import fields as fld
 from . import utils
@@ -31,13 +32,13 @@ class SETDataReader:
         sqlite_path : str
             path to sqlite file e.g. /path/to/sqlite.db
         """
-        self.__sqlite_path = sqlite_path
+        self._sqlite_path = sqlite_path
 
-        self.__engine = sa.create_engine(f"sqlite:///{self.__sqlite_path}")
-        self.__metadata = MetaData(self.__engine)
+        self._engine = sa.create_engine(f"sqlite:///{self._sqlite_path}")
+        self._metadata = MetaData(self._engine)
 
-        if not os.path.isfile(self.__sqlite_path):
-            raise InputError(f"{self.__sqlite_path} is not found")
+        if not os.path.isfile(self._sqlite_path):
+            raise InputError(f"{self._sqlite_path} is not found")
         try:
             self._table("SECURITY")
         except DatabaseError as e:
@@ -64,7 +65,7 @@ class SETDataReader:
         """
         t = self._table(table_name)
         stmt = select([func.max(func.DATE(t.c.D_TRADE))])
-        return self.__engine.execute(stmt).scalar()
+        return self._execute(stmt).scalar()
 
     def last_update(self) -> str:
         """Last database update, checking from last D_TRADE in following
@@ -119,7 +120,7 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        res = self.__engine.execute(stmt).all()
+        res = self._execute(stmt).all()
 
         return [i[0] for i in res]
 
@@ -142,7 +143,7 @@ class SETDataReader:
             func.DATE(calendar_t.c.D_TRADE) == check_date
         )
 
-        res = self.__engine.execute(stmt).scalar()
+        res = self._execute(stmt).scalar()
 
         assert isinstance(res, int)
         return res > 0
@@ -237,12 +238,12 @@ class SETDataReader:
             sector = sector.upper()
             stmt = stmt.where(func.trim(sector_t.c.N_SECTOR) == sector)
 
-        res_df = pd.read_sql_query(stmt, self.__engine)
+        df = self._read_sql_query(stmt)
 
         map_market = {v: k for k, v in fld.MARKET_MAP.items()}
-        res_df["market"] = res_df["market"].replace(map_market)
+        df["market"] = df["market"].replace(map_market)
 
-        return res_df
+        return df
 
     def get_company_info(self, symbol_list: Optional[List[str]] = None) -> pd.DataFrame:
         """Data from table COMPANY.
@@ -311,8 +312,8 @@ class SETDataReader:
             stmt=stmt, column=security_t.c.N_SECURITY, values=symbol_list
         )
 
-        res_df = pd.read_sql_query(stmt, self.__engine)
-        return res_df
+        df = self._read_sql_query(stmt)
+        return df
 
     def get_change_name(
         self,
@@ -391,9 +392,9 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        res_df = pd.read_sql_query(stmt, self.__engine)
-        res_df = res_df.drop_duplicates(ignore_index=True)
-        return res_df
+        df = self._read_sql_query(stmt)
+        df = df.drop_duplicates(ignore_index=True)
+        return df
 
     def get_dividend(
         self,
@@ -495,11 +496,11 @@ class SETDataReader:
             stmt=stmt, column=rights_benefit_t.c.N_CA_TYPE, values=ca_type_list
         )
 
-        res_df = pd.read_sql_query(stmt, self.__engine)
+        df = self._read_sql_query(stmt)
 
-        res_df = self._merge_adjust_factor_dividend(res_df, adjusted_list=adjusted_list)
+        df = self._merge_adjust_factor_dividend(df, adjusted_list=adjusted_list)
 
-        return res_df
+        return df
 
     def get_delisted(
         self,
@@ -563,8 +564,8 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        res_df = pd.read_sql_query(stmt, self.__engine)
-        return res_df
+        df = self._read_sql_query(stmt)
+        return df
 
     def get_sign_posting(
         self,
@@ -640,8 +641,8 @@ class SETDataReader:
             stmt=stmt, column=sign_posting_t.c.N_SIGN, values=sign_list
         )
 
-        res_df = pd.read_sql_query(stmt, self.__engine)
-        return res_df
+        df = self._read_sql_query(stmt)
+        return df
 
     def get_symbols_by_index(
         self,
@@ -787,9 +788,9 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        res_df = pd.read_sql_query(stmt, self.__engine)
+        df = self._read_sql_query(stmt)
 
-        return res_df
+        return df
 
     def get_adjust_factor(
         self,
@@ -865,9 +866,9 @@ class SETDataReader:
             stmt=stmt, column=adjust_factor_t.c.N_CA_TYPE, values=ca_type_list
         )
 
-        res_df = pd.read_sql_query(stmt, self.__engine)
+        df = self._read_sql_query(stmt)
 
-        return res_df
+        return df
 
     def get_data_symbol_daily(
         self,
@@ -1016,9 +1017,7 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        df = pd.read_sql_query(
-            stmt, self.__engine, index_col=TRADE_DATE, parse_dates=TRADE_DATE, dtype={VALUE: np.float64}  # type: ignore
-        )
+        df = self._read_sql_query(stmt, index_col=TRADE_DATE)
 
         df = df.pivot(columns=NAME, values=VALUE)
 
@@ -1678,7 +1677,7 @@ class SETDataReader:
 
         j = self._join_sector_table(mktstat_daily_t)
 
-        sql = (
+        stmt = (
             select(
                 [
                     mktstat_daily_t.c.D_TRADE.label(TRADE_DATE),
@@ -1695,8 +1694,8 @@ class SETDataReader:
             end_date=end_date,
             last_update_date=self.last_table_update(mktstat_daily_t.name),
         )
-        sql = self._filter_stmt_by_symbol_and_date(
-            stmt=sql,
+        stmt = self._filter_stmt_by_symbol_and_date(
+            stmt=stmt,
             symbol_column=sector_t.c.N_SECTOR,
             date_column=mktstat_daily_t.c.D_TRADE,
             symbol_list=index_list,
@@ -1704,9 +1703,7 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        df = pd.read_sql_query(
-            sql, self.__engine, index_col=TRADE_DATE, parse_dates=TRADE_DATE, dtype={VALUE: np.float64}  # type: ignore
-        )
+        df = self._read_sql_query(stmt, index_col=TRADE_DATE)
 
         df = df.pivot(columns=NAME, values=VALUE)
         df.columns.name = None
@@ -1863,7 +1860,30 @@ class SETDataReader:
     """
 
     def _table(self, name: str) -> Table:
-        return Table(name, self.__metadata, autoload=True)
+        return Table(name, self._metadata, autoload=True)
+
+    def _execute(self, stmt: Select):
+        return self._execute(stmt).scalar()
+
+    def _read_sql_query(
+        self, stmt: Select, index_col: Optional[str] = None
+    ) -> pd.DataFrame:
+        col_name_list = [i.name for i in stmt.selected_columns]
+
+        if VALUE in col_name_list:
+            dtype = {VALUE: np.float64}
+        else:
+            dtype = None
+
+        parse_dates = [i for i in col_name_list if i.endswith("_date")]
+
+        return pd.read_sql_query(
+            stmt,
+            self._engine,
+            index_col=index_col,
+            parse_dates=parse_dates,
+            dtype=dtype,  # type: ignore
+        )
 
     def _filter_stmt_by_date(
         self,
@@ -2082,9 +2102,7 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        df = pd.read_sql_query(
-            stmt, self.__engine, parse_dates=TRADE_DATE, dtype={VALUE: np.float64}  # type: ignore
-        )
+        df = self._read_sql_query(stmt, index_col=TRADE_DATE)
 
         # duplicate key mostly I_ACCT_FORM 6,7
         df = df.drop_duplicates(subset=[TRADE_DATE, NAME], keep="last")
@@ -2269,9 +2287,7 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        df = pd.read_sql_query(
-            stmt, self.__engine, index_col=TRADE_DATE, parse_dates=TRADE_DATE, dtype={VALUE: np.float64}  # type: ignore
-        )
+        df = self._read_sql_query(stmt, index_col=TRADE_DATE)
 
         df = df.pivot(columns=NAME, values=VALUE)
 
@@ -2297,4 +2313,4 @@ class SETDataReader:
             end_date=current_date,
         )
 
-        return self.__engine.execute(stmt).scalar()
+        return self._execute(stmt).scalar()
