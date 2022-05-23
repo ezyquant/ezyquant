@@ -15,6 +15,10 @@ from . import utils
 from . import validators as vld
 from .errors import InputError
 
+TRADE_DATE = "trade_date"
+NAME = "name"
+VALUE = "value"
+
 
 class SETDataReader:
     """SETDataReader read PSIMS data."""
@@ -969,10 +973,10 @@ class SETDataReader:
 
         if field in fld.DAILY_STOCK_TRADE_MAP:
             daily_stock_t = self._table("DAILY_STOCK_TRADE")
-            field_col = daily_stock_t.c[fld.DAILY_STOCK_TRADE_MAP[field]].label(field)
+            value_col = daily_stock_t.c[fld.DAILY_STOCK_TRADE_MAP[field]]
         elif field in fld.DAILY_STOCK_STAT_MAP:
             daily_stock_t = self._table("DAILY_STOCK_STAT")
-            field_col = daily_stock_t.c[fld.DAILY_STOCK_STAT_MAP[field]].label(field)
+            value_col = daily_stock_t.c[fld.DAILY_STOCK_STAT_MAP[field]]
         else:
             raise InputError(
                 f"{field} is invalid field. Please read document to check valid field."
@@ -985,9 +989,9 @@ class SETDataReader:
         stmt = (
             select(
                 [
-                    daily_stock_t.c.D_TRADE.label("trade_date"),
-                    func.trim(security_t.c.N_SECURITY).label("symbol"),
-                    field_col,
+                    daily_stock_t.c.D_TRADE.label(TRADE_DATE),
+                    func.trim(security_t.c.N_SECURITY).label(NAME),
+                    value_col.label(VALUE),
                 ]
             )
             .select_from(j)
@@ -1013,10 +1017,10 @@ class SETDataReader:
         )
 
         df = pd.read_sql_query(
-            stmt, self.__engine, index_col="trade_date", parse_dates="trade_date", dtype={field: np.float64}  # type: ignore
+            stmt, self.__engine, index_col=TRADE_DATE, parse_dates=TRADE_DATE, dtype={VALUE: np.float64}  # type: ignore
         )
 
-        df = df.pivot(columns="symbol", values=field)
+        df = df.pivot(columns=NAME, values=VALUE)
 
         df.index.name = None
         df.columns.name = None
@@ -1677,9 +1681,9 @@ class SETDataReader:
         sql = (
             select(
                 [
-                    mktstat_daily_t.c.D_TRADE.label("trade_date"),
-                    func.trim(sector_t.c.N_SECTOR).label("index"),
-                    field_col.label(field),
+                    mktstat_daily_t.c.D_TRADE.label(TRADE_DATE),
+                    func.trim(sector_t.c.N_SECTOR).label(NAME),
+                    field_col.label(VALUE),
                 ]
             )
             .select_from(j)
@@ -1701,10 +1705,10 @@ class SETDataReader:
         )
 
         df = pd.read_sql_query(
-            sql, self.__engine, index_col="trade_date", parse_dates="trade_date", dtype={field: np.float64}  # type: ignore
+            sql, self.__engine, index_col=TRADE_DATE, parse_dates=TRADE_DATE, dtype={VALUE: np.float64}  # type: ignore
         )
 
-        df = df.pivot(columns="index", values=field)
+        df = df.pivot(columns=NAME, values=VALUE)
         df.columns.name = None
         df.index.name = None
 
@@ -2079,17 +2083,17 @@ class SETDataReader:
         )
 
         df = pd.read_sql_query(
-            stmt, self.__engine, parse_dates="trade_date", dtype={"value": np.float64}  # type: ignore
+            stmt, self.__engine, parse_dates=TRADE_DATE, dtype={VALUE: np.float64}  # type: ignore
         )
 
         # duplicate key mostly I_ACCT_FORM 6,7
-        df = df.drop_duplicates(subset=["trade_date", "symbol"], keep="last")
+        df = df.drop_duplicates(subset=[TRADE_DATE, NAME], keep="last")
 
         if fillna_value != None:
             df = df.fillna(fillna_value)
 
         # pivot dataframe
-        df = df.pivot(index="trade_date", columns="symbol", values="value")
+        df = df.pivot(index=TRADE_DATE, columns=NAME, values=VALUE)
 
         df.index.name = None
         df.columns.name = None
@@ -2112,9 +2116,9 @@ class SETDataReader:
         stmt = (
             select(
                 [
-                    d_trade_subquery.c.D_TRADE.label("trade_date"),
-                    func.trim(security_t.c.N_SECURITY).label("symbol"),
-                    value_column.label("value"),
+                    d_trade_subquery.c.D_TRADE.label(TRADE_DATE),
+                    func.trim(security_t.c.N_SECURITY).label(NAME),
+                    value_column.label(VALUE),
                 ]
             )
             .select_from(self._join_security_and_d_trade_subquery(financial_screen_t))
@@ -2150,9 +2154,9 @@ class SETDataReader:
         stmt = (
             select(
                 [
-                    d_trade_subquery.c.D_TRADE.label("trade_date"),
-                    func.trim(security_t.c.N_SECURITY).label("symbol"),
-                    value_column.label("value"),
+                    d_trade_subquery.c.D_TRADE.label(TRADE_DATE),
+                    func.trim(security_t.c.N_SECURITY).label(NAME),
+                    value_column.label(VALUE),
                 ]
             )
             .select_from(self._join_security_and_d_trade_subquery(financial_stat_std_t))
@@ -2239,9 +2243,9 @@ class SETDataReader:
         stmt = (
             select(
                 [
-                    daily_sector_info_t.c.D_TRADE.label("trade_date"),
-                    func.trim(sector_t.c.N_SECTOR).label("sector"),
-                    field_col.label(field),
+                    daily_sector_info_t.c.D_TRADE.label(TRADE_DATE),
+                    func.trim(sector_t.c.N_SECTOR).label(NAME),
+                    field_col.label(VALUE),
                 ]
             )
             .select_from(j)
@@ -2266,10 +2270,10 @@ class SETDataReader:
         )
 
         df = pd.read_sql_query(
-            stmt, self.__engine, index_col="trade_date", parse_dates="trade_date", dtype={field: np.float64}  # type: ignore
+            stmt, self.__engine, index_col=TRADE_DATE, parse_dates=TRADE_DATE, dtype={VALUE: np.float64}  # type: ignore
         )
 
-        df = df.pivot(columns="sector", values=field)
+        df = df.pivot(columns=NAME, values=VALUE)
 
         df.columns.name = None
         df.index.name = None
