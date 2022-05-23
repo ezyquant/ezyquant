@@ -2244,6 +2244,9 @@ class SETDataReader:
     ) -> pd.DataFrame:
         market = market.upper()
         field = field.lower()
+        f_data = f_data.upper()
+
+        assert f_data in {"I", "S"}, f"{f_data} is not a valid f_data"
 
         sector_t = self._table("SECTOR")
         daily_sector_info_t = self._table("DAILY_SECTOR_INFO")
@@ -2287,6 +2290,77 @@ class SETDataReader:
             end_date=end_date,
         )
 
+        df = self._read_sql_query(stmt, index_col=TRADE_DATE)
+
+        df = df.pivot(columns=NAME, values=VALUE)
+
+        df.columns.name = None
+        df.index.name = None
+
+        return df
+
+    def _get_daily_sector_info_by_security(
+        self,
+        field: str,
+        symbol_list: Optional[List[str]],
+        start_date: Optional[str],
+        end_date: Optional[str],
+        f_data: str,
+    ) -> pd.DataFrame:
+        field = field.lower()
+        f_data = f_data.upper()
+
+        assert f_data in {"I", "S"}, f"{f_data} is not a valid f_data"
+
+        security_t = self._table("SECURITY")
+        sector_t = self._table("SECTOR")
+        daily_sector_info_t = self._table("DAILY_SECTOR_INFO")
+
+        j = self._join_sector_table(daily_sector_info_t).join(
+            security_t,
+            and_(
+                sector_t.c.I_MARKET == security_t.c.I_MARKET,
+                sector_t.c.I_INDUSTRY == security_t.c.I_INDUSTRY,
+                sector_t.c.I_SECTOR == security_t.c.I_SECTOR if f_data == "S" else True,
+                sector_t.c.I_SUBSECTOR == security_t.c.I_SUBSECTOR,
+            ),
+        )
+
+        try:
+            field_col = daily_sector_info_t.c[fld.DAILY_SECTOR_INFO_MAP[field]]
+        except KeyError:
+            raise InputError(
+                f"{field} is invalid field. Please read document to check valid field."
+            )
+
+        # N_SECTOR is the industry name in F_DATA = 'I'
+        stmt = (
+            select(
+                [
+                    daily_sector_info_t.c.D_TRADE.label(TRADE_DATE),
+                    func.trim(security_t.c.N_SECURITY).label(NAME),
+                    field_col.label(VALUE),
+                ]
+            )
+            .select_from(j)
+            .where(sector_t.c.F_DATA == f_data)
+            .where(sector_t.c.D_CANCEL == None)
+            .order_by(func.DATE(daily_sector_info_t.c.D_TRADE))
+        )
+
+        vld.check_start_end_date(
+            start_date=start_date,
+            end_date=end_date,
+            last_update_date=self.last_table_update(daily_sector_info_t.name),
+        )
+        stmt = self._filter_stmt_by_symbol_and_date(
+            stmt=stmt,
+            symbol_column=security_t.c.N_SECURITY,
+            date_column=daily_sector_info_t.c.D_TRADE,
+            symbol_list=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
+        )
         df = self._read_sql_query(stmt, index_col=TRADE_DATE)
 
         df = df.pivot(columns=NAME, values=VALUE)
