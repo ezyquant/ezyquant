@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 import utils
 from numpy import inf, nan
-from pandas.testing import assert_frame_equal
+from pandas.testing import assert_frame_equal, assert_series_equal
 
 import ezyquant.fields as fld
 from ezyquant.creator import SETSignalCreator
@@ -108,6 +108,70 @@ class TestGetSymbolInUniverse:
 class TestGetData:
     _check = staticmethod(utils.check_data_symbol_daily)
 
+    def test_sector_daily(self, ssc: SETSignalCreator):
+        # Mock
+        ssc._start_date = "2021-05-18"
+        ssc._end_date = "2021-05-31"
+        ssc._index_list = ["SET", "mai"]
+
+        # Test
+        result = ssc.get_data(
+            field=fld.D_SECTOR_CLOSE,
+            timeframe=fld.TIMEFRAME_DAILY,
+            value_by=fld.VALUE_BY_SECTOR,
+            method=fld.METHOD_CONSTANT,
+            period=0,
+            shift=0,
+        )
+
+        # Check
+        self._check(result)
+
+        for i in [
+            "BAY",
+            "BBL",
+            "CIMBT",
+            "KBANK",
+            "KKP",
+            "KTB",
+            "LHFG",
+            "SCB",
+            "TCAP",
+            "TISCO",
+            "TTB",
+        ]:
+            assert_series_equal(
+                result[i], const.BANK_D_CLOSE_2021_05_18, check_names=False
+            )
+
+    def test_industry_daily(self, ssc: SETSignalCreator):
+        # Mock
+        ssc._start_date = "2021-05-18"
+        ssc._end_date = "2021-05-31"
+        ssc._index_list = ["SET", "mai"]
+
+        # Test
+        result = ssc.get_data(
+            field=fld.D_SECTOR_CLOSE,
+            timeframe=fld.TIMEFRAME_DAILY,
+            value_by=fld.VALUE_BY_INDUSTRY,
+            method=fld.METHOD_CONSTANT,
+            period=0,
+            shift=0,
+        )
+
+        # Check
+        self._check(result)
+
+        for i in [
+            "BAY",  # BANK
+            "AEONTS",  # FIN
+            "AYUD",  # INSUR
+        ]:
+            assert_series_equal(
+                result[i], const.FINCIAL_D_CLOSE_2021_05_18, check_names=False
+            )
+
     @pytest.mark.parametrize(
         "field",
         [
@@ -120,7 +184,7 @@ class TestGetData:
             fld.D_LAST_OFFER,
         ],
     )
-    def test_symbol_daily_fill_prior(self, ssc: SETSignalCreator, field: str):
+    def test_stock_daily_fill_prior(self, ssc: SETSignalCreator, field: str):
         """THAI no trade after 2021-05-18, close at 2021-05-17 is 3.32"""
         # Mock
         ssc._start_date = "2021-05-18"
@@ -274,11 +338,11 @@ class TestGetData:
             (fld.Q_EBITDA, fld.TIMEFRAME_TTM, fld.VALUE_BY_STOCK),
             (fld.Q_EBITDA, fld.TIMEFRAME_YTD, fld.VALUE_BY_STOCK),
             (fld.D_SECTOR_CLOSE, fld.TIMEFRAME_DAILY, fld.VALUE_BY_SECTOR),
-            (fld.D_SECTOR_CLOSE, fld.TIMEFRAME_DAILY, fld.VALUE_BY_INDUSTRY),
+            (fld.D_INDUSTRY_CLOSE, fld.TIMEFRAME_DAILY, fld.VALUE_BY_INDUSTRY),
         ],
     )
-    @pytest.mark.parametrize("period", [1, 2, 1000])
-    @pytest.mark.parametrize("shift", [0, 1, 2, 1000])
+    @pytest.mark.parametrize("period", [1, 1000])
+    @pytest.mark.parametrize("shift", [0, 1, 1000])
     @pytest.mark.parametrize(
         "method", [fld.METHOD_CONSTANT, fld.METHOD_SUM, fld.METHOD_MEAN]
     )

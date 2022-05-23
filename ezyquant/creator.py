@@ -165,11 +165,13 @@ class SETSignalCreator:
         value_by = value_by.lower()
         method = method.lower()
 
+        symbol_list = self._get_symbol_in_universe()
+
         if timeframe == fld.TIMEFRAME_DAILY:
             if value_by == fld.VALUE_BY_STOCK:
                 df = self._sdr.get_data_symbol_daily(
                     field=field,
-                    symbol_list=self._symbol_list,
+                    symbol_list=symbol_list,
                     start_date=self._start_date,
                     end_date=self._end_date,
                 )
@@ -186,7 +188,7 @@ class SETSignalCreator:
                 }:
                     prior_df = self._sdr.get_data_symbol_daily(
                         field=fld.D_PRIOR,
-                        symbol_list=self._symbol_list,
+                        symbol_list=symbol_list,
                         start_date=self._start_date,
                         end_date=self._end_date,
                     )
@@ -199,18 +201,20 @@ class SETSignalCreator:
                     df = df.fillna(prior_df)
 
             elif value_by == fld.VALUE_BY_SECTOR:
-                df = self._sdr.get_data_sector_daily(
+                df = self._sdr._get_daily_sector_info_by_security(
                     field=field,
-                    sector_list=[],
+                    symbol_list=symbol_list,
                     start_date=self._start_date,
                     end_date=self._end_date,
+                    f_data="S",
                 )
             elif value_by == fld.VALUE_BY_INDUSTRY:
-                df = self._sdr.get_data_industry_daily(
+                df = self._sdr._get_daily_sector_info_by_security(
                     field=field,
-                    industry_list=[],
+                    symbol_list=symbol_list,
                     start_date=self._start_date,
                     end_date=self._end_date,
+                    f_data="I",
                 )
             else:
                 raise InputError(
@@ -233,7 +237,7 @@ class SETSignalCreator:
             if value_by == fld.VALUE_BY_STOCK:
                 df = self._sdr._get_fundamental_data(
                     field=field,
-                    symbol_list=self._symbol_list,
+                    symbol_list=symbol_list,
                     start_date=self._start_date,
                     end_date=self._end_date,
                     timeframe=timeframe,
