@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import sqlalchemy as sa
 from sqlalchemy import Column, MetaData, Table, and_, case, func, select
+from sqlalchemy.exc import DatabaseError
 from sqlalchemy.sql import Select
 
 from . import fields as fld
@@ -33,7 +34,10 @@ class SETDataReader:
 
         if not os.path.isfile(self.__sqlite_path):
             raise InputError(f"{self.__sqlite_path} is not found")
-        self._table("SECURITY")
+        try:
+            self._table("SECURITY")
+        except DatabaseError as e:
+            raise InputError(e)
 
     def last_table_update(self, table_name: str) -> str:
         """Last D_TRADE in table.
