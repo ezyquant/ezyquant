@@ -287,23 +287,22 @@ class SETSignalCreator:
             df = self._sdr.get_symbol_info(
                 symbol_list=self._symbol_list, sec_type="S", native="L"
             )
-            out.update(df["symbol"].tolist())
+            out.update(df["symbol"])
         if fld.MARKET_SET in self._index_list:
             df = self._sdr.get_symbol_info(
                 market=fld.MARKET_SET, sec_type="S", native="L"
             )
-            out.update(df["symbol"].tolist())
+            out.update(df["symbol"])
         if fld.MARKET_MAI.upper() in self._index_list:
             df = self._sdr.get_symbol_info(
                 market=fld.MARKET_MAI, sec_type="S", native="L"
             )
-            out.update(df["symbol"].tolist())
-        if self._index_list:
+            out.update(df["symbol"])
+        if [i for i in self._index_list if i not in (fld.MARKET_MAP_UPPER)]:
             df = self._get_symbols_by_index()
-            out.update(df["symbol"].tolist())
+            out.update(df["symbol"])
         return list(out)
 
-    @lru_cache
     def _get_symbol_info(self) -> pd.DataFrame:
         s = self._get_symbol_in_universe()
         return self._sdr.get_symbol_info(symbol_list=s, sec_type="S", native="L")
@@ -337,21 +336,27 @@ class SETSignalCreator:
 
         return series
 
+    @lru_cache
+    def _get_last_as_of_date_in_security_index(self):
+        return self._sdr._get_last_as_of_date_in_security_index(
+            current_date=self._start_date
+        )
+
+    @lru_cache
     def _get_symbols_by_index(self) -> pd.DataFrame:
-        l = []
-        for i in self._index_list:
-            start_date = self._sdr._get_prior_as_of_date_symbol_index(
-                index_name=i, current_date=self._start_date
-            )
+        last_as_of_dict = self._sdr._get_last_as_of_date_in_security_index()
 
-            df = self._sdr.get_symbols_by_index(
-                index_list=[i],
-                start_date=start_date,
-                end_date=self._end_date,
-            )
+        index_list = [i for i in self._index_list if i not in (fld.MARKET_MAP_UPPER)]
 
-            l.append(df)
+        df = pd.concat(
+            [
+                self._sdr.get_symbols_by_index(
+                    index_list=[i],
+                    start_date=last_as_of_dict[i],
+                    end_date=self._end_date,
+                )
+                for i in index_list
+            ]
+        )
 
-        df = pd.concat(l)
-        assert isinstance(df, pd.DataFrame)
         return df
