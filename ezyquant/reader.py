@@ -2000,47 +2000,6 @@ class SETDataReader:
             isouter=isouter,
         )
 
-    def _get_pivot_adjust_factor_df(
-        self,
-        min_date: str,
-        max_date: str,
-        symbol_list: Optional[List[str]] = None,
-        start_date: Optional[str] = None,
-        ca_type_list: Optional[List[str]] = None,
-    ) -> pd.DataFrame:
-        df = self.get_adjust_factor(
-            symbol_list=symbol_list,
-            start_date=start_date,
-            ca_type_list=ca_type_list,
-        )
-
-        # pivot table
-        df = df.pivot(index="effect_date", columns="symbol", values="adjust_factor")
-
-        # reverse cumulate product adjust factor
-        df = df.iloc[::-1].cumprod(skipna=True).iloc[::-1]
-
-        # reindex trade date
-        if not df.empty:
-            max_date = max(max_date, utils.date_to_str(df.index.max()))
-        df = df.reindex(
-            index=pd.date_range(
-                start=min_date,
-                end=max_date,
-                normalize=True,
-                name="effect_date",
-            ),  # type: ignore
-            columns=symbol_list,  # type: ignore
-        )
-
-        # shift back 1 day
-        df = df.shift(-1)
-
-        # back fill and fill 1
-        df = df.fillna(method="backfill").fillna(1)
-
-        return df
-
     def _merge_adjust_factor(
         self,
         df: pd.DataFrame,
@@ -2138,53 +2097,44 @@ class SETDataReader:
 
         return df
 
-    def _get_fundamental_data(
+    def _get_pivot_adjust_factor_df(
         self,
-        timeframe: str,
-        field: str,
+        min_date: str,
+        max_date: str,
         symbol_list: Optional[List[str]] = None,
         start_date: Optional[str] = None,
-        end_date: Optional[str] = None,
-        fillna_value=None,
+        ca_type_list: Optional[List[str]] = None,
     ) -> pd.DataFrame:
-        timeframe = timeframe.lower()
-        field = field.lower()
-
-        security_t = self._table("SECURITY")
-        d_trade_subquery = self._d_trade_subquery()
-
-        if field in fld.FINANCIAL_STAT_STD_MAP_COMPACT:
-            stmt = self._get_financial_stat_std_stmt(field=field, timeframe=timeframe)
-        elif field in fld.FINANCIAL_SCREEN_MAP and timeframe in (
-            fld.TIMEFRAME_QUARTERLY,
-            fld.TIMEFRAME_YEARLY,
-            fld.TIMEFRAME_YTD,
-        ):
-            stmt = self._get_financial_screen_stmt(field=field, timeframe=timeframe)
-        else:
-            raise InputError(
-                f"{field} is invalid field. Please read document to check valid field."
-            )
-
-        stmt = self._filter_stmt_by_symbol_and_date(
-            stmt=stmt,
-            symbol_column=security_t.c.N_SECURITY,
-            date_column=d_trade_subquery.c.D_TRADE,
+        df = self.get_adjust_factor(
             symbol_list=symbol_list,
             start_date=start_date,
-            end_date=end_date,
+            ca_type_list=ca_type_list,
         )
 
-        df = self._read_sql_query(stmt)
+        # pivot table
+        df = df.pivot(index="effect_date", columns="symbol", values="adjust_factor")
 
-        # duplicate key mostly I_ACCT_FORM 6,7
-        df = df.drop_duplicates(subset=[TRADE_DATE, NAME], keep="last")
-        df = df.set_index(TRADE_DATE)
+        # reverse cumulate product adjust factor
+        df = df.iloc[::-1].cumprod(skipna=True).iloc[::-1]
 
-        if fillna_value != None:
-            df = df.fillna(fillna_value)
+        # reindex trade date
+        if not df.empty:
+            max_date = max(max_date, utils.date_to_str(df.index.max()))
+        df = df.reindex(
+            index=pd.date_range(
+                start=min_date,
+                end=max_date,
+                normalize=True,
+                name="effect_date",
+            ),  # type: ignore
+            columns=symbol_list,  # type: ignore
+        )
 
-        self._pivot_name_value(df)
+        # shift back 1 day
+        df = df.shift(-1)
+
+        # back fill and fill 1
+        df = df.fillna(method="backfill").fillna(1)
 
         return df
 
@@ -2258,6 +2208,56 @@ class SETDataReader:
             stmt = stmt.where(financial_stat_std_t.c.I_QUARTER == 9)
 
         return stmt
+
+    def _get_fundamental_data(
+        self,
+        timeframe: str,
+        field: str,
+        symbol_list: Optional[List[str]] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+        fillna_value=None,
+    ) -> pd.DataFrame:
+        timeframe = timeframe.lower()
+        field = field.lower()
+
+        security_t = self._table("SECURITY")
+        d_trade_subquery = self._d_trade_subquery()
+
+        if field in fld.FINANCIAL_STAT_STD_MAP_COMPACT:
+            stmt = self._get_financial_stat_std_stmt(field=field, timeframe=timeframe)
+        elif field in fld.FINANCIAL_SCREEN_MAP and timeframe in (
+            fld.TIMEFRAME_QUARTERLY,
+            fld.TIMEFRAME_YEARLY,
+            fld.TIMEFRAME_YTD,
+        ):
+            stmt = self._get_financial_screen_stmt(field=field, timeframe=timeframe)
+        else:
+            raise InputError(
+                f"{field} is invalid field. Please read document to check valid field."
+            )
+
+        stmt = self._filter_stmt_by_symbol_and_date(
+            stmt=stmt,
+            symbol_column=security_t.c.N_SECURITY,
+            date_column=d_trade_subquery.c.D_TRADE,
+            symbol_list=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+        df = self._read_sql_query(stmt)
+
+        # duplicate key mostly I_ACCT_FORM 6,7
+        df = df.drop_duplicates(subset=[TRADE_DATE, NAME], keep="last")
+        df = df.set_index(TRADE_DATE)
+
+        if fillna_value != None:
+            df = df.fillna(fillna_value)
+
+        self._pivot_name_value(df)
+
+        return df
 
     def _get_daily_sector_info(
         self,
