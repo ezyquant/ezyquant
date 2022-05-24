@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
@@ -270,6 +270,31 @@ class SETSignalCreator:
 
         return df
 
+    def is_universe(self, universe: str) -> pd.DataFrame:
+        """Return Dataframe of boolean is universe.
+
+        Parameters
+        ----------
+        universe : str
+            Can be Market, Sector, Industry, or Index.
+
+        Returns
+        -------
+        pd.DataFrame of boolean
+            - symbol : str as column
+            - trade date : date as index
+
+        Examples
+        --------
+        TODO: Add example
+        """
+        universe = universe.upper()
+
+        try:
+            return self._is_universe_static(universe)
+        except InputError:
+            return self._is_universe_dynamic(universe)
+
     """ 
     Protected methods
     """
@@ -298,10 +323,13 @@ class SETSignalCreator:
                 market=fld.MARKET_MAI, sec_type="S", native="L"
             )
             out.update(df["symbol"])
-        if [i for i in self._index_list if i not in (fld.MARKET_MAP_UPPER)]:
-            df = self._get_symbols_by_index()
+
+        index_list = [i for i in self._index_list if i not in (fld.MARKET_MAP_UPPER)]
+        for i in index_list:
+            df = self._get_symbols_by_index(i)
             out.update(df["symbol"])
-        return list(out)
+
+        return sorted(list(out))
 
     def _get_symbol_info(self) -> pd.DataFrame:
         s = self._get_symbol_in_universe()
@@ -337,26 +365,83 @@ class SETSignalCreator:
         return series
 
     @lru_cache
-    def _get_last_as_of_date_in_security_index(self):
+    def _get_start_as_of_security_index(self):
         return self._sdr._get_last_as_of_date_in_security_index(
             current_date=self._start_date
         )
 
-    @lru_cache
-    def _get_symbols_by_index(self) -> pd.DataFrame:
-        last_as_of_dict = self._sdr._get_last_as_of_date_in_security_index()
+    def _get_symbols_by_index(self, index: str) -> pd.DataFrame:
+        start_as_of_dict = self._get_start_as_of_security_index()
 
-        index_list = [i for i in self._index_list if i not in (fld.MARKET_MAP_UPPER)]
-
-        df = pd.concat(
-            [
-                self._sdr.get_symbols_by_index(
-                    index_list=[i],
-                    start_date=last_as_of_dict[i],
-                    end_date=self._end_date,
-                )
-                for i in index_list
-            ]
+        return self._sdr.get_symbols_by_index(
+            index_list=[index],
+            start_date=start_as_of_dict[index],
+            end_date=self._end_date,
         )
 
+    def _is_universe_static(self, universe: str) -> pd.DataFrame:
+        if universe in fld.MARKET_MAP_UPPER:
+            index_type = "market"
+        elif universe in fld.INDUSTRY_LIST:
+            index_type = "industry"
+        elif universe in fld.SECTOR_LIST:
+            index_type = "sector"
+        else:
+            raise InputError(
+                f"{universe} is invalid universe. Please read document to check valid universe."
+            )
+
+        df = self._get_symbol_info().set_index("symbol")
+        tds = self._get_trading_dates()
+
+        is_uni_dict = (df[index_type].str.upper() == universe).to_dict()
+        df = pd.DataFrame(is_uni_dict, index=pd.DatetimeIndex(tds))
+
         return df
+
+    def _is_universe_dynamic(self, universe: str) -> pd.DataFrame:
+        if universe not in fld.INDEX_LIST:
+            raise InputError(
+                f"{universe} is invalid universe. Please read document to check valid universe."
+            )
+
+        df = self._get_symbols_by_index(universe)
+
+        # Pivot
+        df = df.pivot(index="as_of_date", columns="symbol", values="index")
+        df.index.name = None
+        df.columns.name = None
+
+        # To bool
+        df = df.notna()
+
+        # Reindex
+        index = self._get_trading_dates()
+        df = self._reindex_date(df, index=index, method="ffill", fill_value=False)
+
+        # Reindex columns
+        columns = self._get_symbol_in_universe()
+        df = df.reindex(columns=columns, fill_value=False)  # type: ignore
+
+        return df
+
+    """ 
+    Static methods
+    """
+
+    @staticmethod
+    def _reindex_date(
+        df: pd.DataFrame, index, method: Optional[str] = None, fill_value=None
+    ) -> pd.DataFrame:
+        index = pd.DatetimeIndex(index)
+
+        start = min(df.index.min(), index.min())
+        end = max(df.index.max(), index.max())
+        dr = pd.date_range(start=start, end=end)
+
+        df = df.reindex(dr)  # type: ignore
+
+        df = df.fillna(method=method)  # type: ignore
+        df = df.fillna(fill_value)
+
+        return df.reindex(index=index)  # type: ignore
