@@ -2255,7 +2255,7 @@ class SETDataReader:
         if fillna_value != None:
             df = df.fillna(fillna_value)
 
-        self._pivot_name_value(df)
+        df = self._pivot_name_value(df)
 
         return df
 
