@@ -20,6 +20,8 @@ class SETSignalCreator:
     ):
         """Initialize SETSignalCreator.
 
+        Symbol in universe is union of symbol_list and symbols in index_list.
+
         Parameters
         ----------
         sqlite_path : str
@@ -59,7 +61,8 @@ class SETSignalCreator:
         period: int,
         shift: int,
     ) -> pd.DataFrame:
-        """_summary_
+        """Get DataFrame which columns are symbol in universe and index is
+        trade date.
 
         Parameters
         ----------
