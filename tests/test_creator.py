@@ -1,5 +1,7 @@
+from typing import List
 from unittest.mock import ANY, Mock
 
+import constant as const
 import pandas as pd
 import pytest
 import utils
@@ -7,7 +9,7 @@ from numpy import inf, nan
 from pandas.testing import assert_frame_equal, assert_series_equal
 
 import ezyquant.fields as fld
-from ezyquant.creator import SETSignalCreator
+from ezyquant import SETSignalCreator
 
 dt_idx = pd.DatetimeIndex(
     [
@@ -24,15 +26,6 @@ dt_idx = pd.DatetimeIndex(
     ],
     freq=None,
 )
-
-
-from typing import List
-
-import constant as const
-import pytest
-
-import ezyquant.fields as fld
-from ezyquant import SETSignalCreator
 
 
 class TestGetSymbolInUniverse:
@@ -334,17 +327,19 @@ class TestGetData:
             (fld.D_CLOSE, fld.TIMEFRAME_DAILY, fld.VALUE_BY_STOCK),
             (fld.D_PE, fld.TIMEFRAME_DAILY, fld.VALUE_BY_STOCK),
             (fld.Q_EBITDA, fld.TIMEFRAME_QUARTERLY, fld.VALUE_BY_STOCK),
-            (fld.Q_EBITDA, fld.TIMEFRAME_YEARLY, fld.VALUE_BY_STOCK),
-            (fld.Q_EBITDA, fld.TIMEFRAME_TTM, fld.VALUE_BY_STOCK),
-            (fld.Q_EBITDA, fld.TIMEFRAME_YTD, fld.VALUE_BY_STOCK),
             (fld.D_SECTOR_CLOSE, fld.TIMEFRAME_DAILY, fld.VALUE_BY_SECTOR),
             (fld.D_INDUSTRY_CLOSE, fld.TIMEFRAME_DAILY, fld.VALUE_BY_INDUSTRY),
         ],
     )
-    @pytest.mark.parametrize("period", [1, 1000])
-    @pytest.mark.parametrize("shift", [0, 1, 1000])
+    @pytest.mark.parametrize("shift", [0, 1, 999])
     @pytest.mark.parametrize(
-        "method", [fld.METHOD_CONSTANT, fld.METHOD_SUM, fld.METHOD_MEAN]
+        ("method", "period"),
+        [
+            (fld.METHOD_CONSTANT, 0),
+            (fld.METHOD_MEAN, 1),
+            (fld.METHOD_MEAN, 2),
+            (fld.METHOD_MEAN, 999),
+        ],
     )
     def test_empty(
         self,

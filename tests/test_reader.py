@@ -7,8 +7,8 @@ import utils
 from pandas._testing import assert_frame_equal, assert_index_equal, assert_series_equal
 
 import ezyquant.fields as fld
+from ezyquant import SETDataReader
 from ezyquant.errors import InputError
-from ezyquant.reader import SETDataReader
 
 
 def test_last_table_update(sdr: SETDataReader):
