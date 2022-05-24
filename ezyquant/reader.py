@@ -1,7 +1,7 @@
 import os.path
 from datetime import date
 from functools import lru_cache
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -2390,24 +2390,34 @@ class SETDataReader:
 
         return df
 
-    def _get_prior_as_of_date_symbol_index(
-        self, index_name: str, current_date: Optional[str] = None
-    ) -> str:
+    def _get_last_as_of_date_in_security_index(
+        self, current_date: Optional[str] = None
+    ) -> Dict[str, str]:
         sector_t = self._table("SECTOR")
         security_index_t = self._table("SECURITY_INDEX")
 
         j = self._join_sector_table(security_index_t)
-        stmt = select(func.max(func.DATE(security_index_t.c.D_AS_OF))).select_from(j)
+        stmt = (
+            select(
+                [
+                    func.trim(sector_t.c.N_SECTOR),
+                    func.max(func.DATE(security_index_t.c.D_AS_OF)),
+                ]
+            )
+            .select_from(j)
+            .group_by(sector_t.c.N_SECTOR)
+        )
         stmt = self._filter_stmt_by_symbol_and_date(
             stmt=stmt,
             symbol_column=sector_t.c.N_SECTOR,
             date_column=security_index_t.c.D_AS_OF,
-            symbol_list=[index_name],
+            symbol_list=None,
             start_date=None,
             end_date=current_date,
         )
 
-        return self._execute(stmt).scalar()
+        result = self._execute(stmt).all()
+        return dict(result)  # type: ignore
 
     """ 
     Static methods

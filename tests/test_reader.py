@@ -1863,44 +1863,56 @@ class TestGetDataIndustryDaily:
         return result
 
 
-class TestGetPriorAsOfDateSymbolIndex:
-    @pytest.mark.parametrize(
-        "index_name",
-        [
-            fld.INDEX_SETHD,
-            fld.INDEX_SSET,
-            fld.INDEX_SET100,
-            fld.INDEX_SET50,
-        ],
-    )
-    def test_none(self, sdr: SETDataReader, index_name: str):
+class TestGetLastAsOfDateInSecurityIndex:
+    def test_none(self, sdr: SETDataReader):
         # Test
-        result = sdr._get_prior_as_of_date_symbol_index(index_name)
+        result = sdr._get_last_as_of_date_in_security_index()
 
         # Check
-        datetime.strptime(result, "%Y-%m-%d")
+        self._check(result)
 
     @pytest.mark.parametrize(
-        ("index_name", "current_date", "expected"),
+        ("current_date", "expected"),
         [
-            (fld.INDEX_SETHD, "2022-01-04", "2022-01-04"),
-            (fld.INDEX_SSET, "2022-01-04", "2022-01-04"),
-            (fld.INDEX_SET100, "2022-01-04", "2022-01-04"),
-            (fld.INDEX_SET50, "2022-01-04", "2022-01-04"),
-            (fld.INDEX_SETHD, "2022-03-01", "2022-01-04"),
-            (fld.INDEX_SSET, "2022-03-01", "2022-01-04"),
-            (fld.INDEX_SET100, "2022-03-01", "2022-01-04"),
-            (fld.INDEX_SET50, "2022-03-01", "2022-01-04"),
+            (
+                "2022-01-04",
+                {
+                    "SET100": "2022-01-04",
+                    "SET50": "2022-01-04",
+                    "SETCLMV": "2022-01-04",
+                    "SETHD": "2022-01-04",
+                    "SETTHSI": "2022-01-04",
+                    "SETWB": "2022-01-04",
+                    "sSET": "2022-01-04",
+                },
+            ),
+            (
+                "2022-04-27",
+                {
+                    "SET100": "2022-04-27",
+                    "SET50": "2022-04-27",
+                    "SETCLMV": "2022-04-27",
+                    "SETHD": "2022-04-01",
+                    "SETTHSI": "2022-04-27",
+                    "SETWB": "2022-04-01",
+                    "sSET": "2022-01-04",
+                },
+            ),
         ],
     )
-    def test_with_expect(
-        self, sdr: SETDataReader, index_name: str, current_date: str, expected: str
-    ):
+    def test_with_expect(self, sdr: SETDataReader, current_date: str, expected: str):
         # Test
-        result = sdr._get_prior_as_of_date_symbol_index(index_name, current_date)
+        result = sdr._get_last_as_of_date_in_security_index(current_date)
 
         # Check
+        self._check(result)
         assert result == expected
+
+    @staticmethod
+    def _check(result):
+        for k, v in result.items():
+            assert isinstance(k, str)
+            datetime.strptime(v, "%Y-%m-%d")
 
 
 def is_df_unique(df):
