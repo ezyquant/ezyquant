@@ -1053,10 +1053,7 @@ class SETDataReader:
 
         df = self._read_sql_query(stmt, index_col=TRADE_DATE)
 
-        df = df.pivot(columns=NAME, values=VALUE)
-
-        df.index.name = None
-        df.columns.name = None
+        df = self._pivot_name_value(df)
 
         if field in {
             fld.D_PRIOR,
@@ -1740,9 +1737,7 @@ class SETDataReader:
 
         df = self._read_sql_query(stmt, index_col=TRADE_DATE)
 
-        df = df.pivot(columns=NAME, values=VALUE)
-        df.columns.name = None
-        df.index.name = None
+        df = self._pivot_name_value(df)
 
         return df
 
@@ -2184,15 +2179,12 @@ class SETDataReader:
 
         # duplicate key mostly I_ACCT_FORM 6,7
         df = df.drop_duplicates(subset=[TRADE_DATE, NAME], keep="last")
+        df = df.set_index(TRADE_DATE)
 
         if fillna_value != None:
             df = df.fillna(fillna_value)
 
-        # pivot dataframe
-        df = df.pivot(index=TRADE_DATE, columns=NAME, values=VALUE)
-
-        df.index.name = None
-        df.columns.name = None
+        self._pivot_name_value(df)
 
         return df
 
@@ -2326,10 +2318,7 @@ class SETDataReader:
 
         df = self._read_sql_query(stmt, index_col=TRADE_DATE)
 
-        df = df.pivot(columns=NAME, values=VALUE)
-
-        df.columns.name = None
-        df.index.name = None
+        df = self._pivot_name_value(df)
 
         return df
 
@@ -2397,10 +2386,7 @@ class SETDataReader:
         )
         df = self._read_sql_query(stmt, index_col=TRADE_DATE)
 
-        df = df.pivot(columns=NAME, values=VALUE)
-
-        df.columns.name = None
-        df.index.name = None
+        df = self._pivot_name_value(df)
 
         return df
 
@@ -2422,3 +2408,14 @@ class SETDataReader:
         )
 
         return self._execute(stmt).scalar()
+
+    """ 
+    Static methods
+    """
+
+    @staticmethod
+    def _pivot_name_value(df: pd.DataFrame) -> pd.DataFrame:
+        df = df.pivot(columns=NAME, values=VALUE)
+        df.columns.name = None
+        df.index.name = None
+        return df
