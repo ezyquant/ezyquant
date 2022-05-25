@@ -635,6 +635,7 @@ class SETDataReader:
             sp dataframe contain columns:
                 - symbol: str - SECURITY.N_SECURITY
                 - hold_date: date - D_HOLD
+                - release_date: date - D_RELEASE
                 - sign: str - N_SIGN
 
         Examples
@@ -657,6 +658,7 @@ class SETDataReader:
                 [
                     func.trim(security_t.c.N_SECURITY).label("symbol"),
                     sign_posting_t.c.D_HOLD.label("hold_date"),
+                    sign_posting_t.c.D_RELEASE.label("release_date"),
                     func.trim(sign_posting_t.c.N_SIGN).label("sign"),
                 ]
             )

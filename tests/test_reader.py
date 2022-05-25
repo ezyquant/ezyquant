@@ -777,8 +777,15 @@ class TestGetSignPosting:
         assert_frame_equal(
             result,
             pd.DataFrame(
-                [["TAPAC", pd.Timestamp("2022-01-05"), "SP"]],
-                columns=["symbol", "hold_date", "sign"],
+                [
+                    [
+                        "TAPAC",
+                        pd.Timestamp("2022-01-05"),
+                        pd.Timestamp("2022-01-06"),
+                        "SP",
+                    ]
+                ],
+                columns=["symbol", "hold_date", "release_date", "sign"],
             ),
         )
 
@@ -798,11 +805,12 @@ class TestGetSignPosting:
 
         assert_index_equal(
             result.columns,
-            pd.Index(["symbol", "hold_date", "sign"]),
+            pd.Index(["symbol", "hold_date", "release_date", "sign"]),
         )
 
-        for i in result.columns:
-            assert pd.notna(result[i]).all(), f"{i} is null"
+        assert pd.notna(result["symbol"]).all(), f"symbol is null"
+        assert pd.notna(result["hold_date"]).all(), f"hold_date is null"
+        assert pd.notna(result["sign"]).all(), f"sign is null"
 
         assert result["sign"].isin(["C", "CM", "DS", "H", "NC", "NP", "SP", "ST"]).all()
 
