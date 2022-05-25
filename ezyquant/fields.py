@@ -102,6 +102,7 @@ INDEX_SET50 = "SET50"
 INDEX_LIST = [
     v for k, v in locals().items() if isinstance(k, str) and k.startswith("INDEX_")
 ]
+INDEX_LIST_UPPER = [k.upper() for k in INDEX_LIST]
 
 D_PRIOR = "prior"  # last_close
 D_OPEN = "open"

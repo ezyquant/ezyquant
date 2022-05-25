@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -80,7 +80,7 @@ class SETSignalCreator:
             - industry
             - sector
         method : str, default 'constant'
-            Name of Dataframe rolling window functions.
+            Name of Dataframe rolling window functions. See <https://pandas.pydata.org/docs/reference/window.html#rolling-window-functions> for details.
             - constant
             - count
             - sum
@@ -115,13 +115,11 @@ class SETSignalCreator:
         >>> from ezyquant import SETSignalCreator
         >>> from ezyquant import fields as fld
         >>> ssc = SETSignalCreator(
-        ...     index_list=[],
-        ...     symbol_list=["COM7", "MALEE"],
-        ...     sector_list=[],
-        ...     industry_list=[],
+        ...     sqlite_path="psims.db",
         ...     start_date="2022-01-01",
         ...     end_date="2022-01-10",
-        ...     sqlite_path="psims.db",
+        ...     index_list=[],
+        ...     symbol_list=["COM7", "MALEE"],
         ... )
         >>> ssc.get_data(
         ...     field=fld.D_CLOSE,
@@ -375,10 +373,11 @@ class SETSignalCreator:
         return series
 
     @lru_cache
-    def _get_start_as_of_security_index(self):
-        return self._sdr._get_last_as_of_date_in_security_index(
+    def _get_start_as_of_security_index(self) -> Dict[str, str]:
+        out = self._sdr._get_last_as_of_date_in_security_index(
             current_date=self._start_date
         )
+        return {k.upper(): v for k, v in out.items()}
 
     def _get_symbols_by_index(self, index: str) -> pd.DataFrame:
         start_as_of_dict = self._get_start_as_of_security_index()
@@ -407,10 +406,13 @@ class SETSignalCreator:
         is_uni_dict = (df[index_type].str.upper() == universe).to_dict()
         df = pd.DataFrame(is_uni_dict, index=pd.DatetimeIndex(tds))
 
+        # Reindex columns
+        df = df.reindex(columns=sorted(df.columns))  # type: ignore
+
         return df
 
     def _is_universe_dynamic(self, universe: str) -> pd.DataFrame:
-        if universe not in fld.INDEX_LIST:
+        if universe not in fld.INDEX_LIST_UPPER:
             raise InputError(
                 f"{universe} is invalid universe. Please read document to check valid universe."
             )

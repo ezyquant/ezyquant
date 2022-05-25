@@ -483,7 +483,7 @@ class TestGetChangeName:
 
         assert (result["symbol_old"] != result["symbol_new"]).all()
 
-        assert is_df_unique(result[["symbol_id", "effect_date"]])
+        assert utils.is_df_unique(result[["symbol_id", "effect_date"]])
 
         return result
 
@@ -1057,7 +1057,7 @@ class TestGetAdjustFactor:
         for i in result.columns:
             assert pd.notna(result[i]).all(), f"{i} is null"
 
-        assert is_df_unique(result[["symbol", "effect_date"]])
+        assert utils.is_df_unique(result[["symbol", "effect_date"]])
         assert result["ca_type"].isin(["  ", "CR", "PC", "RC", "SD", "XR"]).all()
         assert (result["adjust_factor"] > 0).all()
 
@@ -1913,24 +1913,3 @@ class TestGetLastAsOfDateInSecurityIndex:
         for k, v in result.items():
             assert isinstance(k, str)
             datetime.strptime(v, "%Y-%m-%d")
-
-
-def is_df_unique(df):
-    return (df.groupby([i for i in df.columns]).size() == 1).all()
-
-
-@pytest.mark.parametrize(
-    ("df", "expected"),
-    [
-        (pd.DataFrame(), True),
-        (pd.DataFrame([1, 1]), False),
-        (pd.DataFrame([1, 2]), True),
-        (pd.DataFrame([1, 2, 3]), True),
-        (pd.DataFrame([1, 1, 2]), False),
-        (pd.DataFrame([1, 1, 2, 2]), False),
-        (pd.DataFrame([[1, 2], [1, 2]]), False),
-        (pd.DataFrame([[1, 1], [1, 2]]), True),
-    ],
-)
-def test_is_df_unique(df: pd.DataFrame, expected: bool):
-    assert is_df_unique(df) == expected
