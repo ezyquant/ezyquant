@@ -100,9 +100,9 @@ class SETSignalCreator:
             - sem
             - rank
         period : int, default 1
-            Number of periods for rolling Dataframe.
+            Number of periods for rolling Dataframe. Period must be greater than 0.
         shift : int, default 0
-            Number of periods to shift Dataframe.
+            Number of periods to shift Dataframe. Shift must be greater than or equal to 0.
 
         Returns
         -------
@@ -169,6 +169,12 @@ class SETSignalCreator:
         value_by = value_by.lower()
         method = method.lower()
 
+        if period < 1:
+            raise InputError(f"period must be greater than 0. but {period} is given.")
+        if shift < 0:
+            raise InputError(
+                f"shift must be greater than or equal to 0, but {shift} is given."
+            )
         if method == fld.METHOD_CONSTANT and period != 1:
             raise InputError(f"{fld.METHOD_CONSTANT} method only support period=1")
 
