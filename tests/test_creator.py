@@ -113,7 +113,7 @@ class TestGetData:
             timeframe=fld.TIMEFRAME_DAILY,
             value_by=fld.VALUE_BY_SECTOR,
             method=fld.METHOD_CONSTANT,
-            period=0,
+            period=1,
             shift=0,
         )
 
@@ -149,7 +149,7 @@ class TestGetData:
             timeframe=fld.TIMEFRAME_DAILY,
             value_by=fld.VALUE_BY_INDUSTRY,
             method=fld.METHOD_CONSTANT,
-            period=0,
+            period=1,
             shift=0,
         )
 
@@ -190,7 +190,7 @@ class TestGetData:
             timeframe=fld.TIMEFRAME_DAILY,
             value_by=fld.VALUE_BY_STOCK,
             method=fld.METHOD_CONSTANT,
-            period=0,
+            period=1,
             shift=0,
         )
 
@@ -233,7 +233,7 @@ class TestGetData:
             (
                 fld.METHOD_CONSTANT,
                 None,
-                0,
+                1,
                 pd.DataFrame(
                     {
                         "A": [11, 12, 13, 14, 15, 16, 17, 18, 19],
@@ -335,7 +335,7 @@ class TestGetData:
     @pytest.mark.parametrize(
         ("method", "period"),
         [
-            (fld.METHOD_CONSTANT, 0),
+            (fld.METHOD_CONSTANT, 1),
             (fld.METHOD_MEAN, 1),
             (fld.METHOD_MEAN, 2),
             (fld.METHOD_MEAN, 999),
