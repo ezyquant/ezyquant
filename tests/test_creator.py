@@ -365,17 +365,3 @@ class TestGetData:
         self._check(result)
 
         assert result.empty
-
-
-# class TestIsUniverse:
-#     @pytest.mark.parametrize("index_list", [[fld.MARKET_SET, fld.MARKET_MAI.upper()]])
-#     def test_market(self, ssc: SETSignalCreator, index_list: List[str]):
-#         # Mock
-#         ssc._index_list = index_list
-
-#         # Test
-#         result = ssc.is_universe("SET100")
-
-#         # Check
-#         print(result)
-#         print(result[["SCB", "SCBB", "BBL"]])
