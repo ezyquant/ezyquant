@@ -113,7 +113,7 @@ class TestGetData:
             timeframe=fld.TIMEFRAME_DAILY,
             value_by=fld.VALUE_BY_SECTOR,
             method=fld.METHOD_CONSTANT,
-            period=0,
+            period=1,
             shift=0,
         )
 
@@ -149,7 +149,7 @@ class TestGetData:
             timeframe=fld.TIMEFRAME_DAILY,
             value_by=fld.VALUE_BY_INDUSTRY,
             method=fld.METHOD_CONSTANT,
-            period=0,
+            period=1,
             shift=0,
         )
 
@@ -190,7 +190,7 @@ class TestGetData:
             timeframe=fld.TIMEFRAME_DAILY,
             value_by=fld.VALUE_BY_STOCK,
             method=fld.METHOD_CONSTANT,
-            period=0,
+            period=1,
             shift=0,
         )
 
@@ -219,8 +219,8 @@ class TestGetData:
         [
             pd.DataFrame(
                 {
-                    "A": [11, 12, 13, 14, 15, 16, 17, 18, 19],
-                    "B": [21, 22, nan, inf, nan, 26, inf, nan, 29],
+                    "A": [11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0],
+                    "B": [21.0, 22.0, nan, inf, nan, 26.0, inf, nan, 29.0],
                     "C": [nan] * 9,
                 },
                 index=dt_idx[:9],
@@ -232,12 +232,12 @@ class TestGetData:
         [
             (
                 fld.METHOD_CONSTANT,
-                None,
+                1,
                 0,
                 pd.DataFrame(
                     {
-                        "A": [11, 12, 13, 14, 15, 16, 17, 18, 19],
-                        "B": [21, 22, 22, nan, nan, 26, nan, nan, 29],
+                        "A": [11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0],
+                        "B": [21.0, 22.0, 22.0, nan, nan, 26.0, nan, nan, 29.0],
                         "C": [nan] * 9,
                     },
                     index=dt_idx[:9],
@@ -245,12 +245,12 @@ class TestGetData:
             ),
             (
                 fld.METHOD_CONSTANT,
-                None,
+                1,
                 1,
                 pd.DataFrame(
                     {
-                        "A": [nan, 11, 12, 13, 14, 15, 16, 17, 18],
-                        "B": [nan, 21, 21, 22, 22, nan, 26, 26, nan],
+                        "A": [nan, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0],
+                        "B": [nan, 21.0, 21.0, 22.0, 22.0, nan, 26.0, 26.0, nan],
                         "C": [nan] * 9,
                     },
                     index=dt_idx[:9],
@@ -262,8 +262,8 @@ class TestGetData:
                 0,
                 pd.DataFrame(
                     {
-                        "A": [nan, 23, 25, 27, 29, 31, 33, 35, 37],
-                        "B": [nan, 43, 43, nan, nan, nan, nan, nan, nan],
+                        "A": [nan, 23.0, 25.0, 27.0, 29.0, 31.0, 33.0, 35.0, 37.0],
+                        "B": [nan, 43.0, 43.0, nan, nan, nan, nan, nan, nan],
                         "C": [nan] * 9,
                     },
                     index=dt_idx[:9],
@@ -275,8 +275,8 @@ class TestGetData:
                 1,
                 pd.DataFrame(
                     {
-                        "A": [nan, nan, 23, 25, 27, 29, 31, 33, 35],
-                        "B": [nan, nan, nan, 43, 43, nan, nan, nan, nan],
+                        "A": [nan, nan, 23.0, 25.0, 27.0, 29.0, 31.0, 33.0, 35.0],
+                        "B": [nan, nan, nan, 43.0, 43.0, nan, nan, nan, nan],
                         "C": [nan] * 9,
                     },
                     index=dt_idx[:9],
@@ -335,7 +335,7 @@ class TestGetData:
     @pytest.mark.parametrize(
         ("method", "period"),
         [
-            (fld.METHOD_CONSTANT, 0),
+            (fld.METHOD_CONSTANT, 1),
             (fld.METHOD_MEAN, 1),
             (fld.METHOD_MEAN, 2),
             (fld.METHOD_MEAN, 999),

@@ -56,13 +56,13 @@ class SETSignalCreator:
         self,
         field: str,
         timeframe: str,
-        value_by: str,
-        method: str,
-        period: int,
-        shift: int,
+        value_by: str = "stock",
+        method: str = "constant",
+        period: int = 1,
+        shift: int = 0,
     ) -> pd.DataFrame:
         """Get DataFrame which columns are symbol in universe and index is
-        trade date.
+        trade date from start_date to end_date.
 
         Parameters
         ----------
@@ -74,12 +74,13 @@ class SETSignalCreator:
             - yearly
             - ttm
             - ytd
-        value_by : str
+        value_by : str, default 'stock'
             - stock
             - index
             - industry
             - sector
-        method : str
+        method : str, default 'constant'
+            Name of Dataframe rolling window functions.
             - constant
             - count
             - sum
@@ -98,10 +99,10 @@ class SETSignalCreator:
             - quantile
             - sem
             - rank
-        period : int
-            Number of observations used for each window.
-        shift : int
-            Number of periods to shift. Can be positive or negative.
+        period : int, default 1
+            Number of periods for rolling Dataframe. Period must be greater than 0.
+        shift : int, default 0
+            Number of periods to shift Dataframe. Shift must be greater than or equal to 0.
 
         Returns
         -------
@@ -167,6 +168,15 @@ class SETSignalCreator:
         timeframe = timeframe.lower()
         value_by = value_by.lower()
         method = method.lower()
+
+        if period < 1:
+            raise InputError(f"period must be greater than 0. but {period} is given.")
+        if shift < 0:
+            raise InputError(
+                f"shift must be greater than or equal to 0, but {shift} is given."
+            )
+        if method == fld.METHOD_CONSTANT and period != 1:
+            raise InputError(f"{fld.METHOD_CONSTANT} method only support period=1")
 
         symbol_list = self._get_symbol_in_universe()
 
