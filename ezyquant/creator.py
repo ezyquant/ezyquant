@@ -113,7 +113,6 @@ class SETSignalCreator:
         Examples
         --------
         >>> from ezyquant import SETSignalCreator
-        >>> from ezyquant import fields as fld
         >>> ssc = SETSignalCreator(
         ...     sqlite_path="psims.db",
         ...     start_date="2022-01-01",
@@ -122,10 +121,10 @@ class SETSignalCreator:
         ...     symbol_list=["COM7", "MALEE"],
         ... )
         >>> ssc.get_data(
-        ...     field=fld.D_CLOSE,
-        ...     timeframe=fld.TIMEFRAME_DAILY,
-        ...     value_by=fld.VALUE_BY_STOCK,
-        ...     method=fld.METHOD_CONSTANT,
+        ...     field="close",
+        ...     timeframe="daily",
+        ...     value_by="stock",
+        ...     method="constant",
         ...     period=0,
         ...     shift=0,
         ... )
@@ -143,10 +142,10 @@ class SETSignalCreator:
         2022-04-01  42.500   5.70
 
         >>> ssc.get_data(
-        ...     field=fld.Q_CASH,
-        ...     timeframe=fld.TIMEFRAME_QUARTERLY,
-        ...     value_by=fld.VALUE_BY_STOCK,
-        ...     method=fld.METHOD_CONSTANT,
+        ...     field="cash",
+        ...     timeframe="quarterly",
+        ...     value_by="stock",
+        ...     method="constant",
         ...     period=0,
         ...     shift=0,
         ... )
@@ -294,7 +293,21 @@ class SETSignalCreator:
 
         Examples
         --------
-        TODO: Add example
+        >>> from ezyquant import SETSignalCreator
+        >>> ssc = SETSignalCreator(
+        ...     sqlite_path="psims.db",
+        ...     start_date="2022-01-01",
+        ...     end_date="2022-01-10",
+        ...     index_list=[],
+        ...     symbol_list=["COM7", "MALEE"],
+        ... )
+        >>> ssc.is_universe("SET100")
+                    COM7  MALEE
+        2022-01-04  True  False
+        2022-01-05  True  False
+        2022-01-06  True  False
+        2022-01-07  True  False
+        2022-01-10  True  False
         """
         universe = universe.upper()
 
