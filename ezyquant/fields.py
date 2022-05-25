@@ -1,3 +1,7 @@
+"""
+SETDataReader
+"""
+
 MARKET_SET = INDEX_SET = "SET"
 MARKET_MAI = INDEX_MAI = "mai"
 
@@ -530,3 +534,36 @@ DAILY_SECTOR_INFO_MAP = {
     D_SECTOR_TURNOVER_VOLUME: "Q_TURNOVER_VOLUME",
     D_SECTOR_12M_DVD_YIELD: "P_12M_DVD_YIELD",
 }
+
+"""
+SETSignalCreator
+"""
+
+TIMEFRAME_DAILY = "daily"
+TIMEFRAME_QUARTERLY = "quarterly"
+TIMEFRAME_YEARLY = "yearly"
+TIMEFRAME_TTM = "ttm"
+TIMEFRAME_YTD = "ytd"
+
+VALUE_BY_STOCK = "stock"
+VALUE_BY_INDUSTRY = "industry"
+VALUE_BY_SECTOR = "sector"
+
+METHOD_CONSTANT = "constant"
+METHOD_COUNT = "count"
+METHOD_SUM = "sum"
+METHOD_MEAN = "mean"
+METHOD_MEDIAN = "median"
+METHOD_VAR = "var"
+METHOD_STD = "std"
+METHOD_MIN = "min"
+METHOD_MAX = "max"
+METHOD_CORR = "corr"
+METHOD_COV = "cov"
+METHOD_SKEW = "skew"
+METHOD_KURT = "kurt"
+METHOD_APPLY = "apply"
+METHOD_AGGREGATE = "aggregate"
+METHOD_QUANTILE = "quantile"
+METHOD_SEM = "sem"
+METHOD_RANK = "rank"

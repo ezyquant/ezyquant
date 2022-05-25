@@ -14,6 +14,10 @@ format:
 	docformatter -i ezyquant/reader.py
 	docformatter -i ezyquant/creator.py
 
+.PHONY: venv
+venv:
+	python -m venv venv
+
 .PHONY: pdoc
 pdoc:
 	pdoc --docformat numpy ezyquant

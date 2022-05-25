@@ -1,13 +1,14 @@
+from datetime import datetime
 from typing import List, Optional
 
 import pandas as pd
 import pytest
+import utils
 from pandas._testing import assert_frame_equal, assert_index_equal, assert_series_equal
 
 import ezyquant.fields as fld
-from ezyquant import utils
+from ezyquant import SETDataReader
 from ezyquant.errors import InputError
-from ezyquant.reader import SETDataReader
 
 
 def test_last_table_update(sdr: SETDataReader):
@@ -1066,6 +1067,8 @@ class TestGetAdjustFactor:
 class TestGetDataSymbolDaily:
     """source: https://www.tradingview.com/chart/?symbol=SET:COM7"""
 
+    _check = staticmethod(utils.check_data_symbol_daily)
+
     @pytest.mark.parametrize(
         "field", [fld.D_AVERAGE, fld.D_VALUE, fld.D_TURNOVER, fld.D_12M_DVD_YIELD]
     )
@@ -1275,22 +1278,9 @@ class TestGetDataSymbolDaily:
         with pytest.raises(InputError):
             sdr.get_data_symbol_daily("close", symbol_list)
 
-    @staticmethod
-    def _check(result):
-        assert isinstance(result, pd.DataFrame)
-
-        assert isinstance(result.index, pd.DatetimeIndex)
-        assert result.index.is_monotonic_increasing
-        assert result.index.is_unique
-        assert (result.index == result.index.normalize()).all()  # type: ignore
-
-        assert (result.columns == result.columns.str.upper()).all()
-
-        return result
-
 
 class TestGetDataSymbolQuarterly:
-    _check = staticmethod(TestGetDataSymbolDaily._check)
+    _check = staticmethod(utils.check_data_symbol_daily)
 
     @pytest.mark.parametrize(
         "field",
@@ -1388,7 +1378,7 @@ class TestGetDataSymbolQuarterly:
 
 
 class TestGetDataSymbolYearly:
-    _check = staticmethod(TestGetDataSymbolDaily._check)
+    _check = staticmethod(utils.check_data_symbol_daily)
 
     @pytest.mark.parametrize(
         "field",
@@ -1476,7 +1466,7 @@ class TestGetDataSymbolYearly:
 
 
 class TestGetDataSymbolTtm:
-    _check = staticmethod(TestGetDataSymbolDaily._check)
+    _check = staticmethod(utils.check_data_symbol_daily)
 
     @pytest.mark.parametrize(
         "field",
@@ -1552,7 +1542,7 @@ class TestGetDataSymbolTtm:
 
 
 class TestGetDataSymbolYtd:
-    _check = staticmethod(TestGetDataSymbolDaily._check)
+    _check = staticmethod(utils.check_data_symbol_daily)
 
     @pytest.mark.parametrize(
         "field",
@@ -1653,7 +1643,7 @@ class TestGetDataIndexDaily:
             (fld.INDEX_SET, fld.D_INDEX_HIGH, 1674.19),
             (fld.INDEX_SET, fld.D_INDEX_LOW, 1663.50),
             (fld.INDEX_SET, fld.D_INDEX_CLOSE, 1670.28),
-            (fld.INDEX_SET, fld.D_INDEX_TOTAL_VOLUME, 28684980655),
+            (fld.INDEX_SET, fld.D_INDEX_TOTAL_VOLUME, 28684980655.0),
             (fld.INDEX_SET, fld.D_INDEX_TOTAL_VALUE, 100014911411.57),
             (fld.INDEX_SET, fld.D_INDEX_MKT_PE, 20.96),
             (fld.INDEX_SET, fld.D_INDEX_MKT_PBV, 1.80),
@@ -1741,7 +1731,7 @@ class TestGetDataSectorDaily:
             (fld.D_SECTOR_HIGH, 299.36),
             (fld.D_SECTOR_LOW, 293.34),
             (fld.D_SECTOR_CLOSE, 296.13),
-            (fld.D_SECTOR_VOLUME, 124063453),
+            (fld.D_SECTOR_VOLUME, 124063453.0),
             (fld.D_SECTOR_VALUE, 795051373.2),
             (fld.D_SECTOR_MKT_PE, 4.50),
             (fld.D_SECTOR_MKT_PBV, 1.29),
@@ -1816,7 +1806,7 @@ class TestGetDataIndustryDaily:
             (fld.D_INDUSTRY_HIGH, 487.57),
             (fld.D_INDUSTRY_LOW, 480.51),
             (fld.D_INDUSTRY_CLOSE, 485.98),
-            (fld.D_INDUSTRY_VOLUME, 511827513),
+            (fld.D_INDUSTRY_VOLUME, 511827513.0),
             (fld.D_INDUSTRY_VALUE, 8342552775.82),
             (fld.D_INDUSTRY_MKT_PE, 26.45),
             (fld.D_INDUSTRY_MKT_PBV, 2.05),
@@ -1888,7 +1878,7 @@ class TestGetPriorAsOfDateSymbolIndex:
         result = sdr._get_prior_as_of_date_symbol_index(index_name)
 
         # Check
-        utils.str_to_date(result)
+        datetime.strptime(result, "%Y-%m-%d")
 
     @pytest.mark.parametrize(
         ("index_name", "current_date", "expected"),

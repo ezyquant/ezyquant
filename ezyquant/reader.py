@@ -7,12 +7,18 @@ import numpy as np
 import pandas as pd
 import sqlalchemy as sa
 from sqlalchemy import Column, MetaData, Table, and_, case, func, select
+from sqlalchemy.exc import DatabaseError
 from sqlalchemy.sql import Select
+from sqlalchemy.sql.selectable import Select
 
 from . import fields as fld
 from . import utils
 from . import validators as vld
 from .errors import InputError
+
+TRADE_DATE = "trade_date"
+NAME = "name"
+VALUE = "value"
 
 
 class SETDataReader:
@@ -26,14 +32,17 @@ class SETDataReader:
         sqlite_path : str
             path to sqlite file e.g. /path/to/sqlite.db
         """
-        self.__sqlite_path = sqlite_path
+        self._sqlite_path = sqlite_path
 
-        self.__engine = sa.create_engine(f"sqlite:///{self.__sqlite_path}")
-        self.__metadata = MetaData(self.__engine)
+        self._engine = sa.create_engine(f"sqlite:///{self._sqlite_path}")
+        self._metadata = MetaData(self._engine)
 
-        if not os.path.isfile(self.__sqlite_path):
-            raise InputError(f"{self.__sqlite_path} is not found")
-        self._table("SECURITY")
+        if not os.path.isfile(self._sqlite_path):
+            raise InputError(f"{self._sqlite_path} is not found")
+        try:
+            self._table("SECURITY")
+        except DatabaseError as e:
+            raise InputError(e)
 
     def last_table_update(self, table_name: str) -> str:
         """Last D_TRADE in table.
@@ -56,7 +65,7 @@ class SETDataReader:
         """
         t = self._table(table_name)
         stmt = select([func.max(func.DATE(t.c.D_TRADE))])
-        return self.__engine.execute(stmt).scalar()
+        return self._execute(stmt).scalar()
 
     def last_update(self) -> str:
         """Last database update, checking from last D_TRADE in following
@@ -111,7 +120,7 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        res = self.__engine.execute(stmt).all()
+        res = self._execute(stmt).all()
 
         return [i[0] for i in res]
 
@@ -134,7 +143,7 @@ class SETDataReader:
             func.DATE(calendar_t.c.D_TRADE) == check_date
         )
 
-        res = self.__engine.execute(stmt).scalar()
+        res = self._execute(stmt).scalar()
 
         assert isinstance(res, int)
         return res > 0
@@ -155,6 +164,8 @@ class SETDataReader:
         market: Optional[str] = None,
         industry: Optional[str] = None,
         sector: Optional[str] = None,
+        sec_type: Optional[str] = None,
+        native: Optional[str] = None,
     ) -> pd.DataFrame:
         """Data from table SECURITY.
 
@@ -168,6 +179,32 @@ class SETDataReader:
             SECTOR.N_INDUSTRY, by default None
         sector : Optional[str]
             SECTOR.N_SECTOR, by default None
+        sec_type : Optional[str]
+            Security type, by default None
+                - S: Common
+                - F: Common Foreign
+                - P: Preferred
+                - Q: Preferred Foreign
+                - U: Unit Trusts
+                - T: Unit Trusts Foreign
+                - W: Warrant
+                - X: Depository Receipts
+                - Y: Depository Receipts Foreign
+                - L: ETFs
+                - O: Index Options
+                - D: Debenture
+                - C: Convertible Debenture
+                - I: Index Warrant
+                - V: Derivatives Warrant
+                - R: Transferable Subscription Right
+                - G: Government Bond
+                - J: Convertible Preferred
+        native : Optional[str]
+            I_NATIVE, by default None
+                - L: Local
+                - F: Foreign
+                - U: Thai Trust Fund
+                - R: NVDR
 
         Returns
         -------
@@ -228,13 +265,19 @@ class SETDataReader:
         if sector != None:
             sector = sector.upper()
             stmt = stmt.where(func.trim(sector_t.c.N_SECTOR) == sector)
+        if sec_type != None:
+            sec_type = sec_type.upper()
+            stmt = stmt.where(security_t.c.I_SEC_TYPE == sec_type)
+        if native != None:
+            native = native.upper()
+            stmt = stmt.where(security_t.c.I_NATIVE == native)
 
-        res_df = pd.read_sql_query(stmt, self.__engine)
+        df = self._read_sql_query(stmt)
 
         map_market = {v: k for k, v in fld.MARKET_MAP.items()}
-        res_df["market"] = res_df["market"].replace(map_market)
+        df["market"] = df["market"].replace(map_market)
 
-        return res_df
+        return df
 
     def get_company_info(self, symbol_list: Optional[List[str]] = None) -> pd.DataFrame:
         """Data from table COMPANY.
@@ -303,8 +346,8 @@ class SETDataReader:
             stmt=stmt, column=security_t.c.N_SECURITY, values=symbol_list
         )
 
-        res_df = pd.read_sql_query(stmt, self.__engine)
-        return res_df
+        df = self._read_sql_query(stmt)
+        return df
 
     def get_change_name(
         self,
@@ -383,9 +426,9 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        res_df = pd.read_sql_query(stmt, self.__engine)
-        res_df = res_df.drop_duplicates(ignore_index=True)
-        return res_df
+        df = self._read_sql_query(stmt)
+        df = df.drop_duplicates(ignore_index=True)
+        return df
 
     def get_dividend(
         self,
@@ -487,11 +530,11 @@ class SETDataReader:
             stmt=stmt, column=rights_benefit_t.c.N_CA_TYPE, values=ca_type_list
         )
 
-        res_df = pd.read_sql_query(stmt, self.__engine)
+        df = self._read_sql_query(stmt)
 
-        res_df = self._merge_adjust_factor_dividend(res_df, adjusted_list=adjusted_list)
+        df = self._merge_adjust_factor_dividend(df, adjusted_list=adjusted_list)
 
-        return res_df
+        return df
 
     def get_delisted(
         self,
@@ -555,8 +598,8 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        res_df = pd.read_sql_query(stmt, self.__engine)
-        return res_df
+        df = self._read_sql_query(stmt)
+        return df
 
     def get_sign_posting(
         self,
@@ -632,8 +675,8 @@ class SETDataReader:
             stmt=stmt, column=sign_posting_t.c.N_SIGN, values=sign_list
         )
 
-        res_df = pd.read_sql_query(stmt, self.__engine)
-        return res_df
+        df = self._read_sql_query(stmt)
+        return df
 
     def get_symbols_by_index(
         self,
@@ -779,9 +822,9 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        res_df = pd.read_sql_query(stmt, self.__engine)
+        df = self._read_sql_query(stmt)
 
-        return res_df
+        return df
 
     def get_adjust_factor(
         self,
@@ -857,9 +900,9 @@ class SETDataReader:
             stmt=stmt, column=adjust_factor_t.c.N_CA_TYPE, values=ca_type_list
         )
 
-        res_df = pd.read_sql_query(stmt, self.__engine)
+        df = self._read_sql_query(stmt)
 
-        return res_df
+        return df
 
     def get_data_symbol_daily(
         self,
@@ -956,8 +999,8 @@ class SETDataReader:
         2022-01-10  40.875   6.30
         """
         adjusted_list = list(adjusted_list)  # copy to avoid modify original list
-
         field = field.lower()
+
         if symbol_list:
             symbol_list = [i.upper() for i in symbol_list]
 
@@ -965,10 +1008,10 @@ class SETDataReader:
 
         if field in fld.DAILY_STOCK_TRADE_MAP:
             daily_stock_t = self._table("DAILY_STOCK_TRADE")
-            field_col = daily_stock_t.c[fld.DAILY_STOCK_TRADE_MAP[field]].label(field)
+            value_col = daily_stock_t.c[fld.DAILY_STOCK_TRADE_MAP[field]]
         elif field in fld.DAILY_STOCK_STAT_MAP:
             daily_stock_t = self._table("DAILY_STOCK_STAT")
-            field_col = daily_stock_t.c[fld.DAILY_STOCK_STAT_MAP[field]].label(field)
+            value_col = daily_stock_t.c[fld.DAILY_STOCK_STAT_MAP[field]]
         else:
             raise InputError(
                 f"{field} is invalid field. Please read document to check valid field."
@@ -981,9 +1024,9 @@ class SETDataReader:
         stmt = (
             select(
                 [
-                    daily_stock_t.c.D_TRADE.label("trade_date"),
-                    func.trim(security_t.c.N_SECURITY).label("symbol"),
-                    field_col,
+                    daily_stock_t.c.D_TRADE.label(TRADE_DATE),
+                    func.trim(security_t.c.N_SECURITY).label(NAME),
+                    value_col.label(VALUE),
                 ]
             )
             .select_from(j)
@@ -1008,14 +1051,9 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        df = pd.read_sql_query(
-            stmt, self.__engine, index_col="trade_date", parse_dates="trade_date"
-        )
+        df = self._read_sql_query(stmt, index_col=TRADE_DATE)
 
-        df = df.pivot(columns="symbol", values=field)
-
-        df.index.name = None
-        df.columns.name = None
+        df = self._pivot_name_value(df)
 
         if field in {
             fld.D_PRIOR,
@@ -1195,7 +1233,7 @@ class SETDataReader:
             field=field,
             start_date=start_date,
             end_date=end_date,
-            period="Q",
+            timeframe=fld.TIMEFRAME_QUARTERLY,
         )
 
     def get_data_symbol_yearly(
@@ -1347,7 +1385,7 @@ class SETDataReader:
             field=field,
             start_date=start_date,
             end_date=end_date,
-            period="Y",
+            timeframe=fld.TIMEFRAME_YEARLY,
         )
 
     def get_data_symbol_ttm(
@@ -1435,7 +1473,7 @@ class SETDataReader:
             field=field,
             start_date=start_date,
             end_date=end_date,
-            period="TTM",
+            timeframe=fld.TIMEFRAME_TTM,
         )
 
     def get_data_symbol_ytd(
@@ -1589,7 +1627,7 @@ class SETDataReader:
             field=field,
             start_date=start_date,
             end_date=end_date,
-            period="YTD",
+            timeframe=fld.TIMEFRAME_YTD,
         )
 
     def get_data_index_daily(
@@ -1654,9 +1692,10 @@ class SETDataReader:
         2022-01-07  1657.62  2257.40
         2022-01-10  1657.06  2256.14
         """
+        field = field.lower()
+
         sector_t = self._table("SECTOR")
 
-        field = field.lower()
         if field in fld.MKTSTAT_DAILY_INDEX_MAP:
             mktstat_daily_t = self._table("MKTSTAT_DAILY_INDEX")
             field_col = mktstat_daily_t.c[fld.MKTSTAT_DAILY_INDEX_MAP[field]]
@@ -1670,12 +1709,12 @@ class SETDataReader:
 
         j = self._join_sector_table(mktstat_daily_t)
 
-        sql = (
+        stmt = (
             select(
                 [
-                    mktstat_daily_t.c.D_TRADE.label("trade_date"),
-                    func.trim(sector_t.c.N_SECTOR).label("index"),
-                    field_col.label(field),
+                    mktstat_daily_t.c.D_TRADE.label(TRADE_DATE),
+                    func.trim(sector_t.c.N_SECTOR).label(NAME),
+                    field_col.label(VALUE),
                 ]
             )
             .select_from(j)
@@ -1687,8 +1726,8 @@ class SETDataReader:
             end_date=end_date,
             last_update_date=self.last_table_update(mktstat_daily_t.name),
         )
-        sql = self._filter_stmt_by_symbol_and_date(
-            stmt=sql,
+        stmt = self._filter_stmt_by_symbol_and_date(
+            stmt=stmt,
             symbol_column=sector_t.c.N_SECTOR,
             date_column=mktstat_daily_t.c.D_TRADE,
             symbol_list=index_list,
@@ -1696,13 +1735,9 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        df = pd.read_sql_query(
-            sql, self.__engine, index_col="trade_date", parse_dates="trade_date"
-        )
+        df = self._read_sql_query(stmt, index_col=TRADE_DATE)
 
-        df = df.pivot(columns="index", values=field)
-        df.columns.name = None
-        df.index.name = None
+        df = self._pivot_name_value(df)
 
         return df
 
@@ -1855,7 +1890,30 @@ class SETDataReader:
     """
 
     def _table(self, name: str) -> Table:
-        return Table(name, self.__metadata, autoload=True)
+        return Table(name, self._metadata, autoload=True)
+
+    def _execute(self, stmt: Select):
+        return self._engine.execute(stmt)
+
+    def _read_sql_query(
+        self, stmt: Select, index_col: Optional[str] = None
+    ) -> pd.DataFrame:
+        col_name_list = [i.name for i in stmt.selected_columns]
+
+        if VALUE in col_name_list:
+            dtype = {VALUE: np.float64}
+        else:
+            dtype = None
+
+        parse_dates = [i for i in col_name_list if i.endswith("_date")]
+
+        return pd.read_sql_query(
+            stmt,
+            self._engine,
+            index_col=index_col,
+            parse_dates=parse_dates,
+            dtype=dtype,  # type: ignore
+        )
 
     def _filter_stmt_by_date(
         self,
@@ -1899,46 +1957,48 @@ class SETDataReader:
         )
         return stmt
 
-    def _get_pivot_adjust_factor_df(
-        self,
-        min_date: str,
-        max_date: str,
-        symbol_list: Optional[List[str]] = None,
-        start_date: Optional[str] = None,
-        ca_type_list: Optional[List[str]] = None,
-    ) -> pd.DataFrame:
-        df = self.get_adjust_factor(
-            symbol_list=symbol_list,
-            start_date=start_date,
-            ca_type_list=ca_type_list,
+    @lru_cache
+    def _d_trade_subquery(self):
+        daily_stock_stat_t = self._table("DAILY_STOCK_STAT")
+        return (
+            select(
+                [
+                    daily_stock_stat_t.c.I_SECURITY,
+                    daily_stock_stat_t.c.D_AS_OF,
+                    func.min(func.DATE(daily_stock_stat_t.c.D_TRADE)).label("D_TRADE"),
+                ]
+            )
+            .group_by(
+                daily_stock_stat_t.c.I_SECURITY, func.DATE(daily_stock_stat_t.c.D_AS_OF)
+            )
+            .subquery()
         )
 
-        # pivot table
-        df = df.pivot(index="effect_date", columns="symbol", values="adjust_factor")
-
-        # reverse cumulate product adjust factor
-        df = df.iloc[::-1].cumprod(skipna=True).iloc[::-1]
-
-        # reindex trade date
-        if not df.empty:
-            max_date = max(max_date, utils.date_to_str(df.index.max()))
-        df = df.reindex(
-            index=pd.date_range(
-                start=min_date,
-                end=max_date,
-                normalize=True,
-                name="effect_date",
-            ),  # type: ignore
-            columns=symbol_list,  # type: ignore
+    def _join_security_and_d_trade_subquery(self, table: Table):
+        security_t = self._table("SECURITY")
+        d_trade_subquery = self._d_trade_subquery()
+        return table.join(
+            security_t, table.c.I_SECURITY == security_t.c.I_SECURITY
+        ).join(
+            d_trade_subquery,
+            and_(
+                table.c.I_SECURITY == d_trade_subquery.c.I_SECURITY,
+                func.DATE(table.c.D_AS_OF) == func.DATE(d_trade_subquery.c.D_AS_OF),
+            ),
         )
 
-        # shift back 1 day
-        df = df.shift(-1)
-
-        # back fill and fill 1
-        df = df.fillna(method="backfill").fillna(1)
-
-        return df
+    def _join_sector_table(self, table: Table, isouter: bool = False):
+        sector_t = self._table("SECTOR")
+        return table.join(
+            sector_t,
+            and_(
+                table.c.I_MARKET == sector_t.c.I_MARKET,
+                table.c.I_INDUSTRY == sector_t.c.I_INDUSTRY,
+                table.c.I_SECTOR == sector_t.c.I_SECTOR,
+                table.c.I_SUBSECTOR == sector_t.c.I_SUBSECTOR,
+            ),
+            isouter=isouter,
+        )
 
     def _merge_adjust_factor(
         self,
@@ -2037,25 +2097,141 @@ class SETDataReader:
 
         return df
 
+    def _get_pivot_adjust_factor_df(
+        self,
+        min_date: str,
+        max_date: str,
+        symbol_list: Optional[List[str]] = None,
+        start_date: Optional[str] = None,
+        ca_type_list: Optional[List[str]] = None,
+    ) -> pd.DataFrame:
+        df = self.get_adjust_factor(
+            symbol_list=symbol_list,
+            start_date=start_date,
+            ca_type_list=ca_type_list,
+        )
+
+        # pivot table
+        df = df.pivot(index="effect_date", columns="symbol", values="adjust_factor")
+
+        # reverse cumulate product adjust factor
+        df = df.iloc[::-1].cumprod(skipna=True).iloc[::-1]
+
+        # reindex trade date
+        if not df.empty:
+            max_date = max(max_date, utils.date_to_str(df.index.max()))
+        df = df.reindex(
+            index=pd.date_range(
+                start=min_date,
+                end=max_date,
+                normalize=True,
+                name="effect_date",
+            ),  # type: ignore
+            columns=symbol_list,  # type: ignore
+        )
+
+        # shift back 1 day
+        df = df.shift(-1)
+
+        # back fill and fill 1
+        df = df.fillna(method="backfill").fillna(1)
+
+        return df
+
+    def _get_financial_screen_stmt(self, timeframe: str, field: str) -> Select:
+        TIMEFRAME_MAP = {
+            fld.TIMEFRAME_QUARTERLY: ("Q1", "Q2", "Q3", "Q4"),
+            fld.TIMEFRAME_YEARLY: ("YE",),
+            fld.TIMEFRAME_YTD: ("Q1", "6M", "9M", "YE"),
+        }
+
+        financial_screen_t = self._table("FINANCIAL_SCREEN")
+        security_t = self._table("SECURITY")
+        d_trade_subquery = self._d_trade_subquery()
+
+        value_column = financial_screen_t.c[fld.FINANCIAL_SCREEN_MAP[field]]
+
+        stmt = (
+            select(
+                [
+                    d_trade_subquery.c.D_TRADE.label(TRADE_DATE),
+                    func.trim(security_t.c.N_SECURITY).label(NAME),
+                    value_column.label(VALUE),
+                ]
+            )
+            .select_from(self._join_security_and_d_trade_subquery(financial_screen_t))
+            .where(func.trim(financial_screen_t.c.I_PERIOD_TYPE) == "QY")
+            .where(
+                func.trim(financial_screen_t.c.I_PERIOD).in_(TIMEFRAME_MAP[timeframe])
+            )
+        )
+
+        return stmt
+
+    def _get_financial_stat_std_stmt(self, timeframe: str, field: str) -> Select:
+        financial_stat_std_t = self._table("FINANCIAL_STAT_STD")
+        security_t = self._table("SECURITY")
+        d_trade_subquery = self._d_trade_subquery()
+
+        if timeframe == fld.TIMEFRAME_QUARTERLY:
+            value_column = financial_stat_std_t.c["M_ACCOUNT"]
+        elif timeframe == fld.TIMEFRAME_YEARLY:
+            if field in fld.FINANCIAL_STAT_STD_MAP["B"]:
+                value_column = financial_stat_std_t.c["M_ACCOUNT"]
+            else:
+                value_column = financial_stat_std_t.c["M_ACC_ACCOUNT_12M"]
+        elif timeframe == fld.TIMEFRAME_YTD:
+            value_column = financial_stat_std_t.c["M_ACC_ACCOUNT"]
+        elif timeframe == "average":
+            value_column = financial_stat_std_t.c["M_ACCOUNT_AVG"]
+        elif timeframe == fld.TIMEFRAME_TTM:
+            value_column = financial_stat_std_t.c["M_ACC_ACCOUNT_12M"]
+        else:
+            raise ValueError(f"{timeframe} is not a valid timeframe")
+
+        stmt = (
+            select(
+                [
+                    d_trade_subquery.c.D_TRADE.label(TRADE_DATE),
+                    func.trim(security_t.c.N_SECURITY).label(NAME),
+                    value_column.label(VALUE),
+                ]
+            )
+            .select_from(self._join_security_and_d_trade_subquery(financial_stat_std_t))
+            .where(
+                func.trim(financial_stat_std_t.c.N_ACCOUNT)
+                == fld.FINANCIAL_STAT_STD_MAP_COMPACT[field]
+            )
+        )
+
+        if timeframe == fld.TIMEFRAME_YEARLY:
+            stmt = stmt.where(financial_stat_std_t.c.I_QUARTER == 9)
+
+        return stmt
+
     def _get_fundamental_data(
         self,
-        period: str,
+        timeframe: str,
         field: str,
         symbol_list: Optional[List[str]] = None,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
         fillna_value=None,
     ) -> pd.DataFrame:
-        period = period.upper()
+        timeframe = timeframe.lower()
         field = field.lower()
 
         security_t = self._table("SECURITY")
         d_trade_subquery = self._d_trade_subquery()
 
         if field in fld.FINANCIAL_STAT_STD_MAP_COMPACT:
-            stmt = self._get_financial_stat_std_stmt(field=field, period=period)
-        elif field in fld.FINANCIAL_SCREEN_MAP and period in ("Q", "Y", "YTD"):
-            stmt = self._get_financial_screen_stmt(field=field, period=period)
+            stmt = self._get_financial_stat_std_stmt(field=field, timeframe=timeframe)
+        elif field in fld.FINANCIAL_SCREEN_MAP and timeframe in (
+            fld.TIMEFRAME_QUARTERLY,
+            fld.TIMEFRAME_YEARLY,
+            fld.TIMEFRAME_YTD,
+        ):
+            stmt = self._get_financial_screen_stmt(field=field, timeframe=timeframe)
         else:
             raise InputError(
                 f"{field} is invalid field. Please read document to check valid field."
@@ -2070,135 +2246,18 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        df = pd.read_sql_query(
-            stmt, self.__engine, parse_dates="trade_date", dtype={"value": np.float64}  # type: ignore
-        )
+        df = self._read_sql_query(stmt)
 
         # duplicate key mostly I_ACCT_FORM 6,7
-        df = df.drop_duplicates(subset=["trade_date", "symbol"], keep="last")
+        df = df.drop_duplicates(subset=[TRADE_DATE, NAME], keep="last")
+        df = df.set_index(TRADE_DATE)
 
         if fillna_value != None:
             df = df.fillna(fillna_value)
 
-        # pivot dataframe
-        df = df.pivot(index="trade_date", columns="symbol", values="value")
-
-        df.index.name = None
-        df.columns.name = None
+        df = self._pivot_name_value(df)
 
         return df
-
-    def _get_financial_screen_stmt(self, period: str, field: str) -> Select:
-        PERIOD_DICT = {
-            "Q": ("Q1", "Q2", "Q3", "Q4"),
-            "Y": ("YE",),
-            "YTD": ("Q1", "6M", "9M", "YE"),
-        }
-
-        financial_screen_t = self._table("FINANCIAL_SCREEN")
-        security_t = self._table("SECURITY")
-        d_trade_subquery = self._d_trade_subquery()
-
-        value_column = financial_screen_t.c[fld.FINANCIAL_SCREEN_MAP[field]]
-
-        stmt = (
-            select(
-                [
-                    d_trade_subquery.c.D_TRADE.label("trade_date"),
-                    func.trim(security_t.c.N_SECURITY).label("symbol"),
-                    value_column.label("value"),
-                ]
-            )
-            .select_from(self._join_security_and_d_trade_subquery(financial_screen_t))
-            .where(func.trim(financial_screen_t.c.I_PERIOD_TYPE) == "QY")
-            .where(func.trim(financial_screen_t.c.I_PERIOD).in_(PERIOD_DICT[period]))
-        )
-
-        return stmt
-
-    def _get_financial_stat_std_stmt(self, period: str, field: str) -> Select:
-        financial_stat_std_t = self._table("FINANCIAL_STAT_STD")
-        security_t = self._table("SECURITY")
-        d_trade_subquery = self._d_trade_subquery()
-
-        if period == "Q":
-            value_column = financial_stat_std_t.c["M_ACCOUNT"]
-        elif period == "Y":
-            if field in fld.FINANCIAL_STAT_STD_MAP["B"]:
-                value_column = financial_stat_std_t.c["M_ACCOUNT"]
-            else:
-                value_column = financial_stat_std_t.c["M_ACC_ACCOUNT_12M"]
-        elif period == "YTD":
-            value_column = financial_stat_std_t.c["M_ACC_ACCOUNT"]
-        elif period == "AVG":
-            value_column = financial_stat_std_t.c["M_ACCOUNT_AVG"]
-        elif period == "TTM":
-            value_column = financial_stat_std_t.c["M_ACC_ACCOUNT_12M"]
-        else:
-            raise ValueError(f"{period} is not a valid period")
-
-        stmt = (
-            select(
-                [
-                    d_trade_subquery.c.D_TRADE.label("trade_date"),
-                    func.trim(security_t.c.N_SECURITY).label("symbol"),
-                    value_column.label("value"),
-                ]
-            )
-            .select_from(self._join_security_and_d_trade_subquery(financial_stat_std_t))
-            .where(
-                func.trim(financial_stat_std_t.c.N_ACCOUNT)
-                == fld.FINANCIAL_STAT_STD_MAP_COMPACT[field]
-            )
-        )
-
-        if period == "Y":
-            stmt = stmt.where(financial_stat_std_t.c.I_QUARTER == 9)
-
-        return stmt
-
-    @lru_cache
-    def _d_trade_subquery(self):
-        daily_stock_stat_t = self._table("DAILY_STOCK_STAT")
-        return (
-            select(
-                [
-                    daily_stock_stat_t.c.I_SECURITY,
-                    daily_stock_stat_t.c.D_AS_OF,
-                    func.min(func.DATE(daily_stock_stat_t.c.D_TRADE)).label("D_TRADE"),
-                ]
-            )
-            .group_by(
-                daily_stock_stat_t.c.I_SECURITY, func.DATE(daily_stock_stat_t.c.D_AS_OF)
-            )
-            .subquery()
-        )
-
-    def _join_security_and_d_trade_subquery(self, table: Table):
-        security_t = self._table("SECURITY")
-        d_trade_subquery = self._d_trade_subquery()
-        return table.join(
-            security_t, table.c.I_SECURITY == security_t.c.I_SECURITY
-        ).join(
-            d_trade_subquery,
-            and_(
-                table.c.I_SECURITY == d_trade_subquery.c.I_SECURITY,
-                func.DATE(table.c.D_AS_OF) == func.DATE(d_trade_subquery.c.D_AS_OF),
-            ),
-        )
-
-    def _join_sector_table(self, table: Table, isouter: bool = False):
-        sector_t = self._table("SECTOR")
-        return table.join(
-            sector_t,
-            and_(
-                table.c.I_MARKET == sector_t.c.I_MARKET,
-                table.c.I_INDUSTRY == sector_t.c.I_INDUSTRY,
-                table.c.I_SECTOR == sector_t.c.I_SECTOR,
-                table.c.I_SUBSECTOR == sector_t.c.I_SUBSECTOR,
-            ),
-            isouter=isouter,
-        )
 
     def _get_daily_sector_info(
         self,
@@ -2210,11 +2269,13 @@ class SETDataReader:
         f_data: str,
     ) -> pd.DataFrame:
         market = market.upper()
+        field = field.lower()
+        f_data = f_data.upper()
+
+        assert f_data in {"I", "S"}, f"{f_data} is not a valid f_data"
 
         sector_t = self._table("SECTOR")
         daily_sector_info_t = self._table("DAILY_SECTOR_INFO")
-
-        field = field.lower()
 
         j = self._join_sector_table(daily_sector_info_t)
 
@@ -2229,9 +2290,9 @@ class SETDataReader:
         stmt = (
             select(
                 [
-                    daily_sector_info_t.c.D_TRADE.label("trade_date"),
-                    func.trim(sector_t.c.N_SECTOR).label("sector"),
-                    field_col.label(field),
+                    daily_sector_info_t.c.D_TRADE.label(TRADE_DATE),
+                    func.trim(sector_t.c.N_SECTOR).label(NAME),
+                    field_col.label(VALUE),
                 ]
             )
             .select_from(j)
@@ -2255,14 +2316,77 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        df = pd.read_sql_query(
-            stmt, self.__engine, index_col="trade_date", parse_dates="trade_date"
+        df = self._read_sql_query(stmt, index_col=TRADE_DATE)
+
+        df = self._pivot_name_value(df)
+
+        return df
+
+    def _get_daily_sector_info_by_security(
+        self,
+        field: str,
+        symbol_list: Optional[List[str]],
+        start_date: Optional[str],
+        end_date: Optional[str],
+        f_data: str,
+    ) -> pd.DataFrame:
+        field = field.lower()
+        f_data = f_data.upper()
+
+        assert f_data in {"I", "S"}, f"{f_data} is not a valid f_data"
+
+        security_t = self._table("SECURITY")
+        sector_t = self._table("SECTOR")
+        daily_sector_info_t = self._table("DAILY_SECTOR_INFO")
+
+        j = self._join_sector_table(daily_sector_info_t).join(
+            security_t,
+            and_(
+                sector_t.c.I_MARKET == security_t.c.I_MARKET,
+                sector_t.c.I_INDUSTRY == security_t.c.I_INDUSTRY,
+                sector_t.c.I_SECTOR == security_t.c.I_SECTOR if f_data == "S" else True,
+                sector_t.c.I_SUBSECTOR == security_t.c.I_SUBSECTOR,
+            ),
         )
 
-        df = df.pivot(columns="sector", values=field)
+        try:
+            field_col = daily_sector_info_t.c[fld.DAILY_SECTOR_INFO_MAP[field]]
+        except KeyError:
+            raise InputError(
+                f"{field} is invalid field. Please read document to check valid field."
+            )
 
-        df.columns.name = None
-        df.index.name = None
+        # N_SECTOR is the industry name in F_DATA = 'I'
+        stmt = (
+            select(
+                [
+                    daily_sector_info_t.c.D_TRADE.label(TRADE_DATE),
+                    func.trim(security_t.c.N_SECURITY).label(NAME),
+                    field_col.label(VALUE),
+                ]
+            )
+            .select_from(j)
+            .where(sector_t.c.F_DATA == f_data)
+            .where(sector_t.c.D_CANCEL == None)
+            .order_by(func.DATE(daily_sector_info_t.c.D_TRADE))
+        )
+
+        vld.check_start_end_date(
+            start_date=start_date,
+            end_date=end_date,
+            last_update_date=self.last_table_update(daily_sector_info_t.name),
+        )
+        stmt = self._filter_stmt_by_symbol_and_date(
+            stmt=stmt,
+            symbol_column=security_t.c.N_SECURITY,
+            date_column=daily_sector_info_t.c.D_TRADE,
+            symbol_list=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        df = self._read_sql_query(stmt, index_col=TRADE_DATE)
+
+        df = self._pivot_name_value(df)
 
         return df
 
@@ -2283,4 +2407,15 @@ class SETDataReader:
             end_date=current_date,
         )
 
-        return self.__engine.execute(stmt).scalar()
+        return self._execute(stmt).scalar()
+
+    """ 
+    Static methods
+    """
+
+    @staticmethod
+    def _pivot_name_value(df: pd.DataFrame) -> pd.DataFrame:
+        df = df.pivot(columns=NAME, values=VALUE)
+        df.columns.name = None
+        df.index.name = None
+        return df
