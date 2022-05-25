@@ -56,10 +56,10 @@ class SETSignalCreator:
         self,
         field: str,
         timeframe: str,
-        value_by: str,
-        method: str,
-        period: int,
-        shift: int,
+        value_by: str = "stock",
+        method: str = "constant",
+        period: int = 1,
+        shift: int = 0,
     ) -> pd.DataFrame:
         """Get DataFrame which columns are symbol in universe and index is
         trade date.
@@ -167,6 +167,9 @@ class SETSignalCreator:
         timeframe = timeframe.lower()
         value_by = value_by.lower()
         method = method.lower()
+
+        if method == fld.METHOD_CONSTANT and period != 1:
+            raise InputError("Method 'constant' can only be used with period = 1.")
 
         symbol_list = self._get_symbol_in_universe()
 
