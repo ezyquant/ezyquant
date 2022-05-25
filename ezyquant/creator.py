@@ -62,7 +62,7 @@ class SETSignalCreator:
         shift: int = 0,
     ) -> pd.DataFrame:
         """Get DataFrame which columns are symbol in universe and index is
-        trade date.
+        trade date from start_date to end_date.
 
         Parameters
         ----------
@@ -74,12 +74,13 @@ class SETSignalCreator:
             - yearly
             - ttm
             - ytd
-        value_by : str
+        value_by : str, default 'stock'
             - stock
             - index
             - industry
             - sector
-        method : str
+        method : str, default 'constant'
+            Name of Dataframe rolling window functions.
             - constant
             - count
             - sum
@@ -98,10 +99,10 @@ class SETSignalCreator:
             - quantile
             - sem
             - rank
-        period : int
-            Number of observations used for each window.
-        shift : int
-            Number of periods to shift. Can be positive or negative.
+        period : int, default 1
+            Number of periods for rolling Dataframe.
+        shift : int, default 0
+            Number of periods to shift Dataframe.
 
         Returns
         -------
@@ -169,7 +170,7 @@ class SETSignalCreator:
         method = method.lower()
 
         if method == fld.METHOD_CONSTANT and period != 1:
-            raise InputError("Method 'constant' can only be used with period = 1.")
+            raise InputError(f"{fld.METHOD_CONSTANT} method only support period=1")
 
         symbol_list = self._get_symbol_in_universe()
 
