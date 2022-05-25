@@ -316,7 +316,22 @@ class SETSignalCreator:
         except InputError:
             return self._is_universe_dynamic(universe)
 
-    """ 
+    def is_banned(self) -> pd.DataFrame:
+        """Return Dataframe of boolean is banned by Delisted or Suspension (SP).
+        Returns
+        -------
+        pd.DataFrame of boolean
+            - symbol : str as column
+            - trade date : date as index
+
+        Examples
+        --------
+        TODO: Example
+        """
+        # TODO: Suspension
+        return self._get_pivot_delisted()
+
+    """
     Protected methods
     """
 
@@ -450,7 +465,26 @@ class SETSignalCreator:
 
         return df
 
-    """ 
+    def _get_delisted(self) -> pd.DataFrame:
+        symbol_list = self._get_symbol_in_universe()
+        return self._sdr.get_delisted(
+            symbol_list=symbol_list,
+            start_date=self._start_date,
+            end_date=self._end_date,
+        )
+
+    def _get_pivot_delisted(self) -> pd.DataFrame:
+        df = self._get_delisted()
+
+        df["tmp"] = True
+        df = df.pivot(index="delisted_date", columns="symbol", values="tmp")
+
+        df = self._reindex_trade_date(df)
+        df = df.fillna(method="ffill").fillna(False)
+
+        return df
+
+    """
     Static methods
     """
 
