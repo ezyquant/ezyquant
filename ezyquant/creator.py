@@ -370,9 +370,9 @@ class SETSignalCreator:
         s = self._get_symbol_in_universe()
         return self._sdr.get_symbol_info(symbol_list=s, sec_type="S", native="L")
 
-    def _reindex_trade_date(self, df: pd.DataFrame) -> pd.DataFrame:
+    def _reindex_trade_date(self, df: pd.DataFrame, **kwargs) -> pd.DataFrame:
         td = self._get_trading_dates()
-        return df.reindex(pd.DatetimeIndex(td))  # type: ignore
+        return self._reindex_date(df=df, index=td, **kwargs)
 
     def _reindex_columns_symbol(
         self, df: pd.DataFrame, fill_value=None
@@ -460,10 +460,7 @@ class SETSignalCreator:
         df = df.notna()
 
         # Reindex
-        index = self._get_trading_dates()
-        df = self._reindex_date(df, index=index, method="ffill", fill_value=False)
-
-        # Reindex columns
+        df = self._reindex_trade_date(df, method="ffill", fill_value=False)
         df = self._reindex_columns_symbol(df, fill_value=False)
 
         return df
@@ -480,9 +477,9 @@ class SETSignalCreator:
         df["true"] = True
         df = df.pivot(index="delisted_date", columns="symbol", values="true")
 
-        df = self._reindex_trade_date(df)
+        # Reindex
+        df = self._reindex_trade_date(df, method="ffill", fill_value=False)
         df = self._reindex_columns_symbol(df, fill_value=False)
-        df = df.fillna(method="ffill").fillna(False)
 
         return df
 
@@ -491,7 +488,7 @@ class SETSignalCreator:
 
         df = self._sdr.get_sign_posting(
             symbol_list=symbol_list,
-            start_date=self._start_date,
+            start_date=None,
             end_date=self._end_date,
             sign_list=["SP"],
         )
@@ -503,9 +500,9 @@ class SETSignalCreator:
 
         df = df_hold.fillna(df_release)
 
-        df = self._reindex_trade_date(df)
+        # Reindex
+        df = self._reindex_trade_date(df, method="ffill", fill_value=False)
         df = self._reindex_columns_symbol(df, fill_value=False)
-        df = df.fillna(method="ffill").fillna(False)
 
         return df
 
@@ -517,15 +514,14 @@ class SETSignalCreator:
     def _reindex_date(
         df: pd.DataFrame, index, method: Optional[str] = None, fill_value=None
     ) -> pd.DataFrame:
+        """Reindex and fillna with method and fill_value."""
         index = pd.DatetimeIndex(index)
 
-        start = min(df.index.min(), index.min())
-        end = max(df.index.max(), index.max())
+        start = pd.Series([df.index.min(), index.min()]).min()
+        end = pd.Series([df.index.max(), index.max()]).max()
         dr = pd.date_range(start=start, end=end)
-
         df = df.reindex(dr)  # type: ignore
 
-        df = df.fillna(method=method)  # type: ignore
-        df = df.fillna(fill_value)
+        df = df.fillna(method=method).fillna(fill_value)  # type: ignore
 
         return df.reindex(index=index)  # type: ignore
