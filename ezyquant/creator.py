@@ -328,8 +328,7 @@ class SETSignalCreator:
         --------
         TODO: Example
         """
-        # TODO: Suspension
-        return self._get_pivot_delisted()
+        return self._get_is_banned_delisted() | self._get_is_banned_sp()
 
     """
     Protected methods
@@ -373,8 +372,13 @@ class SETSignalCreator:
 
     def _reindex_trade_date(self, df: pd.DataFrame) -> pd.DataFrame:
         td = self._get_trading_dates()
-        df = df.reindex(pd.DatetimeIndex(td))  # type: ignore
-        return df
+        return df.reindex(pd.DatetimeIndex(td))  # type: ignore
+
+    def _reindex_columns_symbol(
+        self, df: pd.DataFrame, fill_value=None
+    ) -> pd.DataFrame:
+        s = self._get_symbol_in_universe()
+        return df.reindex(columns=s, fill_value=fill_value)  # type: ignore
 
     def _rolling(self, data, method: str, period: int):
         roll = data.rolling(period)
@@ -460,26 +464,47 @@ class SETSignalCreator:
         df = self._reindex_date(df, index=index, method="ffill", fill_value=False)
 
         # Reindex columns
-        columns = self._get_symbol_in_universe()
-        df = df.reindex(columns=columns, fill_value=False)  # type: ignore
+        df = self._reindex_columns_symbol(df, fill_value=False)
 
         return df
 
-    def _get_delisted(self) -> pd.DataFrame:
+    def _get_is_banned_delisted(self) -> pd.DataFrame:
         symbol_list = self._get_symbol_in_universe()
-        return self._sdr.get_delisted(
+
+        df = self._sdr.get_delisted(
             symbol_list=symbol_list,
             start_date=self._start_date,
             end_date=self._end_date,
         )
 
-    def _get_pivot_delisted(self) -> pd.DataFrame:
-        df = self._get_delisted()
-
-        df["tmp"] = True
-        df = df.pivot(index="delisted_date", columns="symbol", values="tmp")
+        df["true"] = True
+        df = df.pivot(index="delisted_date", columns="symbol", values="true")
 
         df = self._reindex_trade_date(df)
+        df = self._reindex_columns_symbol(df, fill_value=False)
+        df = df.fillna(method="ffill").fillna(False)
+
+        return df
+
+    def _get_is_banned_sp(self) -> pd.DataFrame:
+        symbol_list = self._get_symbol_in_universe()
+
+        df = self._sdr.get_sign_posting(
+            symbol_list=symbol_list,
+            start_date=self._start_date,
+            end_date=self._end_date,
+            sign_list=["SP"],
+        )
+
+        df["true"] = True
+        df["false"] = False
+        df_hold = df.pivot(index="hold_date", columns="symbol", values="true")
+        df_release = df.pivot(index="release_date", columns="symbol", values="false")
+
+        df = df_hold.fillna(df_release)
+
+        df = self._reindex_trade_date(df)
+        df = self._reindex_columns_symbol(df, fill_value=False)
         df = df.fillna(method="ffill").fillna(False)
 
         return df
