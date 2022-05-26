@@ -2110,7 +2110,9 @@ class SETDataReader:
         )
 
         # pivot table
-        df = df.pivot(index="effect_date", columns="symbol", values="adjust_factor")
+        df = utils.pivot_remove_index_name(
+            df=df, index="effect_date", columns="symbol", values="adjust_factor"
+        )
 
         # reverse cumulate product adjust factor
         df = df.iloc[::-1].cumprod(skipna=True).iloc[::-1]
@@ -2421,7 +2423,5 @@ class SETDataReader:
 
     @staticmethod
     def _pivot_name_value(df: pd.DataFrame) -> pd.DataFrame:
-        df = df.pivot(columns=NAME, values=VALUE)
-        df.columns.name = None
-        df.index.name = None
+        df = utils.pivot_remove_index_name(df=df, columns=NAME, values=VALUE)
         return df
