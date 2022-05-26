@@ -77,7 +77,6 @@ class SETSignalCreator:
             - ytd
         value_by : str, default 'stock'
             - stock
-            - index
             - industry
             - sector
         method : str, default 'constant'
