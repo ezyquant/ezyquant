@@ -327,7 +327,21 @@ class SETSignalCreator:
 
         Examples
         --------
-        TODO: Example
+        >>> from ezyquant import SETSignalCreator
+        >>> ssc = SETSignalCreator(
+        ...     sqlite_path="psims.db",
+        ...     start_date="2022-01-01",
+        ...     end_date="2022-01-10",
+        ...     index_list=[],
+        ...     symbol_list=["COM7", "MALEE", "THAI"],
+        ... )
+        >>> ssc.is_banned()
+                     COM7  MALEE  THAI
+        2022-01-04  False  False  True
+        2022-01-05  False  False  True
+        2022-01-06  False  False  True
+        2022-01-07  False  False  True
+        2022-01-10  False  False  True
         """
         return self._is_banned_delisted() | self._is_banned_sp()
 
@@ -494,6 +508,7 @@ class SETSignalCreator:
             sign_list=["SP"],
         )
 
+        # hold_date and release_date can be with time
         df["hold_date"] = df["hold_date"].dt.normalize()
         df["release_date"] = df["release_date"].dt.normalize()
 
