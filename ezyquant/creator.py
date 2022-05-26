@@ -345,6 +345,12 @@ class SETSignalCreator:
         """
         return self._is_banned_delisted() | self._is_banned_sp()
 
+    @staticmethod
+    def rank(
+        factor_df: pd.DataFrame, quantity: Optional[int] = None, ascending: bool = True
+    ):
+        return factor_df.rank(ascending=ascending)
+
     """
     Protected methods
     """

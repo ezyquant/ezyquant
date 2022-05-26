@@ -651,3 +651,19 @@ class TestIsBanned:
         self._check(result)
 
         assert (result[symbol] == expect).all()
+
+
+@pytest.mark.parametrize(
+    ("df", "expect"),
+    [
+        (pd.DataFrame(), pd.DataFrame()),
+        (
+            pd.DataFrame([[11.0, 12.0, 13.0], [21.0, 22.0, 23.0]]),
+            pd.DataFrame([[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]),
+        ),
+    ],
+)
+def test_rank(df: pd.DataFrame, expect: pd.DataFrame):
+    result = SETSignalCreator.rank(df)
+
+    assert_frame_equal(result, expect)
