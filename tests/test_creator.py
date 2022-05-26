@@ -295,7 +295,7 @@ class TestGetData:
         expected: pd.DataFrame,
     ):
         # Mock
-        ssc._reindex_trade_date = lambda df: df
+        ssc._reindex_trade_date = lambda df, **kwargs: df
         ssc._sdr._get_fundamental_data = Mock(return_value=data)
 
         # Test
@@ -544,3 +544,110 @@ class TestIsUniverse:
 
         assert (result.dtypes == bool).all()
         assert result.notna().all().all()
+
+
+class TestIsBanned:
+    _check = staticmethod(TestIsUniverse._check)
+
+    @pytest.mark.parametrize(
+        ("start_date", "end_date"),
+        [
+            ("2010-01-01", "2022-01-01"),
+            ("2021-01-01", "2021-02-01"),
+            ("2021-02-24", "2021-02-24"),
+            ("2021-02-25", "2021-02-25"),
+        ],
+    )
+    def test_all(self, ssc: SETSignalCreator, start_date: str, end_date: str):
+        # Mock
+        ssc._index_list = [fld.MARKET_SET, fld.MARKET_MAI.upper()]
+        ssc._start_date = start_date
+        ssc._end_date = end_date
+
+        # Test
+        result = ssc.is_banned()
+
+        # Check
+        self._check(result)
+
+    @pytest.mark.parametrize("symbol_list", [["JTS"], ["JTS", "THAI"]])
+    def test_one_day_sp(self, ssc: SETSignalCreator, symbol_list: List[str]):
+        """https://portal.settrade.com/NewsEngineTXTDisplay.jsp?newsId=16529175763321&t=H&fp=/simsImg/news/histri/202205/22065589.t22&tk=ee62bd2018156b05378402dcd9cb4828&q=Y"""
+        # Mock
+        ssc._symbol_list = symbol_list
+        ssc._start_date = "2022-04-01"
+        ssc._end_date = "2022-05-01"
+
+        # Test
+        result = ssc.is_banned()
+
+        # Check
+        self._check(result)
+
+        assert_frame_equal(
+            result[["JTS"]],
+            pd.DataFrame(
+                {
+                    "JTS": [
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
+                        True,
+                        False,
+                        False,
+                        True,
+                        False,
+                        False,
+                        False,
+                        False,
+                    ]
+                },
+                index=IDX_2022_04_01_TO_2022_04_29,
+            ),
+        )
+
+    @pytest.mark.parametrize(
+        ("symbol", "start_date", "end_date", "expect"),
+        [
+            ("THAI", "2021-01-01", "2021-02-01", False),
+            ("THAI", "2021-02-24", "2021-02-24", False),
+            ("THAI", "2021-02-25", "2021-02-25", True),
+            ("THAI", "2022-01-01", "2022-02-01", True),
+            ("SCBB", "2022-01-01", "2022-02-01", False),
+            ("SCBB", "2022-04-26", "2022-04-26", False),
+            ("SCBB", "2022-04-27", "2022-04-27", True),
+            ("SCBB", "2022-05-01", "2022-06-01", True),
+            ("EARTH", "2017-01-01", "2017-02-01", False),
+            ("EARTH", "2017-06-14", "2017-06-14", False),
+            ("EARTH", "2017-06-15", "2017-06-15", True),
+            ("EARTH", "2018-01-01", "2019-01-01", True),
+            ("EARTH", "2019-01-01", "2020-01-01", True),
+            ("AOT", "2010-01-01", "2020-01-01", False),
+        ],
+    )
+    def test_one_symbol(
+        self,
+        ssc: SETSignalCreator,
+        symbol: str,
+        start_date: str,
+        end_date: str,
+        expect: bool,
+    ):
+        # Mock
+        ssc._symbol_list = [symbol]
+        ssc._start_date = start_date
+        ssc._end_date = end_date
+
+        # Test
+        result = ssc.is_banned()
+
+        # Check
+        self._check(result)
+
+        assert (result[symbol] == expect).all()

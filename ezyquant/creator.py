@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 
 from . import fields as fld
+from . import utils
 from .errors import InputError
 from .reader import SETDataReader
 
@@ -316,7 +317,35 @@ class SETSignalCreator:
         except InputError:
             return self._is_universe_dynamic(universe)
 
-    """ 
+    def is_banned(self) -> pd.DataFrame:
+        """Return Dataframe of boolean is banned by Delisted or Suspension (SP).
+        Returns
+        -------
+        pd.DataFrame of boolean
+            - symbol : str as column
+            - trade date : date as index
+
+        Examples
+        --------
+        >>> from ezyquant import SETSignalCreator
+        >>> ssc = SETSignalCreator(
+        ...     sqlite_path="psims.db",
+        ...     start_date="2022-01-01",
+        ...     end_date="2022-01-10",
+        ...     index_list=[],
+        ...     symbol_list=["COM7", "MALEE", "THAI"],
+        ... )
+        >>> ssc.is_banned()
+                     COM7  MALEE  THAI
+        2022-01-04  False  False  True
+        2022-01-05  False  False  True
+        2022-01-06  False  False  True
+        2022-01-07  False  False  True
+        2022-01-10  False  False  True
+        """
+        return self._is_banned_delisted() | self._is_banned_sp()
+
+    """
     Protected methods
     """
 
@@ -356,10 +385,15 @@ class SETSignalCreator:
         s = self._get_symbol_in_universe()
         return self._sdr.get_symbol_info(symbol_list=s, sec_type="S", native="L")
 
-    def _reindex_trade_date(self, df: pd.DataFrame) -> pd.DataFrame:
+    def _reindex_trade_date(self, df: pd.DataFrame, **kwargs) -> pd.DataFrame:
         td = self._get_trading_dates()
-        df = df.reindex(pd.DatetimeIndex(td))  # type: ignore
-        return df
+        return self._reindex_date(df=df, index=td, **kwargs)
+
+    def _reindex_columns_symbol(
+        self, df: pd.DataFrame, fill_value=None
+    ) -> pd.DataFrame:
+        s = self._get_symbol_in_universe()
+        return df.reindex(columns=s, fill_value=fill_value)  # type: ignore
 
     def _rolling(self, data, method: str, period: int):
         roll = data.rolling(period)
@@ -433,24 +467,75 @@ class SETSignalCreator:
         df = self._get_symbols_by_index(universe)
 
         # Pivot
-        df = df.pivot(index="as_of_date", columns="symbol", values="index")
-        df.index.name = None
-        df.columns.name = None
+        df = utils.pivot_remove_index_name(
+            df=df, index="as_of_date", columns="symbol", values="index"
+        )
 
         # To bool
         df = df.notna()
 
         # Reindex
-        index = self._get_trading_dates()
-        df = self._reindex_date(df, index=index, method="ffill", fill_value=False)
-
-        # Reindex columns
-        columns = self._get_symbol_in_universe()
-        df = df.reindex(columns=columns, fill_value=False)  # type: ignore
+        df = self._reindex_trade_date(df, method="ffill", fill_value=False)
+        df = self._reindex_columns_symbol(df, fill_value=False)
 
         return df
 
-    """ 
+    def _is_banned_delisted(self) -> pd.DataFrame:
+        symbol_list = self._get_symbol_in_universe()
+
+        df = self._sdr.get_delisted(
+            symbol_list=symbol_list,
+            end_date=self._end_date,
+        )
+
+        df["true"] = True
+        df = utils.pivot_remove_index_name(
+            df=df, index="delisted_date", columns="symbol", values="true"
+        )
+
+        # Reindex
+        df = self._reindex_trade_date(df, method="ffill", fill_value=False)
+        df = self._reindex_columns_symbol(df, fill_value=False)
+
+        return df
+
+    def _is_banned_sp(self) -> pd.DataFrame:
+        symbol_list = self._get_symbol_in_universe()
+
+        df = self._sdr.get_sign_posting(
+            symbol_list=symbol_list,
+            end_date=self._end_date,
+            sign_list=["SP"],
+        )
+
+        # hold_date and release_date can be with time
+        df["hold_date"] = df["hold_date"].dt.normalize()
+        df["release_date"] = df["release_date"].dt.normalize()
+
+        df["true"] = 1
+        df["false"] = 0
+
+        # pivot_table also drop duplicated index
+        df_hold = df.pivot_table(index="hold_date", columns="symbol", values="true")
+        df_release = df.pivot_table(
+            index="release_date", columns="symbol", values="false"
+        )
+
+        df_hold, df_release = df_hold.align(df_release)
+
+        df = df_release.fillna(df_hold)
+        df.index.name = None
+        df.columns.name = None
+
+        # Reindex
+        df = self._reindex_trade_date(df, method="ffill", fill_value=0)
+        df = self._reindex_columns_symbol(df, fill_value=0)
+
+        df = df.astype(bool)
+
+        return df
+
+    """
     Static methods
     """
 
@@ -458,15 +543,17 @@ class SETSignalCreator:
     def _reindex_date(
         df: pd.DataFrame, index, method: Optional[str] = None, fill_value=None
     ) -> pd.DataFrame:
+        """Reindex and fillna with method and fill_value."""
         index = pd.DatetimeIndex(index)
 
-        start = min(df.index.min(), index.min())
-        end = max(df.index.max(), index.max())
+        start = pd.Series([df.index.min(), index.min()]).min()
+        end = pd.Series([df.index.max(), index.max()]).max()
         dr = pd.date_range(start=start, end=end)
-
         df = df.reindex(dr)  # type: ignore
 
-        df = df.fillna(method=method)  # type: ignore
-        df = df.fillna(fill_value)
+        if method != None:
+            df = df.fillna(method=method)  # type: ignore
+        if fill_value != None:
+            df = df.fillna(fill_value)
 
         return df.reindex(index=index)  # type: ignore
