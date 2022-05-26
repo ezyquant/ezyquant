@@ -349,7 +349,10 @@ class SETSignalCreator:
     def rank(
         factor_df: pd.DataFrame, quantity: Optional[int] = None, ascending: bool = True
     ):
-        return factor_df.rank(ascending=ascending)
+        df = factor_df.rank(ascending=ascending, axis=1, method="min")
+        if quantity != None:
+            df = df.mask(df > quantity, np.nan)
+        return df
 
     """
     Protected methods
