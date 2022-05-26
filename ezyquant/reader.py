@@ -2110,10 +2110,7 @@ class SETDataReader:
         )
 
         # pivot table
-        df = utils.pivot_remove_index_name(
-            df=df, index="effect_date", columns="symbol", values="adjust_factor"
-        )
-
+        df = df.pivot(index="effect_date", columns="symbol", values="adjust_factor")
         # reverse cumulate product adjust factor
         df = df.iloc[::-1].cumprod(skipna=True).iloc[::-1]
 
