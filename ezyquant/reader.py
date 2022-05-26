@@ -1,7 +1,7 @@
 import os.path
 from datetime import date
 from functools import lru_cache
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -436,7 +436,7 @@ class SETDataReader:
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
         ca_type_list: Optional[List[str]] = None,
-        adjusted_list: List[str] = ["  ", "CR", "PC", "RC", "SD", "XR"],
+        adjusted_list: List[str] = ["", "CR", "PC", "RC", "SD", "XR"],
     ) -> pd.DataFrame:
         """Data from table RIGHTS_BENEFIT. Include only Cash Dividend (CD) and
         Stock Dividend (SD). Not include Cancelled (F_CANCEL!='C') and dps more
@@ -455,7 +455,7 @@ class SETDataReader:
                 - CD - cash dividend
                 - SD - stock dividend
         adjusted_list : List[str]
-            Adjust data by ca_type, empty list for no adjust, by default ["  ", "CR", "PC", "RC", "SD", "XR"]
+            Adjust data by ca_type, empty list for no adjust, by default ["", "CR", "PC", "RC", "SD", "XR"]
 
         Returns
         -------
@@ -910,7 +910,7 @@ class SETDataReader:
         symbol_list: Optional[List[str]] = None,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
-        adjusted_list: List[str] = ["  ", "CR", "PC", "RC", "SD", "XR"],
+        adjusted_list: List[str] = ["", "CR", "PC", "RC", "SD", "XR"],
     ) -> pd.DataFrame:
         """Data from table DAILY_STOCK_TRADE, DAILY_STOCK_STAT.
 
@@ -972,7 +972,7 @@ class SETDataReader:
         end_date : Optional[str]
             end of trade_date (D_TRADE), by default None
         adjusted_list : List[str]
-            Adjust data by ca_type, empty list for no adjust, by default ["  ", "CR", "PC", "RC", "SD", "XR"]
+            Adjust data by ca_type, empty list for no adjust, by default ["", "CR", "PC", "RC", "SD", "XR"]
 
         Returns
         -------
@@ -1936,7 +1936,7 @@ class SETDataReader:
     ):
         vld.check_duplicate(values)
         if values != None:
-            values = [i.upper() for i in values]
+            values = [i.strip().upper() for i in values]
             stmt = stmt.where(func.upper(func.trim(column)).in_(values))
         return stmt
 
@@ -2386,24 +2386,32 @@ class SETDataReader:
 
         return df
 
-    def _get_prior_as_of_date_symbol_index(
-        self, index_name: str, current_date: Optional[str] = None
-    ) -> str:
+    def _get_last_as_of_date_in_security_index(
+        self, current_date: Optional[str] = None
+    ) -> Dict[str, str]:
         sector_t = self._table("SECTOR")
         security_index_t = self._table("SECURITY_INDEX")
 
         j = self._join_sector_table(security_index_t)
-        stmt = select(func.max(func.DATE(security_index_t.c.D_AS_OF))).select_from(j)
-        stmt = self._filter_stmt_by_symbol_and_date(
+        stmt = (
+            select(
+                [
+                    func.trim(sector_t.c.N_SECTOR),
+                    func.max(func.DATE(security_index_t.c.D_AS_OF)),
+                ]
+            )
+            .select_from(j)
+            .group_by(sector_t.c.N_SECTOR)
+        )
+        stmt = self._filter_stmt_by_date(
             stmt=stmt,
-            symbol_column=sector_t.c.N_SECTOR,
-            date_column=security_index_t.c.D_AS_OF,
-            symbol_list=[index_name],
+            column=security_index_t.c.D_AS_OF,
             start_date=None,
             end_date=current_date,
         )
 
-        return self._execute(stmt).scalar()
+        result = self._execute(stmt).all()
+        return dict(result)  # type: ignore
 
     """ 
     Static methods

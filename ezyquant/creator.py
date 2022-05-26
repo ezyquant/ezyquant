@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import List
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -80,7 +80,7 @@ class SETSignalCreator:
             - industry
             - sector
         method : str, default 'constant'
-            Name of Dataframe rolling window functions.
+            Name of Dataframe rolling window functions. See <https://pandas.pydata.org/docs/reference/window.html#rolling-window-functions> for details.
             - constant
             - count
             - sum
@@ -113,21 +113,18 @@ class SETSignalCreator:
         Examples
         --------
         >>> from ezyquant import SETSignalCreator
-        >>> from ezyquant import fields as fld
         >>> ssc = SETSignalCreator(
-        ...     index_list=[],
-        ...     symbol_list=["COM7", "MALEE"],
-        ...     sector_list=[],
-        ...     industry_list=[],
+        ...     sqlite_path="psims.db",
         ...     start_date="2022-01-01",
         ...     end_date="2022-01-10",
-        ...     sqlite_path="psims.db",
+        ...     index_list=[],
+        ...     symbol_list=["COM7", "MALEE"],
         ... )
         >>> ssc.get_data(
-        ...     field=fld.D_CLOSE,
-        ...     timeframe=fld.TIMEFRAME_DAILY,
-        ...     value_by=fld.VALUE_BY_STOCK,
-        ...     method=fld.METHOD_CONSTANT,
+        ...     field="close",
+        ...     timeframe="daily",
+        ...     value_by="stock",
+        ...     method="constant",
         ...     period=0,
         ...     shift=0,
         ... )
@@ -145,10 +142,10 @@ class SETSignalCreator:
         2022-04-01  42.500   5.70
 
         >>> ssc.get_data(
-        ...     field=fld.Q_CASH,
-        ...     timeframe=fld.TIMEFRAME_QUARTERLY,
-        ...     value_by=fld.VALUE_BY_STOCK,
-        ...     method=fld.METHOD_CONSTANT,
+        ...     field="cash",
+        ...     timeframe="quarterly",
+        ...     value_by="stock",
+        ...     method="constant",
         ...     period=0,
         ...     shift=0,
         ... )
@@ -280,6 +277,45 @@ class SETSignalCreator:
 
         return df
 
+    def is_universe(self, universe: str) -> pd.DataFrame:
+        """Return Dataframe of boolean is universe.
+
+        Parameters
+        ----------
+        universe : str
+            Can be Market, Sector, Industry, or Index.
+
+        Returns
+        -------
+        pd.DataFrame of boolean
+            - symbol : str as column
+            - trade date : date as index
+
+        Examples
+        --------
+        >>> from ezyquant import SETSignalCreator
+        >>> ssc = SETSignalCreator(
+        ...     sqlite_path="psims.db",
+        ...     start_date="2022-01-01",
+        ...     end_date="2022-01-10",
+        ...     index_list=[],
+        ...     symbol_list=["COM7", "MALEE"],
+        ... )
+        >>> ssc.is_universe("SET100")
+                    COM7  MALEE
+        2022-01-04  True  False
+        2022-01-05  True  False
+        2022-01-06  True  False
+        2022-01-07  True  False
+        2022-01-10  True  False
+        """
+        universe = universe.upper()
+
+        try:
+            return self._is_universe_static(universe)
+        except InputError:
+            return self._is_universe_dynamic(universe)
+
     """ 
     Protected methods
     """
@@ -297,23 +333,25 @@ class SETSignalCreator:
             df = self._sdr.get_symbol_info(
                 symbol_list=self._symbol_list, sec_type="S", native="L"
             )
-            out.update(df["symbol"].tolist())
+            out.update(df["symbol"])
         if fld.MARKET_SET in self._index_list:
             df = self._sdr.get_symbol_info(
                 market=fld.MARKET_SET, sec_type="S", native="L"
             )
-            out.update(df["symbol"].tolist())
+            out.update(df["symbol"])
         if fld.MARKET_MAI.upper() in self._index_list:
             df = self._sdr.get_symbol_info(
                 market=fld.MARKET_MAI, sec_type="S", native="L"
             )
-            out.update(df["symbol"].tolist())
-        if self._index_list:
-            df = self._get_symbols_by_index()
-            out.update(df["symbol"].tolist())
-        return list(out)
+            out.update(df["symbol"])
 
-    @lru_cache
+        index_list = [i for i in self._index_list if i not in (fld.MARKET_MAP_UPPER)]
+        for i in index_list:
+            df = self._get_symbols_by_index(i)
+            out.update(df["symbol"])
+
+        return sorted(list(out))
+
     def _get_symbol_info(self) -> pd.DataFrame:
         s = self._get_symbol_in_universe()
         return self._sdr.get_symbol_info(symbol_list=s, sec_type="S", native="L")
@@ -347,21 +385,88 @@ class SETSignalCreator:
 
         return series
 
-    def _get_symbols_by_index(self) -> pd.DataFrame:
-        l = []
-        for i in self._index_list:
-            start_date = self._sdr._get_prior_as_of_date_symbol_index(
-                index_name=i, current_date=self._start_date
+    @lru_cache
+    def _get_start_as_of_security_index(self) -> Dict[str, str]:
+        out = self._sdr._get_last_as_of_date_in_security_index(
+            current_date=self._start_date
+        )
+        return {k.upper(): v for k, v in out.items()}
+
+    def _get_symbols_by_index(self, index: str) -> pd.DataFrame:
+        start_as_of_dict = self._get_start_as_of_security_index()
+
+        return self._sdr.get_symbols_by_index(
+            index_list=[index],
+            start_date=start_as_of_dict[index],
+            end_date=self._end_date,
+        )
+
+    def _is_universe_static(self, universe: str) -> pd.DataFrame:
+        if universe in fld.MARKET_MAP_UPPER:
+            index_type = "market"
+        elif universe in fld.INDUSTRY_LIST:
+            index_type = "industry"
+        elif universe in fld.SECTOR_LIST:
+            index_type = "sector"
+        else:
+            raise InputError(
+                f"{universe} is invalid universe. Please read document to check valid universe."
             )
 
-            df = self._sdr.get_symbols_by_index(
-                index_list=[i],
-                start_date=start_date,
-                end_date=self._end_date,
-            )
+        df = self._get_symbol_info().set_index("symbol")
+        tds = self._get_trading_dates()
 
-            l.append(df)
+        is_uni_dict = (df[index_type].str.upper() == universe).to_dict()
+        df = pd.DataFrame(is_uni_dict, index=pd.DatetimeIndex(tds))
 
-        df = pd.concat(l)
-        assert isinstance(df, pd.DataFrame)
+        # Reindex columns
+        df = df.reindex(columns=sorted(df.columns))  # type: ignore
+
         return df
+
+    def _is_universe_dynamic(self, universe: str) -> pd.DataFrame:
+        if universe not in fld.INDEX_LIST_UPPER:
+            raise InputError(
+                f"{universe} is invalid universe. Please read document to check valid universe."
+            )
+
+        df = self._get_symbols_by_index(universe)
+
+        # Pivot
+        df = df.pivot(index="as_of_date", columns="symbol", values="index")
+        df.index.name = None
+        df.columns.name = None
+
+        # To bool
+        df = df.notna()
+
+        # Reindex
+        index = self._get_trading_dates()
+        df = self._reindex_date(df, index=index, method="ffill", fill_value=False)
+
+        # Reindex columns
+        columns = self._get_symbol_in_universe()
+        df = df.reindex(columns=columns, fill_value=False)  # type: ignore
+
+        return df
+
+    """ 
+    Static methods
+    """
+
+    @staticmethod
+    def _reindex_date(
+        df: pd.DataFrame, index, method: Optional[str] = None, fill_value=None
+    ) -> pd.DataFrame:
+        index = pd.DatetimeIndex(index)
+
+        start = min(df.index.min(), index.min())
+        end = max(df.index.max(), index.max())
+        dr = pd.date_range(start=start, end=end)
+
+        df = df.reindex(dr)  # type: ignore
+
+        df = df.fillna(method=method)  # type: ignore
+        df = df.fillna(fill_value)
+
+        return df.reindex(index=index)  # type: ignore

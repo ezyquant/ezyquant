@@ -483,7 +483,7 @@ class TestGetChangeName:
 
         assert (result["symbol_old"] != result["symbol_new"]).all()
 
-        assert is_df_unique(result[["symbol_id", "effect_date"]])
+        assert utils.is_df_unique(result[["symbol_id", "effect_date"]])
 
         return result
 
@@ -1057,7 +1057,7 @@ class TestGetAdjustFactor:
         for i in result.columns:
             assert pd.notna(result[i]).all(), f"{i} is null"
 
-        assert is_df_unique(result[["symbol", "effect_date"]])
+        assert utils.is_df_unique(result[["symbol", "effect_date"]])
         assert result["ca_type"].isin(["  ", "CR", "PC", "RC", "SD", "XR"]).all()
         assert (result["adjust_factor"] > 0).all()
 
@@ -1863,62 +1863,53 @@ class TestGetDataIndustryDaily:
         return result
 
 
-class TestGetPriorAsOfDateSymbolIndex:
-    @pytest.mark.parametrize(
-        "index_name",
-        [
-            fld.INDEX_SETHD,
-            fld.INDEX_SSET,
-            fld.INDEX_SET100,
-            fld.INDEX_SET50,
-        ],
-    )
-    def test_none(self, sdr: SETDataReader, index_name: str):
+class TestGetLastAsOfDateInSecurityIndex:
+    def test_none(self, sdr: SETDataReader):
         # Test
-        result = sdr._get_prior_as_of_date_symbol_index(index_name)
+        result = sdr._get_last_as_of_date_in_security_index()
 
         # Check
-        datetime.strptime(result, "%Y-%m-%d")
+        self._check(result)
 
     @pytest.mark.parametrize(
-        ("index_name", "current_date", "expected"),
+        ("current_date", "expected"),
         [
-            (fld.INDEX_SETHD, "2022-01-04", "2022-01-04"),
-            (fld.INDEX_SSET, "2022-01-04", "2022-01-04"),
-            (fld.INDEX_SET100, "2022-01-04", "2022-01-04"),
-            (fld.INDEX_SET50, "2022-01-04", "2022-01-04"),
-            (fld.INDEX_SETHD, "2022-03-01", "2022-01-04"),
-            (fld.INDEX_SSET, "2022-03-01", "2022-01-04"),
-            (fld.INDEX_SET100, "2022-03-01", "2022-01-04"),
-            (fld.INDEX_SET50, "2022-03-01", "2022-01-04"),
+            (
+                "2022-01-04",
+                {
+                    "SET100": "2022-01-04",
+                    "SET50": "2022-01-04",
+                    "SETCLMV": "2022-01-04",
+                    "SETHD": "2022-01-04",
+                    "SETTHSI": "2022-01-04",
+                    "SETWB": "2022-01-04",
+                    "sSET": "2022-01-04",
+                },
+            ),
+            (
+                "2022-04-27",
+                {
+                    "SET100": "2022-04-27",
+                    "SET50": "2022-04-27",
+                    "SETCLMV": "2022-04-27",
+                    "SETHD": "2022-04-01",
+                    "SETTHSI": "2022-04-27",
+                    "SETWB": "2022-04-01",
+                    "sSET": "2022-01-04",
+                },
+            ),
         ],
     )
-    def test_with_expect(
-        self, sdr: SETDataReader, index_name: str, current_date: str, expected: str
-    ):
+    def test_with_expect(self, sdr: SETDataReader, current_date: str, expected: str):
         # Test
-        result = sdr._get_prior_as_of_date_symbol_index(index_name, current_date)
+        result = sdr._get_last_as_of_date_in_security_index(current_date)
 
         # Check
+        self._check(result)
         assert result == expected
 
-
-def is_df_unique(df):
-    return (df.groupby([i for i in df.columns]).size() == 1).all()
-
-
-@pytest.mark.parametrize(
-    ("df", "expected"),
-    [
-        (pd.DataFrame(), True),
-        (pd.DataFrame([1, 1]), False),
-        (pd.DataFrame([1, 2]), True),
-        (pd.DataFrame([1, 2, 3]), True),
-        (pd.DataFrame([1, 1, 2]), False),
-        (pd.DataFrame([1, 1, 2, 2]), False),
-        (pd.DataFrame([[1, 2], [1, 2]]), False),
-        (pd.DataFrame([[1, 1], [1, 2]]), True),
-    ],
-)
-def test_is_df_unique(df: pd.DataFrame, expected: bool):
-    assert is_df_unique(df) == expected
+    @staticmethod
+    def _check(result):
+        for k, v in result.items():
+            assert isinstance(k, str)
+            datetime.strptime(v, "%Y-%m-%d")

@@ -10,8 +10,9 @@ from pandas.testing import assert_frame_equal, assert_series_equal
 
 import ezyquant.fields as fld
 from ezyquant import SETSignalCreator
+from ezyquant.errors import InputError
 
-dt_idx = pd.DatetimeIndex(
+IDX_2020_01_02_TO_2020_01_15 = pd.DatetimeIndex(
     [
         "2020-01-02",
         "2020-01-03",
@@ -65,13 +66,13 @@ class TestGetSymbolInUniverse:
                 const.SET50_2022_01_04 + const.SET50_2022_04_27,
             ),
             (
-                [fld.INDEX_SET50, fld.INDEX_SSET],
+                [fld.INDEX_SET50, fld.INDEX_SSET.upper()],
                 "2022-01-04",
                 "2022-01-04",
                 const.SET50_2022_01_04 + const.SSET_2022_01_04,
             ),
             (
-                [fld.INDEX_SET50, fld.INDEX_SSET],
+                [fld.INDEX_SET50, fld.INDEX_SSET.upper()],
                 "2022-04-26",
                 "2022-04-27",
                 const.SET50_2022_01_04 + const.SSET_2022_01_04 + const.SET50_2022_04_27,
@@ -105,7 +106,7 @@ class TestGetData:
         # Mock
         ssc._start_date = "2021-05-18"
         ssc._end_date = "2021-05-31"
-        ssc._index_list = ["SET", "mai"]
+        ssc._index_list = [fld.INDEX_SET, fld.INDEX_MAI.upper()]
 
         # Test
         result = ssc.get_data(
@@ -141,7 +142,7 @@ class TestGetData:
         # Mock
         ssc._start_date = "2021-05-18"
         ssc._end_date = "2021-05-31"
-        ssc._index_list = ["SET", "mai"]
+        ssc._index_list = [fld.INDEX_SET, fld.INDEX_MAI.upper()]
 
         # Test
         result = ssc.get_data(
@@ -223,7 +224,7 @@ class TestGetData:
                     "B": [21.0, 22.0, nan, inf, nan, 26.0, inf, nan, 29.0],
                     "C": [nan] * 9,
                 },
-                index=dt_idx[:9],
+                index=IDX_2020_01_02_TO_2020_01_15[:9],
             )
         ],
     )
@@ -240,7 +241,7 @@ class TestGetData:
                         "B": [21.0, 22.0, 22.0, nan, nan, 26.0, nan, nan, 29.0],
                         "C": [nan] * 9,
                     },
-                    index=dt_idx[:9],
+                    index=IDX_2020_01_02_TO_2020_01_15[:9],
                 ),
             ),
             (
@@ -253,7 +254,7 @@ class TestGetData:
                         "B": [nan, 21.0, 21.0, 22.0, 22.0, nan, 26.0, 26.0, nan],
                         "C": [nan] * 9,
                     },
-                    index=dt_idx[:9],
+                    index=IDX_2020_01_02_TO_2020_01_15[:9],
                 ),
             ),
             (
@@ -266,7 +267,7 @@ class TestGetData:
                         "B": [nan, 43.0, 43.0, nan, nan, nan, nan, nan, nan],
                         "C": [nan] * 9,
                     },
-                    index=dt_idx[:9],
+                    index=IDX_2020_01_02_TO_2020_01_15[:9],
                 ),
             ),
             (
@@ -279,7 +280,7 @@ class TestGetData:
                         "B": [nan, nan, nan, 43.0, 43.0, nan, nan, nan, nan],
                         "C": [nan] * 9,
                     },
-                    index=dt_idx[:9],
+                    index=IDX_2020_01_02_TO_2020_01_15[:9],
                 ),
             ),
         ],
@@ -365,3 +366,181 @@ class TestGetData:
         self._check(result)
 
         assert result.empty
+
+
+IDX_2022_04_01_TO_2022_04_29 = pd.DatetimeIndex(
+    [
+        "2022-04-01",
+        "2022-04-04",
+        "2022-04-05",
+        "2022-04-07",
+        "2022-04-08",
+        "2022-04-11",
+        "2022-04-12",
+        "2022-04-18",
+        "2022-04-19",
+        "2022-04-20",
+        "2022-04-21",
+        "2022-04-22",
+        "2022-04-25",
+        "2022-04-26",
+        "2022-04-27",
+        "2022-04-28",
+        "2022-04-29",
+    ],
+    freq=None,
+)
+
+
+class TestIsUniverse:
+    @pytest.mark.parametrize(
+        "universe",
+        [
+            fld.INDEX_SET,
+            fld.INDEX_MAI,
+            fld.INDUSTRY_FINCIAL,
+            fld.INDUSTRY_AGRO,
+            fld.SECTOR_BANK,
+            fld.SECTOR_INSUR,
+            fld.SECTOR_AGRI,
+        ],
+    )
+    def test_static(self, ssc: SETSignalCreator, universe: str):
+        # Mock
+        ssc._index_list = [fld.MARKET_SET, fld.MARKET_MAI.upper()]
+        ssc._start_date = "2022-04-01"
+        ssc._end_date = "2022-05-01"
+
+        # Test
+        result = ssc.is_universe(universe)
+
+        # Check
+        self._check(result)
+        assert utils.is_df_unique_cols(result)
+
+    @pytest.mark.parametrize(
+        ("index_list", "symbol_list"),
+        [
+            ([], ["SCB", "SCBB"]),
+            ([], ["SCBB", "SCB", "AU"]),
+            ([fld.INDEX_SET50], []),
+            ([fld.INDEX_SET100], []),
+            ([fld.INDEX_SET, fld.INDEX_MAI.upper()], []),
+            ([fld.INDEX_SET50], ["SCB", "SCBB"]),
+            ([fld.INDEX_SET50], ["AU"]),
+            ([fld.INDEX_MAI.upper()], ["SCB", "SCBB"]),
+        ],
+    )
+    @pytest.mark.parametrize(
+        ("universe", "expect"),
+        [
+            (
+                fld.INDEX_SET,
+                pd.DataFrame(
+                    {"SCB": True, "SCBB": True},
+                    index=IDX_2022_04_01_TO_2022_04_29,
+                ),
+            ),
+            (
+                fld.INDEX_MAI,
+                pd.DataFrame(
+                    {"SCB": False, "SCBB": False},
+                    index=IDX_2022_04_01_TO_2022_04_29,
+                ),
+            ),
+            (
+                fld.INDUSTRY_FINCIAL,
+                pd.DataFrame(
+                    {"SCB": True, "SCBB": True},
+                    index=IDX_2022_04_01_TO_2022_04_29,
+                ),
+            ),
+            (
+                fld.INDUSTRY_AGRO,
+                pd.DataFrame(
+                    {"SCB": False, "SCBB": False},
+                    index=IDX_2022_04_01_TO_2022_04_29,
+                ),
+            ),
+            (
+                fld.SECTOR_BANK,
+                pd.DataFrame(
+                    {"SCB": True, "SCBB": True},
+                    index=IDX_2022_04_01_TO_2022_04_29,
+                ),
+            ),
+            (
+                fld.SECTOR_INSUR,
+                pd.DataFrame(
+                    {"SCB": False, "SCBB": False},
+                    index=IDX_2022_04_01_TO_2022_04_29,
+                ),
+            ),
+            (
+                fld.SECTOR_AGRI,
+                pd.DataFrame(
+                    {"SCB": False, "SCBB": False},
+                    index=IDX_2022_04_01_TO_2022_04_29,
+                ),
+            ),
+            (
+                fld.INDEX_SET100,
+                pd.DataFrame(
+                    {
+                        "SCB": [False] * 14 + [True] * 3,
+                        "SCBB": [True] * 14 + [False] * 3,
+                    },
+                    index=IDX_2022_04_01_TO_2022_04_29,
+                ),
+            ),
+            (
+                fld.INDEX_SET50,
+                pd.DataFrame(
+                    {
+                        "SCB": [False] * 14 + [True] * 3,
+                        "SCBB": [True] * 14 + [False] * 3,
+                    },
+                    index=IDX_2022_04_01_TO_2022_04_29,
+                ),
+            ),
+            (
+                fld.INDEX_SSET.upper(),
+                pd.DataFrame(
+                    {"SCB": False, "SCBB": False},
+                    index=IDX_2022_04_01_TO_2022_04_29,
+                ),
+            ),
+        ],
+    )
+    def test_with_expect(
+        self,
+        ssc: SETSignalCreator,
+        index_list: List[str],
+        symbol_list: List[str],
+        universe: str,
+        expect: pd.DataFrame,
+    ):
+        # Mock
+        ssc._index_list = index_list
+        ssc._symbol_list = symbol_list
+        ssc._start_date = "2022-04-01"
+        ssc._end_date = "2022-05-01"
+
+        # Test
+        result = ssc.is_universe(universe)
+
+        # Check
+        self._check(result)
+        assert_frame_equal(result[["SCB", "SCBB"]], expect)
+
+    @pytest.mark.parametrize("universe", ["", "invalid"])
+    def test_invalid_universe(self, ssc: SETSignalCreator, universe: str):
+        with pytest.raises(InputError):
+            ssc.is_universe(universe)
+
+    @staticmethod
+    def _check(result):
+        utils.check_data_symbol_daily(result)
+
+        assert (result.dtypes == bool).all()
+        assert result.notna().all().all()
