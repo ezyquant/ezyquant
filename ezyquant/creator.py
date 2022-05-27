@@ -383,6 +383,10 @@ class SETSignalCreator:
         """
         df = factor_df.rank(ascending=ascending, axis=1, method="min")
         if quantity != None:
+            if quantity < 1:
+                raise InputError(
+                    f"quantity must be greater than 0. but {quantity} is given."
+                )
             df = df.mask(df > quantity, np.nan)
         return df
 
