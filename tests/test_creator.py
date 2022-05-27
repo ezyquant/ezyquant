@@ -651,3 +651,61 @@ class TestIsBanned:
         self._check(result)
 
         assert (result[symbol] == expect).all()
+
+
+class TestRank:
+    @pytest.mark.parametrize(
+        ("factor_df", "expect"),
+        [
+            (pd.DataFrame(), pd.DataFrame()),
+            (pd.DataFrame([[11.0, 12.0, 13.0]]), pd.DataFrame([[1.0, 2.0, 3.0]])),
+            (
+                pd.DataFrame(
+                    [
+                        [11.0, 12.0, 13.0],
+                        [21.0, nan, 23.0],
+                        [31.0, 31.0, 31.0],
+                    ]
+                ),
+                pd.DataFrame(
+                    [
+                        [1.0, 2.0, 3.0],
+                        [1.0, nan, 2.0],
+                        [1.0, 1.0, 1.0],
+                    ]
+                ),
+            ),
+        ],
+    )
+    def test_no_quantity_ascending(self, factor_df: pd.DataFrame, expect: pd.DataFrame):
+        result = SETSignalCreator.rank(factor_df)
+
+        assert_frame_equal(result, expect)
+
+    @pytest.mark.parametrize(
+        ("factor_df", "expect"),
+        [
+            (pd.DataFrame(), pd.DataFrame()),
+            (pd.DataFrame([[11.0, 12.0, 13.0]]), pd.DataFrame([[1.0, 2.0, nan]])),
+            (
+                pd.DataFrame(
+                    [
+                        [11.0, 12.0, 13.0],
+                        [21.0, nan, 23.0],
+                        [31.0, 31.0, 31.0],
+                    ]
+                ),
+                pd.DataFrame(
+                    [
+                        [1.0, 2.0, nan],
+                        [1.0, nan, 2.0],
+                        [1.0, 1.0, 1.0],
+                    ]
+                ),
+            ),
+        ],
+    )
+    def test_quantity(self, factor_df: pd.DataFrame, expect: pd.DataFrame):
+        result = SETSignalCreator.rank(factor_df, quantity=2)
+
+        assert_frame_equal(result, expect)
