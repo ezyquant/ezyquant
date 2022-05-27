@@ -348,7 +348,7 @@ class TA:
         return rsi
 
     @staticmethod
-    def so(
+    def sto(
         high: pd.DataFrame,
         low: pd.DataFrame,
         close: pd.DataFrame,
