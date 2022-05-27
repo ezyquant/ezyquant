@@ -313,6 +313,123 @@ class TA:
 
         return psar, psar_down, psar_down_indicator, psar_up, psar_up_indicator
 
+    """Momentum Indicators"""
+
+    @staticmethod
+    def rsi(
+        close: pd.DataFrame, window: int = 14, fillna: bool = False
+    ) -> pd.DataFrame:
+        """Relative Strength Index (RSI)
+
+        Parameters
+        ----------
+        close : pd.DataFrame
+            dataset 'Close' dataframe.
+        window : int, default 14
+            n period.
+        fillna : bool, default False
+            if True, fill nan values.
+
+        Returns
+        -------
+        pd.DataFrame
+            Relative Strength Index (RSI)
+        """
+        ind = close.apply(
+            lambda x: RSIIndicator(
+                close=x,
+                window=window,
+                fillna=fillna,
+            )
+        )
+
+        rsi = _apply_t(ind, RSIIndicator.rsi)
+
+        return rsi
+
+    @staticmethod
+    def so(
+        high: pd.DataFrame,
+        low: pd.DataFrame,
+        close: pd.DataFrame,
+        window: int = 14,
+        smooth_window: int = 3,
+        fillna: bool = False,
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        """Stochastic RSI (Stochastic Relative Strength Index)
+
+        Parameters
+        ----------
+        high : pd.DataFrame
+            dataset 'High' dataframe.
+        low : pd.DataFrame
+            dataset 'Low' dataframe.
+        close : pd.DataFrame
+            dataset 'Close' dataframe.
+        window : int, default 14
+            n period.
+        smooth_window : int, default 3
+            sma period over stoch_k.
+        fillna : bool, default False
+            if True, fill nan values.
+
+        Returns
+        -------
+        Tuple[pd.DataFrame]
+            Contains:
+                - Stochastic Oscillator
+                - Signal Stochastic Oscillator
+        """
+        ind = close.apply(
+            lambda x: StochasticOscillator(
+                high=high[x.name],
+                low=low[x.name],
+                close=x,
+                window=window,
+                smooth_window=smooth_window,
+                fillna=fillna,
+            )
+        )
+
+        stoch = _apply_t(ind, StochasticOscillator.stoch)
+        stoch_signal = _apply_t(ind, StochasticOscillator.stoch_signal)
+
+        return stoch, stoch_signal
+
+    @staticmethod
+    def roc(
+        close: pd.DataFrame,
+        window: int = 12,
+        fillna: bool = False,
+    ) -> pd.DataFrame:
+        """Rate of Change (ROC)
+
+        Parameters
+        ----------
+        close : pd.DataFrame
+            dataset 'Close' dataframe.
+        window : int, default 12
+            n period.
+        fillna : bool, default False
+            if True, fill nan values.
+
+        Returns
+        -------
+        pd.DataFrame
+            Rate of Change (ROC)
+        """
+        ind = close.apply(
+            lambda x: ROCIndicator(
+                close=x,
+                window=window,
+                fillna=fillna,
+            )
+        )
+
+        roc = _apply_t(ind, ROCIndicator.roc)
+
+        return roc
+
     """Volatility Indicators"""
 
     @staticmethod
