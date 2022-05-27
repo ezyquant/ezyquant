@@ -352,7 +352,7 @@ class SETSignalCreator:
         return self._is_banned_delisted() | self._is_banned_sp()
 
     """
-    Technical indicator
+    Technical Indicators
     """
 
     """
