@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Callable, Tuple
 
 import pandas as pd
 from ta.momentum import (
@@ -62,9 +62,7 @@ class TA:
             Simple Moving Average (SMA)
         """
         df = _sma(close, periods=window, fillna=fillna)
-
         assert isinstance(df, pd.DataFrame)
-
         return df
 
     @staticmethod
@@ -88,9 +86,7 @@ class TA:
             Exponential Moving Average (EMA)
         """
         df = _ema(close, periods=window, fillna=fillna)
-
         assert isinstance(df, pd.DataFrame)
-
         return df
 
     @staticmethod
@@ -122,9 +118,8 @@ class TA:
             Contains:
                 - MACD
                 - MACD Signal
-                - MACD Signal
+                - MACD Histogram
         """
-
         ind = close.apply(
             lambda x: MACD(
                 close=x,
@@ -135,13 +130,9 @@ class TA:
             )
         )
 
-        macd = ind.apply(lambda x: x.macd()).T
-        macd_signal = ind.apply(lambda x: x.macd_signal()).T
-        macd_diff = ind.apply(lambda x: x.macd_diff()).T
-
-        assert isinstance(macd, pd.DataFrame)
-        assert isinstance(macd_signal, pd.DataFrame)
-        assert isinstance(macd_diff, pd.DataFrame)
+        macd = _apply_t(ind, MACD.macd)
+        macd_signal = _apply_t(ind, MACD.macd_signal)
+        macd_diff = _apply_t(ind, MACD.macd_diff)
 
         return macd, macd_signal, macd_diff
 
@@ -186,13 +177,9 @@ class TA:
             )
         )
 
-        adx = ind.apply(lambda x: x.adx()).T
-        adx_neg = ind.apply(lambda x: x.adx_neg()).T
-        adx_pos = ind.apply(lambda x: x.adx_pos()).T
-
-        assert isinstance(adx, pd.DataFrame)
-        assert isinstance(adx_neg, pd.DataFrame)
-        assert isinstance(adx_pos, pd.DataFrame)
+        adx = _apply_t(ind, ADXIndicator.adx)
+        adx_neg = _apply_t(ind, ADXIndicator.adx_neg)
+        adx_pos = _apply_t(ind, ADXIndicator.adx_pos)
 
         return adx, adx_neg, adx_pos
 
@@ -238,9 +225,7 @@ class TA:
             )
         )
 
-        cci = ind.apply(lambda x: x.cci()).T
-
-        assert isinstance(cci, pd.DataFrame)
+        cci = _apply_t(ind, CCIIndicator.cci)
 
         return cci
 
@@ -294,15 +279,10 @@ class TA:
             )
         )
 
-        conversion_line = ind.apply(lambda x: x.ichimoku_conversion_line()).T
-        base_line = ind.apply(lambda x: x.ichimoku_base_line()).T
-        a = ind.apply(lambda x: x.ichimoku_a()).T
-        b = ind.apply(lambda x: x.ichimoku_b()).T
-
-        assert isinstance(conversion_line, pd.DataFrame)
-        assert isinstance(base_line, pd.DataFrame)
-        assert isinstance(a, pd.DataFrame)
-        assert isinstance(b, pd.DataFrame)
+        conversion_line = _apply_t(ind, IchimokuIndicator.ichimoku_conversion_line)
+        base_line = _apply_t(ind, IchimokuIndicator.ichimoku_base_line)
+        a = _apply_t(ind, IchimokuIndicator.ichimoku_a)
+        b = _apply_t(ind, IchimokuIndicator.ichimoku_b)
 
         return conversion_line, base_line, a, b
 
@@ -346,9 +326,7 @@ class TA:
             )
         )
 
-        average_true_range = ind.apply(lambda x: x.average_true_range()).T
-
-        assert isinstance(average_true_range, pd.DataFrame)
+        average_true_range = _apply_t(ind, AverageTrueRange.average_true_range)
 
         return average_true_range
 
@@ -398,31 +376,15 @@ class TA:
             )
         )
 
-        hband = ind.apply(lambda x: x.bollinger_hband()).T
-        hband_indicator = ind.apply(lambda x: x.bollinger_hband_indicator()).T
-        lband = ind.apply(lambda x: x.bollinger_lband()).T
-        lband_indicator = ind.apply(lambda x: x.bollinger_lband_indicator()).T
-        mavg = ind.apply(lambda x: x.bollinger_mavg()).T
-        pband = ind.apply(lambda x: x.bollinger_pband()).T
-        wband = ind.apply(lambda x: x.bollinger_wband()).T
+        hband = _apply_t(ind, BollingerBands.bollinger_hband)
+        hband_indicator = _apply_t(ind, BollingerBands.bollinger_hband_indicator)
+        lband = _apply_t(ind, BollingerBands.bollinger_lband)
+        lband_indicator = _apply_t(ind, BollingerBands.bollinger_lband_indicator)
+        mavg = _apply_t(ind, BollingerBands.bollinger_mavg)
+        pband = _apply_t(ind, BollingerBands.bollinger_pband)
+        wband = _apply_t(ind, BollingerBands.bollinger_wband)
 
-        assert isinstance(hband, pd.DataFrame)
-        assert isinstance(hband_indicator, pd.DataFrame)
-        assert isinstance(lband, pd.DataFrame)
-        assert isinstance(lband_indicator, pd.DataFrame)
-        assert isinstance(mavg, pd.DataFrame)
-        assert isinstance(pband, pd.DataFrame)
-        assert isinstance(wband, pd.DataFrame)
-
-        return (
-            hband,
-            hband_indicator,
-            lband,
-            lband_indicator,
-            mavg,
-            pband,
-            wband,
-        )
+        return (hband, hband_indicator, lband, lband_indicator, mavg, pband, wband)
 
     @staticmethod
     def dc(
@@ -471,17 +433,11 @@ class TA:
             )
         )
 
-        hband = ind.apply(lambda x: x.donchian_channel_hband()).T
-        lband = ind.apply(lambda x: x.donchian_channel_lband()).T
-        mband = ind.apply(lambda x: x.donchian_channel_mband()).T
-        pband = ind.apply(lambda x: x.donchian_channel_pband()).T
-        wband = ind.apply(lambda x: x.donchian_channel_wband()).T
-
-        assert isinstance(hband, pd.DataFrame)
-        assert isinstance(lband, pd.DataFrame)
-        assert isinstance(mband, pd.DataFrame)
-        assert isinstance(pband, pd.DataFrame)
-        assert isinstance(wband, pd.DataFrame)
+        hband = _apply_t(ind, DonchianChannel.donchian_channel_hband)
+        lband = _apply_t(ind, DonchianChannel.donchian_channel_lband)
+        mband = _apply_t(ind, DonchianChannel.donchian_channel_mband)
+        pband = _apply_t(ind, DonchianChannel.donchian_channel_pband)
+        wband = _apply_t(ind, DonchianChannel.donchian_channel_wband)
 
         return hband, lband, mband, pband, wband
 
@@ -550,20 +506,18 @@ class TA:
             )
         )
 
-        hband = ind.apply(lambda x: x.keltner_channel_hband()).T
-        hband_indicator = ind.apply(lambda x: x.keltner_channel_hband_indicator()).T
-        lband = ind.apply(lambda x: x.keltner_channel_lband()).T
-        lband_indicator = ind.apply(lambda x: x.keltner_channel_lband_indicator()).T
-        mband = ind.apply(lambda x: x.keltner_channel_mband()).T
-        pband = ind.apply(lambda x: x.keltner_channel_pband()).T
-        wband = ind.apply(lambda x: x.keltner_channel_wband()).T
-
-        assert isinstance(hband, pd.DataFrame)
-        assert isinstance(hband_indicator, pd.DataFrame)
-        assert isinstance(lband, pd.DataFrame)
-        assert isinstance(lband_indicator, pd.DataFrame)
-        assert isinstance(mband, pd.DataFrame)
-        assert isinstance(pband, pd.DataFrame)
-        assert isinstance(wband, pd.DataFrame)
+        hband = _apply_t(ind, KeltnerChannel.keltner_channel_hband)
+        hband_indicator = _apply_t(ind, KeltnerChannel.keltner_channel_hband_indicator)
+        lband = _apply_t(ind, KeltnerChannel.keltner_channel_lband)
+        lband_indicator = _apply_t(ind, KeltnerChannel.keltner_channel_lband_indicator)
+        mband = _apply_t(ind, KeltnerChannel.keltner_channel_mband)
+        pband = _apply_t(ind, KeltnerChannel.keltner_channel_pband)
+        wband = _apply_t(ind, KeltnerChannel.keltner_channel_wband)
 
         return hband, hband_indicator, lband, lband_indicator, mband, pband, wband
+
+
+def _apply_t(series: pd.Series, func: Callable) -> pd.DataFrame:
+    df = series.apply(func).T
+    assert isinstance(df, pd.DataFrame)
+    return df
