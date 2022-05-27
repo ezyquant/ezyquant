@@ -1,36 +1,8 @@
 from typing import Callable, Tuple
 
 import pandas as pd
-from ta.momentum import (
-    AwesomeOscillatorIndicator,
-    KAMAIndicator,
-    PercentagePriceOscillator,
-    PercentageVolumeOscillator,
-    ROCIndicator,
-    RSIIndicator,
-    StochasticOscillator,
-    StochRSIIndicator,
-    TSIIndicator,
-    UltimateOscillator,
-    WilliamsRIndicator,
-)
-from ta.trend import (
-    MACD,
-    ADXIndicator,
-    AroonIndicator,
-    CCIIndicator,
-    DPOIndicator,
-    EMAIndicator,
-    IchimokuIndicator,
-    KSTIndicator,
-    MassIndex,
-    PSARIndicator,
-    SMAIndicator,
-    STCIndicator,
-    TRIXIndicator,
-    VortexIndicator,
-    WMAIndicator,
-)
+from ta.momentum import ROCIndicator, RSIIndicator, StochasticOscillator
+from ta.trend import MACD, ADXIndicator, CCIIndicator, IchimokuIndicator, PSARIndicator
 from ta.utils import _ema, _sma
 from ta.volatility import (
     AverageTrueRange,
@@ -286,6 +258,61 @@ class TA:
 
         return conversion_line, base_line, a, b
 
+    @staticmethod
+    def psar(
+        high: pd.DataFrame,
+        low: pd.DataFrame,
+        close: pd.DataFrame,
+        step: float = 0.02,
+        max_step: float = 0.20,
+        fillna: bool = False,
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+        """Parabolic SAR (Parabolic Stop and Reverse)
+
+        Parameters
+        ----------
+        high : pd.DataFrame
+            dataset 'High' dataframe.
+        low : pd.DataFrame
+            dataset 'Low' dataframe.
+        close : pd.DataFrame
+            dataset 'Close' dataframe.
+        step : float, default 0.02
+            the Acceleration Factor used to compute the SAR.
+        max_step : float, default 0.2
+            the maximum value allowed for the Acceleration Factor.
+        fillna : bool, default False
+            if True, fill nan values.
+
+        Returns
+        -------
+        Tuple[pd.DataFrame]
+            Contains:
+                - PSAR value
+                - PSAR down trend value
+                - PSAR down trend value indicator
+                - PSAR up trend value
+                - PSAR up trend value indicator
+        """
+        ind = close.apply(
+            lambda x: PSARIndicator(
+                high=high[x.name],
+                low=low[x.name],
+                close=x,
+                step=step,
+                max_step=max_step,
+                fillna=fillna,
+            )
+        )
+
+        psar = _apply_t(ind, PSARIndicator.psar)
+        psar_down = _apply_t(ind, PSARIndicator.psar_down)
+        psar_down_indicator = _apply_t(ind, PSARIndicator.psar_down_indicator)
+        psar_up = _apply_t(ind, PSARIndicator.psar_up)
+        psar_up_indicator = _apply_t(ind, PSARIndicator.psar_up_indicator)
+
+        return psar, psar_down, psar_down_indicator, psar_up, psar_up_indicator
+
     """Volatility Indicators"""
 
     @staticmethod
@@ -384,7 +411,7 @@ class TA:
         pband = _apply_t(ind, BollingerBands.bollinger_pband)
         wband = _apply_t(ind, BollingerBands.bollinger_wband)
 
-        return (hband, hband_indicator, lband, lband_indicator, mavg, pband, wband)
+        return hband, hband_indicator, lband, lband_indicator, mavg, pband, wband
 
     @staticmethod
     def dc(
