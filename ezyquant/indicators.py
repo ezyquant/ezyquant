@@ -13,7 +13,7 @@ class TA:
     """Volatility Indicators."""
 
     @staticmethod
-    def average_true_range(
+    def atr(
         high: pd.DataFrame,
         low: pd.DataFrame,
         close: pd.DataFrame,
@@ -53,7 +53,7 @@ class TA:
         return out  # type: ignore
 
     @staticmethod
-    def bollinger_bands(
+    def bb(
         close: pd.DataFrame, window: int = 20, window_dev: int = 2, fillna: bool = False
     ) -> Tuple[
         pd.DataFrame,
@@ -109,7 +109,7 @@ class TA:
         return out  # type: ignore
 
     @staticmethod
-    def donchian_channel(
+    def dc(
         high: pd.DataFrame,
         low: pd.DataFrame,
         close: pd.DataFrame,
@@ -160,7 +160,7 @@ class TA:
         return out  # type: ignore
 
     @staticmethod
-    def keltner_channel(
+    def kc(
         high: pd.DataFrame,
         low: pd.DataFrame,
         close: pd.DataFrame,
