@@ -80,7 +80,6 @@ class SETSignalCreator:
             - ytd
         value_by : str, default 'stock'
             - stock
-            - index
             - industry
             - sector
         method : str, default 'constant'
@@ -321,7 +320,9 @@ class SETSignalCreator:
             return self._is_universe_dynamic(universe)
 
     def is_banned(self) -> pd.DataFrame:
-        """Return Dataframe of boolean is banned by Delisted or Suspension (SP).
+        """Return Dataframe of boolean is banned by Delisted or Suspension
+        (SP).
+
         Returns
         -------
         pd.DataFrame of boolean
@@ -347,6 +348,50 @@ class SETSignalCreator:
         2022-01-10  False  False  True
         """
         return self._is_banned_delisted() | self._is_banned_sp()
+
+    @staticmethod
+    def rank(
+        factor_df: pd.DataFrame, quantity: Optional[int] = None, ascending: bool = True
+    ):
+        """Compute numerical data ranks (1 through quantity) along axis.
+
+        Parameters
+        ----------
+        factor_df : pd.DataFrame
+            Dataframe of numerical data.
+        quantity : int, optional, default None
+            Number of ranks to compute. Default is None, which means all ranks.
+        ascending : bool, default True
+            Whether or not the elements should be ranked in ascending order.
+
+        Returns
+        -------
+        pd.DataFrame with data ranks as values.
+
+        Examples
+        --------
+        >>> from ezyquant import SETSignalCreator
+        >>> df = pd.DataFrame(
+        ...     [
+        ...         [11.0, 12.0, 13.0],
+        ...         [21.0, float("nan"), 23.0],
+        ...         [31.0, 31.0, 31.0],
+        ...     ]
+        ... )
+        >>> SETSignalCreator.rank(df)
+             0    1    2
+        0  1.0  2.0  3.0
+        1  1.0  NaN  2.0
+        2  1.0  1.0  1.0
+        """
+        df = factor_df.rank(ascending=ascending, axis=1, method="min")
+        if quantity != None:
+            if quantity < 1:
+                raise InputError(
+                    f"quantity must be greater than 0. but {quantity} is given."
+                )
+            df = df.mask(df > quantity, np.nan)
+        return df
 
     """
     Protected methods
