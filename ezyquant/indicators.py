@@ -22,6 +22,7 @@ from ta.momentum import (
     williams_r,
 )
 from ta.trend import (
+    PSARIndicator,
     adx,
     adx_neg,
     adx_pos,
@@ -255,6 +256,138 @@ class TA:
         assert isinstance(adx_pos_df, pd.DataFrame)
 
         return adx_df, adx_neg_df, adx_pos_df
+
+    @staticmethod
+    def cci(
+        high: pd.DataFrame,
+        low: pd.DataFrame,
+        close: pd.DataFrame,
+        window: int = 20,
+        constant: float = 0.015,
+        fillna: bool = False,
+    ) -> pd.DataFrame:
+        """Commodity Channel Index (CCI)
+
+        Parameters
+        ----------
+        high : pd.DataFrame
+            dataset 'High' dataframe.
+        low : pd.DataFrame
+            dataset 'Low' dataframe.
+        close : pd.DataFrame
+            dataset 'Close' dataframe.
+        window : int, default 20
+            n period.
+        constant : float, default 0.015
+            constant.
+        fillna : bool, default False
+            if True, fill nan values.
+
+        Returns
+        -------
+        pd.DataFrame
+            Commodity Channel Index (CCI)
+        """
+        cci_df = close.apply(
+            lambda x: cci(
+                high=high[x.name],
+                low=low[x.name],
+                close=x,
+                window=window,
+                constant=constant,
+                fillna=fillna,
+            )
+        )
+
+        assert isinstance(cci_df, pd.DataFrame)
+
+        return cci_df
+
+    @staticmethod
+    def ichimoku(
+        high: pd.DataFrame,
+        low: pd.DataFrame,
+        window1: int = 9,
+        window2: int = 26,
+        window3: int = 52,
+        visual: bool = False,
+        fillna: bool = False,
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+        """Ichimoku Kinko Hyo (Ichimoku)
+
+        Parameters
+        ----------
+        high : pd.DataFrame
+            dataset 'High' dataframe.
+        low : pd.DataFrame
+            dataset 'Low' dataframe.
+        window1 : int, default 9
+            n period for Tenkan-sen.
+        window2 : int, default 26
+            n period for Kijun-sen.
+        window3 : int, default 52
+            n period for Senkou Span A.
+        visual : bool, default False
+            if True, plot graph.
+        fillna : bool, default False
+            if True, fill nan values.
+
+        Returns
+        -------
+        Tuple[pd.DataFrame]
+            Contains:
+                - Tenkan-sen (Conversion Line)
+                - Kijun-sen (Base Line)
+                - Senkou Span A (Leading Span A)
+                - Senkou Span B (Leading Span B)
+        """
+        conversion_line_df = high.apply(
+            lambda x: ichimoku_conversion_line(
+                high=x,
+                low=low[x.name],
+                window1=window1,
+                window2=window2,
+                visual=visual,
+                fillna=fillna,
+            )
+        )
+        base_line_df = high.apply(
+            lambda x: ichimoku_base_line(
+                high=x,
+                low=low[x.name],
+                window1=window1,
+                window2=window2,
+                visual=visual,
+                fillna=fillna,
+            )
+        )
+        a_df = high.apply(
+            lambda x: ichimoku_a(
+                high=x,
+                low=low[x.name],
+                window1=window1,
+                window2=window2,
+                visual=visual,
+                fillna=fillna,
+            )
+        )
+        b_df = high.apply(
+            lambda x: ichimoku_b(
+                high=x,
+                low=low[x.name],
+                window2=window2,
+                window3=window3,
+                visual=visual,
+                fillna=fillna,
+            )
+        )
+
+        assert isinstance(conversion_line_df, pd.DataFrame)
+        assert isinstance(base_line_df, pd.DataFrame)
+        assert isinstance(a_df, pd.DataFrame)
+        assert isinstance(b_df, pd.DataFrame)
+
+        return conversion_line_df, base_line_df, a_df, b_df
 
     """Volatility Indicators"""
 
