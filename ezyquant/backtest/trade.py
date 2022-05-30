@@ -27,8 +27,6 @@ class Trade:
     pct_commission: float
 
     def __post_init__(self):
-        assert isinstance(self.timestamp, datetime), "timestamp must be a datetime"
-        assert isinstance(self.symbol, str), "symbol must be a string"
         assert self.volume != 0, "volume must be non-zero"
         assert self.volume % 100 == 0, "volume must be multiple of 100"
         assert self.price > 0, "price must be positive"

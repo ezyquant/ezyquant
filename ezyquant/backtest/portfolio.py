@@ -2,6 +2,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, List
 
+import pandas as pd
+
 from .position import Position
 from .trade import Trade
 
@@ -23,11 +25,29 @@ class Portfolio:
             assert isinstance(v.symbol, str), "position_dict must be a dict of Position"
             assert v.symbol == k, "position_dict must be a dict of Position"
 
+    @property
+    def total_market_value(self) -> float:
+        return float(sum(i.market_value for i in self.position_dict.values()))
+
+    @property
+    def port_value(self) -> float:
+        return self.cash + self.total_market_value
+
+    @property
+    def volume_series(self) -> pd.Series:
+        return pd.Series({k: v.volume for k, v in self.position_dict.items()})
+
     def update_position_market_price(self, price_dict: Dict[str, float]) -> None:
         for sym, pos in self.position_dict.items():
             pos.market_price = price_dict[sym]
 
-    def buy(self, symbol: str, volume: int, price: float, timestamp: datetime) -> Trade:
+    def transact(
+        self,
+        symbol: str,
+        volume: int,
+        price: float,
+        timestamp: datetime,
+    ):
         trade = Trade(
             timestamp=timestamp,
             symbol=symbol,
@@ -35,33 +55,16 @@ class Portfolio:
             price=price,
             pct_commission=self.pct_commission,
         )
+        self.trade_list.append(trade)
 
         self.cash -= trade.value_with_commission
+        if self.cash < 0:
+            raise ValueError("Insufficient cash")
 
         if symbol not in self.position_dict:
             self.position_dict[symbol] = Position(symbol=symbol)
-        self.position_dict[symbol].buy(volume=trade.volume, price=trade.price)
 
-        return trade
-
-    def sell(
-        self,
-        symbol: str,
-        volume: int,
-        price: float,
-        timestamp: datetime,
-    ) -> Trade:
-        trade = Trade(
-            timestamp=timestamp,
-            symbol=symbol,
-            volume=-volume,
-            price=price,
-            pct_commission=self.pct_commission,
-        )
-
-        self.cash -= trade.value_with_commission
-
-        self.position_dict[symbol].sell(volume=trade.volume, price=trade.price)
+        self.position_dict[symbol].transact(volume=trade.volume, price=trade.price)
 
         if self.position_dict[symbol].volume == 0:
             del self.position_dict[trade.symbol]
