@@ -7,10 +7,13 @@ import pandas as pd
 from . import fields as fld
 from . import utils
 from .errors import InputError
+from .indicators import TA
 from .reader import SETDataReader
 
 
 class SETSignalCreator:
+    ta = TA
+
     def __init__(
         self,
         sqlite_path: str,

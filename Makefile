@@ -13,6 +13,7 @@ format:
 
 	docformatter -i ezyquant/reader.py
 	docformatter -i ezyquant/creator.py
+	docformatter -i ezyquant/indicators.py
 
 .PHONY: venv
 venv:
