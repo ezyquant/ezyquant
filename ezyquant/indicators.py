@@ -11,6 +11,8 @@ from ta.volatility import (
     KeltnerChannel,
 )
 
+from .errors import InputError
+
 
 class TA:
     """Trend Indicators."""
@@ -663,5 +665,7 @@ class TA:
 
 def _apply_t(series: pd.Series, func: Callable) -> pd.DataFrame:
     df = series.apply(func).T
+    if df.empty:
+        raise InputError(f"{func.__name__} returned an empty dataframe")
     assert isinstance(df, pd.DataFrame)
     return df
