@@ -47,7 +47,7 @@ def backtest(
         # Sell
         for k, v in vol_s[vol_s < 0].items():
             price = match_price_s[k] * r_sell_match  # type: ignore
-            pf.transact(
+            pf.place_order(
                 symbol=str(k),
                 volume=cast(int, v),
                 price=price,
@@ -57,14 +57,14 @@ def backtest(
         # Buy
         for k, v in vol_s[vol_s > 0].items():
             price = match_price_s[k] * r_buy_match  # type: ignore
-            pf.transact(
+            pf.place_order(
                 symbol=str(k),
                 volume=cast(int, v),
                 price=price,
                 timestamp=ts,
             )
 
-        pf.update_position_market_price(close_s.to_dict())
+        pf.set_position_market_price(close_s)
 
         pos_df = pf.get_position_df()
         pos_df["timestamp"] = ts

@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, List
 
+import numpy as np
 import pandas as pd
 
 from .position import Position
@@ -35,16 +36,18 @@ class Portfolio:
 
     @property
     def volume_series(self) -> pd.Series:
-        return pd.Series({k: v.volume for k, v in self.position_dict.items()})
+        return pd.Series(
+            {k: v.volume for k, v in self.position_dict.items()}, dtype=np.float64
+        )
 
-    def update_position_market_price(self, price_dict: Dict[str, float]) -> None:
+    def set_position_market_price(self, price_dict: Dict[str, float]) -> None:
         for sym, pos in self.position_dict.items():
             pos.market_price = price_dict[sym]
 
     def get_position_df(self) -> pd.DataFrame:
         return pd.DataFrame(self.position_dict.values())  # type: ignore
 
-    def transact(
+    def place_order(
         self,
         symbol: str,
         volume: int,
@@ -67,9 +70,9 @@ class Portfolio:
         if symbol not in self.position_dict:
             self.position_dict[symbol] = Position(symbol=symbol)
 
-        self.position_dict[symbol].transact(volume=trade.volume, price=trade.price)
+        self.position_dict[symbol].place_order(volume=volume, price=price)
 
         if self.position_dict[symbol].volume == 0:
-            del self.position_dict[trade.symbol]
+            del self.position_dict[symbol]
 
         return trade

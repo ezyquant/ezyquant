@@ -63,5 +63,5 @@ class Trade:
 
     @property
     def value_with_commission(self) -> float:
-        """Positive is Buy, Negative is Sell"""
+        """Amount of cash reduced by this trade. Positive is Buy, Negative is Sell"""
         return self.value + self.commission
