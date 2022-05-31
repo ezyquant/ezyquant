@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Tuple, cast
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -36,32 +36,32 @@ def backtest(
 
     position_df_list: List[pd.DataFrame] = []
 
-    def func(close_s):
+    def func(close_s: pd.Series):
         ts = close_s.name
 
-        vol_s = (pf.port_value * sig_by_price_df.loc[ts] // 100 * 100).sub(
-            pf.volume_series, fill_value=0
-        )
-        match_price_s = match_price_df.loc[ts]
+        vol_s = (
+            pf.port_value * sig_by_price_df.loc[ts] // 100 * 100  # type: ignore
+        ).sub(pf.volume_series, fill_value=0)
+        match_price_s = match_price_df.loc[ts]  # type: ignore
 
         # Sell
         for k, v in vol_s[vol_s < 0].items():
-            price = match_price_s[k] * r_sell_match  # type: ignore
+            price = match_price_s[k] * r_sell_match
             pf.place_order(
                 symbol=str(k),
-                volume=cast(int, v),
+                volume=v,
                 price=price,
-                timestamp=ts,
+                timestamp=ts,  # type: ignore
             )
 
         # Buy
         for k, v in vol_s[vol_s > 0].items():
-            price = match_price_s[k] * r_buy_match  # type: ignore
+            price = match_price_s[k] * r_buy_match
             pf.place_order(
                 symbol=str(k),
-                volume=cast(int, v),
+                volume=v,
                 price=price,
-                timestamp=ts,
+                timestamp=ts,  # type: ignore
             )
 
         pf.set_position_market_price(close_s)

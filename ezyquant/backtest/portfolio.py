@@ -40,9 +40,9 @@ class Portfolio:
             {k: v.volume for k, v in self.position_dict.items()}, dtype=np.float64
         )
 
-    def set_position_market_price(self, price_dict: Dict[str, float]) -> None:
+    def set_position_market_price(self, price_series: pd.Series) -> None:
         for sym, pos in self.position_dict.items():
-            pos.market_price = price_dict[sym]
+            pos.market_price = price_series[sym]
 
     def get_position_df(self) -> pd.DataFrame:
         return pd.DataFrame(self.position_dict.values())  # type: ignore
