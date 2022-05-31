@@ -41,6 +41,9 @@ class Portfolio:
         for sym, pos in self.position_dict.items():
             pos.market_price = price_dict[sym]
 
+    def get_position_df(self) -> pd.DataFrame:
+        return pd.DataFrame(self.position_dict.values())  # type: ignore
+
     def transact(
         self,
         symbol: str,

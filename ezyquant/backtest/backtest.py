@@ -1,0 +1,87 @@
+from typing import Dict, List, Optional, Tuple, cast
+
+import numpy as np
+import pandas as pd
+
+from .portfolio import Portfolio
+from .position import Position
+
+
+def backtest(
+    signal_df: pd.DataFrame,
+    close_df: pd.DataFrame,
+    match_price_df: pd.DataFrame,
+    rebalance_df: pd.DataFrame,
+    initial_cash: float,
+    pct_commission: float = 0.0,
+    pct_buy_match: float = 0.0,
+    pct_sell_match: float = 0.0,
+    initial_position_dict: Optional[Dict[str, Position]] = None,
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    r_buy_match = 1.0 + pct_buy_match
+    r_sell_match = 1.0 + pct_sell_match
+
+    if initial_position_dict == None:
+        initial_position_dict = {}
+
+    pf = Portfolio(
+        cash=initial_cash,
+        pct_commission=pct_commission,
+        position_dict=initial_position_dict,
+    )
+
+    sig_by_price_df = (
+        signal_df.where(rebalance_df, np.nan) / match_price_df * r_buy_match
+    )
+
+    position_df_list: List[pd.DataFrame] = []
+
+    def func(close_s):
+        ts = close_s.name
+
+        vol_s = (pf.port_value * sig_by_price_df.loc[ts] // 100 * 100).sub(
+            pf.volume_series, fill_value=0
+        )
+        match_price_s = match_price_df.loc[ts]
+
+        # Sell
+        for k, v in vol_s[vol_s < 0].items():
+            price = match_price_s[k] * r_sell_match  # type: ignore
+            pf.transact(
+                symbol=str(k),
+                volume=cast(int, v),
+                price=price,
+                timestamp=ts,
+            )
+
+        # Buy
+        for k, v in vol_s[vol_s > 0].items():
+            price = match_price_s[k] * r_buy_match  # type: ignore
+            pf.transact(
+                symbol=str(k),
+                volume=cast(int, v),
+                price=price,
+                timestamp=ts,
+            )
+
+        pf.update_position_market_price(close_s.to_dict())
+
+        pos_df = pf.get_position_df()
+        pos_df["timestamp"] = ts
+        position_df_list.append(pos_df)
+
+        return pd.Series(
+            {
+                "port_value": pf.port_value,
+                "cash": pf.cash,
+                "total_market_value": pf.total_market_value,
+            }
+        )
+
+    port_df = close_df.apply(func, axis=1)
+
+    position_df = pd.concat(position_df_list)
+
+    trade_df = pd.DataFrame(pf.trade_list)
+
+    return port_df, position_df, trade_df
