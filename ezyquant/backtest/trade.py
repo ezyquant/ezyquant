@@ -13,7 +13,7 @@ class Trade:
         The timestamp of the trade
     symbol : str
         The symbol of the trade
-    volume : int
+    volume : float
         The volume of the trade, must be multiple of 100, positive is buy and negative is sell
     price : float
         The price of the trade
@@ -23,7 +23,7 @@ class Trade:
 
     timestamp: datetime
     symbol: str
-    volume: int
+    volume: float
     price: float
     pct_commission: float
 

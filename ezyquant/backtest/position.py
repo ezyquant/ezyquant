@@ -1,12 +1,12 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass
 class Position:
     symbol: str
-    volume: int = field(default=0, init=False)
-    cost_price: float = field(default=0.0, init=False)
-    market_price: float = field(default=0.0)
+    volume: float = 0.0
+    cost_price: float = 0.0
+    market_price: float = 0.0
 
     @property
     def market_value(self) -> float:
@@ -16,9 +16,9 @@ class Position:
     def cost_value(self) -> float:
         return self.volume * self.cost_price
 
-    def place_order(self, volume: int, price: float):
+    def place_order(self, volume: float, price: float) -> float:
         if volume > 0:
-            self.cost_price = ((self.volume * self.cost_price) + (volume * price)) / (
+            self.cost_price = (self.cost_value + (volume * price)) / (
                 self.volume + volume
             )
 
@@ -26,3 +26,5 @@ class Position:
 
         if self.volume < 0:
             raise ValueError("Insufficient volume")
+
+        return self.volume

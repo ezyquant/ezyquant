@@ -50,7 +50,7 @@ class Portfolio:
     def place_order(
         self,
         symbol: str,
-        volume: int,
+        volume: float,
         price: float,
         timestamp: datetime,
     ):
