@@ -267,3 +267,9 @@ class TestPlaceOrderBuy:
                 timestamp=timestamp,
             )
         assert "volume" in e.value.args[0]
+
+
+class TestPlaceOrderSell:
+    def test_success(self):
+        # TODO: TestPlaceOrderSell
+        return
