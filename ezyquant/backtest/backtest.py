@@ -9,35 +9,34 @@ from .position import Position
 
 
 def backtest(
-    signal_df: pd.DataFrame,
-    close_df: pd.DataFrame,
-    match_price_df: pd.DataFrame,
-    rebalance_df: pd.DataFrame,
     initial_cash: float,
+    signal_weight_df: pd.DataFrame,
+    match_price_df: pd.DataFrame,
+    close_price_df: pd.DataFrame,
+    is_rebalance_df: pd.DataFrame,
     pct_commission: float = 0.0,
-    pct_buy_match: float = 0.0,
-    pct_sell_match: float = 0.0,
+    pct_buy_match_price: float = 0.0,
+    pct_sell_match_price: float = 0.0,
     initial_position_dict: Optional[Dict[str, Position]] = None,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    r_buy_match = 1.0 + pct_buy_match
-    r_sell_match = 1.0 - pct_sell_match
+    r_buy_match = 1.0 + pct_buy_match_price
+    r_sell_match = 1.0 - pct_sell_match_price
     r_min_match = min(r_buy_match, r_sell_match)
     r_max_match = max(r_buy_match, r_sell_match)
-
-    if initial_position_dict == None:
-        initial_position_dict = {}
 
     pf = Portfolio(
         cash=initial_cash,
         pct_commission=pct_commission,
-        position_dict=initial_position_dict,
+        position_dict=initial_position_dict if initial_position_dict else {},
     )
 
-    cash_signal_s = 1 - signal_df.sum(axis=1)
-    signal_df = signal_df.where(rebalance_df, np.nan)
-    signal_df = signal_df.div(signal_df.sum(axis=1) + cash_signal_s, axis=0)
+    cash_signal_s = 1 - signal_weight_df.sum(axis=1)
+    signal_weight_df = signal_weight_df.where(is_rebalance_df, np.nan)
+    signal_weight_df = signal_weight_df.div(
+        signal_weight_df.sum(axis=1) + cash_signal_s, axis=0
+    )
 
-    sig_by_price_df = signal_df / (match_price_df * r_max_match)
+    sig_by_price_df = signal_weight_df / (match_price_df * r_max_match)
 
     position_df_list: List[pd.DataFrame] = []
 
@@ -85,8 +84,8 @@ def backtest(
             }
         )
 
-    port_df = close_df.apply(on_interval, axis=1)
+    summary_df = close_price_df.apply(on_interval, axis=1)
     position_df = pd.concat(position_df_list)
     trade_df = pd.DataFrame(pf.trade_list)
 
-    return port_df, position_df, trade_df
+    return summary_df, position_df, trade_df
