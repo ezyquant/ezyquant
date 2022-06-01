@@ -1,6 +1,6 @@
 import pytest
 
-from ezyquant.backtest.position import Position
+from ezyquant.backtest import Position
 
 
 class TestCostPrice:

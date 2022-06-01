@@ -61,6 +61,7 @@ class Portfolio:
         price: float,
         timestamp: datetime,
     ):
+        # Create trade
         trade = Trade(
             timestamp=timestamp,
             symbol=symbol,
@@ -70,15 +71,15 @@ class Portfolio:
         )
         self.trade_list.append(trade)
 
+        # Add/Reduce cash
         self.cash -= trade.value_with_commission
         if self.cash < 0:
             raise ValueError("Insufficient cash")
 
+        # Add/Remove Position
         if symbol not in self.position_dict:
             self.position_dict[symbol] = Position(symbol=symbol)
-
         self.position_dict[symbol].place_order(volume=volume, price=price)
-
         if self.position_dict[symbol].volume == 0:
             del self.position_dict[symbol]
 
