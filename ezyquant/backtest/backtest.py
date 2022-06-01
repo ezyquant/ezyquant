@@ -3,6 +3,7 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 
+from .. import utils
 from .portfolio import Portfolio
 from .position import Position
 
@@ -19,7 +20,9 @@ def backtest(
     initial_position_dict: Optional[Dict[str, Position]] = None,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     r_buy_match = 1.0 + pct_buy_match
-    r_sell_match = 1.0 + pct_sell_match
+    r_sell_match = 1.0 - pct_sell_match
+    r_min_match = min(r_buy_match, r_sell_match)
+    r_max_match = max(r_buy_match, r_sell_match)
 
     if initial_position_dict == None:
         initial_position_dict = {}
@@ -30,11 +33,11 @@ def backtest(
         position_dict=initial_position_dict,
     )
 
-    cash_signal_df = 1 - signal_df.sum(axis=1)
+    cash_signal_s = 1 - signal_df.sum(axis=1)
     signal_df = signal_df.where(rebalance_df, np.nan)
-    signal_df = signal_df.div(signal_df.sum(axis=1) + cash_signal_df, axis=0)
+    signal_df = signal_df.div(signal_df.sum(axis=1) + cash_signal_s, axis=0)
 
-    sig_by_price_df = signal_df / match_price_df * r_buy_match
+    sig_by_price_df = signal_df / (match_price_df * r_max_match)
 
     position_df_list: List[pd.DataFrame] = []
 
@@ -43,29 +46,27 @@ def backtest(
 
         match_price_s = match_price_df.loc[ts]  # type: ignore
 
-        # value for trade today
-        trade_value = (pf.volume_series * match_price_s).sum() + pf.cash
-
-        vol_s = (trade_value * sig_by_price_df.loc[ts] // 100 * 100).sub(  # type: ignore
-            pf.volume_series, fill_value=0
-        )
+        trade_value = pf.cash + (pf.volume_series * match_price_s * r_min_match).sum()
+        target_volume_s = trade_value * sig_by_price_df.loc[ts]  # type: ignore
+        target_volume_s = utils.round_df_100(target_volume_s)
+        trade_volume_s = target_volume_s.sub(pf.volume_series, fill_value=0)
 
         # Sell
-        for k, v in vol_s[vol_s < 0].items():
+        for k, v in trade_volume_s[trade_volume_s < 0].items():
             price = match_price_s[k] * r_sell_match
             pf.place_order(
-                symbol=str(k),
-                volume=v,
+                symbol=k,  # type: ignore
+                volume=v,  # type: ignore
                 price=price,
                 timestamp=ts,  # type: ignore
             )
 
         # Buy
-        for k, v in vol_s[vol_s > 0].items():
+        for k, v in trade_volume_s[trade_volume_s > 0].items():
             price = match_price_s[k] * r_buy_match
             pf.place_order(
-                symbol=str(k),
-                volume=v,
+                symbol=k,  # type: ignore
+                volume=v,  # type: ignore
                 price=price,
                 timestamp=ts,  # type: ignore
             )
