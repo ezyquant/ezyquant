@@ -3,7 +3,7 @@ import pytest
 from ezyquant.backtest.position import Position
 
 
-class TestPosition:
+class TestCostPrice:
     @pytest.mark.parametrize(
         ("volume1", "price1", "volume2", "price2", "expect_cost_price"),
         [

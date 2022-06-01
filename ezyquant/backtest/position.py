@@ -8,6 +8,28 @@ class Position:
     cost_price: float = 0.0
     market_price: float = 0.0
 
+    def __post_init__(self):
+        # TODO: remove assert after testing
+
+        # symbol
+        assert isinstance(
+            self.symbol, str
+        ), f"symbol must be str, got {type(self.symbol)}"
+        assert self.symbol != "", f"symbol must not be empty, got {self.symbol}"
+
+        # volume
+        assert self.volume >= 0, f"volume must be positive, got {self.volume}"
+
+        # price
+        assert (
+            self.cost_price >= 0
+        ), f"cost_price must be positive, got {self.cost_price}"
+
+        # market_price
+        assert (
+            self.market_price >= 0
+        ), f"market_price must be positive, got {self.market_price}"
+
     @property
     def market_value(self) -> float:
         return self.volume * self.market_price

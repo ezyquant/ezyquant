@@ -1,4 +1,3 @@
-import math
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -29,27 +28,31 @@ class Trade:
 
     def __post_init__(self):
         # TODO: remove assert after testing
+
         # timestamp
-        assert isinstance(self.timestamp, datetime), "timestamp must be datetime"
+        assert isinstance(
+            self.timestamp, datetime
+        ), f"timestamp must be datetime, got {type(self.timestamp)}"
 
         # symbol
-        assert isinstance(self.symbol, str), "symbol must be str"
-        assert self.symbol != "", "symbol must not be empty"
+        assert isinstance(
+            self.symbol, str
+        ), f"symbol must be str, got {type(self.symbol)}"
+        assert self.symbol != "", f"symbol must not be empty, got {self.symbol}"
 
         # volume
-        assert not math.isnan(self.volume), "volume must be a number"
-        assert self.volume != 0, "volume must be non-zero"
-        assert self.volume % 100 == 0, "volume must be multiple of 100"
+        assert self.volume != 0, f"volume must not be 0, got {self.volume}"
+        assert (
+            self.volume % 100 == 0
+        ), f"volume must be multiple of 100, got {self.volume}"
 
         # price
-        assert isinstance(self.price, float), "price must be float"
-        assert not math.isnan(self.price), "price must be a number"
-        assert self.price > 0, "price must be positive"
+        assert self.price > 0, f"price must be positive, got {self.price}"
 
         # pct_commission
-        assert isinstance(self.pct_commission, float), "pct_commission must be float"
-        assert not math.isnan(self.pct_commission), "pct_commission must be a number"
-        assert 0 <= self.pct_commission <= 1, "pct_commission must be between 0 and 1"
+        assert (
+            0 <= self.pct_commission <= 1
+        ), f"pct_commission must be between 0 and 1, got {self.pct_commission}"
 
     @property
     def value(self) -> float:

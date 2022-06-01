@@ -17,14 +17,22 @@ class Portfolio:
     trade_list: List[Trade] = field(default_factory=list)
 
     def __post_init__(self) -> None:
+        # TODO: remove assert after testing
+
+        # cash
         assert self.cash >= 0, "cash must be positive"
+
+        # pct_commission
         assert 0 <= self.pct_commission <= 1, "pct_commission must be between 0 and 1"
 
+        # position_dict
         for k, v in self.position_dict.items():
             assert isinstance(v, Position), "position_dict must be a dict of Position"
-            assert isinstance(k, str), "position_dict must be a dict of Position"
-            assert isinstance(v.symbol, str), "position_dict must be a dict of Position"
             assert v.symbol == k, "position_dict must be a dict of Position"
+
+        # trade_list
+        for i in self.trade_list:
+            assert isinstance(i, Trade), "trade_list must be a list of Trade"
 
     @property
     def total_market_value(self) -> float:

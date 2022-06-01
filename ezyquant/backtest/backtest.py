@@ -36,7 +36,7 @@ def backtest(
 
     position_df_list: List[pd.DataFrame] = []
 
-    def func(close_s: pd.Series):
+    def on_interval(close_s: pd.Series) -> pd.Series:
         ts = close_s.name
 
         vol_s = (
@@ -78,10 +78,8 @@ def backtest(
             }
         )
 
-    port_df = close_df.apply(func, axis=1)
-
+    port_df = close_df.apply(on_interval, axis=1)
     position_df = pd.concat(position_df_list)
-
     trade_df = pd.DataFrame(pf.trade_list)
 
     return port_df, position_df, trade_df
