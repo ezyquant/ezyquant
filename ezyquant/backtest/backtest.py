@@ -30,19 +30,25 @@ def backtest(
         position_dict=initial_position_dict,
     )
 
-    sig_by_price_df = (
-        signal_df.where(rebalance_df, np.nan) / match_price_df * r_buy_match
-    )
+    cash_signal_df = 1 - signal_df.sum(axis=1)
+    signal_df = signal_df.where(rebalance_df, np.nan)
+    signal_df = signal_df.div(signal_df.sum(axis=1) + cash_signal_df, axis=0)
+
+    sig_by_price_df = signal_df / match_price_df * r_buy_match
 
     position_df_list: List[pd.DataFrame] = []
 
     def on_interval(close_s: pd.Series) -> pd.Series:
         ts = close_s.name
 
-        vol_s = (
-            pf.port_value * sig_by_price_df.loc[ts] // 100 * 100  # type: ignore
-        ).sub(pf.volume_series, fill_value=0)
         match_price_s = match_price_df.loc[ts]  # type: ignore
+
+        # value for trade today
+        trade_value = (pf.volume_series * match_price_s).sum() + pf.cash
+
+        vol_s = (trade_value * sig_by_price_df.loc[ts] // 100 * 100).sub(  # type: ignore
+            pf.volume_series, fill_value=0
+        )
 
         # Sell
         for k, v in vol_s[vol_s < 0].items():
