@@ -17,8 +17,8 @@ class SETSignalCreator:
     def __init__(
         self,
         sqlite_path: str,
-        start_date: str,
-        end_date: str,
+        start_date: str = "2010-01-01",
+        end_date: Optional[str] = None,
         index_list: List[str] = ["SET100"],
         symbol_list: List[str] = [],
     ):
@@ -48,11 +48,11 @@ class SETSignalCreator:
         symbol_list : List[str]
             List of symbol name. by default []
         """
-        self._index_list = [i.upper() for i in index_list]
-        self._symbol_list = [i.upper() for i in symbol_list]
-        self._start_date = start_date
-        self._end_date = end_date
-        self._sqlite_path = sqlite_path
+        self._index_list: List[str] = [i.upper() for i in index_list]
+        self._symbol_list: List[str] = [i.upper() for i in symbol_list]
+        self._start_date: str = start_date
+        self._end_date: Optional[str] = end_date
+        self._sqlite_path: str = sqlite_path
 
         self._sdr = SETDataReader(self._sqlite_path)
 
@@ -399,9 +399,10 @@ class SETSignalCreator:
 
     @lru_cache
     def _get_trading_dates(self) -> List[str]:
-        return self._sdr.get_trading_dates(
-            start_date=self._start_date, end_date=self._end_date
-        )
+        end = self._end_date
+        if self._end_date == None:
+            end = self._sdr.last_table_update("DAILY_STOCK_TRADE")
+        return self._sdr.get_trading_dates(start_date=self._start_date, end_date=end)
 
     @lru_cache
     def _get_symbol_in_universe(self) -> List[str]:
