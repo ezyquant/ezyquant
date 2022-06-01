@@ -2,7 +2,6 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, List
 
-import numpy as np
 import pandas as pd
 
 from .position import Position
@@ -45,7 +44,7 @@ class Portfolio:
     @property
     def volume_series(self) -> pd.Series:
         return pd.Series(
-            {k: v.volume for k, v in self.position_dict.items()}, dtype=np.float64
+            {k: v.volume for k, v in self.position_dict.items()}, dtype="float64"
         )
 
     def set_position_market_price(self, price_series: pd.Series) -> None:
