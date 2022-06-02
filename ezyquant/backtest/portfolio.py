@@ -40,10 +40,7 @@ class Portfolio:
         )
 
     def get_position_df(self) -> pd.DataFrame:
-        return pd.DataFrame(
-            self.position_dict.values(),  # type: ignore
-            columns=[i.name for i in fields(Position)],
-        )
+        return pd.DataFrame(self.position_dict.values())  # type: ignore
 
     def place_order(
         self,

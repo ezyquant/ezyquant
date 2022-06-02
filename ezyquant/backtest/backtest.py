@@ -5,6 +5,7 @@ import pandas as pd
 
 from .. import utils
 from .portfolio import Portfolio
+from .position import Position
 from .trade import Trade
 
 
@@ -70,7 +71,11 @@ def backtest(
 
     sig_by_price_df = signal_weight_df / (match_price_df * r_max_match)
 
-    position_df_list: List[pd.DataFrame] = []
+    position_df_list: List[pd.DataFrame] = [
+        pd.DataFrame(
+            columns=["timestamp"] + [i.name for i in fields(Position)], dtype="float64"
+        )
+    ]
 
     def on_interval(match_price_s: pd.Series) -> float:
         ts = match_price_s.name
@@ -107,7 +112,9 @@ def backtest(
         return pf.cash
 
     cash_df = match_price_df.apply(on_interval, axis=1).to_frame("cash")
-    position_df = pd.concat(position_df_list)
-    trade_df = pd.DataFrame(pf.trade_list, columns=[i.name for i in fields(Trade)])
+    position_df = pd.concat(position_df_list, ignore_index=True)
+    trade_df = pd.DataFrame(
+        pf.trade_list, columns=[i.name for i in fields(Trade)], dtype="float64"
+    )
 
     return cash_df, position_df, trade_df
