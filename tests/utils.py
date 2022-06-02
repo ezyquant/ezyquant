@@ -4,13 +4,23 @@ from typing import List
 
 import numpy as np
 import pandas as pd
-from pandas.testing import assert_index_equal
+import pandas.api.types as ptypes
+from pandas.testing import assert_frame_equal, assert_index_equal, assert_series_equal
 
 
-def sort_values_df(df: pd.DataFrame) -> pd.DataFrame:
-    df = df.reindex(sorted(df.columns), axis=1)  #  type: ignore
-    df = df.sort_values(by=df.columns)  #  type: ignore
+def sort_index_column(df: pd.DataFrame) -> pd.DataFrame:
+    assert isinstance(df.index, pd.RangeIndex), "Index must be RangeIndex"
+    df = df.sort_index(axis=1)
+    df = df.sort_values(by=df.columns.to_list()).reset_index(drop=True)
     return df
+
+
+def assert_frame_equal_sort_index(
+    df1: pd.DataFrame, df2: pd.DataFrame, check_dtype: bool = True
+):
+    df1 = sort_index_column(df1)
+    df2 = sort_index_column(df2)
+    assert_frame_equal(df1, df2, check_dtype=check_dtype)  # type: ignore
 
 
 def check_index_daily(result, is_unique=True):
@@ -41,6 +51,12 @@ def check_cash_df(df):
     # Column
     assert_index_equal(df.columns, pd.Index(["cash"]))
 
+    # Data type
+    assert ptypes.is_float_dtype(df["cash"])
+
+    # Cash
+    assert (df["cash"] >= 0).all()
+
     assert not df.empty
 
 
@@ -49,9 +65,14 @@ def check_position_df(df):
 
     # Column
     assert_index_equal(
-        df.columns,
-        pd.Index(["symbol", "volume", "avg_cost_price", "timestamp"]),
+        df.columns, pd.Index(["timestamp", "symbol", "volume", "avg_cost_price"])
     )
+
+    # Data type
+    # assert ptypes.is_datetime64_any_dtype(df["timestamp"])
+    # assert ptypes.is_string_dtype(df["symbol"])
+    assert ptypes.is_float_dtype(df["volume"])
+    assert ptypes.is_float_dtype(df["avg_cost_price"])
 
 
 def check_trade_df(df):
@@ -62,6 +83,13 @@ def check_trade_df(df):
         df.columns,
         pd.Index(["timestamp", "symbol", "volume", "price", "pct_commission"]),
     )
+
+    # Data type
+    # assert ptypes.is_datetime64_any_dtype(df["timestamp"])
+    # assert ptypes.is_string_dtype(df["symbol"])
+    assert ptypes.is_float_dtype(df["volume"])
+    assert ptypes.is_float_dtype(df["price"])
+    assert ptypes.is_float_dtype(df["pct_commission"])
 
 
 def is_df_unique(df) -> bool:
@@ -83,12 +111,12 @@ N_ROW = 10
 N_COL = 4
 
 
-def make_str_list(n: int) -> List[str]:
+def make_str_list(n: int = N_COL) -> List[str]:
     p = product(string.ascii_uppercase, repeat=3)
     return ["".join(next(p)) for _ in range(n)]
 
 
-def make_bdate_range(n: int) -> pd.DatetimeIndex:
+def make_bdate_range(n: int = N_ROW) -> pd.DatetimeIndex:
     return pd.bdate_range(start="2000-01-01", periods=n)
 
 

@@ -3,6 +3,7 @@ sqlalchemy
 ta
 
 pytest
+pytest-kwparametrize
 isort
 black
 docformatter
