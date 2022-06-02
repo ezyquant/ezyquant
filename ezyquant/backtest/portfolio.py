@@ -34,22 +34,10 @@ class Portfolio:
             assert isinstance(i, Trade), "trade_list must be a list of Trade"
 
     @property
-    def total_market_value(self) -> float:
-        return float(sum(i.market_value for i in self.position_dict.values()))
-
-    @property
-    def port_value(self) -> float:
-        return self.cash + self.total_market_value
-
-    @property
     def volume_series(self) -> pd.Series:
         return pd.Series(
             {k: v.volume for k, v in self.position_dict.items()}, dtype="float64"
         )
-
-    def set_position_market_price(self, price_series: pd.Series) -> None:
-        for sym, pos in self.position_dict.items():
-            pos.market_price = price_series[sym]
 
     def get_position_df(self) -> pd.DataFrame:
         return pd.DataFrame(self.position_dict.values())  # type: ignore

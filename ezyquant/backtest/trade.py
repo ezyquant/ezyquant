@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
+from functools import cached_property
 
 
 @dataclass(frozen=True)
@@ -54,17 +55,17 @@ class Trade:
             0 <= self.pct_commission <= 1
         ), f"pct_commission must be between 0 and 1, got {self.pct_commission}"
 
-    @property
+    @cached_property
     def value(self) -> float:
         """Positive is Buy, Negative is Sell"""
         return self.price * self.volume
 
-    @property
+    @cached_property
     def commission(self) -> float:
         """Always positive"""
         return abs(self.value * self.pct_commission)
 
-    @property
+    @cached_property
     def value_with_commission(self) -> float:
         """Amount of cash reduced by this trade. Positive is Buy, Negative is Sell"""
         return self.value + self.commission

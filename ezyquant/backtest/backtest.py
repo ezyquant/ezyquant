@@ -12,7 +12,6 @@ def backtest(
     initial_cash: float,
     signal_weight_df: pd.DataFrame,
     match_price_df: pd.DataFrame,
-    close_price_df: pd.DataFrame,
     pct_commission: float = 0.0,
     pct_buy_match_price: float = 0.0,
     pct_sell_match_price: float = 0.0,
@@ -33,10 +32,8 @@ def backtest(
 
     position_df_list: List[pd.DataFrame] = []
 
-    def on_interval(close_s: pd.Series) -> pd.Series:
-        ts = close_s.name
-
-        match_price_s = match_price_df.loc[ts]  # type: ignore
+    def on_interval(match_price_s: pd.Series) -> float:
+        ts = match_price_s.name
 
         trade_value = pf.cash + (pf.volume_series * match_price_s * r_min_match).sum()
         target_volume_s = trade_value * sig_by_price_df.loc[ts]  # type: ignore
@@ -45,7 +42,7 @@ def backtest(
 
         # Sell
         for k, v in trade_volume_s[trade_volume_s < 0].items():
-            price = match_price_s[k] * r_sell_match
+            price = match_price_s[k] * r_sell_match  # type: ignore
             pf.place_order(
                 symbol=k,  # type: ignore
                 volume=v,  # type: ignore
@@ -55,7 +52,7 @@ def backtest(
 
         # Buy
         for k, v in trade_volume_s[trade_volume_s > 0].items():
-            price = match_price_s[k] * r_buy_match
+            price = match_price_s[k] * r_buy_match  # type: ignore
             pf.place_order(
                 symbol=k,  # type: ignore
                 volume=v,  # type: ignore
@@ -63,22 +60,14 @@ def backtest(
                 timestamp=ts,  # type: ignore
             )
 
-        pf.set_position_market_price(close_s)
-
         pos_df = pf.get_position_df()
         pos_df["timestamp"] = ts
         position_df_list.append(pos_df)
 
-        return pd.Series(
-            {
-                "port_value": pf.port_value,
-                "cash": pf.cash,
-                "total_market_value": pf.total_market_value,
-            }
-        )
+        return pf.cash
 
-    summary_df = close_price_df.apply(on_interval, axis=1)
+    cash_df = match_price_df.apply(on_interval, axis=1)
     position_df = pd.concat(position_df_list)
     trade_df = pd.DataFrame(pf.trade_list)
 
-    return summary_df, position_df, trade_df
+    return cash_df, position_df, trade_df
