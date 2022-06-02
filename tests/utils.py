@@ -27,16 +27,14 @@ def check_data_symbol_daily(result):
     assert_index_equal(result.columns, result.columns.str.upper())
 
 
-def check_summary_df(df):
+def check_cash_df(df):
     assert isinstance(df, pd.DataFrame)
 
     # Index
     check_index_daily(df.index)
 
     # Column
-    assert_index_equal(
-        df.columns, pd.Index(["port_value", "cash", "total_market_value"])
-    )
+    assert_index_equal(df.columns, pd.Index(["cash"]))
 
     assert not df.empty
 
@@ -47,7 +45,7 @@ def check_position_df(df):
     # Column
     assert_index_equal(
         df.columns,
-        pd.Index(["symbol", "volume", "cost_price", "market_price", "timestamp"]),
+        pd.Index(["symbol", "volume", "cost_price", "timestamp"]),
     )
 
 

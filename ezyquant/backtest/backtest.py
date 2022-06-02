@@ -64,7 +64,7 @@ def backtest(
 
         return pf.cash
 
-    cash_df = match_price_df.apply(on_interval, axis=1)
+    cash_df = match_price_df.apply(on_interval, axis=1).to_frame("cash")
     position_df = pd.concat(position_df_list)
     trade_df = pd.DataFrame(pf.trade_list)
 
