@@ -1,11 +1,9 @@
-from typing import Dict, List, Optional, Tuple
+from typing import List, Tuple
 
-import numpy as np
 import pandas as pd
 
 from .. import utils
 from .portfolio import Portfolio
-from .position import Position
 
 
 def backtest(
@@ -15,7 +13,6 @@ def backtest(
     pct_commission: float = 0.0,
     pct_buy_match_price: float = 0.0,
     pct_sell_match_price: float = 0.0,
-    initial_position_dict: Optional[Dict[str, Position]] = None,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     r_buy_match = 1.0 + pct_buy_match_price
     r_sell_match = 1.0 - pct_sell_match_price
@@ -25,7 +22,8 @@ def backtest(
     pf = Portfolio(
         cash=initial_cash,
         pct_commission=pct_commission,
-        position_dict=initial_position_dict if initial_position_dict else {},
+        position_dict={},  # TODO: initial position
+        trade_list=[],  # TODO: initial trade for result
     )
 
     sig_by_price_df = signal_weight_df / (match_price_df * r_max_match)
