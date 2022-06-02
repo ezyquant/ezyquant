@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from datetime import datetime
 from typing import Dict, List
 
@@ -40,7 +40,10 @@ class Portfolio:
         )
 
     def get_position_df(self) -> pd.DataFrame:
-        return pd.DataFrame(self.position_dict.values())  # type: ignore
+        return pd.DataFrame(
+            self.position_dict.values(),  # type: ignore
+            columns=[i.name for i in fields(Position)],
+        )
 
     def place_order(
         self,

@@ -1,9 +1,11 @@
+from dataclasses import fields
 from typing import List, Tuple
 
 import pandas as pd
 
 from .. import utils
 from .portfolio import Portfolio
+from .trade import Trade
 
 
 def backtest(
@@ -66,6 +68,6 @@ def backtest(
 
     cash_df = match_price_df.apply(on_interval, axis=1).to_frame("cash")
     position_df = pd.concat(position_df_list)
-    trade_df = pd.DataFrame(pf.trade_list)
+    trade_df = pd.DataFrame(pf.trade_list, columns=[i.name for i in fields(Trade)])
 
     return cash_df, position_df, trade_df
