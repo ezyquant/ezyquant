@@ -16,6 +16,46 @@ def backtest(
     pct_buy_match_price: float = 0.0,
     pct_sell_match_price: float = 0.0,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Backtest.
+
+    Parameters
+    ----------
+    initial_cash : float
+        cash at the beginning of the backtest
+    signal_weight_df : pd.DataFrame
+        dataframe of signal weight.
+        index is datetime, columns are symbol, values are weight.
+        values must be positive and sum must not more than 1 each day.
+        nan values are ignored (not rebalance).
+    match_price_df : pd.DataFrame
+        dataframe of match price.
+        index is datetime, columns are symbol, values are weight.
+        index and columns must be same as or more than signal_weight_df.
+    pct_commission : float, default 0.0
+        percentage of commission fee
+    pct_buy_match_price : float, default 0.0
+        percentage of buy match price
+    pct_sell_match_price : float, default 0.0
+        percentage of sell match price
+
+    Returns
+    -------
+    Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]
+        Return snapshot at end of day:
+            - cash_df
+                - timestamp (index)
+                - cash
+            - position_df
+                - timestamp
+                - symbol
+                - volume
+                - avg_cost_price
+            - trade_df
+                - timestamp
+                - symbol
+                - volume
+                - price
+    """
     r_buy_match = 1.0 + pct_buy_match_price
     r_sell_match = 1.0 - pct_sell_match_price
     r_min_match = min(r_buy_match, r_sell_match)
@@ -25,7 +65,7 @@ def backtest(
         cash=initial_cash,
         pct_commission=pct_commission,
         position_dict={},  # TODO: initial position
-        trade_list=[],  # TODO: initial trade for result
+        trade_list=[],  # TODO: initial trade
     )
 
     sig_by_price_df = signal_weight_df / (match_price_df * r_max_match)
