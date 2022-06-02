@@ -48,17 +48,17 @@ class TestPlaceOrderBuy:
         [
             (
                 {},
-                {"A": Position(symbol="A", volume=100.0, cost_price=1.0)},
+                {"A": Position(symbol="A", volume=100.0, avg_cost_price=1.0)},
             ),
             (
-                {"A": Position(symbol="A", volume=100.0, cost_price=2.0)},
-                {"A": Position(symbol="A", volume=200.0, cost_price=1.5)},
+                {"A": Position(symbol="A", volume=100.0, avg_cost_price=2.0)},
+                {"A": Position(symbol="A", volume=200.0, avg_cost_price=1.5)},
             ),
             (
-                {"B": Position(symbol="B", volume=200.0, cost_price=2.0)},
+                {"B": Position(symbol="B", volume=200.0, avg_cost_price=2.0)},
                 {
-                    "A": Position(symbol="A", volume=100.0, cost_price=1.0),
-                    "B": Position(symbol="B", volume=200.0, cost_price=2.0),
+                    "A": Position(symbol="A", volume=100.0, avg_cost_price=1.0),
+                    "B": Position(symbol="B", volume=200.0, avg_cost_price=2.0),
                 },
             ),
         ],

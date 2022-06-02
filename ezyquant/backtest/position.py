@@ -5,7 +5,7 @@ from dataclasses import dataclass
 class Position:
     symbol: str
     volume: float = 0.0
-    cost_price: float = 0.0
+    avg_cost_price: float = 0.0
 
     def __post_init__(self):
         # TODO: remove assert after testing
@@ -21,16 +21,16 @@ class Position:
 
         # price
         assert (
-            self.cost_price >= 0
-        ), f"cost_price must be positive, got {self.cost_price}"
+            self.avg_cost_price >= 0
+        ), f"avg_cost_price must be positive, got {self.avg_cost_price}"
 
     @property
     def cost_value(self) -> float:
-        return self.volume * self.cost_price
+        return self.volume * self.avg_cost_price
 
     def place_order(self, volume: float, price: float) -> float:
         if volume > 0:
-            self.cost_price = (self.cost_value + (volume * price)) / (
+            self.avg_cost_price = (self.cost_value + (volume * price)) / (
                 self.volume + volume
             )
 

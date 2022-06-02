@@ -50,7 +50,7 @@ def check_position_df(df):
     # Column
     assert_index_equal(
         df.columns,
-        pd.Index(["symbol", "volume", "cost_price", "timestamp"]),
+        pd.Index(["symbol", "volume", "avg_cost_price", "timestamp"]),
     )
 
 
