@@ -62,6 +62,7 @@ class TestBacktest:
 
     @pytest.mark.parametrize("initial_cash", [10000.0])
     @pytest.mark.kwparametrize(
+        # Buy and hold
         dict(
             signal_weight_df=utils.make_data_df(
                 [[0.1], [0.1], [0.1]], n_row=3, n_col=1
@@ -71,7 +72,7 @@ class TestBacktest:
             pct_buy_match_price=0.0,
             pct_sell_match_price=0.0,
             expect_cash_df=pd.DataFrame(
-                {"cash": [9010.0, 9130.0, 9260]},
+                {"cash": [9010.0, 9130.0, 9260.0]},
                 index=utils.make_bdate_range(3),
             ),
             expect_position_df=pd.DataFrame(
@@ -91,6 +92,35 @@ class TestBacktest:
                 columns=["timestamp", "symbol", "volume", "price", "pct_commission"],
             ),
         ),
+        # Buy and hold full port
+        dict(
+            signal_weight_df=utils.make_data_df(
+                [[1.0], [1.0], [1.0]], n_row=3, n_col=1
+            ),
+            match_price_df=utils.make_data_df([[1.1], [1.2], [1.3]], n_row=3, n_col=1),
+            pct_commission=0.0,
+            pct_buy_match_price=0.0,
+            pct_sell_match_price=0.0,
+            expect_cash_df=pd.DataFrame(
+                {"cash": [100.0, 100.0, 100.0]},
+                index=utils.make_bdate_range(3),
+            ),
+            expect_position_df=pd.DataFrame(
+                [
+                    [pd.Timestamp("2000-01-03"), "AAA", 9000.0, 1.1],
+                    [pd.Timestamp("2000-01-04"), "AAA", 9000.0, 1.1],
+                    [pd.Timestamp("2000-01-05"), "AAA", 9000.0, 1.1],
+                ],
+                columns=["timestamp", "symbol", "volume", "avg_cost_price"],
+            ),
+            expect_trade_df=pd.DataFrame(
+                [
+                    [pd.Timestamp("2000-01-03"), "AAA", 9000.0, 1.1, 0.0],
+                ],
+                columns=["timestamp", "symbol", "volume", "price", "pct_commission"],
+            ),
+        ),
+        # Buy and Sell
         dict(
             signal_weight_df=utils.make_data_df(
                 [[0.1], [0.0], [0.1]], n_row=3, n_col=1
@@ -115,6 +145,93 @@ class TestBacktest:
                     [pd.Timestamp("2000-01-03"), "AAA", 900.0, 1.1, 0.0],
                     [pd.Timestamp("2000-01-04"), "AAA", -900.0, 1.2, 0.0],
                     [pd.Timestamp("2000-01-05"), "AAA", 700.0, 1.3, 0.0],
+                ],
+                columns=["timestamp", "symbol", "volume", "price", "pct_commission"],
+            ),
+        ),
+        # Buy and Sell full port
+        dict(
+            signal_weight_df=utils.make_data_df(
+                [[1.0], [0.0], [1.0]], n_row=3, n_col=1
+            ),
+            match_price_df=utils.make_data_df([[1.1], [1.2], [1.3]], n_row=3, n_col=1),
+            pct_commission=0.0,
+            pct_buy_match_price=0.0,
+            pct_sell_match_price=0.0,
+            expect_cash_df=pd.DataFrame(
+                {"cash": [100.0, 10900.0, 110.0]},
+                index=utils.make_bdate_range(3),
+            ),
+            expect_position_df=pd.DataFrame(
+                [
+                    [pd.Timestamp("2000-01-03"), "AAA", 9000.0, 1.1],
+                    [pd.Timestamp("2000-01-05"), "AAA", 8300.0, 1.3],
+                ],
+                columns=["timestamp", "symbol", "volume", "avg_cost_price"],
+            ),
+            expect_trade_df=pd.DataFrame(
+                [
+                    [pd.Timestamp("2000-01-03"), "AAA", 9000.0, 1.1, 0.0],
+                    [pd.Timestamp("2000-01-04"), "AAA", -9000.0, 1.2, 0.0],
+                    [pd.Timestamp("2000-01-05"), "AAA", 8300.0, 1.3, 0.0],
+                ],
+                columns=["timestamp", "symbol", "volume", "price", "pct_commission"],
+            ),
+        ),
+        # Buy and Sell full port with commission
+        dict(
+            signal_weight_df=utils.make_data_df(
+                [[1.0], [0.0], [1.0]], n_row=3, n_col=1
+            ),
+            match_price_df=utils.make_data_df([[1.1], [1.2], [1.3]], n_row=3, n_col=1),
+            pct_commission=0.1,
+            pct_buy_match_price=0.0,
+            pct_sell_match_price=0.0,
+            expect_cash_df=pd.DataFrame(
+                {"cash": [78.0, 8934.0, 68.00]},
+                index=utils.make_bdate_range(3),
+            ),
+            expect_position_df=pd.DataFrame(
+                [
+                    [pd.Timestamp("2000-01-03"), "AAA", 8200.0, 1.1],
+                    [pd.Timestamp("2000-01-05"), "AAA", 6200.0, 1.3],
+                ],
+                columns=["timestamp", "symbol", "volume", "avg_cost_price"],
+            ),
+            expect_trade_df=pd.DataFrame(
+                [
+                    [pd.Timestamp("2000-01-03"), "AAA", 8200.0, 1.1, 0.1],
+                    [pd.Timestamp("2000-01-04"), "AAA", -8200.0, 1.2, 0.1],
+                    [pd.Timestamp("2000-01-05"), "AAA", 6200.0, 1.3, 0.1],
+                ],
+                columns=["timestamp", "symbol", "volume", "price", "pct_commission"],
+            ),
+        ),
+        # Buy and Sell full port with pct_buy_match_price, pct_sell_match_price
+        dict(
+            signal_weight_df=utils.make_data_df(
+                [[1.0], [0.0], [1.0]], n_row=3, n_col=1
+            ),
+            match_price_df=utils.make_data_df([[1.1], [1.2], [1.3]], n_row=3, n_col=1),
+            pct_commission=0.0,
+            pct_buy_match_price=0.1,
+            pct_sell_match_price=0.1,
+            expect_cash_df=pd.DataFrame(
+                {"cash": [78.0, 8934.0, 68.00]},
+                index=utils.make_bdate_range(3),
+            ),
+            expect_position_df=pd.DataFrame(
+                [
+                    [pd.Timestamp("2000-01-03"), "AAA", 8200.0, 1.21],
+                    [pd.Timestamp("2000-01-05"), "AAA", 6200.0, 1.43],
+                ],
+                columns=["timestamp", "symbol", "volume", "avg_cost_price"],
+            ),
+            expect_trade_df=pd.DataFrame(
+                [
+                    [pd.Timestamp("2000-01-03"), "AAA", 8200.0, 1.21, 0.0],
+                    [pd.Timestamp("2000-01-04"), "AAA", -8200.0, 1.08, 0.0],
+                    [pd.Timestamp("2000-01-05"), "AAA", 6200.0, 1.43, 0.0],
                 ],
                 columns=["timestamp", "symbol", "volume", "price", "pct_commission"],
             ),

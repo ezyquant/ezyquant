@@ -61,6 +61,7 @@ def backtest(
     r_sell_match = 1.0 - pct_sell_match_price
     r_min_match = min(r_buy_match, r_sell_match)
     r_max_match = max(r_buy_match, r_sell_match)
+    r_commission = 1.0 + pct_commission
 
     pf = Portfolio(
         cash=initial_cash,
@@ -69,7 +70,7 @@ def backtest(
         trade_list=[],  # TODO: initial trade
     )
 
-    sig_by_price_df = signal_weight_df / (match_price_df * r_max_match)
+    sig_by_price_df = signal_weight_df / (match_price_df * r_max_match * r_commission)
 
     position_df_list: List[pd.DataFrame] = [
         pd.DataFrame(
