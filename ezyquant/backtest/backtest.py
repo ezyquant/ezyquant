@@ -13,7 +13,6 @@ def backtest(
     signal_weight_df: pd.DataFrame,
     match_price_df: pd.DataFrame,
     close_price_df: pd.DataFrame,
-    is_rebalance_df: pd.DataFrame,
     pct_commission: float = 0.0,
     pct_buy_match_price: float = 0.0,
     pct_sell_match_price: float = 0.0,
@@ -28,12 +27,6 @@ def backtest(
         cash=initial_cash,
         pct_commission=pct_commission,
         position_dict=initial_position_dict if initial_position_dict else {},
-    )
-
-    cash_signal_s = 1 - signal_weight_df.sum(axis=1)
-    signal_weight_df = signal_weight_df.where(is_rebalance_df, np.nan)
-    signal_weight_df = signal_weight_df.div(
-        signal_weight_df.sum(axis=1) + cash_signal_s, axis=0
     )
 
     sig_by_price_df = signal_weight_df / (match_price_df * r_max_match)
