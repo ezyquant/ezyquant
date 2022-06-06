@@ -3,15 +3,15 @@ import pytest
 import utils
 from pandas.testing import assert_frame_equal, assert_index_equal
 
-from ezyquant.backtest import backtest
+from ezyquant.backtest import backtest_target_weight
 
 
-class TestBacktest:
+class TestBacktestTargetWeight:
     @pytest.mark.parametrize("pct_commission", [0.0, 0.1])
     @pytest.mark.parametrize("pct_buy_match_price", [0.0, 0.1])
     @pytest.mark.parametrize("pct_sell_match_price", [0.0, 0.1])
     @pytest.mark.parametrize(
-        ("initial_cash", "signal_weight_df", "match_price_df"),
+        ("initial_cash", "signal_weight_df", "price_df"),
         [
             # cash
             (0.0, utils.make_signal_weight_df(), utils.make_price_df()),
@@ -31,16 +31,16 @@ class TestBacktest:
         self,
         initial_cash: float,
         signal_weight_df: pd.DataFrame,
-        match_price_df: pd.DataFrame,
+        price_df: pd.DataFrame,
         pct_commission: float,
         pct_buy_match_price: float,
         pct_sell_match_price: float,
     ):
         # Test
-        cash_df, position_df, trade_df = backtest(
+        cash_df, position_df, trade_df = backtest_target_weight(
             initial_cash=initial_cash,
             signal_weight_df=signal_weight_df,
-            match_price_df=match_price_df,
+            price_df=price_df,
             pct_commission=pct_commission,
             pct_buy_match_price=pct_buy_match_price,
             pct_sell_match_price=pct_sell_match_price,
@@ -49,7 +49,7 @@ class TestBacktest:
         # Check
         # cash_df
         utils.check_cash_df(cash_df)
-        assert_index_equal(match_price_df.index, cash_df.index)
+        assert_index_equal(price_df.index, cash_df.index)
         assert (cash_df == initial_cash).all().all()
 
         # position_df
@@ -67,7 +67,7 @@ class TestBacktest:
             signal_weight_df=utils.make_data_df(
                 [[0.1], [0.1], [0.1]], n_row=3, n_col=1
             ),
-            match_price_df=utils.make_data_df([[1.1], [1.2], [1.3]], n_row=3, n_col=1),
+            price_df=utils.make_data_df([[1.1], [1.2], [1.3]], n_row=3, n_col=1),
             pct_commission=0.0,
             pct_buy_match_price=0.0,
             pct_sell_match_price=0.0,
@@ -97,7 +97,7 @@ class TestBacktest:
             signal_weight_df=utils.make_data_df(
                 [[1.0], [1.0], [1.0]], n_row=3, n_col=1
             ),
-            match_price_df=utils.make_data_df([[1.1], [1.2], [1.3]], n_row=3, n_col=1),
+            price_df=utils.make_data_df([[1.1], [1.2], [1.3]], n_row=3, n_col=1),
             pct_commission=0.0,
             pct_buy_match_price=0.0,
             pct_sell_match_price=0.0,
@@ -125,7 +125,7 @@ class TestBacktest:
             signal_weight_df=utils.make_data_df(
                 [[0.1], [0.0], [0.1]], n_row=3, n_col=1
             ),
-            match_price_df=utils.make_data_df([[1.1], [1.2], [1.3]], n_row=3, n_col=1),
+            price_df=utils.make_data_df([[1.1], [1.2], [1.3]], n_row=3, n_col=1),
             pct_commission=0.0,
             pct_buy_match_price=0.0,
             pct_sell_match_price=0.0,
@@ -154,7 +154,7 @@ class TestBacktest:
             signal_weight_df=utils.make_data_df(
                 [[1.0], [0.0], [1.0]], n_row=3, n_col=1
             ),
-            match_price_df=utils.make_data_df([[1.1], [1.2], [1.3]], n_row=3, n_col=1),
+            price_df=utils.make_data_df([[1.1], [1.2], [1.3]], n_row=3, n_col=1),
             pct_commission=0.0,
             pct_buy_match_price=0.0,
             pct_sell_match_price=0.0,
@@ -183,7 +183,7 @@ class TestBacktest:
             signal_weight_df=utils.make_data_df(
                 [[1.0], [0.0], [1.0]], n_row=3, n_col=1
             ),
-            match_price_df=utils.make_data_df([[1.1], [1.2], [1.3]], n_row=3, n_col=1),
+            price_df=utils.make_data_df([[1.1], [1.2], [1.3]], n_row=3, n_col=1),
             pct_commission=0.1,
             pct_buy_match_price=0.0,
             pct_sell_match_price=0.0,
@@ -212,7 +212,7 @@ class TestBacktest:
             signal_weight_df=utils.make_data_df(
                 [[1.0], [0.0], [1.0]], n_row=3, n_col=1
             ),
-            match_price_df=utils.make_data_df([[1.1], [1.2], [1.3]], n_row=3, n_col=1),
+            price_df=utils.make_data_df([[1.1], [1.2], [1.3]], n_row=3, n_col=1),
             pct_commission=0.0,
             pct_buy_match_price=0.1,
             pct_sell_match_price=0.1,
@@ -241,7 +241,7 @@ class TestBacktest:
         self,
         initial_cash: float,
         signal_weight_df: pd.DataFrame,
-        match_price_df: pd.DataFrame,
+        price_df: pd.DataFrame,
         pct_commission: float,
         pct_buy_match_price: float,
         pct_sell_match_price: float,
@@ -250,10 +250,10 @@ class TestBacktest:
         expect_trade_df: pd.DataFrame,
     ):
         # Test
-        cash_df, position_df, trade_df = backtest(
+        cash_df, position_df, trade_df = backtest_target_weight(
             initial_cash=initial_cash,
             signal_weight_df=signal_weight_df,
-            match_price_df=match_price_df,
+            price_df=price_df,
             pct_commission=pct_commission,
             pct_buy_match_price=pct_buy_match_price,
             pct_sell_match_price=pct_sell_match_price,
@@ -262,7 +262,7 @@ class TestBacktest:
         # Check
         # cash_df
         utils.check_cash_df(cash_df)
-        assert_index_equal(match_price_df.index, cash_df.index)
+        assert_index_equal(price_df.index, cash_df.index)
         assert_frame_equal(cash_df, expect_cash_df)
 
         # position_df
@@ -289,7 +289,7 @@ class TestBacktest:
                 n_row=3,
                 n_col=2,
             ),
-            match_price_df=utils.make_data_df(
+            price_df=utils.make_data_df(
                 [
                     [1.1, 2.1],
                     [1.2, 2.2],
@@ -331,7 +331,7 @@ class TestBacktest:
         self,
         initial_cash: float,
         signal_weight_df: pd.DataFrame,
-        match_price_df: pd.DataFrame,
+        price_df: pd.DataFrame,
         pct_commission: float,
         pct_buy_match_price: float,
         pct_sell_match_price: float,
@@ -342,7 +342,7 @@ class TestBacktest:
         self.test_one_symbol(
             initial_cash=initial_cash,
             signal_weight_df=signal_weight_df,
-            match_price_df=match_price_df,
+            price_df=price_df,
             pct_commission=pct_commission,
             pct_buy_match_price=pct_buy_match_price,
             pct_sell_match_price=pct_sell_match_price,

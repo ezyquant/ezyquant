@@ -9,10 +9,10 @@ from .position import Position
 from .trade import Trade
 
 
-def backtest(
+def backtest_target_weight(
     initial_cash: float,
     signal_weight_df: pd.DataFrame,
-    match_price_df: pd.DataFrame,
+    price_df: pd.DataFrame,
     pct_commission: float = 0.0,
     pct_buy_match_price: float = 0.0,
     pct_sell_match_price: float = 0.0,
@@ -28,7 +28,7 @@ def backtest(
         index is datetime, columns are symbol, values are weight.
         values must be positive and sum must not more than 1 each day.
         nan values are ignored (not rebalance).
-    match_price_df : pd.DataFrame
+    price_df : pd.DataFrame
         dataframe of match price.
         index is datetime, columns are symbol, values are weight.
         index and columns must be same as or more than signal_weight_df.
@@ -70,7 +70,7 @@ def backtest(
         trade_list=[],  # TODO: initial trade
     )
 
-    sig_by_price_df = signal_weight_df / (match_price_df * r_max_match * r_commission)
+    sig_by_price_df = signal_weight_df / (price_df * r_max_match * r_commission)
 
     position_df_list: List[pd.DataFrame] = [
         pd.DataFrame(
@@ -112,7 +112,7 @@ def backtest(
 
         return pf.cash
 
-    cash_df = match_price_df.apply(on_interval, axis=1).to_frame("cash")
+    cash_df = price_df.apply(on_interval, axis=1).to_frame("cash")
     position_df = pd.concat(position_df_list, ignore_index=True)
     trade_df = pd.DataFrame(
         pf.trade_list, columns=[i.name for i in fields(Trade)], dtype="float64"
