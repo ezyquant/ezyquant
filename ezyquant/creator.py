@@ -68,6 +68,8 @@ class SETSignalCreator:
         """Get DataFrame which columns are symbol in universe and index is
         trade date from start_date to end_date.
 
+        Banned symbol will be replaced with nan.
+
         Parameters
         ----------
         field : str
@@ -277,6 +279,8 @@ class SETSignalCreator:
             )
 
         df.index.freq = None  # type: ignore
+
+        df = df.mask(self.is_banned(), np.nan)
 
         return df
 
