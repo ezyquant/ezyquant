@@ -9,7 +9,7 @@ from .position import Position
 from .trade import Trade
 
 
-def backtest_target_weight(
+def _backtest_target_weight(
     initial_cash: float,
     signal_weight_df: pd.DataFrame,
     price_df: pd.DataFrame,
@@ -17,7 +17,7 @@ def backtest_target_weight(
     pct_buy_match_price: float = 0.0,
     pct_sell_match_price: float = 0.0,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Backtest.
+    """Backtest Target Weight.
 
     Parameters
     ----------
@@ -25,12 +25,12 @@ def backtest_target_weight(
         cash at the beginning of the backtest
     signal_weight_df : pd.DataFrame
         dataframe of signal weight.
-        index is datetime, columns are symbol, values are weight.
+        index is trade date, columns are symbol, values are weight.
         values must be positive and sum must not more than 1 each day.
-        nan values are ignored (not rebalance).
+        missing trade date or nan row is not rebalance.
     price_df : pd.DataFrame
         dataframe of match price.
-        index is datetime, columns are symbol, values are weight.
+        index is trade date, columns are symbol, values are weight.
         index and columns must be same as or more than signal_weight_df.
     pct_commission : float, default 0.0
         percentage of commission fee
@@ -73,6 +73,7 @@ def backtest_target_weight(
     sig_by_price_df = signal_weight_df / (price_df * r_max_match * r_commission)
 
     position_df_list: List[pd.DataFrame] = [
+        # First dataframe for sort columns
         pd.DataFrame(
             columns=["timestamp"] + [i.name for i in fields(Position)], dtype="float64"
         )
