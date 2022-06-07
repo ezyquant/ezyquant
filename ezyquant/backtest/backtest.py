@@ -72,8 +72,8 @@ def _backtest_target_weight(
 
     r_commission = 1.0 + pct_commission
 
-    min_price_df = pd.concat([buy_price_df, sell_price_df]).min(level=0)
-    max_price_df = pd.concat([buy_price_df, sell_price_df]).max(level=0)
+    min_price_df = pd.concat([buy_price_df, sell_price_df]).groupby(level=0).min()
+    max_price_df = pd.concat([buy_price_df, sell_price_df]).groupby(level=0).max()
 
     pf = Portfolio(
         cash=initial_cash,
@@ -130,9 +130,7 @@ def _backtest_target_weight(
     assert isinstance(cash_s, pd.Series)
 
     position_df = pd.concat(position_df_list, ignore_index=True)
-    trade_df = pd.DataFrame(
-        pf.trade_list, columns=[i.name for i in fields(Trade)], dtype="float64"
-    )
+    trade_df = pd.DataFrame(pf.trade_list, columns=[i.name for i in fields(Trade)])
 
     return cash_s, position_df, trade_df
 
