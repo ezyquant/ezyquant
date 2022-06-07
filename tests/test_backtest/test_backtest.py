@@ -5,10 +5,10 @@ from pandas.testing import assert_frame_equal, assert_index_equal
 
 from ezyquant.backtest import _backtest_target_weight
 
+nan = float("nan")
+
 position_columns = ["timestamp", "symbol", "volume", "avg_cost_price"]
 trade_columns = ["timestamp", "symbol", "volume", "price", "pct_commission"]
-
-nan = float("nan")
 
 
 class TestBacktestTargetWeightNoTrade:
@@ -69,9 +69,28 @@ class TestBacktestTargetWeightNoTrade:
 @pytest.mark.parametrize("initial_cash", [10000.0])
 @pytest.mark.parametrize(
     "price_df",
-    [utils.make_data_df([[1.1, 2.1], [1.2, 2.2], [1.3, 2.3]], n_row=3, n_col=2)],
+    [
+        utils.make_data_df(
+            [
+                [1.1, 2.1],
+                [1.2, 2.2],
+                [1.3, 2.3],
+            ],
+            n_row=3,
+            n_col=2,
+        ),
+        utils.make_data_df(
+            [
+                [1.1, 2.1, 0.0],
+                [1.2, 2.2, 0.0],
+                [1.3, 2.3, 0.0],
+            ],
+            n_row=3,
+            n_col=3,
+        ),
+    ],
 )
-class TestBacktestTargetWeightSamePrice:
+class TestBacktestTargetWeight:
     @pytest.mark.kwparametrize(
         # Buy and hold
         dict(
@@ -393,4 +412,70 @@ class TestBacktestTargetWeightSamePrice:
             expect_cash_df=expect_cash_df,
             expect_position_df=expect_position_df,
             expect_trade_df=expect_trade_df,
+        )
+
+    @pytest.mark.kwparametrize(
+        dict(
+            signal_weight_df=utils.make_data_df([0.1, 0.1, 0.1], n_row=3, n_col=1),
+            sell_price_df=utils.make_data_df(
+                [[1.15], [1.25], [1.35]], n_row=3, n_col=1
+            ),
+            pct_commission=0.0,
+            expect_cash_df=pd.DataFrame(
+                {"cash": [9120.0, 9120.0, 9255.0]},
+                index=utils.make_bdate_range(3),
+            ),
+            expect_position_df=pd.DataFrame(
+                [
+                    [pd.Timestamp("2000-01-03"), "AAA", 800.0, 1.1],
+                    [pd.Timestamp("2000-01-04"), "AAA", 800.0, 1.1],
+                    [pd.Timestamp("2000-01-05"), "AAA", 700.0, 1.1],
+                ],
+                columns=position_columns,
+            ),
+            expect_trade_df=pd.DataFrame(
+                [
+                    [pd.Timestamp("2000-01-03"), "AAA", 800.0, 1.1, 0.0],
+                    [pd.Timestamp("2000-01-05"), "AAA", -100.0, 1.35, 0.0],
+                ],
+                columns=trade_columns,
+            ),
+        ),
+    )
+    def test_buy_sell_price(
+        self,
+        initial_cash: float,
+        signal_weight_df: pd.DataFrame,
+        price_df: pd.DataFrame,
+        sell_price_df: pd.DataFrame,
+        pct_commission: float,
+        expect_cash_df: pd.DataFrame,
+        expect_position_df: pd.DataFrame,
+        expect_trade_df: pd.DataFrame,
+    ):
+        # Test
+        cash_df, position_df, trade_df = _backtest_target_weight(
+            initial_cash=initial_cash,
+            signal_weight_df=signal_weight_df,
+            buy_price_df=price_df,
+            sell_price_df=sell_price_df,
+            pct_commission=pct_commission,
+        )
+
+        # Check
+        # cash_df
+        utils.check_cash_df(cash_df)
+        assert_index_equal(price_df.index, cash_df.index)
+        assert_frame_equal(cash_df, expect_cash_df)
+
+        # position_df
+        utils.check_position_df(position_df)
+        utils.assert_frame_equal_sort_index(
+            position_df, expect_position_df, check_dtype=False
+        )
+
+        # trade_df
+        utils.check_trade_df(trade_df)
+        utils.assert_frame_equal_sort_index(
+            trade_df, expect_trade_df, check_dtype=False
         )
