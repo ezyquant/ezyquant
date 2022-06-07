@@ -83,8 +83,10 @@ def backtest_target_weight(
 
         trade_value = pf.cash + (pf.volume_series * match_price_s * r_min_match).sum()
         target_volume_s = trade_value * sig_by_price_df.loc[ts]  # type: ignore
-        target_volume_s = utils.round_df_100(target_volume_s)
-        trade_volume_s = target_volume_s.sub(pf.volume_series, fill_value=0)
+        trade_volume_s = target_volume_s - pf.volume_series.reindex(
+            target_volume_s.index, fill_value=0
+        )
+        trade_volume_s = utils.round_df_100(trade_volume_s)
 
         # Sell
         for k, v in trade_volume_s[trade_volume_s < 0].items():
