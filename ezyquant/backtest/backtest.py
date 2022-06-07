@@ -12,10 +12,9 @@ from .trade import Trade
 def _backtest_target_weight(
     initial_cash: float,
     signal_weight_df: pd.DataFrame,
-    price_df: pd.DataFrame,
+    buy_price_df: pd.DataFrame,
+    sell_price_df: pd.DataFrame,
     pct_commission: float = 0.0,
-    pct_buy_match_price: float = 0.0,
-    pct_sell_match_price: float = 0.0,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Backtest Target Weight.
 
@@ -57,11 +56,10 @@ def _backtest_target_weight(
                 - volume
                 - price
     """
-    r_buy_match = 1.0 + pct_buy_match_price
-    r_sell_match = 1.0 - pct_sell_match_price
-    r_min_match = min(r_buy_match, r_sell_match)
-    r_max_match = max(r_buy_match, r_sell_match)
     r_commission = 1.0 + pct_commission
+
+    min_price_df = pd.concat([buy_price_df, sell_price_df]).min(level=0)
+    max_price_df = pd.concat([buy_price_df, sell_price_df]).max(level=0)
 
     pf = Portfolio(
         cash=initial_cash,
@@ -70,7 +68,7 @@ def _backtest_target_weight(
         trade_list=[],  # TODO: initial trade
     )
 
-    sig_by_price_df = signal_weight_df / (price_df * r_max_match * r_commission)
+    sig_by_price_df = signal_weight_df / max_price_df / r_commission
 
     position_df_list: List[pd.DataFrame] = [
         # First dataframe for sort columns
@@ -79,10 +77,10 @@ def _backtest_target_weight(
         )
     ]
 
-    def on_interval(match_price_s: pd.Series) -> float:
-        ts = match_price_s.name
+    def on_interval(buy_price_s: pd.Series) -> float:
+        ts = buy_price_s.name
 
-        trade_value = pf.cash + (pf.volume_series * match_price_s * r_min_match).sum()
+        trade_value = pf.cash + (pf.volume_series * min_price_df.loc[ts]).sum()  # type: ignore
         target_volume_s = trade_value * sig_by_price_df.loc[ts]  # type: ignore
         trade_volume_s = target_volume_s - pf.volume_series.reindex(
             target_volume_s.index, fill_value=0
@@ -90,22 +88,21 @@ def _backtest_target_weight(
         trade_volume_s = utils.round_df_100(trade_volume_s)
 
         # Sell
+        sell_price_s = sell_price_df.loc[ts]  # type: ignore
         for k, v in trade_volume_s[trade_volume_s < 0].items():
-            price = match_price_s[k] * r_sell_match  # type: ignore
             pf.place_order(
                 symbol=k,  # type: ignore
                 volume=v,  # type: ignore
-                price=price,
+                price=sell_price_s[k],
                 timestamp=ts,  # type: ignore
             )
 
         # Buy
         for k, v in trade_volume_s[trade_volume_s > 0].items():
-            price = match_price_s[k] * r_buy_match  # type: ignore
             pf.place_order(
                 symbol=k,  # type: ignore
                 volume=v,  # type: ignore
-                price=price,
+                price=buy_price_s[k],  # type: ignore
                 timestamp=ts,  # type: ignore
             )
 
@@ -115,7 +112,7 @@ def _backtest_target_weight(
 
         return pf.cash
 
-    cash_df = price_df.apply(on_interval, axis=1).to_frame("cash")
+    cash_df = buy_price_df.apply(on_interval, axis=1).to_frame("cash")
     position_df = pd.concat(position_df_list, ignore_index=True)
     trade_df = pd.DataFrame(
         pf.trade_list, columns=[i.name for i in fields(Trade)], dtype="float64"
