@@ -26,7 +26,7 @@ def _backtest_target_weight(
         dataframe of signal weight.
         index is trade date, columns are symbol, values are weight.
         values must be positive and sum must not more than 1 each day.
-        missing trade date or nan row is not rebalance.
+        missing index or nan row is not rebalance.
     price_df : pd.DataFrame
         dataframe of match price.
         index is trade date, columns are symbol, values are weight.
@@ -56,6 +56,11 @@ def _backtest_target_weight(
                 - volume
                 - price
     """
+    buy_price_df = buy_price_df[signal_weight_df.columns]
+    sell_price_df = sell_price_df[signal_weight_df.columns]
+    _validate_price_df(buy_price_df, sell_price_df)
+    _validate_signal_df(signal_weight_df, buy_price_df.index)
+
     r_commission = 1.0 + pct_commission
 
     min_price_df = pd.concat([buy_price_df, sell_price_df]).min(level=0)
@@ -119,3 +124,39 @@ def _backtest_target_weight(
     )
 
     return cash_df, position_df, trade_df
+
+
+def _validate_price_df(buy_price_df: pd.DataFrame, sell_price_df: pd.DataFrame):
+    idx = buy_price_df.index
+
+    if not isinstance(idx, pd.DatetimeIndex):
+        raise ValueError("buy_price_df index must be DatetimeIndex")
+    if not idx.is_monotonic_increasing:
+        raise ValueError("buy_price_df index must be monotonic increasing")
+    if not idx.is_unique:
+        raise ValueError("buy_price_df index must be unique")
+    if not idx.equals(sell_price_df.index):
+        raise ValueError("buy_price_df and sell_price_df index must be same")
+
+    if buy_price_df.empty:
+        raise ValueError("buy_price_df must not be empty")
+
+
+def _validate_signal_df(signal_df: pd.DataFrame, trade_date_index: pd.Index):
+    idx = signal_df.index
+
+    if not idx.is_monotonic_increasing:
+        raise ValueError("signal_df index must be monotonic increasing")
+    if not idx.is_unique:
+        raise ValueError("signal_df index must be unique")
+    if not idx.isin(trade_date_index).all():
+        raise ValueError("signal_df index must be trade date")
+
+    signal_df = signal_df.dropna(how="all")
+
+    if signal_df.isnull().values.any():
+        raise ValueError("signal_df must be nan all row")
+    if not signal_df.sum(axis=1).between(0, 1).all():
+        raise ValueError(
+            "signal_df must be positive and sum must not more than 1 each day"
+        )

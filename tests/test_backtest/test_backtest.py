@@ -22,9 +22,6 @@ class TestBacktestTargetWeightNoTrade:
             # signal
             (1000.0, utils.make_data_df(0), utils.make_price_df()),
             (1000.0, utils.make_data_df(nan), utils.make_price_df()),
-            (1000.0, utils.make_data_df(0, n_row=0), utils.make_price_df()),
-            (1000.0, utils.make_data_df(0, n_col=0), utils.make_price_df()),
-            (1000.0, utils.make_data_df(0, n_row=0, n_col=0), utils.make_price_df()),
             (
                 1000.0,
                 utils.make_data_df([0, nan, 0, nan], n_row=4, n_col=1),
@@ -453,6 +450,8 @@ class TestBacktestTargetWeight:
         expect_position_df: pd.DataFrame,
         expect_trade_df: pd.DataFrame,
     ):
+        price_df = price_df[sell_price_df.columns]
+
         # Test
         cash_df, position_df, trade_df = _backtest_target_weight(
             initial_cash=initial_cash,
