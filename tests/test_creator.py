@@ -197,7 +197,7 @@ class TestGetData:
 
         # Check
         expect = pd.DataFrame(
-            {"THAI": [3.32] * 9},
+            {"THAI": nan},
             index=pd.DatetimeIndex(
                 [
                     "2021-05-18",
@@ -297,6 +297,13 @@ class TestGetData:
         # Mock
         ssc._reindex_trade_date = lambda df, **kwargs: df
         ssc._sdr._get_fundamental_data = Mock(return_value=data)
+        ssc.is_banned = Mock(
+            return_value=pd.DataFrame(
+                False,  # type: ignore
+                columns=data.columns,
+                index=data.index,
+            )
+        )
 
         # Test
         result = ssc.get_data(
