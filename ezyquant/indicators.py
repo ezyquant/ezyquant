@@ -594,9 +594,9 @@ class TA:
         close: pd.DataFrame,
         window: int = 20,
         window_atr: int = 10,
-        fillna: bool = False,
-        original_version: bool = True,
         multiplier: int = 2,
+        original_version: bool = False,
+        fillna: bool = False,
     ) -> Tuple[
         pd.DataFrame,
         pd.DataFrame,
