@@ -197,7 +197,7 @@ class TestTa:
         for i in result:
             self._check(i)
 
-    @pytest.mark.parametrize("n_row", [1, 20])
+    @pytest.mark.parametrize("n_row", [10, 20])
     @pytest.mark.parametrize("n_col", [1, 20])
     def test_kc(self, n_row: int, n_col: int):
         # Mock
