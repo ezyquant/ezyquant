@@ -27,16 +27,16 @@ def _backtest_target_weight(
         index is trade date, columns are symbol, values are weight.
         values must be positive and sum must not more than 1 each day.
         missing index or nan row is not rebalance.
-    price_df : pd.DataFrame
-        dataframe of match price.
+    buy_price_df : pd.DataFrame
+        dataframe of buy price.
+        index is trade date, columns are symbol, values are weight.
+        index and columns must be same as or more than signal_weight_df.
+    sell_price_df : pd.DataFrame
+        dataframe of sell price.
         index is trade date, columns are symbol, values are weight.
         index and columns must be same as or more than signal_weight_df.
     pct_commission : float, default 0.0
         percentage of commission fee
-    pct_buy_match_price : float, default 0.0
-        percentage of buy match price
-    pct_sell_match_price : float, default 0.0
-        percentage of sell match price
 
     Returns
     -------
