@@ -42,22 +42,19 @@ def check_data_symbol_daily(result):
     assert_index_equal(result.columns, result.columns.str.upper())
 
 
-def check_cash_df(df):
-    assert isinstance(df, pd.DataFrame)
+def check_cash_series(series):
+    assert isinstance(series, pd.Series)
 
     # Index
-    check_index_daily(df.index)
-
-    # Column
-    assert_index_equal(df.columns, pd.Index(["cash"]))
+    check_index_daily(series.index)
 
     # Data type
-    assert ptypes.is_float_dtype(df["cash"])
+    assert ptypes.is_float_dtype(series)
 
     # Cash
-    assert (df["cash"] >= 0).all()
+    assert (series >= 0).all()
 
-    assert not df.empty
+    assert not series.empty
 
 
 def check_position_df(df):

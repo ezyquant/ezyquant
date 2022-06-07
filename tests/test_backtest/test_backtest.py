@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 import utils
-from pandas.testing import assert_frame_equal, assert_index_equal
+from pandas.testing import assert_index_equal, assert_series_equal
 
 from ezyquant.backtest import _backtest_target_weight
 
@@ -40,7 +40,7 @@ class TestBacktestTargetWeightNoTrade:
         pct_commission: float,
     ):
         # Test
-        cash_df, position_df, trade_df = _backtest_target_weight(
+        cash_series, position_df, trade_df = _backtest_target_weight(
             initial_cash=initial_cash,
             signal_weight_df=signal_weight_df,
             buy_price_df=price_df,
@@ -49,10 +49,10 @@ class TestBacktestTargetWeightNoTrade:
         )
 
         # Check
-        # cash_df
-        utils.check_cash_df(cash_df)
-        assert_index_equal(price_df.index, cash_df.index)
-        assert (cash_df == initial_cash).all().all()
+        # cash_series
+        utils.check_cash_series(cash_series)
+        assert_index_equal(price_df.index, cash_series.index)
+        assert (cash_series == initial_cash).all()
 
         # position_df
         utils.check_position_df(position_df)
@@ -93,8 +93,8 @@ class TestBacktestTargetWeight:
         dict(
             signal_weight_df=utils.make_data_df([0.1, 0.1, 0.1], n_row=3, n_col=1),
             pct_commission=0.0,
-            expect_cash_df=pd.DataFrame(
-                {"cash": [9010.0, 9130.0, 9260.0]},
+            expect_cash_series=pd.Series(
+                [9010.0, 9130.0, 9260.0],
                 index=utils.make_bdate_range(3),
             ),
             expect_position_df=pd.DataFrame(
@@ -120,8 +120,8 @@ class TestBacktestTargetWeight:
                 [[1.0], [1.0], [1.0]], n_row=3, n_col=1
             ),
             pct_commission=0.0,
-            expect_cash_df=pd.DataFrame(
-                {"cash": [100.0, 100.0, 100.0]},
+            expect_cash_series=pd.Series(
+                [100.0, 100.0, 100.0],
                 index=utils.make_bdate_range(3),
             ),
             expect_position_df=pd.DataFrame(
@@ -145,8 +145,8 @@ class TestBacktestTargetWeight:
                 [[0.1], [0.0], [0.1]], n_row=3, n_col=1
             ),
             pct_commission=0.0,
-            expect_cash_df=pd.DataFrame(
-                {"cash": [9010.00, 10090.00, 9180.00]},
+            expect_cash_series=pd.Series(
+                [9010.00, 10090.00, 9180.00],
                 index=utils.make_bdate_range(3),
             ),
             expect_position_df=pd.DataFrame(
@@ -171,8 +171,8 @@ class TestBacktestTargetWeight:
                 [[1.0], [0.0], [1.0]], n_row=3, n_col=1
             ),
             pct_commission=0.0,
-            expect_cash_df=pd.DataFrame(
-                {"cash": [100.0, 10900.0, 110.0]},
+            expect_cash_series=pd.Series(
+                [100.0, 10900.0, 110.0],
                 index=utils.make_bdate_range(3),
             ),
             expect_position_df=pd.DataFrame(
@@ -197,8 +197,8 @@ class TestBacktestTargetWeight:
                 [[1.0], [0.0], [1.0]], n_row=3, n_col=1
             ),
             pct_commission=0.1,
-            expect_cash_df=pd.DataFrame(
-                {"cash": [78.0, 8934.0, 68.00]},
+            expect_cash_series=pd.Series(
+                [78.0, 8934.0, 68.00],
                 index=utils.make_bdate_range(3),
             ),
             expect_position_df=pd.DataFrame(
@@ -224,12 +224,12 @@ class TestBacktestTargetWeight:
         signal_weight_df: pd.DataFrame,
         price_df: pd.DataFrame,
         pct_commission: float,
-        expect_cash_df: pd.DataFrame,
+        expect_cash_series: pd.Series,
         expect_position_df: pd.DataFrame,
         expect_trade_df: pd.DataFrame,
     ):
         # Test
-        cash_df, position_df, trade_df = _backtest_target_weight(
+        cash_series, position_df, trade_df = _backtest_target_weight(
             initial_cash=initial_cash,
             signal_weight_df=signal_weight_df,
             buy_price_df=price_df,
@@ -238,10 +238,10 @@ class TestBacktestTargetWeight:
         )
 
         # Check
-        # cash_df
-        utils.check_cash_df(cash_df)
-        assert_index_equal(price_df.index, cash_df.index)
-        assert_frame_equal(cash_df, expect_cash_df)
+        # cash_series
+        utils.check_cash_series(cash_series)
+        assert_index_equal(price_df.index, cash_series.index)
+        assert_series_equal(cash_series, expect_cash_series)
 
         # position_df
         utils.check_position_df(position_df)
@@ -262,8 +262,8 @@ class TestBacktestTargetWeight:
                 [[0.1], [nan], [0.1]], n_row=3, n_col=1
             ),
             pct_commission=0.0,
-            expect_cash_df=pd.DataFrame(
-                {"cash": [9010.0, 9010.0, 9270.0]},
+            expect_cash_series=pd.Series(
+                [9010.0, 9010.0, 9270.0],
                 index=utils.make_bdate_range(3),
             ),
             expect_position_df=pd.DataFrame(
@@ -288,8 +288,8 @@ class TestBacktestTargetWeight:
                 [[1.0], [nan], [1.0]], n_row=3, n_col=1
             ),
             pct_commission=0.0,
-            expect_cash_df=pd.DataFrame(
-                {"cash": [100.0, 100.0, 100.0]},
+            expect_cash_series=pd.Series(
+                [100.0, 100.0, 100.0],
                 index=utils.make_bdate_range(3),
             ),
             expect_position_df=pd.DataFrame(
@@ -313,8 +313,8 @@ class TestBacktestTargetWeight:
                 [[nan], [0.1], [0.1]], n_row=3, n_col=1
             ),
             pct_commission=0.0,
-            expect_cash_df=pd.DataFrame(
-                {"cash": [10000.0, 9040.0, 9170.0]},
+            expect_cash_series=pd.Series(
+                [10000.0, 9040.0, 9170.0],
                 index=utils.make_bdate_range(3),
             ),
             expect_position_df=pd.DataFrame(
@@ -339,7 +339,7 @@ class TestBacktestTargetWeight:
         signal_weight_df: pd.DataFrame,
         price_df: pd.DataFrame,
         pct_commission: float,
-        expect_cash_df: pd.DataFrame,
+        expect_cash_series: pd.Series,
         expect_position_df: pd.DataFrame,
         expect_trade_df: pd.DataFrame,
     ):
@@ -348,7 +348,7 @@ class TestBacktestTargetWeight:
             signal_weight_df=signal_weight_df,
             price_df=price_df,
             pct_commission=pct_commission,
-            expect_cash_df=expect_cash_df,
+            expect_cash_series=expect_cash_series,
             expect_position_df=expect_position_df,
             expect_trade_df=expect_trade_df,
         )
@@ -365,8 +365,8 @@ class TestBacktestTargetWeight:
                 n_col=2,
             ),
             pct_commission=0.0,
-            expect_cash_df=pd.DataFrame(
-                {"cash": [8170.0, 8290.0, 8420.0]},
+            expect_cash_series=pd.Series(
+                [8170.0, 8290.0, 8420.0],
                 index=utils.make_bdate_range(3),
             ),
             expect_position_df=pd.DataFrame(
@@ -397,7 +397,7 @@ class TestBacktestTargetWeight:
         signal_weight_df: pd.DataFrame,
         price_df: pd.DataFrame,
         pct_commission: float,
-        expect_cash_df: pd.DataFrame,
+        expect_cash_series: pd.Series,
         expect_position_df: pd.DataFrame,
         expect_trade_df: pd.DataFrame,
     ):
@@ -406,7 +406,7 @@ class TestBacktestTargetWeight:
             signal_weight_df=signal_weight_df,
             price_df=price_df,
             pct_commission=pct_commission,
-            expect_cash_df=expect_cash_df,
+            expect_cash_series=expect_cash_series,
             expect_position_df=expect_position_df,
             expect_trade_df=expect_trade_df,
         )
@@ -418,8 +418,8 @@ class TestBacktestTargetWeight:
                 [[1.15], [1.25], [1.35]], n_row=3, n_col=1
             ),
             pct_commission=0.0,
-            expect_cash_df=pd.DataFrame(
-                {"cash": [9120.0, 9120.0, 9255.0]},
+            expect_cash_series=pd.Series(
+                [9120.0, 9120.0, 9255.0],
                 index=utils.make_bdate_range(3),
             ),
             expect_position_df=pd.DataFrame(
@@ -446,14 +446,14 @@ class TestBacktestTargetWeight:
         price_df: pd.DataFrame,
         sell_price_df: pd.DataFrame,
         pct_commission: float,
-        expect_cash_df: pd.DataFrame,
+        expect_cash_series: pd.Series,
         expect_position_df: pd.DataFrame,
         expect_trade_df: pd.DataFrame,
     ):
         price_df = price_df[sell_price_df.columns]
 
         # Test
-        cash_df, position_df, trade_df = _backtest_target_weight(
+        cash_series, position_df, trade_df = _backtest_target_weight(
             initial_cash=initial_cash,
             signal_weight_df=signal_weight_df,
             buy_price_df=price_df,
@@ -462,10 +462,10 @@ class TestBacktestTargetWeight:
         )
 
         # Check
-        # cash_df
-        utils.check_cash_df(cash_df)
-        assert_index_equal(price_df.index, cash_df.index)
-        assert_frame_equal(cash_df, expect_cash_df)
+        # cash_series
+        utils.check_cash_series(cash_series)
+        assert_index_equal(price_df.index, cash_series.index)
+        assert_series_equal(cash_series, expect_cash_series)
 
         # position_df
         utils.check_position_df(position_df)

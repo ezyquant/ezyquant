@@ -15,7 +15,7 @@ def _backtest_target_weight(
     buy_price_df: pd.DataFrame,
     sell_price_df: pd.DataFrame,
     pct_commission: float = 0.0,
-) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+) -> Tuple[pd.Series, pd.DataFrame, pd.DataFrame]:
     """Backtest Target Weight.
 
     Parameters
@@ -40,9 +40,9 @@ def _backtest_target_weight(
 
     Returns
     -------
-    Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]
+    Tuple[pd.Series, pd.DataFrame, pd.DataFrame]
         Return snapshot at end of day:
-            - cash_df
+            - cash_series
                 - timestamp (index)
                 - cash
             - position_df
@@ -55,6 +55,7 @@ def _backtest_target_weight(
                 - symbol
                 - volume
                 - price
+                - pct_commission
     """
     buy_price_df = buy_price_df[signal_weight_df.columns]
     sell_price_df = sell_price_df[signal_weight_df.columns]
@@ -117,13 +118,15 @@ def _backtest_target_weight(
 
         return pf.cash
 
-    cash_df = buy_price_df.apply(on_interval, axis=1).to_frame("cash")
+    cash_s = buy_price_df.apply(on_interval, axis=1)
+    assert isinstance(cash_s, pd.Series)
+
     position_df = pd.concat(position_df_list, ignore_index=True)
     trade_df = pd.DataFrame(
         pf.trade_list, columns=[i.name for i in fields(Trade)], dtype="float64"
     )
 
-    return cash_df, position_df, trade_df
+    return cash_s, position_df, trade_df
 
 
 def _validate_price_df(buy_price_df: pd.DataFrame, sell_price_df: pd.DataFrame):
