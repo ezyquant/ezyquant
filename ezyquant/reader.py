@@ -3,7 +3,6 @@ from datetime import date
 from functools import lru_cache
 from typing import Dict, List, Optional
 
-import numpy as np
 import pandas as pd
 import sqlalchemy as sa
 from sqlalchemy import Column, MetaData, Table, and_, case, func, select
@@ -1903,7 +1902,7 @@ class SETDataReader:
         col_name_list = [i.name for i in stmt.selected_columns]
 
         if VALUE in col_name_list:
-            dtype = {VALUE: np.float64}
+            dtype = {VALUE: "float64"}
         else:
             dtype = None
 
