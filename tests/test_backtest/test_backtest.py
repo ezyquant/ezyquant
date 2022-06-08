@@ -478,3 +478,37 @@ class TestBacktestTargetWeight:
         utils.assert_frame_equal_sort_index(
             trade_df, expect_trade_df, check_dtype=False
         )
+
+
+@pytest.mark.parametrize("initial_cash", [1e2, 1e6])
+@pytest.mark.parametrize("pct_commission", [0.0, 0.0025, 0.1])
+@pytest.mark.parametrize(
+    "signal_weight_df", [utils.make_signal_weight_df(n_row=2000, n_col=800)]
+)
+@pytest.mark.parametrize("buy_price_df", [utils.make_price_df(n_row=2000, n_col=800)])
+@pytest.mark.parametrize("sell_price_df", [utils.make_price_df(n_row=2000, n_col=800)])
+def test_random_input(
+    initial_cash: float,
+    signal_weight_df: pd.DataFrame,
+    buy_price_df: pd.DataFrame,
+    sell_price_df: pd.DataFrame,
+    pct_commission: float,
+):
+    cash_series, position_df, trade_df = _backtest_target_weight(
+        initial_cash=initial_cash,
+        signal_weight_df=signal_weight_df,
+        buy_price_df=buy_price_df,
+        sell_price_df=sell_price_df,
+        pct_commission=pct_commission,
+    )
+
+    # Check
+    # cash_series
+    utils.check_cash_series(cash_series)
+    assert_index_equal(buy_price_df.index, cash_series.index)
+
+    # position_df
+    utils.check_position_df(position_df)
+
+    # trade_df
+    utils.check_trade_df(trade_df)

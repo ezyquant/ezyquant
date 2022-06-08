@@ -117,20 +117,28 @@ def make_bdate_range(n: int = N_ROW) -> pd.DatetimeIndex:
     return pd.bdate_range(start="2000-01-01", periods=n)
 
 
-def make_data_df(data, n_row: int = N_ROW, n_col: int = N_COL):
+def make_data_df(data, n_row: int = N_ROW, n_col: int = N_COL) -> pd.DataFrame:
     return pd.DataFrame(
         data, columns=make_str_list(n_col), index=make_bdate_range(n_row)
     )
 
 
-def make_signal_weight_df(n_row: int = N_ROW, n_col: int = N_COL):
-    """Equal weight top 10 symbol"""
+def make_signal_weight_df(n_row: int = N_ROW, n_col: int = N_COL) -> pd.DataFrame:
+    """Equal weight top 10 and monthly rebalance."""
     df = make_data_df(np.random.rand(n_row, n_col), n_row, n_col)
+
+    # Top 10
     df = (df.rank(axis=1) <= 10).astype(bool) / 10
+
+    # Rebalance monthly
+    idx_ym = df.index.strftime("%Y%m")  # type: ignore
+    df = df[~idx_ym.duplicated()]
+    assert isinstance(df, pd.DataFrame)
+
     return df
 
 
-def make_price_df(n_row: int = N_ROW, n_col: int = N_COL):
+def make_price_df(n_row: int = N_ROW, n_col: int = N_COL) -> pd.DataFrame:
     """Make random price from a normal (Gaussian) distribution."""
     df = make_data_df(np.random.normal(1, 0.1, size=(n_row, n_col)), n_row, n_col)
     df = df.cumprod()

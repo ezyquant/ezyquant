@@ -70,12 +70,9 @@ def _backtest_target_weight(
     buy_price_df = buy_price_df[signal_weight_df.columns]
     sell_price_df = sell_price_df[signal_weight_df.columns]
 
-    min_price_df = pd.concat([buy_price_df, sell_price_df]).groupby(level=0).min() * (
-        1.0 - pct_commission
-    )
-    max_price_df = pd.concat([buy_price_df, sell_price_df]).groupby(level=0).max() * (
-        1.0 + pct_commission
-    )
+    group_price = pd.concat([buy_price_df, sell_price_df]).groupby(level=0)
+    min_price_df = group_price.min() * (1.0 - pct_commission)
+    max_price_df = group_price.max() * (1.0 + pct_commission)
 
     pf = Portfolio(
         cash=initial_cash,
