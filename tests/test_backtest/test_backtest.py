@@ -1,3 +1,5 @@
+from typing import Optional
+
 import pandas as pd
 import pytest
 import utils
@@ -486,14 +488,21 @@ class TestBacktestTargetWeight:
     "signal_weight_df", [utils.make_signal_weight_df(n_row=2000, n_col=800)]
 )
 @pytest.mark.parametrize("buy_price_df", [utils.make_price_df(n_row=2000, n_col=800)])
-@pytest.mark.parametrize("sell_price_df", [utils.make_price_df(n_row=2000, n_col=800)])
+@pytest.mark.parametrize(
+    "sell_price_df", [None, utils.make_price_df(n_row=2000, n_col=800)]
+)
 def test_random_input(
     initial_cash: float,
     signal_weight_df: pd.DataFrame,
     buy_price_df: pd.DataFrame,
-    sell_price_df: pd.DataFrame,
+    sell_price_df: Optional[pd.DataFrame],
     pct_commission: float,
 ):
+    # Mock
+    if sell_price_df is None:
+        sell_price_df = buy_price_df.copy()
+
+    # Test
     cash_series, position_df, trade_df = _backtest_target_weight(
         initial_cash=initial_cash,
         signal_weight_df=signal_weight_df,
