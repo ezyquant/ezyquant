@@ -3,6 +3,7 @@ from typing import List, Tuple
 
 import pandas as pd
 
+from .. import fields as fld
 from .. import utils
 from ..reader import SETDataReader
 from .portfolio import Portfolio
@@ -30,13 +31,36 @@ def backtest_target_weight(
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     # TODO: initial_position_dict
 
-    # Prepare price df
-    buy_price_df = pd.DataFrame()
-    sell_price_df = pd.DataFrame()
-
     # Prepare signal df
     # Rebalance
     # Baned symbol
+
+    # Price df
+    _validate_price_mode(trigger_buy_price_mode)
+    _validate_price_mode(trigger_sell_price_mode)
+
+    symbol_list = signal_df.columns.tolist()
+
+    buy_price_df = sdr.get_data_symbol_daily(
+        field=trigger_buy_price_mode,
+        symbol_list=symbol_list,
+        start_date=start_date,
+        end_date=end_date,
+    )
+    sell_price_df = sdr.get_data_symbol_daily(
+        field=trigger_sell_price_mode,
+        symbol_list=symbol_list,
+        start_date=start_date,
+        end_date=end_date,
+    )
+
+    # Slip
+    buy_price_df *= 1 + pct_buy_slip
+    sell_price_df *= 1 - pct_sell_slip
+
+    # Delay
+    buy_price_df = buy_price_df.shift(trigger_buy_price_delay_bar)
+    sell_price_df = sell_price_df.shift(trigger_sell_price_delay_bar)
 
     # Backtest
     cash_series, position_df, trade_df = _backtest_target_weight(
@@ -187,6 +211,11 @@ def _backtest_target_weight(
 """ 
 Validation
 """
+
+
+def _validate_price_mode(price_mode: str) -> None:
+    if price_mode not in [fld.D_OPEN, fld.D_HIGH, fld.D_LOW, fld.D_CLOSE]:
+        raise ValueError(f"Invalid price mode: {price_mode}")
 
 
 def _validate_initial_cash(initial_cash: float) -> None:
