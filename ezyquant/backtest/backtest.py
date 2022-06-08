@@ -5,15 +5,15 @@ import pandas as pd
 
 from .. import fields as fld
 from .. import utils
+from ..creator import SETSignalCreator
 from ..reader import SETDataReader
 from .portfolio import Portfolio
 from .position import Position
 from .trade import Trade
 
-sdr = SETDataReader("psims.db")
-
 
 def backtest_target_weight(
+    sqlite_path: str,
     signal_df: pd.DataFrame,
     rebalance_freq: str,
     rebalance_at: int,
@@ -29,16 +29,33 @@ def backtest_target_weight(
     trigger_sell_price_mode: str = "close",
     trigger_sell_price_delay_bar: int = 0,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+
+    symbol_list = signal_df.columns.tolist()
+    ssc = SETSignalCreator(
+        sqlite_path=sqlite_path,
+        start_date=start_date,
+        end_date=end_date,
+        symbol_list=symbol_list,
+    )
+
     # TODO: initial_position_dict
 
-    # Prepare signal df
-    # Rebalance
     # Baned symbol
+    # TODO: Sell only banned symbol, not rebalance
+    is_banned = ssc.is_banned()
+    signal_df = signal_df.mask(is_banned, 0)
+
+    # Rebalance
+    # TODO: Rebalance by frequency
+    is_signal_change = (signal_df != signal_df.shift(1)).any(axis=1)
+
+    signal_df = signal_df[is_signal_change]
 
     # Price df
     _validate_price_mode(trigger_buy_price_mode)
     _validate_price_mode(trigger_sell_price_mode)
 
+    sdr = SETDataReader(sqlite_path)
     symbol_list = signal_df.columns.tolist()
 
     buy_price_df = sdr.get_data_symbol_daily(
@@ -59,8 +76,9 @@ def backtest_target_weight(
     sell_price_df *= 1 - pct_sell_slip
 
     # Delay
-    buy_price_df = buy_price_df.shift(trigger_buy_price_delay_bar)
-    sell_price_df = sell_price_df.shift(trigger_sell_price_delay_bar)
+    # TODO: delay bar, load more data
+    # buy_price_df = buy_price_df.shift(trigger_buy_price_delay_bar)
+    # sell_price_df = sell_price_df.shift(trigger_sell_price_delay_bar)
 
     # Backtest
     cash_series, position_df, trade_df = _backtest_target_weight(
@@ -249,7 +267,10 @@ def _validate_price_df(buy_price_df: pd.DataFrame, sell_price_df: pd.DataFrame):
 
 
 def _validate_signal_df(
-    signal_df: pd.DataFrame, trade_date_list: List, symbol_list: List[str]
+    signal_df: pd.DataFrame,
+    trade_date_list: List,
+    symbol_list: List[str],
+    is_allow_nan_row: bool = True,
 ):
     idx = signal_df.index
 
@@ -267,10 +288,11 @@ def _validate_signal_df(
     if signal_df.empty:
         raise ValueError("signal_df must not be empty")
 
-    signal_df = signal_df.dropna(how="all")
+    if is_allow_nan_row:
+        signal_df = signal_df.dropna(how="all")
 
     if signal_df.isnull().values.any():
-        raise ValueError("signal_df must be nan all row")
+        raise ValueError("signal_df must not contain NaN")
     if (signal_df < 0).values.any():
         raise ValueError("signal_df must be positive")
     if not signal_df.sum(axis=1).between(0, 1).all():
