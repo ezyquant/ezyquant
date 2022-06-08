@@ -4,9 +4,59 @@ from typing import List, Tuple
 import pandas as pd
 
 from .. import utils
+from ..reader import SETDataReader
 from .portfolio import Portfolio
 from .position import Position
 from .trade import Trade
+
+sdr = SETDataReader("psims.db")
+
+
+def backtest_target_weight(
+    signal_df: pd.DataFrame,
+    rebalance_freq: str,
+    rebalance_at: int,
+    # common param
+    start_date: str,
+    end_date: str,
+    initial_cash: float,
+    pct_commission: float = 0.0,
+    pct_buy_slip: float = 0.0,
+    pct_sell_slip: float = 0.0,
+    trigger_buy_price_mode: str = "close",
+    trigger_buy_price_delay_bar: int = 0,
+    trigger_sell_price_mode: str = "close",
+    trigger_sell_price_delay_bar: int = 0,
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    # TODO: initial_position_dict
+
+    # Prepare price df
+    buy_price_df = pd.DataFrame()
+    sell_price_df = pd.DataFrame()
+
+    # Prepare signal df
+    # Rebalance
+    # Baned symbol
+
+    # Backtest
+    cash_series, position_df, trade_df = _backtest_target_weight(
+        initial_cash=initial_cash,
+        signal_weight_df=signal_df,
+        buy_price_df=buy_price_df,
+        sell_price_df=sell_price_df,
+        pct_commission=pct_commission,
+    )
+
+    # Dividend df
+    dividend_df = pd.DataFrame()
+
+    # Stat df
+    stat_df = pd.DataFrame()
+
+    # Summary df
+    summary_df = pd.DataFrame()
+
+    return summary_df, position_df, trade_df, dividend_df, stat_df
 
 
 def _backtest_target_weight(
