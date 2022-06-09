@@ -573,6 +573,7 @@ METHOD_RANK = "rank"
 Backtest
 """
 
+REBALANCE_FREQ_NO = "no"
 REBALANCE_FREQ_DAILY = "daily"
 REBALANCE_FREQ_WEEKLY = "weekly"
 REBALANCE_FREQ_MONTHLY = "monthly"
