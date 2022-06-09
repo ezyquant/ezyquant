@@ -10,6 +10,17 @@ from . import backtest_logic as btl
 from . import result as res
 from . import validators as vld
 
+summary_df_columns = [
+    "port_value_with_dividend",
+    "port_value",
+    "total_market_value",
+    "cash",
+    "cashflow",
+    "dividend",
+    "cumulative_dividend",
+    "commission",
+]
+
 
 def backtest_target_weight(
     signal_df: pd.DataFrame,
@@ -80,10 +91,15 @@ def backtest_target_weight(
     Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]
         Return following dataframe:
             - summary_df
-                - cash
-                - total_market_value
+                - timestamp (index)
+                - port_value_with_dividend
                 - port_value
-                - TODO
+                - total_market_value
+                - cash
+                - cashflow
+                - dividend
+                - cumulative_dividend
+                - commission
             - position_df
                 - timestamp
                 - symbol
@@ -185,17 +201,28 @@ def backtest_target_weight(
 
     # Dividend df
     # TODO: dividend_df
-    dividend_df = pd.DataFrame()
+    dividend_df = pd.DataFrame(columns=["timestamp", "amount"])
 
     # Summary df
     summary_df = cash_series.to_frame("cash")
-    summary_df["total_market_value"] = (
-        position_df.set_index("timestamp")["close_value"]
-        .groupby(level=0)
-        .sum()
-        .fillna(0)
+    summary_df["cashflow"] = summary_df["cash"].diff().fillna(0)
+    summary_df["commision"] = (
+        trade_df.set_index("timestamp")["commission"].groupby(level=0).sum()
     )
+    summary_df["commision"] = summary_df["commision"].fillna(0)
+    summary_df["total_market_value"] = (
+        position_df.set_index("timestamp")["close_value"].groupby(level=0).sum()
+    )
+    summary_df["total_market_value"] = summary_df["total_market_value"].fillna(0)
     summary_df["port_value"] = summary_df["total_market_value"] + summary_df["cash"]
+    summary_df["dividend"] = (
+        dividend_df.set_index("timestamp")["amount"].groupby(level=0).sum()
+    )
+    summary_df["dividend"] = summary_df["dividend"].fillna(0)
+    summary_df["cummulative_dividend"] = summary_df["dividend"].cumsum()
+    summary_df["port_value_with_dividend"] = (
+        summary_df["port_value"] + summary_df["cummulative_dividend"]
+    )
 
     # Stat df
     # TODO: stat_df
