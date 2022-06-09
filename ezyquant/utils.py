@@ -28,14 +28,96 @@ def round_df_100(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def is_rebalance_weekly(
-    trade_date_index: pd.DatetimeIndex, rebalance_day: int
+    trade_date_index: pd.DatetimeIndex, rebalance_at: int
 ) -> pd.Series:
-    assert (
-        rebalance_day >= 1 and rebalance_day <= 5
-    ), f"Week rebalance day ({rebalance_day}) must between [1-5]"
+    """Return a series of bool, True if the date is a rebalance date.
+    Always rebalance on first day of index.
 
-    tds = trade_date_index.to_series()
-    rule = f"W-{calendar.day_abbr[rebalance_day-2]}"
-    rbs = tds.resample(rule=rule).first()
+    Parameters
+    ----------
+    trade_date_index : pd.DatetimeIndex
+        Trade date index.
+    rebalance_at : int
+        Day of week to rebalance. 1 is Monday, 5 is Friday.
 
-    return tds.isin(rbs)
+    Returns
+    -------
+    pd.Series
+        Series of bool, True if the date is a rebalance date.
+    """
+    if not trade_date_index.is_monotonic or not trade_date_index.is_unique:
+        raise ValueError("trade_date_index must be monotonic and unique")
+    if rebalance_at < 1 or rebalance_at > 5:
+        raise ValueError("rebalance_at must be between 1 and 5")
+
+    td_s = trade_date_index.to_series()
+
+    rule = f"W-{calendar.day_abbr[rebalance_at-2]}"
+    rbs = td_s.resample(rule=rule).first()
+    return td_s.isin(rbs)
+
+
+def is_rebalance_monthly(
+    trade_date_index: pd.DatetimeIndex, rebalance_at: int
+) -> pd.Series:
+    """Return a series of bool, True if the date is a rebalance date.
+    Always rebalance on first day of index.
+
+    Parameters
+    ----------
+    trade_date_index : pd.DatetimeIndex
+        Trade date index.
+    rebalance_at : int
+        Day of month to rebalance. Can be 1-31.
+
+    Returns
+    -------
+    pd.Series
+        Series of bool, True if the date is a rebalance date.
+    """
+    if not trade_date_index.is_monotonic or not trade_date_index.is_unique:
+        raise ValueError("trade_date_index must be monotonic and unique")
+    if rebalance_at < 1 or rebalance_at > 31:
+        raise ValueError("rebalance_at must be between 1 and 31")
+
+    td_s = trade_date_index.to_series()
+
+    # TODO: improve is_rebalance_monthly
+    v = _date_range(
+        start_month=td_s[0].month,
+        start_year=td_s[0].year,
+        end_month=td_s[-1].month,
+        end_year=td_s[-1].year,
+        day_of_month=rebalance_at,
+    )
+
+    idx = td_s.searchsorted(v, side="left")
+    idx = idx[idx != td_s.size]
+
+    return td_s.isin(td_s[idx])
+
+
+def _date_range(
+    start_month: int,
+    start_year: int,
+    end_month: int,
+    end_year: int,
+    day_of_month: int,
+):
+    out = []
+
+    ym_start = 12 * start_year + start_month - 2
+    ym_end = 12 * end_year + end_month + 1
+
+    for ym in range(ym_start, ym_end):
+        y, m = divmod(ym, 12)
+        try:
+            out.append(date(y, m + 1, day_of_month))
+        except ValueError:
+            assert day_of_month > 28
+            out.append(date(y, m + 2, 1))
+
+    assert len(out) >= 3
+
+    out = pd.to_datetime(out)
+    return out
