@@ -13,7 +13,7 @@ position_columns = ["timestamp", "symbol", "volume", "avg_cost_price"]
 trade_columns = ["timestamp", "symbol", "volume", "price", "pct_commission"]
 
 
-class TestBacktestTargetWeightNoTrade:
+class TestBacktestTargetWeightLogicNoTrade:
     @pytest.mark.parametrize("pct_commission", [0.0, 0.1])
     @pytest.mark.parametrize(
         ("initial_cash", "signal_weight_df", "price_df"),
@@ -89,7 +89,7 @@ class TestBacktestTargetWeightNoTrade:
         ),
     ],
 )
-class TestBacktestTargetWeight:
+class TestBacktestTargetWeightLogic:
     @pytest.mark.kwparametrize(
         # Buy and hold
         dict(
@@ -394,6 +394,62 @@ class TestBacktestTargetWeight:
         ),
     )
     def test_two_symbol(
+        self,
+        initial_cash: float,
+        signal_weight_df: pd.DataFrame,
+        price_df: pd.DataFrame,
+        pct_commission: float,
+        expect_cash_series: pd.Series,
+        expect_position_df: pd.DataFrame,
+        expect_trade_df: pd.DataFrame,
+    ):
+        self.test_one_symbol(
+            initial_cash=initial_cash,
+            signal_weight_df=signal_weight_df,
+            price_df=price_df,
+            pct_commission=pct_commission,
+            expect_cash_series=expect_cash_series,
+            expect_position_df=expect_position_df,
+            expect_trade_df=expect_trade_df,
+        )
+
+    @pytest.mark.kwparametrize(
+        dict(
+            signal_weight_df=utils.make_data_df(
+                [
+                    [0.1, 0.1],
+                    [nan, 0.0],
+                    [0.1, 0.0],
+                ],
+                n_row=3,
+                n_col=2,
+            ),
+            pct_commission=0.0,
+            expect_cash_series=pd.Series(
+                [8170.0, 9050.0, 9310.0],
+                index=utils.make_bdate_range(3),
+            ),
+            expect_position_df=pd.DataFrame(
+                [
+                    [pd.Timestamp("2000-01-03"), "AAA", 900.0, 1.1],
+                    [pd.Timestamp("2000-01-03"), "AAB", 400.0, 2.1],
+                    [pd.Timestamp("2000-01-04"), "AAA", 900.0, 1.1],
+                    [pd.Timestamp("2000-01-05"), "AAA", 700.0, 1.1],
+                ],
+                columns=position_columns,
+            ),
+            expect_trade_df=pd.DataFrame(
+                [
+                    [pd.Timestamp("2000-01-03"), "AAA", 900.0, 1.1, 0.0],
+                    [pd.Timestamp("2000-01-03"), "AAB", 400.0, 2.1, 0.0],
+                    [pd.Timestamp("2000-01-04"), "AAB", -400.0, 2.2, 0.0],
+                    [pd.Timestamp("2000-01-05"), "AAA", -200.0, 1.3, 0.0],
+                ],
+                columns=trade_columns,
+            ),
+        ),
+    )
+    def test_two_symbol_nan_signal(
         self,
         initial_cash: float,
         signal_weight_df: pd.DataFrame,
