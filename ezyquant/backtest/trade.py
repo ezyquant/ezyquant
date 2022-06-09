@@ -28,8 +28,6 @@ class Trade:
     pct_commission: float
 
     def __post_init__(self):
-        # TODO: remove assert after testing
-
         # timestamp
         assert isinstance(
             self.timestamp, datetime
