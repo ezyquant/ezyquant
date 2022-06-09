@@ -23,9 +23,8 @@ def backtest_target_weight(
     pct_buy_slip: float = 0.0,
     pct_sell_slip: float = 0.0,
     trigger_buy_price_mode: str = "close",
-    trigger_buy_price_delay_bar: int = 0,
     trigger_sell_price_mode: str = "close",
-    trigger_sell_price_delay_bar: int = 0,
+    signal_delay_bar: int = 1,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Backtest target weight. Rebalance with rebalance_freq, rebalance_at or
     if signal was changed from yesterday.
@@ -36,7 +35,7 @@ def backtest_target_weight(
         signal dataframe.
     rebalance_freq : str
         rebalance frequency.
-            - none
+            - no
             - daily
             - weekly
             - monthly
@@ -65,8 +64,6 @@ def backtest_target_weight(
             - low
             - close
             - average
-    trigger_buy_price_delay_bar : int, by default 0
-        trigger buy price delay bar.
     trigger_sell_price_mode : str, by default "close"
         trigger sell price mode.
             - open
@@ -74,8 +71,8 @@ def backtest_target_weight(
             - low
             - close
             - average
-    trigger_sell_price_delay_bar : int, by default 0
-        trigger sell price delay bar.
+    signal_delay_bar : int, by default 1
+        delay bar for signal.
 
     Returns
     -------
@@ -103,17 +100,17 @@ def backtest_target_weight(
     vld.check_price_mode(trigger_buy_price_mode)
     vld.check_price_mode(trigger_sell_price_mode)
 
-    # TODO: load more data for delay bar
     buy_price_df = ssc.get_data(
         field=trigger_buy_price_mode,
         timeframe=fld.TIMEFRAME_DAILY,
-        shift=trigger_buy_price_delay_bar,
     )
     sell_price_df = ssc.get_data(
         field=trigger_sell_price_mode,
         timeframe=fld.TIMEFRAME_DAILY,
-        shift=trigger_sell_price_delay_bar,
     )
+
+    # Signal df
+    signal_df = signal_df.shift(signal_delay_bar)
 
     # Rebalance
     assert isinstance(signal_df.index, pd.DatetimeIndex)
