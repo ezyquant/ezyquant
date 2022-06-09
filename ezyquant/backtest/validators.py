@@ -47,10 +47,7 @@ def check_price_df(buy_price_df: pd.DataFrame, sell_price_df: pd.DataFrame):
 
 
 def check_signal_df(
-    signal_df: pd.DataFrame,
-    trade_date_list: List,
-    symbol_list: List[str],
-    is_allow_nan_row: bool = True,
+    signal_df: pd.DataFrame, trade_date_list: List, symbol_list: List[str]
 ):
     idx = signal_df.index
 
@@ -67,14 +64,10 @@ def check_signal_df(
 
     if signal_df.empty:
         raise ValueError("signal_df must not be empty")
-
-    if is_allow_nan_row:
-        signal_df = signal_df.dropna(how="all")
-
-    if signal_df.isnull().values.any():
-        raise ValueError("signal_df must not contain NaN")
     if (signal_df < 0).values.any():
-        raise ValueError("signal_df must be positive")
+        raise ValueError("signal_df cannot have negative value")
+    if (signal_df.isna().any(axis=1) & (signal_df > 0).any(axis=1)).any():
+        raise ValueError("signal_df cannot have NaN among non zero value")
     if not signal_df.sum(axis=1).between(0, 1).all():
         raise ValueError(
             "signal_df must be positive and sum must not more than 1 each day"

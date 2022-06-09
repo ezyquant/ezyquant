@@ -135,7 +135,6 @@ def backtest_target_weight(
     signal_df = signal_df.where(is_rebalance, np.nan)
 
     # Baned symbol
-    # TODO: backtest_target_weight_logic must allow sell all, but not rebalance
     is_banned = buy_price_df.isna() | sell_price_df.isna()
     is_force_sell = is_banned & ~is_banned.shift(1, fill_value=False)
     signal_df = signal_df.mask(is_force_sell, 0)
