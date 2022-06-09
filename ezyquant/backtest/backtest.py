@@ -76,7 +76,7 @@ def backtest_target_weight(
     sell_price_df *= 1 - pct_sell_slip
 
     # Delay
-    # TODO: delay bar, load more data
+    # TODO: load more data for delay bar
     # buy_price_df = buy_price_df.shift(trigger_buy_price_delay_bar)
     # sell_price_df = sell_price_df.shift(trigger_sell_price_delay_bar)
 
@@ -251,7 +251,7 @@ def _validate_price_df(buy_price_df: pd.DataFrame, sell_price_df: pd.DataFrame):
 
     if not isinstance(idx, pd.DatetimeIndex):
         raise ValueError("buy_price_df index must be DatetimeIndex")
-    if not idx.is_monotonic_increasing:
+    if not idx.is_monotonic:
         raise ValueError("buy_price_df index must be monotonic increasing")
     if not idx.is_unique:
         raise ValueError("buy_price_df index must be unique")
@@ -276,7 +276,7 @@ def _validate_signal_df(
 
     if not isinstance(idx, pd.DatetimeIndex):
         raise ValueError("signal_df index must be DatetimeIndex")
-    if not idx.is_monotonic_increasing:
+    if not idx.is_monotonic:
         raise ValueError("signal_df index must be monotonic increasing")
     if not idx.is_unique:
         raise ValueError("signal_df index must be unique")
