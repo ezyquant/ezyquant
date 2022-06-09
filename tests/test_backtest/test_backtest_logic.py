@@ -5,7 +5,7 @@ import pytest
 import utils
 from pandas.testing import assert_index_equal, assert_series_equal
 
-from ezyquant.backtest import _backtest_target_weight
+from ezyquant.backtest.backtest_logic import backtest_target_weight_logic
 
 nan = float("nan")
 
@@ -42,7 +42,7 @@ class TestBacktestTargetWeightNoTrade:
         pct_commission: float,
     ):
         # Test
-        cash_series, position_df, trade_df = _backtest_target_weight(
+        cash_series, position_df, trade_df = backtest_target_weight_logic(
             initial_cash=initial_cash,
             signal_weight_df=signal_weight_df,
             buy_price_df=price_df,
@@ -231,7 +231,7 @@ class TestBacktestTargetWeight:
         expect_trade_df: pd.DataFrame,
     ):
         # Test
-        cash_series, position_df, trade_df = _backtest_target_weight(
+        cash_series, position_df, trade_df = backtest_target_weight_logic(
             initial_cash=initial_cash,
             signal_weight_df=signal_weight_df,
             buy_price_df=price_df,
@@ -455,7 +455,7 @@ class TestBacktestTargetWeight:
         price_df = price_df[sell_price_df.columns]
 
         # Test
-        cash_series, position_df, trade_df = _backtest_target_weight(
+        cash_series, position_df, trade_df = backtest_target_weight_logic(
             initial_cash=initial_cash,
             signal_weight_df=signal_weight_df,
             buy_price_df=price_df,
@@ -503,7 +503,7 @@ def test_random_input(
         sell_price_df = buy_price_df.copy()
 
     # Test
-    cash_series, position_df, trade_df = _backtest_target_weight(
+    cash_series, position_df, trade_df = backtest_target_weight_logic(
         initial_cash=initial_cash,
         signal_weight_df=signal_weight_df,
         buy_price_df=buy_price_df,
