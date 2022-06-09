@@ -620,12 +620,12 @@ class TA:
             n period.
         window_atr : int, default 10
             n atr period. Only valid if original_version param is False.
-        fillna : bool, default False
-            if True, fill nan values.
-        original_version : bool, default True
-            if True, use the original version.
         multiplier : int, default 2
             The multiplier has the most effect on the channel width.
+        original_version : bool, default False
+            if True, use the original version.
+        fillna : bool, default False
+            if True, fill nan values.
 
         Returns
         -------
