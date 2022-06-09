@@ -9,6 +9,8 @@ from .portfolio import Portfolio
 from .position import Position
 from .trade import Trade
 
+position_df_columns = ["timestamp"] + [i.name for i in fields(Position)]
+
 
 def backtest_target_weight_logic(
     initial_cash: float,
@@ -86,9 +88,7 @@ def backtest_target_weight_logic(
 
     position_df_list: List[pd.DataFrame] = [
         # First dataframe for sort columns
-        pd.DataFrame(
-            columns=["timestamp"] + [i.name for i in fields(Position)], dtype="float64"
-        )
+        pd.DataFrame(columns=position_df_columns, dtype="float64"),
     ]
 
     def on_interval(buy_price_s: pd.Series) -> float:
@@ -130,6 +130,7 @@ def backtest_target_weight_logic(
     assert isinstance(cash_s, pd.Series)
 
     position_df = pd.concat(position_df_list, ignore_index=True)
-    trade_df = pd.DataFrame(pf.trade_list, columns=[i.name for i in fields(Trade)])
+    position_df["timestamp"] = pd.to_datetime(position_df["timestamp"])
 
+    trade_df = pd.DataFrame(pf.trade_list, columns=[i.name for i in fields(Trade)])
     return cash_s, position_df, trade_df

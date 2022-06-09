@@ -7,6 +7,7 @@ from .. import fields as fld
 from .. import utils
 from ..creator import SETSignalCreator
 from . import backtest_logic as btl
+from . import result as res
 from . import validators as vld
 
 
@@ -79,10 +80,28 @@ def backtest_target_weight(
     Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]
         Return following dataframe:
             - summary_df
+                - cash
+                - total_market_value
+                - port_value
+                - TODO
             - position_df
+                - timestamp
+                - symbol
+                - volume
+                - avg_cost_price
+                - close_price
+                - close_value
             - trade_df
+                - timestamp
+                - symbol
+                - side
+                - volume
+                - price
+                - commission
             - dividend_df
+                - TODO
             - stat_df
+                - TODO
     """
     signal_df = signal_df.dropna(axis=1, how="all")
     symbol_list = signal_df.columns.tolist()
@@ -101,12 +120,10 @@ def backtest_target_weight(
     vld.check_price_mode(trigger_sell_price_mode)
 
     buy_price_df = ssc.get_data(
-        field=trigger_buy_price_mode,
-        timeframe=fld.TIMEFRAME_DAILY,
+        field=trigger_buy_price_mode, timeframe=fld.TIMEFRAME_DAILY
     )
     sell_price_df = ssc.get_data(
-        field=trigger_sell_price_mode,
-        timeframe=fld.TIMEFRAME_DAILY,
+        field=trigger_sell_price_mode, timeframe=fld.TIMEFRAME_DAILY
     )
 
     # Signal df
@@ -154,16 +171,34 @@ def backtest_target_weight(
         pct_commission=pct_commission,
     )
 
+    # Position df
+    close_price_df = ssc.get_data(field=fld.D_CLOSE, timeframe=fld.TIMEFRAME_DAILY)
+    position_df = res.make_position_df(position_df, close_price_df)
+
+    # Trade df
+    trade_df["side"] = trade_df["volume"].apply(lambda x: "buy" if x > 0 else "sell")
+    trade_df["volume"] = trade_df["volume"].abs()
+    trade_df["commission"] = (
+        trade_df["price"] * trade_df["volume"] * trade_df["pct_commission"]
+    )
+    trade_df = trade_df.drop(columns=["pct_commission"])
+
     # Dividend df
     # TODO: dividend_df
     dividend_df = pd.DataFrame()
 
+    # Summary df
+    summary_df = cash_series.to_frame("cash")
+    summary_df["total_market_value"] = (
+        position_df.set_index("timestamp")["close_value"]
+        .groupby(level=0)
+        .sum()
+        .fillna(0)
+    )
+    summary_df["port_value"] = summary_df["total_market_value"] + summary_df["cash"]
+
     # Stat df
     # TODO: stat_df
     stat_df = pd.DataFrame()
-
-    # Summary df
-    # TODO: summary_df
-    summary_df = cash_series.to_frame("cash")
 
     return summary_df, position_df, trade_df, dividend_df, stat_df
