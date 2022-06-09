@@ -25,7 +25,7 @@ def assert_frame_equal_sort_index(
 
 def check_index_daily(result, is_unique=True):
     assert isinstance(result, pd.DatetimeIndex)
-    assert result.is_monotonic_increasing
+    assert result.is_monotonic
     if is_unique:
         assert result.is_unique
     assert_index_equal(result, result.normalize())  # type: ignore
