@@ -1,14 +1,15 @@
 import numpy as np
 
+import ezyquant as ez
 from ezyquant import SETSignalCreator, backtest_target_weight
 
-sqlite_path = "psims.db"
+ez.connect_sqlite("psims.db")
+
 start_date = "2010-01-01"
 end_date = "2019-12-31"
 
 #%% create signal
 ssc = SETSignalCreator(
-    sqlite_path=sqlite_path,
     start_date=start_date,
     end_date=end_date,
     index_list=["SET100"],
@@ -27,7 +28,6 @@ result = backtest_target_weight(
     rebalance_freq="no",
     rebalance_at=0,
     # common param
-    sqlite_path=sqlite_path,
     start_date=start_date,
     end_date=end_date,
     initial_cash=initial_cash,

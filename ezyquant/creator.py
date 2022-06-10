@@ -4,11 +4,11 @@ from typing import Dict, List, Optional
 import numpy as np
 import pandas as pd
 
+from . import connect as con
 from . import fields as fld
 from . import utils
 from .errors import InputError
 from .indicators import TA
-from .reader import SETDataReader
 
 
 class SETSignalCreator:
@@ -16,7 +16,6 @@ class SETSignalCreator:
 
     def __init__(
         self,
-        sqlite_path: str,
         start_date: str = "2010-01-01",
         end_date: Optional[str] = None,
         index_list: List[str] = ["SET100"],
@@ -28,8 +27,6 @@ class SETSignalCreator:
 
         Parameters
         ----------
-        sqlite_path : str
-            path to sqlite file e.g. /path/to/sqlite.db
         start_date : str
             Start date of data.
         end_date : str
@@ -52,9 +49,8 @@ class SETSignalCreator:
         self._symbol_list: List[str] = [i.upper() for i in symbol_list]
         self._start_date: str = start_date
         self._end_date: Optional[str] = end_date
-        self._sqlite_path: str = sqlite_path
 
-        self._sdr = SETDataReader(self._sqlite_path)
+        self._sdr = con._get_sdr()
 
     def get_data(
         self,
@@ -119,7 +115,6 @@ class SETSignalCreator:
         --------
         >>> from ezyquant import SETSignalCreator
         >>> ssc = SETSignalCreator(
-        ...     sqlite_path="psims.db",
         ...     start_date="2022-01-01",
         ...     end_date="2022-01-10",
         ...     index_list=[],
@@ -302,7 +297,6 @@ class SETSignalCreator:
         --------
         >>> from ezyquant import SETSignalCreator
         >>> ssc = SETSignalCreator(
-        ...     sqlite_path="psims.db",
         ...     start_date="2022-01-01",
         ...     end_date="2022-01-10",
         ...     index_list=[],
@@ -337,7 +331,6 @@ class SETSignalCreator:
         --------
         >>> from ezyquant import SETSignalCreator
         >>> ssc = SETSignalCreator(
-        ...     sqlite_path="psims.db",
         ...     start_date="2022-01-01",
         ...     end_date="2022-01-10",
         ...     index_list=[],

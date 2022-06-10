@@ -3,7 +3,7 @@ from .reader import SETDataReader
 
 SETDataReaderCached = utils.wrap_cache_class(SETDataReader)
 
-sdrc = None
+sdr = None
 
 
 def connect_sqlite(sqlite_path: str) -> SETDataReader:
@@ -14,13 +14,13 @@ def connect_sqlite(sqlite_path: str) -> SETDataReader:
     sqlite_path : str
         path to sqlite file e.g. /path/to/sqlite.db
     """
-    global sdrc
-    sdrc = SETDataReaderCached(sqlite_path)
-    return sdrc  # type: ignore
+    global sdr
+    sdr = SETDataReaderCached(sqlite_path)
+    return sdr  # type: ignore
 
 
-def get_sdrc() -> SETDataReader:
+def _get_sdr() -> SETDataReader:
     """Return SETDataReader instance."""
-    if sdrc is None:
+    if sdr is None:
         raise RuntimeError("Please connect to SQLite database first")
-    return sdrc  # type: ignore
+    return sdr  # type: ignore
