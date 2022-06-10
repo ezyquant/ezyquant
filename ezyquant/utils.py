@@ -3,6 +3,8 @@ from datetime import date, datetime, timedelta
 
 import pandas as pd
 
+from .errors import InputError
+
 
 def date_to_str(value: date) -> str:
     return value.strftime("%Y-%m-%d")
@@ -46,9 +48,9 @@ def is_rebalance_weekly(
         Series of bool, True if the date is a rebalance date.
     """
     if not trade_date_index.is_monotonic or not trade_date_index.is_unique:
-        raise ValueError("trade_date_index must be monotonic and unique")
+        raise InputError("trade_date_index must be monotonic and unique")
     if rebalance_at < 1 or rebalance_at > 5:
-        raise ValueError("rebalance_at must be between 1 and 5")
+        raise InputError("rebalance_at must be between 1 and 5")
 
     td_s = trade_date_index.to_series()
 
@@ -76,9 +78,9 @@ def is_rebalance_monthly(
         Series of bool, True if the date is a rebalance date.
     """
     if not trade_date_index.is_monotonic or not trade_date_index.is_unique:
-        raise ValueError("trade_date_index must be monotonic and unique")
+        raise InputError("trade_date_index must be monotonic and unique")
     if rebalance_at < 1 or rebalance_at > 31:
-        raise ValueError("rebalance_at must be between 1 and 31")
+        raise InputError("rebalance_at must be between 1 and 31")
 
     td_s = trade_date_index.to_series()
 

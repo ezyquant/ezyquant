@@ -80,7 +80,7 @@ def backtest_target_weight_logic(
     pf = Portfolio(
         cash=initial_cash,
         pct_commission=pct_commission,
-        position_dict={},  # TODO: initial position
+        position_dict={},  # TODO: [EZ-79] initial position dict
         trade_list=[],  # TODO: initial trade
     )
 

@@ -6,6 +6,7 @@ import pandas as pd
 from .. import fields as fld
 from .. import utils
 from ..creator import SETSignalCreator
+from ..errors import InputError
 from . import backtest_logic as btl
 from . import result as res
 from . import validators as vld
@@ -120,7 +121,7 @@ def backtest_target_weight(
     )
 
     # Price df
-    # TODO: more price mode
+    # TODO: [EZ-80] more price mode
     vld.check_price_mode(trigger_buy_price_mode)
     vld.check_price_mode(trigger_sell_price_mode)
 
@@ -145,7 +146,7 @@ def backtest_target_weight(
     elif rebalance_freq == fld.REBALANCE_FREQ_MONTHLY:
         is_rebalance_freq = utils.is_rebalance_monthly(signal_df.index, rebalance_at)
     else:
-        raise ValueError(f"Invalid rebalance_freq: {rebalance_freq}")
+        raise InputError(f"Invalid rebalance_freq: {rebalance_freq}")
 
     is_signal_change = (signal_df != signal_df.shift(1)).any(axis=1)
 
@@ -167,7 +168,7 @@ def backtest_target_weight(
     sell_price_df *= 1 - pct_sell_slip
 
     # Backtest
-    # TODO: initial_position_dict
+    # TODO: [EZ-79] initial_position_dict
     cash_series, position_df, trade_df = btl.backtest_target_weight_logic(
         initial_cash=initial_cash,
         signal_weight_df=signal_df,
@@ -184,7 +185,7 @@ def backtest_target_weight(
     trade_df = res.make_trade_df(trade_df)
 
     # Dividend df
-    # TODO: dividend_df
+    # TODO: [EZ-77] dividend_df
     dividend_df = pd.DataFrame(columns=["timestamp", "amount"])
 
     # Summary df
@@ -196,7 +197,7 @@ def backtest_target_weight(
     )
 
     # Stat df
-    # TODO: stat_df
+    # TODO: [EZ-76] stat_df
     stat_df = pd.DataFrame()
 
     return summary_df, position_df, trade_df, dividend_df, stat_df
