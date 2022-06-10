@@ -16,8 +16,6 @@ class Portfolio:
     trade_list: List[Trade] = field(default_factory=list)
 
     def __post_init__(self) -> None:
-        # TODO: remove assert after testing
-
         # cash
         assert self.cash >= 0, "cash must be positive"
 

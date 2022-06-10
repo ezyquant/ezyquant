@@ -1,200 +1,202 @@
-from dataclasses import fields
-from typing import List, Tuple
+from typing import Tuple
 
+import numpy as np
 import pandas as pd
 
+from .. import fields as fld
 from .. import utils
-from .portfolio import Portfolio
-from .position import Position
-from .trade import Trade
+from ..creator import SETSignalCreator
+from ..errors import InputError
+from . import result as res
+from . import validators as vld
+from ._backtest import _backtest_target_weight
 
 
-def _backtest_target_weight(
+def backtest_target_weight(
+    signal_df: pd.DataFrame,
+    rebalance_freq: str,
+    rebalance_at: int,
+    # common param
+    sqlite_path: str,
+    start_date: str,
+    end_date: str,
     initial_cash: float,
-    signal_weight_df: pd.DataFrame,
-    buy_price_df: pd.DataFrame,
-    sell_price_df: pd.DataFrame,
     pct_commission: float = 0.0,
-) -> Tuple[pd.Series, pd.DataFrame, pd.DataFrame]:
-    """Backtest Target Weight.
+    pct_buy_slip: float = 0.0,
+    pct_sell_slip: float = 0.0,
+    buy_price_match_mode: str = "open",
+    sell_price_match_mode: str = "open",
+    signal_delay_bar: int = 1,
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Backtest target weight. Rebalance with rebalance_freq, rebalance_at or
+    if signal was changed from yesterday.
 
     Parameters
     ----------
+    signal_df : pd.DataFrame
+        signal dataframe.
+    rebalance_freq : str
+        rebalance frequency.
+            - no
+            - daily
+            - weekly
+            - monthly
+    rebalance_at : int
+        rebalance at. can be 1 to 31 depending on rebalance_freq.
+            - 1: first day of month or Monday
+            - 5: fifth day of month or Friday
+    sqlite_path : str
+        path to sqlite file e.g. /path/to/sqlite.db
+    start_date : str
+        start date in format YYYY-MM-DD
+    end_date : str
+        end date in format YYYY-MM-DD
     initial_cash : float
-        cash at the beginning of the backtest
-    signal_weight_df : pd.DataFrame
-        dataframe of signal weight.
-        index is trade date, columns are symbol, values are weight.
-        values must be positive and sum must not more than 1 each day.
-        missing index or nan row is not rebalance.
-    buy_price_df : pd.DataFrame
-        dataframe of buy price.
-        index is trade date, columns are symbol, values are weight.
-        index and columns must be same as or more than signal_weight_df.
-    sell_price_df : pd.DataFrame
-        dataframe of sell price.
-        index is trade date, columns are symbol, values are weight.
-        index and columns must be same as or more than signal_weight_df.
-    pct_commission : float, default 0.0
-        percentage of commission fee
+        initial cash
+    pct_commission : float, by default 0.0
+        percent commission
+    pct_buy_slip : float, by default 0.0
+        percent of buy price increase
+    pct_sell_slip : float, by default 0.0
+        percent of sell price decrease
+    buy_price_match_mode : str, by default "open"
+        buy price match mode.
+            - open
+            - high
+            - low
+            - close
+            - average
+    sell_price_match_mode : str, by default "open"
+        sell price match mode.
+            - open
+            - high
+            - low
+            - close
+            - average
+    signal_delay_bar : int, by default 1
+        delay bar for signal.
 
     Returns
     -------
-    Tuple[pd.Series, pd.DataFrame, pd.DataFrame]
-        Return snapshot at end of day:
-            - cash_series
+    Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]
+        Return following dataframe:
+            - summary_df
                 - timestamp (index)
+                - port_value_with_dividend
+                - port_value
+                - total_market_value
                 - cash
+                - cashflow
+                - dividend
+                - cumulative_dividend
+                - commission
             - position_df
                 - timestamp
                 - symbol
                 - volume
                 - avg_cost_price
+                - close_price
+                - close_value
             - trade_df
                 - timestamp
                 - symbol
+                - side
                 - volume
                 - price
-                - pct_commission
+                - commission
+            - dividend_df
+                - TODO
+            - stat_df
+                - TODO
     """
-    _validate_initial_cash(initial_cash)
-    _validate_pct_commission(pct_commission)
-    _validate_price_df(buy_price_df, sell_price_df)
-    _validate_signal_df(
-        signal_weight_df,
-        trade_date_list=buy_price_df.index.to_list(),
-        symbol_list=buy_price_df.columns.to_list(),
+    symbol_list = signal_df.columns.tolist()
+    ssc = SETSignalCreator(
+        sqlite_path=sqlite_path,
+        start_date=start_date,
+        end_date=end_date,
+        index_list=[],
+        symbol_list=symbol_list,
     )
 
-    # Select only symbol in signal
-    buy_price_df = buy_price_df[signal_weight_df.columns]
-    sell_price_df = sell_price_df[signal_weight_df.columns]
+    # Price df
+    # TODO: [EZ-80] more price mode
+    vld.check_price_mode(buy_price_match_mode)
+    vld.check_price_mode(sell_price_match_mode)
 
-    group_price = pd.concat([buy_price_df, sell_price_df]).groupby(level=0)
-    min_price_df = group_price.min() * (1.0 - pct_commission)
-    max_price_df = group_price.max() * (1.0 + pct_commission)
+    # TODO: cache load price
+    buy_price_df = ssc.get_data(
+        field=buy_price_match_mode, timeframe=fld.TIMEFRAME_DAILY
+    )
+    sell_price_df = ssc.get_data(
+        field=sell_price_match_mode, timeframe=fld.TIMEFRAME_DAILY
+    )
 
-    pf = Portfolio(
-        cash=initial_cash,
+    # Slip
+    buy_price_df *= 1 + pct_buy_slip
+    sell_price_df *= 1 - pct_sell_slip
+
+    # Signal df
+    signal_df = signal_df.shift(signal_delay_bar)
+
+    # Rebalance
+    assert isinstance(signal_df.index, pd.DatetimeIndex)
+    if rebalance_freq == fld.REBALANCE_FREQ_NO:
+        is_rebalance_freq = False
+    elif rebalance_freq == fld.REBALANCE_FREQ_DAILY:
+        is_rebalance_freq = True
+    elif rebalance_freq == fld.REBALANCE_FREQ_WEEKLY:
+        is_rebalance_freq = utils.is_rebalance_weekly(signal_df.index, rebalance_at)
+    elif rebalance_freq == fld.REBALANCE_FREQ_MONTHLY:
+        is_rebalance_freq = utils.is_rebalance_monthly(signal_df.index, rebalance_at)
+    else:
+        raise InputError(f"Invalid rebalance_freq: {rebalance_freq}")
+
+    is_signal_change = (signal_df != signal_df.shift(1)).any(axis=1)
+
+    is_rebalance = is_signal_change | is_rebalance_freq  # type: ignore
+
+    signal_df = signal_df.where(is_rebalance, np.nan)
+
+    # Baned symbol
+    is_banned = buy_price_df.isna() | sell_price_df.isna()
+    is_force_sell = is_banned & ~is_banned.shift(1, fill_value=False)
+    signal_df = signal_df.mask(is_force_sell, 0)
+
+    # Drop NaN row
+    signal_df = signal_df.dropna(axis=0, how="all")
+    signal_df = signal_df.dropna(axis=1, how="all")
+
+    # Backtest
+    # TODO: [EZ-79] initial_position_dict
+    cash_series, position_df, trade_df = _backtest_target_weight(
+        initial_cash=initial_cash,
+        signal_weight_df=signal_df,
+        buy_price_df=buy_price_df,
+        sell_price_df=sell_price_df,
         pct_commission=pct_commission,
-        position_dict={},  # TODO: initial position
-        trade_list=[],  # TODO: initial trade
     )
 
-    sig_by_price_df = signal_weight_df / max_price_df
+    # Position df
+    close_price_df = ssc.get_data(field=fld.D_CLOSE, timeframe=fld.TIMEFRAME_DAILY)
+    position_df = res.make_position_df(position_df, close_price_df)
 
-    position_df_list: List[pd.DataFrame] = [
-        # First dataframe for sort columns
-        pd.DataFrame(
-            columns=["timestamp"] + [i.name for i in fields(Position)], dtype="float64"
-        )
-    ]
+    # Trade df
+    trade_df = res.make_trade_df(trade_df)
 
-    def on_interval(buy_price_s: pd.Series) -> float:
-        ts = buy_price_s.name
+    # Dividend df
+    # TODO: [EZ-77] dividend_df
+    dividend_df = pd.DataFrame(columns=["timestamp", "amount"])
 
-        trade_value = pf.cash + (pf.volume_series * min_price_df.loc[ts]).sum()  # type: ignore
-        target_volume_s = trade_value * sig_by_price_df.loc[ts]  # type: ignore
-        trade_volume_s = target_volume_s - pf.volume_series.reindex(
-            target_volume_s.index, fill_value=0
-        )
-        trade_volume_s = utils.round_df_100(trade_volume_s)
+    # Summary df
+    summary_df = res.make_summary_df(
+        cash_series=cash_series,
+        trade_df=trade_df,
+        position_df=position_df,
+        dividend_df=dividend_df,
+    )
 
-        # Sell
-        sell_price_s = sell_price_df.loc[ts]  # type: ignore
-        for k, v in trade_volume_s[trade_volume_s < 0].items():
-            pf.place_order(
-                symbol=k,  # type: ignore
-                volume=v,  # type: ignore
-                price=sell_price_s[k],
-                timestamp=ts,  # type: ignore
-            )
+    # Stat df
+    # TODO: [EZ-76] stat_df
+    stat_df = pd.DataFrame()
 
-        # Buy
-        for k, v in trade_volume_s[trade_volume_s > 0].items():
-            pf.place_order(
-                symbol=k,  # type: ignore
-                volume=v,  # type: ignore
-                price=buy_price_s[k],  # type: ignore
-                timestamp=ts,  # type: ignore
-            )
-
-        pos_df = pf.get_position_df()
-        pos_df["timestamp"] = ts
-        position_df_list.append(pos_df)
-
-        return pf.cash
-
-    cash_s = buy_price_df.apply(on_interval, axis=1)
-    assert isinstance(cash_s, pd.Series)
-
-    position_df = pd.concat(position_df_list, ignore_index=True)
-    trade_df = pd.DataFrame(pf.trade_list, columns=[i.name for i in fields(Trade)])
-
-    return cash_s, position_df, trade_df
-
-
-""" 
-Validation
-"""
-
-
-def _validate_initial_cash(initial_cash: float) -> None:
-    if initial_cash < 0:
-        raise ValueError("initial_cash must be positive")
-
-
-def _validate_pct_commission(pct_commission: float) -> None:
-    if pct_commission < 0 or pct_commission > 1:
-        raise ValueError("pct_commission must be between 0 and 1")
-
-
-def _validate_price_df(buy_price_df: pd.DataFrame, sell_price_df: pd.DataFrame):
-    idx = buy_price_df.index
-
-    if not isinstance(idx, pd.DatetimeIndex):
-        raise ValueError("buy_price_df index must be DatetimeIndex")
-    if not idx.is_monotonic_increasing:
-        raise ValueError("buy_price_df index must be monotonic increasing")
-    if not idx.is_unique:
-        raise ValueError("buy_price_df index must be unique")
-    if not idx.equals(sell_price_df.index):
-        raise ValueError("buy_price_df and sell_price_df index must be same")
-    if not buy_price_df.columns.equals(sell_price_df.columns):
-        raise ValueError("buy_price_df and sell_price_df columns must be same")
-
-    if buy_price_df.empty:
-        raise ValueError("buy_price_df must not be empty")
-    if sell_price_df.empty:
-        raise ValueError("sell_price_df must not be empty")
-
-
-def _validate_signal_df(
-    signal_df: pd.DataFrame, trade_date_list: List, symbol_list: List[str]
-):
-    idx = signal_df.index
-
-    if not isinstance(idx, pd.DatetimeIndex):
-        raise ValueError("signal_df index must be DatetimeIndex")
-    if not idx.is_monotonic_increasing:
-        raise ValueError("signal_df index must be monotonic increasing")
-    if not idx.is_unique:
-        raise ValueError("signal_df index must be unique")
-    if not idx.isin(trade_date_list).all():
-        raise ValueError("signal_df index must be in buy_price_df index")
-    if not signal_df.columns.isin(symbol_list).all():
-        raise ValueError("signal_df columns must be in buy_price_df columns")
-
-    if signal_df.empty:
-        raise ValueError("signal_df must not be empty")
-
-    signal_df = signal_df.dropna(how="all")
-
-    if signal_df.isnull().values.any():
-        raise ValueError("signal_df must be nan all row")
-    if (signal_df < 0).values.any():
-        raise ValueError("signal_df must be positive")
-    if not signal_df.sum(axis=1).between(0, 1).all():
-        raise ValueError(
-            "signal_df must be positive and sum must not more than 1 each day"
-        )
+    return summary_df, position_df, trade_df, dividend_df, stat_df

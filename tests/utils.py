@@ -25,7 +25,7 @@ def assert_frame_equal_sort_index(
 
 def check_index_daily(result, is_unique=True):
     assert isinstance(result, pd.DatetimeIndex)
-    assert result.is_monotonic_increasing
+    assert result.is_monotonic
     if is_unique:
         assert result.is_unique
     assert_index_equal(result, result.normalize())  # type: ignore
@@ -66,7 +66,7 @@ def check_position_df(df):
     )
 
     # Data type
-    # assert ptypes.is_datetime64_any_dtype(df["timestamp"])
+    assert ptypes.is_datetime64_any_dtype(df["timestamp"])
     # assert ptypes.is_string_dtype(df["symbol"])
     assert ptypes.is_float_dtype(df["volume"])
     assert ptypes.is_float_dtype(df["avg_cost_price"])

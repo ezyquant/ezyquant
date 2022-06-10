@@ -8,8 +8,6 @@ class Position:
     avg_cost_price: float = 0.0
 
     def __post_init__(self):
-        # TODO: remove assert after testing
-
         # symbol
         assert isinstance(
             self.symbol, str
@@ -18,6 +16,9 @@ class Position:
 
         # volume
         assert self.volume >= 0, f"volume must be positive, got {self.volume}"
+        assert (
+            self.volume % 100 == 0
+        ), f"volume must be multiple of 100, got {self.volume}"
 
         # price
         assert (
