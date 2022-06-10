@@ -73,3 +73,13 @@ class TestMakePositionDf:
         result = res.make_position_df(position_df, close_price_df)
 
         assert_frame_equal(result, expect_result, check_dtype=False)  # type: ignore
+
+
+class TestMakeTradeDf:
+    # TODO: TestMakeTradeDf
+    pass
+
+
+class TestMakeSummaryDf:
+    # TODO: TestMakeSummaryDf
+    pass
