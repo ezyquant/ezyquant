@@ -64,7 +64,9 @@ class SETDataReader:
         """
         t = self._table(table_name)
         stmt = select([func.max(func.DATE(t.c.D_TRADE))])
-        return self._execute(stmt).scalar()
+        res = self._execute(stmt).scalar()
+        assert isinstance(res, str)
+        return res
 
     def last_update(self) -> str:
         """Last database update, checking from last D_TRADE in following
@@ -2413,7 +2415,7 @@ class SETDataReader:
         result = self._execute(stmt).all()
         return dict(result)  # type: ignore
 
-    """ 
+    """
     Static methods
     """
 
