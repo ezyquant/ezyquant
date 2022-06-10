@@ -24,8 +24,8 @@ def backtest_target_weight(
     pct_commission: float = 0.0,
     pct_buy_slip: float = 0.0,
     pct_sell_slip: float = 0.0,
-    trigger_buy_price_mode: str = "close",
-    trigger_sell_price_mode: str = "close",
+    trigger_buy_price_mode: str = "open",
+    trigger_sell_price_mode: str = "open",
     signal_delay_bar: int = 1,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Backtest target weight. Rebalance with rebalance_freq, rebalance_at or
@@ -59,14 +59,14 @@ def backtest_target_weight(
         percent of buy price increase
     pct_sell_slip : float, by default 0.0
         percent of sell price decrease
-    trigger_buy_price_mode : str, by default "close"
+    trigger_buy_price_mode : str, by default "open"
         trigger buy price mode.
             - open
             - high
             - low
             - close
             - average
-    trigger_sell_price_mode : str, by default "close"
+    trigger_sell_price_mode : str, by default "open"
         trigger sell price mode.
             - open
             - high
