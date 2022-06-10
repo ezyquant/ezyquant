@@ -1,4 +1,6 @@
+import copy
 import string
+from functools import lru_cache
 from itertools import product
 from typing import List
 
@@ -143,3 +145,35 @@ def make_price_df(n_row: int = N_ROW, n_col: int = N_COL) -> pd.DataFrame:
     df = make_data_df(np.random.normal(1, 0.1, size=(n_row, n_col)), n_row, n_col)
     df = df.cumprod()
     return df
+
+
+""" 
+Cache
+"""
+
+
+def cache_wrapper(f):
+    f = lru_cache(maxsize=128)(f)
+
+    def wrapped(*args, **kwargs):
+        new_args = tuple(tuple(i) if isinstance(i, list) else i for i in args)
+        new_kwargs = {
+            k: tuple(v) if isinstance(v, list) else v for k, v in kwargs.items()
+        }
+        out = f(*new_args, **new_kwargs)
+        return copy.deepcopy(out)
+
+    return wrapped
+
+
+class CacheMetaClass(type):
+    def __new__(cls, clsname, bases, attrs):
+        new_attrs = {
+            k: cache_wrapper(v) if not k.startswith("_") and callable(v) else v
+            for k, v in attrs.items()
+        }
+        return type.__new__(cls, clsname, bases, new_attrs)
+
+
+def wrap_cache_class(cls):
+    return CacheMetaClass(cls.__name__, cls.__bases__, cls.__dict__)
