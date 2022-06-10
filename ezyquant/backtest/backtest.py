@@ -10,17 +10,6 @@ from . import backtest_logic as btl
 from . import result as res
 from . import validators as vld
 
-summary_df_columns = [
-    "port_value_with_dividend",
-    "port_value",
-    "total_market_value",
-    "cash",
-    "cashflow",
-    "dividend",
-    "cumulative_dividend",
-    "commission",
-]
-
 
 def backtest_target_weight(
     signal_df: pd.DataFrame,
@@ -192,36 +181,18 @@ def backtest_target_weight(
     position_df = res.make_position_df(position_df, close_price_df)
 
     # Trade df
-    trade_df["side"] = trade_df["volume"].apply(lambda x: "buy" if x > 0 else "sell")
-    trade_df["volume"] = trade_df["volume"].abs()
-    trade_df["commission"] = (
-        trade_df["price"] * trade_df["volume"] * trade_df["pct_commission"]
-    )
-    trade_df = trade_df.drop(columns=["pct_commission"])
+    trade_df = res.make_trade_df(trade_df)
 
     # Dividend df
     # TODO: dividend_df
     dividend_df = pd.DataFrame(columns=["timestamp", "amount"])
 
     # Summary df
-    summary_df = cash_series.to_frame("cash")
-    summary_df["cashflow"] = summary_df["cash"].diff().fillna(0)
-    summary_df["commision"] = (
-        trade_df.set_index("timestamp")["commission"].groupby(level=0).sum()
-    )
-    summary_df["commision"] = summary_df["commision"].fillna(0)
-    summary_df["total_market_value"] = (
-        position_df.set_index("timestamp")["close_value"].groupby(level=0).sum()
-    )
-    summary_df["total_market_value"] = summary_df["total_market_value"].fillna(0)
-    summary_df["port_value"] = summary_df["total_market_value"] + summary_df["cash"]
-    summary_df["dividend"] = (
-        dividend_df.set_index("timestamp")["amount"].groupby(level=0).sum()
-    )
-    summary_df["dividend"] = summary_df["dividend"].fillna(0)
-    summary_df["cummulative_dividend"] = summary_df["dividend"].cumsum()
-    summary_df["port_value_with_dividend"] = (
-        summary_df["port_value"] + summary_df["cummulative_dividend"]
+    summary_df = res.make_summary_df(
+        cash_series=cash_series,
+        trade_df=trade_df,
+        position_df=position_df,
+        dividend_df=dividend_df,
     )
 
     # Stat df
