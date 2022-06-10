@@ -10,9 +10,10 @@ from .position import Position
 from .trade import Trade
 
 position_df_columns = ["timestamp"] + [i.name for i in fields(Position)]
+trade_df_columns = [i.name for i in fields(Trade)]
 
 
-def backtest_target_weight_logic(
+def _backtest_target_weight(
     initial_cash: float,
     signal_weight_df: pd.DataFrame,
     buy_price_df: pd.DataFrame,
@@ -132,5 +133,5 @@ def backtest_target_weight_logic(
     position_df = pd.concat(position_df_list, ignore_index=True)
     position_df["timestamp"] = pd.to_datetime(position_df["timestamp"])
 
-    trade_df = pd.DataFrame(pf.trade_list, columns=[i.name for i in fields(Trade)])
+    trade_df = pd.DataFrame(pf.trade_list, columns=trade_df_columns)
     return cash_s, position_df, trade_df

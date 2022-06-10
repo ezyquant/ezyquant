@@ -7,9 +7,9 @@ from .. import fields as fld
 from .. import utils
 from ..creator import SETSignalCreator
 from ..errors import InputError
-from . import backtest_logic as btl
 from . import result as res
 from . import validators as vld
+from ._backtest import _backtest_target_weight
 
 
 def backtest_target_weight(
@@ -168,7 +168,7 @@ def backtest_target_weight(
 
     # Backtest
     # TODO: [EZ-79] initial_position_dict
-    cash_series, position_df, trade_df = btl.backtest_target_weight_logic(
+    cash_series, position_df, trade_df = _backtest_target_weight(
         initial_cash=initial_cash,
         signal_weight_df=signal_df,
         buy_price_df=buy_price_df,
