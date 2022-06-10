@@ -109,9 +109,7 @@ def backtest_target_weight(
             - stat_df
                 - TODO
     """
-    signal_df = signal_df.dropna(axis=1, how="all")
     symbol_list = signal_df.columns.tolist()
-
     ssc = SETSignalCreator(
         sqlite_path=sqlite_path,
         start_date=start_date,
@@ -125,12 +123,17 @@ def backtest_target_weight(
     vld.check_price_mode(trigger_buy_price_mode)
     vld.check_price_mode(trigger_sell_price_mode)
 
+    # TODO: cache load price
     buy_price_df = ssc.get_data(
         field=trigger_buy_price_mode, timeframe=fld.TIMEFRAME_DAILY
     )
     sell_price_df = ssc.get_data(
         field=trigger_sell_price_mode, timeframe=fld.TIMEFRAME_DAILY
     )
+
+    # Slip
+    buy_price_df *= 1 + pct_buy_slip
+    sell_price_df *= 1 - pct_sell_slip
 
     # Signal df
     signal_df = signal_df.shift(signal_delay_bar)
@@ -162,10 +165,6 @@ def backtest_target_weight(
     # Drop NaN row
     signal_df = signal_df.dropna(axis=0, how="all")
     signal_df = signal_df.dropna(axis=1, how="all")
-
-    # Slip
-    buy_price_df *= 1 + pct_buy_slip
-    sell_price_df *= 1 - pct_sell_slip
 
     # Backtest
     # TODO: [EZ-79] initial_position_dict
