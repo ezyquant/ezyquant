@@ -38,7 +38,7 @@ class SETResult:
     def __init__(
         self, cash_series: pd.Series, position_df: pd.DataFrame, trade_df: pd.DataFrame
     ):
-        """SETResult
+        """SETResult.
 
         Parameters
         ----------
@@ -66,6 +66,21 @@ class SETResult:
 
     @cached_property
     def summary_df(self) -> pd.DataFrame:
+        """Summary DataFrame.
+
+        Returns
+        -------
+        pd.DataFrame
+            - timestamp
+            - port_value_with_dividend
+            - port_value
+            - total_market_value
+            - cash
+            - cashflow
+            - dividend
+            - cumulative_dividend
+            - commission
+        """
         df = self._cash_series.to_frame("cash")
 
         df["cashflow"] = df["cash"].diff().fillna(0)
@@ -103,6 +118,18 @@ class SETResult:
 
     @cached_property
     def position_df(self) -> pd.DataFrame:
+        """Position DataFrame.
+
+        Returns
+        -------
+        pd.DataFrame
+            - timestamp
+            - symbol
+            - volume
+            - avg_cost_price
+            - close_price
+            - close_value
+        """
         # close df
         close_price_df = self._sdr.get_data_symbol_daily(
             field=fld.D_CLOSE,
@@ -128,6 +155,18 @@ class SETResult:
 
     @cached_property
     def trade_df(self) -> pd.DataFrame:
+        """Trade DataFrame.
+
+        Returns
+        -------
+        pd.DataFrame
+            - timestamp
+            - symbol
+            - side
+            - volume
+            - price
+            - commission
+        """
         df = self._trade_df.copy()
         df["side"] = df["volume"].apply(lambda x: "buy" if x > 0 else "sell")
         df["volume"] = df["volume"].abs()
@@ -141,10 +180,22 @@ class SETResult:
 
     @cached_property
     def dividend_df(self) -> pd.DataFrame:
+        """Dividend DataFrame.
+
+        Returns
+        -------
+        pd.DataFrame
+        """
         # TODO: [EZ-77] dividend_df
         return pd.DataFrame(columns=["timestamp", "amount"])
 
     @cached_property
     def stat_df(self) -> pd.DataFrame:
+        """Stat DataFrame.
+
+        Returns
+        -------
+        pd.DataFrame
+        """
         # TODO: [EZ-76] stat_df
         return pd.DataFrame()
