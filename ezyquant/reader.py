@@ -219,7 +219,7 @@ class SETDataReader:
         --------
         >>> from ezyquant import fields as fld
         >>> from ezyquant import SETDataReader
-        >>> sdr = SETDataReader("psims.db")
+        >>> sdr = SETDataReader()
         >>> sdr.get_symbol_info(["BBL"])
            symbol_id symbol market industry sector sec_type native
         0          1    BBL    SET  FINCIAL   BANK        S      L
@@ -306,7 +306,7 @@ class SETDataReader:
         Examples
         --------
         >>> from ezyquant import SETDataReader
-        >>> sdr = SETDataReader("psims.db")
+        >>> sdr = SETDataReader()
         >>> sdr.get_company_info(symbol_list=["BBL", "PTT"])
            company_id symbol               company_name_t  ...  establish                                       dvd_policy_t                                       dvd_policy_e
         0           1    BBL  ธนาคารกรุงเทพ จำกัด (มหาชน)  ...  1/12/1944  เมื่อผลประกอบการของธนาคารมีกำไร (โดยมีเงื่อนไข...  Pays when company has profit (with additional ...
@@ -376,7 +376,7 @@ class SETDataReader:
         Examples
         --------
         >>> from ezyquant import SETDataReader
-        >>> sdr = SETDataReader("psims.db")
+        >>> sdr = SETDataReader()
         >>> sdr.get_change_name(["SMG"])
            symbol_id symbol effect_date symbol_old symbol_new
         0        220    SMG  2006-07-31        SMG      SCSMG
@@ -467,7 +467,7 @@ class SETDataReader:
         Examples
         --------
         >>> from ezyquant import SETDataReader
-        >>> sdr = SETDataReader("psims.db")
+        >>> sdr = SETDataReader()
         >>> sdr.get_dividend(["M"])
            symbol     ex_date    pay_date ca_type  dps
         0       M  2014-05-06  2014-05-21      CD  1.6
@@ -561,7 +561,7 @@ class SETDataReader:
         Examples
         --------
         >>> from ezyquant import SETDataReader
-        >>> sdr = SETDataReader("psims.db")
+        >>> sdr = SETDataReader()
         >>> sdr.get_delisted(start_date="2020-02-20", end_date="2020-02-20")
              symbol delisted_date
         0    ROBINS    2020-02-20
@@ -638,7 +638,7 @@ class SETDataReader:
         Examples
         --------
         >>> from ezyquant import SETDataReader
-        >>> sdr = SETDataReader("psims.db")
+        >>> sdr = SETDataReader()
         >>> sdr.get_sign_posting(symbol_list=["THAI"], start_date="2020-11-12", end_date="2021-02-25")
           symbol  hold_date sign
         0   THAI 2020-11-12   SP
@@ -718,7 +718,7 @@ class SETDataReader:
         Examples
         --------
         >>> from ezyquant import SETDataReader
-        >>> sdr = SETDataReader("psims.db")
+        >>> sdr = SETDataReader()
         >>> sdr.get_symbols_by_index(index_list=["SET50"], start_date="2022-01-04", end_date="2022-01-04")
            as_of_date  index  symbol  seq
         0  2022-01-04  SET50     OSP    1
@@ -863,7 +863,7 @@ class SETDataReader:
         Examples
         --------
         >>> from ezyquant import SETDataReader
-        >>> sdr = SETDataReader("psims.db")
+        >>> sdr = SETDataReader()
         >>> sdr.get_adjust_factor(symbol_list=["RAM"])
           symbol effect_date ca_type  adjust_factor
         0    RAM  2019-06-17      PC           0.05
@@ -983,7 +983,7 @@ class SETDataReader:
         --------
         >>> from ezyquant import SETDataReader
         >>> from ezyquant import fields as fld
-        >>> sdr = SETDataReader("psims.db")
+        >>> sdr = SETDataReader()
         >>> sdr.get_data_symbol_daily(
         ...    field=fld.D_CLOSE,
         ...    symbol_list=["COM7", "MALEE"],
@@ -1216,7 +1216,7 @@ class SETDataReader:
         --------
         >>> from ezyquant import SETDataReader
         >>> from ezyquant import fields as fld
-        >>> sdr = SETDataReader("psims.db")
+        >>> sdr = SETDataReader()
         >>> sdr.get_data_symbol_quarterly(
         ...     field=fld.Q_TOTAL_REVENUE,
         ...     symbol_list=["COM7", "MALEE"],
@@ -1368,7 +1368,7 @@ class SETDataReader:
         --------
         >>> from ezyquant import SETDataReader
         >>> from ezyquant import fields as fld
-        >>> sdr = SETDataReader("psims.db")
+        >>> sdr = SETDataReader()
         >>> sdr.get_data_symbol_yearly(
         ...     field=fld.Y_TOTAL_REVENUE,
         ...     symbol_list=["COM7", "MALEE"],
@@ -1456,7 +1456,7 @@ class SETDataReader:
         --------
         >>> from ezyquant import SETDataReader
         >>> from ezyquant import fields as fld
-        >>> sdr = SETDataReader("psims.db")
+        >>> sdr = SETDataReader()
         >>> sdr.get_data_symbol_ttm(
         ...     field=fld.Q_TOTAL_REVENUE,
         ...     symbol_list=["COM7", "MALEE"],
@@ -1610,7 +1610,7 @@ class SETDataReader:
         --------
         >>> from ezyquant import SETDataReader
         >>> from ezyquant import fields as fld
-        >>> sdr = SETDataReader("psims.db")
+        >>> sdr = SETDataReader()
         >>> sdr.get_data_symbol_ytd(
         ...     field=fld.Q_TOTAL_REVENUE,
         ...     symbol_list=["COM7", "MALEE"],
@@ -1677,7 +1677,7 @@ class SETDataReader:
         --------
         >>> from ezyquant import SETDataReader
         >>> from ezyquant import fields as fld
-        >>> sdr = SETDataReader("psims.db")
+        >>> sdr = SETDataReader()
         >>> sdr.get_data_index_daily(
         ...     field=fld.D_INDEX_CLOSE,
         ...     index_list=[fld.INDEX_SET, fld.INDEX_SET100],
@@ -1789,7 +1789,7 @@ class SETDataReader:
         --------
         >>> from ezyquant import SETDataReader
         >>> from ezyquant import fields as fld
-        >>> sdr = SETDataReader("psims.db")
+        >>> sdr = SETDataReader()
         >>> sdr.get_data_sector_daily(
         ...     field=fld.D_SECTOR_CLOSE,
         ...     sector_list=[fld.SECTOR_AGRI, fld.SECTOR_BANK],
@@ -1861,7 +1861,7 @@ class SETDataReader:
         --------
         >>> from ezyquant import SETDataReader
         >>> from ezyquant import fields as fld
-        >>> sdr = SETDataReader("psims.db")
+        >>> sdr = SETDataReader()
         >>> sdr.get_data_industry_daily(
         ...     field=fld.D_INDUSTRY_CLOSE,
         ...     industry_list=[fld.INDUSTRY_AGRO, fld.INDUSTRY_CONSUMP],
