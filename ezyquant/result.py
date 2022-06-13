@@ -5,7 +5,7 @@ import pandas as pd
 from . import fields as fld
 from .reader import SETDataReader
 
-summary_df_columns = [
+summary_columns = [
     "timestamp",
     "port_value_with_dividend",
     "port_value",
@@ -83,26 +83,26 @@ class SETResult:
         """
         df = self._cash_series.to_frame("cash")
 
-        df["cashflow"] = df["cash"].diff().fillna(0)
+        df["cashflow"] = df["cash"].diff().fillna(0.0)
 
         df["commission"] = (
             self.trade_df.set_index("timestamp")["commission"].groupby(level=0).sum()
         )
-        df["commission"] = df["commission"].fillna(0)
+        df["commission"] = df["commission"].fillna(0.0)
 
         df["total_market_value"] = (
             self.position_df.set_index("timestamp")["close_value"]
             .groupby(level=0)
             .sum()
         )
-        df["total_market_value"] = df["total_market_value"].fillna(0)
+        df["total_market_value"] = df["total_market_value"].fillna(0.0)
 
         df["port_value"] = df["total_market_value"] + df["cash"]
 
         df["dividend"] = (
             self.dividend_df.set_index("timestamp")["amount"].groupby(level=0).sum()
         )
-        df["dividend"] = df["dividend"].fillna(0)
+        df["dividend"] = df["dividend"].fillna(0.0)
 
         df["cumulative_dividend"] = df["dividend"].cumsum()
 
@@ -112,7 +112,7 @@ class SETResult:
         df = df.reset_index()
 
         # sort column
-        df = df[summary_df_columns]
+        df = df[summary_columns]
 
         return df
 

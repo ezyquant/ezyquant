@@ -1,11 +1,11 @@
-from unittest.mock import Mock
+from unittest.mock import Mock, PropertyMock
 
 import pandas as pd
 import pytest
 import utils
 from pandas.testing import assert_frame_equal
 
-from ezyquant.result import SETResult, position_columns, trade_columns
+from ezyquant.result import SETResult, position_columns, summary_columns, trade_columns
 
 position_in_columns = ["timestamp", "symbol", "volume", "avg_cost_price"]
 trade_in_columns = ["timestamp", "symbol", "volume", "price", "pct_commission"]
@@ -128,6 +128,93 @@ def test_trade_df(trade_df: pd.DataFrame, expect_result: pd.DataFrame):
     assert_frame_equal(result, expect_result, check_dtype=False)  # type: ignore
 
 
-class TestMakeSummaryDf:
-    # TODO: TestMakeSummaryDf
-    pass
+@pytest.mark.kwparametrize(
+    {
+        "cash_series": pd.Series({pd.Timestamp("2000-01-03"): 1.0}),
+        "position_df": pd.DataFrame(columns=["timestamp", "close_value"]),
+        "trade_df": pd.DataFrame(columns=["timestamp", "commission"]),
+        "dividend_df": pd.DataFrame(columns=["timestamp", "amount"]),
+        "expect_result": pd.DataFrame(
+            [[pd.Timestamp("2000-01-03"), 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]],
+            columns=summary_columns,
+        ),
+    },
+    # Position
+    {
+        "cash_series": pd.Series({pd.Timestamp("2000-01-03"): 1.0}),
+        "position_df": pd.DataFrame(
+            [[pd.Timestamp("2000-01-03"), 1.0]], columns=["timestamp", "close_value"]
+        ),
+        "trade_df": pd.DataFrame(columns=["timestamp", "commission"]),
+        "dividend_df": pd.DataFrame(columns=["timestamp", "amount"]),
+        "expect_result": pd.DataFrame(
+            [[pd.Timestamp("2000-01-03"), 2.0, 2.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0]],
+            columns=summary_columns,
+        ),
+    },
+    # Trade
+    {
+        "cash_series": pd.Series({pd.Timestamp("2000-01-03"): 1.0}),
+        "position_df": pd.DataFrame(columns=["timestamp", "close_value"]),
+        "trade_df": pd.DataFrame(
+            [[pd.Timestamp("2000-01-03"), 1.0]], columns=["timestamp", "commission"]
+        ),
+        "dividend_df": pd.DataFrame(columns=["timestamp", "amount"]),
+        "expect_result": pd.DataFrame(
+            [[pd.Timestamp("2000-01-03"), 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]],
+            columns=summary_columns,
+        ),
+    },
+    # Dividend
+    {
+        "cash_series": pd.Series({pd.Timestamp("2000-01-03"): 1.0}),
+        "position_df": pd.DataFrame(columns=["timestamp", "close_value"]),
+        "trade_df": pd.DataFrame(columns=["timestamp", "commission"]),
+        "dividend_df": pd.DataFrame(
+            [[pd.Timestamp("2000-01-03"), 1.0]], columns=["timestamp", "amount"]
+        ),
+        "expect_result": pd.DataFrame(
+            [[pd.Timestamp("2000-01-03"), 2.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0]],
+            columns=summary_columns,
+        ),
+    },
+    # Cumulative dividend
+    {
+        "cash_series": pd.Series(
+            {pd.Timestamp("2000-01-03"): 1.0, pd.Timestamp("2000-01-04"): 1.0}
+        ),
+        "position_df": pd.DataFrame(columns=["timestamp", "close_value"]),
+        "trade_df": pd.DataFrame(columns=["timestamp", "commission"]),
+        "dividend_df": pd.DataFrame(
+            [[pd.Timestamp("2000-01-03"), 1.0]], columns=["timestamp", "amount"]
+        ),
+        "expect_result": pd.DataFrame(
+            [
+                [pd.Timestamp("2000-01-03"), 2.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0],
+                [pd.Timestamp("2000-01-04"), 2.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0],
+            ],
+            columns=summary_columns,
+        ),
+    },
+)
+def test_summary_df(
+    cash_series: pd.Series,
+    position_df: pd.DataFrame,
+    trade_df: pd.DataFrame,
+    dividend_df: pd.DataFrame,
+    expect_result: pd.DataFrame,
+):
+    # Mock
+    srs = SETResult(
+        cash_series=cash_series, position_df=pd.DataFrame(), trade_df=pd.DataFrame()
+    )
+
+    SETResult.position_df = PropertyMock(return_value=position_df)
+    SETResult.trade_df = PropertyMock(return_value=trade_df)
+    SETResult.dividend_df = PropertyMock(return_value=dividend_df)
+
+    # Test
+    result = srs.summary_df
+
+    # Check
+    assert_frame_equal(result, expect_result)
