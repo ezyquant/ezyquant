@@ -28,8 +28,8 @@ trade_columns = [
     "timestamp",
     "symbol",
     "side",
-    "price",
     "volume",
+    "price",
     "commission",
 ]
 
