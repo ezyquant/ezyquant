@@ -132,14 +132,19 @@ Cache
 """
 
 
+def _arg_handler(arg):
+    if isinstance(arg, list):
+        return tuple(sorted(arg))
+    else:
+        return arg
+
+
 def cache_wrapper(method):
     method = lru_cache(maxsize=128)(method)
 
     def wrapped(*args, **kwargs):
-        new_args = tuple(tuple(i) if isinstance(i, list) else i for i in args)
-        new_kwargs = {
-            k: tuple(v) if isinstance(v, list) else v for k, v in kwargs.items()
-        }
+        new_args = tuple(_arg_handler(i) for i in args)
+        new_kwargs = {k: _arg_handler(v) for k, v in kwargs.items()}
         out = method(*new_args, **new_kwargs)
         return copy.deepcopy(out)
 
