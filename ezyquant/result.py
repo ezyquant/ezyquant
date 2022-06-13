@@ -1,7 +1,7 @@
 from functools import cached_property
 
 import pandas as pd
-
+from . import utils
 from . import fields as fld
 from .reader import SETDataReader
 
@@ -131,12 +131,18 @@ class SETResult:
             - close_value
         """
         # close df
+        if self._position_df.empty:
+            return pd.DataFrame(columns=position_columns)
+            
+        start = utils.date_to_str(self._position_df["timestamp"].min())
+        end = utils.date_to_str(self._position_df["timestamp"].max())
         close_price_df = self._sdr.get_data_symbol_daily(
             field=fld.D_CLOSE,
             symbol_list=self._position_df["symbol"].unique().tolist(),
-            start_date=self._position_df["timestamp"].min(),
-            end_date=self._position_df["timestamp"].max(),
+            start_date=start,
+            end_date=end,
         )
+
         close_price_df = close_price_df.stack()  # type: ignore
         close_price_df.index.names = ["timestamp", "symbol"]
         close_price_df.name = "close_price"

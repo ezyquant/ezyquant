@@ -73,7 +73,7 @@ def backtest_target_weight(
 
     Returns
     -------
-        SETResult
+    SETResult
     """
     symbol_list = signal_df.columns.tolist()
     ssc = SETSignalCreator(
