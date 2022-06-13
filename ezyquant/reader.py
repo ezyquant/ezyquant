@@ -21,17 +21,13 @@ VALUE = "value"
 
 
 class SETDataReader:
-    """SETDataReader read PSIMS data."""
 
-    def __init__(self, sqlite_path: str):
-        """SETDataReader constructor.
+    _sqlite_path: Optional[str] = None
 
-        Parameters
-        ----------
-        sqlite_path : str
-            path to sqlite file e.g. /path/to/sqlite.db
-        """
-        self._sqlite_path = sqlite_path
+    def __init__(self):
+        """SETDataReader read PSIMS data."""
+        if self._sqlite_path == None:
+            raise InputError("sqlite_path is not set")
 
         self._engine = sa.create_engine(f"sqlite:///{self._sqlite_path}")
         self._metadata = MetaData(self._engine)
@@ -2423,3 +2419,6 @@ class SETDataReader:
     def _pivot_name_value(df: pd.DataFrame) -> pd.DataFrame:
         df = utils.pivot_remove_index_name(df=df, columns=NAME, values=VALUE)
         return df
+
+
+SETDataReaderCached = utils.wrap_cache_class(SETDataReader)

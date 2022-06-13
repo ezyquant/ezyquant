@@ -4,11 +4,11 @@ from typing import Dict, List, Optional
 import numpy as np
 import pandas as pd
 
-from . import connect as con
 from . import fields as fld
 from . import utils
 from .errors import InputError
 from .indicators import TA
+from .reader import SETDataReader
 
 
 class SETSignalCreator:
@@ -50,7 +50,7 @@ class SETSignalCreator:
         self._start_date: str = start_date
         self._end_date: Optional[str] = end_date
 
-        self._sdr = con._get_sdr()
+        self._sdr = SETDataReader()
 
     def get_data(
         self,
