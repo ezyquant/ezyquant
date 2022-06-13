@@ -1,9 +1,11 @@
+from unittest.mock import Mock
+
 import pandas as pd
 import pytest
 import utils
 from pandas.testing import assert_frame_equal
 
-from ezyquant.backtest import result as res
+from ezyquant.result import SETResult
 
 position_in_columns = ["timestamp", "symbol", "volume", "avg_cost_price"]
 position_columns = [
@@ -70,8 +72,18 @@ class TestMakePositionDf:
         close_price_df: pd.DataFrame,
         expect_result: pd.DataFrame,
     ):
-        result = res.make_position_df(position_df, close_price_df)
+        # Mock
+        srs = SETResult(
+            cash_series=pd.Series(),
+            position_df=position_df,
+            trade_df=pd.DataFrame(),
+        )
+        srs._sdr.get_data_symbol_daily = Mock(return_value=close_price_df)
 
+        # Test
+        result = srs.position_df
+
+        # Check
         assert_frame_equal(result, expect_result, check_dtype=False)  # type: ignore
 
 
