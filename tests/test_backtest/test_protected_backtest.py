@@ -1,6 +1,7 @@
 from typing import Optional
 
 import pandas as pd
+import pandas.api.types as ptypes
 import pytest
 import utils
 from pandas.testing import assert_index_equal, assert_series_equal
@@ -52,16 +53,16 @@ class TestBacktestTargetWeightLogicNoTrade:
 
         # Check
         # cash_series
-        utils.check_cash_series(cash_series)
+        _check_cash_series(cash_series)
         assert_index_equal(price_df.index, cash_series.index)
         assert (cash_series == initial_cash).all()
 
         # position_df
-        utils.check_position_df(position_df)
+        _check_position_df(position_df)
         assert position_df.empty
 
         # trade_df
-        utils.check_trade_df(trade_df)
+        _check_trade_df(trade_df)
         assert trade_df.empty
 
 
@@ -241,18 +242,18 @@ class TestBacktestTargetWeightLogic:
 
         # Check
         # cash_series
-        utils.check_cash_series(cash_series)
+        _check_cash_series(cash_series)
         assert_index_equal(price_df.index, cash_series.index)
         assert_series_equal(cash_series, expect_cash_series)
 
         # position_df
-        utils.check_position_df(position_df)
+        _check_position_df(position_df)
         utils.assert_frame_equal_sort_index(
             position_df, expect_position_df, check_dtype=False
         )
 
         # trade_df
-        utils.check_trade_df(trade_df)
+        _check_trade_df(trade_df)
         utils.assert_frame_equal_sort_index(
             trade_df, expect_trade_df, check_dtype=False
         )
@@ -521,18 +522,18 @@ class TestBacktestTargetWeightLogic:
 
         # Check
         # cash_series
-        utils.check_cash_series(cash_series)
+        _check_cash_series(cash_series)
         assert_index_equal(price_df.index, cash_series.index)
         assert_series_equal(cash_series, expect_cash_series)
 
         # position_df
-        utils.check_position_df(position_df)
+        _check_position_df(position_df)
         utils.assert_frame_equal_sort_index(
             position_df, expect_position_df, check_dtype=False
         )
 
         # trade_df
-        utils.check_trade_df(trade_df)
+        _check_trade_df(trade_df)
         utils.assert_frame_equal_sort_index(
             trade_df, expect_trade_df, check_dtype=False
         )
@@ -569,11 +570,56 @@ def test_random_input(
 
     # Check
     # cash_series
-    utils.check_cash_series(cash_series)
+    _check_cash_series(cash_series)
     assert_index_equal(buy_price_df.index, cash_series.index)
 
     # position_df
-    utils.check_position_df(position_df)
+    _check_position_df(position_df)
 
     # trade_df
-    utils.check_trade_df(trade_df)
+    _check_trade_df(trade_df)
+
+
+def _check_cash_series(series):
+    assert isinstance(series, pd.Series)
+
+    # Index
+    utils.check_index_daily(series.index)
+
+    # Data type
+    assert ptypes.is_float_dtype(series)
+
+    # Cash
+    assert (series >= 0).all()
+
+    assert not series.empty
+
+
+def _check_position_df(df):
+    assert isinstance(df, pd.DataFrame)
+
+    # Column
+    assert_index_equal(df.columns, pd.Index(position_columns))
+
+    # Data type
+    assert ptypes.is_datetime64_any_dtype(df["timestamp"])
+    # assert ptypes.is_string_dtype(df["symbol"])
+    assert ptypes.is_float_dtype(df["volume"])
+    assert ptypes.is_float_dtype(df["avg_cost_price"])
+
+
+def _check_trade_df(df):
+    assert isinstance(df, pd.DataFrame)
+
+    # Column
+    assert_index_equal(
+        df.columns,
+        pd.Index(trade_columns),
+    )
+
+    # Data type
+    # assert ptypes.is_datetime64_any_dtype(df["timestamp"])
+    # assert ptypes.is_string_dtype(df["symbol"])
+    # assert ptypes.is_float_dtype(df["volume"])
+    # assert ptypes.is_float_dtype(df["price"])
+    # assert ptypes.is_float_dtype(df["pct_commission"])
