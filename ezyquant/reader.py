@@ -27,7 +27,9 @@ class SETDataReader:
     def __init__(self):
         """SETDataReader read PSIMS data."""
         if self._sqlite_path == None:
-            raise InputError("sqlite_path is not set")
+            raise InputError(
+                "You need to connect sqlite using ezyquant.connect_sqlite(sqllite_path)."
+            )
 
         self._engine = sa.create_engine(f"sqlite:///{self._sqlite_path}")
         self._metadata = MetaData(self._engine)
