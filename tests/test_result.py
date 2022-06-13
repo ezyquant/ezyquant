@@ -5,26 +5,10 @@ import pytest
 import utils
 from pandas.testing import assert_frame_equal
 
-from ezyquant.result import SETResult
+from ezyquant.result import SETResult, position_columns, trade_columns
 
 position_in_columns = ["timestamp", "symbol", "volume", "avg_cost_price"]
-position_columns = [
-    "timestamp",
-    "symbol",
-    "volume",
-    "avg_cost_price",
-    "close_price",
-    "close_value",
-]
 trade_in_columns = ["timestamp", "symbol", "volume", "price", "pct_commission"]
-trade_columns = [
-    "timestamp",
-    "symbol",
-    "side",
-    "volume",
-    "price",
-    "commission",
-]
 
 
 @pytest.mark.parametrize(
