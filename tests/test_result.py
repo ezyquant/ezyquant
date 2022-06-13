@@ -1,14 +1,141 @@
 from unittest.mock import Mock, PropertyMock
 
 import pandas as pd
+import pandas.api.types as ptypes
 import pytest
 import utils
-from pandas.testing import assert_frame_equal
+from pandas.testing import assert_frame_equal, assert_index_equal
 
 from ezyquant.result import SETResult, position_columns, summary_columns, trade_columns
 
 position_in_columns = ["timestamp", "symbol", "volume", "avg_cost_price"]
 trade_in_columns = ["timestamp", "symbol", "volume", "price", "pct_commission"]
+
+
+class TestSummaryDf:
+    def setup_method(self, _):
+        self.position_df = SETResult.position_df
+        self.trade_df = SETResult.trade_df
+        self.dividend_df = SETResult.dividend_df
+
+    def teardown_method(self, _):
+        SETResult.position_df = self.position_df
+        SETResult.trade_df = self.trade_df
+        SETResult.dividend_df = self.dividend_df
+
+    @pytest.mark.kwparametrize(
+        {
+            "cash_series": pd.Series({pd.Timestamp("2000-01-03"): 1.0}),
+            "position_df": pd.DataFrame(columns=["timestamp", "close_value"]),
+            "trade_df": pd.DataFrame(columns=["timestamp", "commission"]),
+            "dividend_df": pd.DataFrame(columns=["timestamp", "amount"]),
+            "expect_result": pd.DataFrame(
+                [[pd.Timestamp("2000-01-03"), 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]],
+                columns=summary_columns,
+            ),
+        },
+        # Position
+        {
+            "cash_series": pd.Series({pd.Timestamp("2000-01-03"): 1.0}),
+            "position_df": pd.DataFrame(
+                [[pd.Timestamp("2000-01-03"), 1.0]],
+                columns=["timestamp", "close_value"],
+            ),
+            "trade_df": pd.DataFrame(columns=["timestamp", "commission"]),
+            "dividend_df": pd.DataFrame(columns=["timestamp", "amount"]),
+            "expect_result": pd.DataFrame(
+                [[pd.Timestamp("2000-01-03"), 2.0, 2.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0]],
+                columns=summary_columns,
+            ),
+        },
+        # Trade
+        {
+            "cash_series": pd.Series({pd.Timestamp("2000-01-03"): 1.0}),
+            "position_df": pd.DataFrame(columns=["timestamp", "close_value"]),
+            "trade_df": pd.DataFrame(
+                [[pd.Timestamp("2000-01-03"), 1.0]], columns=["timestamp", "commission"]
+            ),
+            "dividend_df": pd.DataFrame(columns=["timestamp", "amount"]),
+            "expect_result": pd.DataFrame(
+                [[pd.Timestamp("2000-01-03"), 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]],
+                columns=summary_columns,
+            ),
+        },
+        # Dividend
+        {
+            "cash_series": pd.Series({pd.Timestamp("2000-01-03"): 1.0}),
+            "position_df": pd.DataFrame(columns=["timestamp", "close_value"]),
+            "trade_df": pd.DataFrame(columns=["timestamp", "commission"]),
+            "dividend_df": pd.DataFrame(
+                [[pd.Timestamp("2000-01-03"), 1.0]], columns=["timestamp", "amount"]
+            ),
+            "expect_result": pd.DataFrame(
+                [[pd.Timestamp("2000-01-03"), 2.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0]],
+                columns=summary_columns,
+            ),
+        },
+        # Cumulative dividend
+        {
+            "cash_series": pd.Series(
+                {pd.Timestamp("2000-01-03"): 1.0, pd.Timestamp("2000-01-04"): 1.0}
+            ),
+            "position_df": pd.DataFrame(columns=["timestamp", "close_value"]),
+            "trade_df": pd.DataFrame(columns=["timestamp", "commission"]),
+            "dividend_df": pd.DataFrame(
+                [[pd.Timestamp("2000-01-03"), 1.0]], columns=["timestamp", "amount"]
+            ),
+            "expect_result": pd.DataFrame(
+                [
+                    [
+                        pd.Timestamp("2000-01-03"),
+                        2.0,
+                        1.0,
+                        0.0,
+                        1.0,
+                        0.0,
+                        1.0,
+                        1.0,
+                        0.0,
+                    ],
+                    [
+                        pd.Timestamp("2000-01-04"),
+                        2.0,
+                        1.0,
+                        0.0,
+                        1.0,
+                        0.0,
+                        0.0,
+                        1.0,
+                        0.0,
+                    ],
+                ],
+                columns=summary_columns,
+            ),
+        },
+    )
+    def test_summary_df(
+        self,
+        cash_series: pd.Series,
+        position_df: pd.DataFrame,
+        trade_df: pd.DataFrame,
+        dividend_df: pd.DataFrame,
+        expect_result: pd.DataFrame,
+    ):
+        # Mock
+        srs = SETResult(
+            cash_series=cash_series, position_df=pd.DataFrame(), trade_df=pd.DataFrame()
+        )
+
+        SETResult.position_df = PropertyMock(return_value=position_df)
+        SETResult.trade_df = PropertyMock(return_value=trade_df)
+        SETResult.dividend_df = PropertyMock(return_value=dividend_df)
+
+        # Test
+        result = srs.summary_df
+
+        # Check
+        _check_summary_df(result)
+        assert_frame_equal(result, expect_result)
 
 
 @pytest.mark.parametrize(
@@ -73,6 +200,7 @@ def test_position_df(
     result = srs.position_df
 
     # Check
+    _check_position_df(result)
     assert_frame_equal(result, expect_result, check_dtype=False)  # type: ignore
 
 
@@ -125,96 +253,79 @@ def test_trade_df(trade_df: pd.DataFrame, expect_result: pd.DataFrame):
     result = srs.trade_df
 
     # Check
+    _check_trade_df(result)
     assert_frame_equal(result, expect_result, check_dtype=False)  # type: ignore
 
 
-@pytest.mark.kwparametrize(
-    {
-        "cash_series": pd.Series({pd.Timestamp("2000-01-03"): 1.0}),
-        "position_df": pd.DataFrame(columns=["timestamp", "close_value"]),
-        "trade_df": pd.DataFrame(columns=["timestamp", "commission"]),
-        "dividend_df": pd.DataFrame(columns=["timestamp", "amount"]),
-        "expect_result": pd.DataFrame(
-            [[pd.Timestamp("2000-01-03"), 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]],
-            columns=summary_columns,
-        ),
-    },
-    # Position
-    {
-        "cash_series": pd.Series({pd.Timestamp("2000-01-03"): 1.0}),
-        "position_df": pd.DataFrame(
-            [[pd.Timestamp("2000-01-03"), 1.0]], columns=["timestamp", "close_value"]
-        ),
-        "trade_df": pd.DataFrame(columns=["timestamp", "commission"]),
-        "dividend_df": pd.DataFrame(columns=["timestamp", "amount"]),
-        "expect_result": pd.DataFrame(
-            [[pd.Timestamp("2000-01-03"), 2.0, 2.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0]],
-            columns=summary_columns,
-        ),
-    },
-    # Trade
-    {
-        "cash_series": pd.Series({pd.Timestamp("2000-01-03"): 1.0}),
-        "position_df": pd.DataFrame(columns=["timestamp", "close_value"]),
-        "trade_df": pd.DataFrame(
-            [[pd.Timestamp("2000-01-03"), 1.0]], columns=["timestamp", "commission"]
-        ),
-        "dividend_df": pd.DataFrame(columns=["timestamp", "amount"]),
-        "expect_result": pd.DataFrame(
-            [[pd.Timestamp("2000-01-03"), 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]],
-            columns=summary_columns,
-        ),
-    },
-    # Dividend
-    {
-        "cash_series": pd.Series({pd.Timestamp("2000-01-03"): 1.0}),
-        "position_df": pd.DataFrame(columns=["timestamp", "close_value"]),
-        "trade_df": pd.DataFrame(columns=["timestamp", "commission"]),
-        "dividend_df": pd.DataFrame(
-            [[pd.Timestamp("2000-01-03"), 1.0]], columns=["timestamp", "amount"]
-        ),
-        "expect_result": pd.DataFrame(
-            [[pd.Timestamp("2000-01-03"), 2.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0]],
-            columns=summary_columns,
-        ),
-    },
-    # Cumulative dividend
-    {
-        "cash_series": pd.Series(
-            {pd.Timestamp("2000-01-03"): 1.0, pd.Timestamp("2000-01-04"): 1.0}
-        ),
-        "position_df": pd.DataFrame(columns=["timestamp", "close_value"]),
-        "trade_df": pd.DataFrame(columns=["timestamp", "commission"]),
-        "dividend_df": pd.DataFrame(
-            [[pd.Timestamp("2000-01-03"), 1.0]], columns=["timestamp", "amount"]
-        ),
-        "expect_result": pd.DataFrame(
-            [
-                [pd.Timestamp("2000-01-03"), 2.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0],
-                [pd.Timestamp("2000-01-04"), 2.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0],
-            ],
-            columns=summary_columns,
-        ),
-    },
-)
-def test_summary_df(
-    cash_series: pd.Series,
-    position_df: pd.DataFrame,
-    trade_df: pd.DataFrame,
-    dividend_df: pd.DataFrame,
-    expect_result: pd.DataFrame,
-):
-    # Mock
-    srs = SETResult(
-        cash_series=cash_series, position_df=pd.DataFrame(), trade_df=pd.DataFrame()
-    )
+def _check_summary_df(df):
+    assert isinstance(df, pd.DataFrame)
 
-    SETResult.position_df = PropertyMock(return_value=position_df)
-    SETResult.trade_df = PropertyMock(return_value=trade_df)
-    SETResult.dividend_df = PropertyMock(return_value=dividend_df)
+    # Column
+    assert_index_equal(df.columns, pd.Index(summary_columns))
 
-    # Test
-    result = srs.summary_df
+    # Data type
+    assert ptypes.is_datetime64_any_dtype(df["timestamp"])
+    assert ptypes.is_float_dtype(df["port_value_with_dividend"])
+    assert ptypes.is_float_dtype(df["port_value"])
+    assert ptypes.is_float_dtype(df["total_market_value"])
+    assert ptypes.is_float_dtype(df["cash"])
+    assert ptypes.is_float_dtype(df["cashflow"])
+    assert ptypes.is_float_dtype(df["dividend"])
+    assert ptypes.is_float_dtype(df["cumulative_dividend"])
+    assert ptypes.is_float_dtype(df["commission"])
 
-    # Check
-    assert_frame_equal(result, expect_result)
+    # Value
+    assert (df["port_value_with_dividend"] >= 0).all()
+    assert (df["port_value"] >= 0).all()
+    assert (df["total_market_value"] >= 0).all()
+    assert (df["cash"] >= 0).all()
+    assert (df["dividend"] >= 0).all()
+    assert (df["cumulative_dividend"] >= 0).all()
+    assert (df["commission"] >= 0).all()
+
+    assert df["cumulative_dividend"].is_monotonic
+
+    assert not df.empty
+
+
+def _check_position_df(df):
+    assert isinstance(df, pd.DataFrame)
+
+    # Column
+    assert_index_equal(df.columns, pd.Index(position_columns))
+
+    # Data type
+    if not df.empty:
+        assert ptypes.is_datetime64_any_dtype(df["timestamp"])
+        assert ptypes.is_string_dtype(df["symbol"])
+        assert ptypes.is_float_dtype(df["volume"])
+        assert ptypes.is_float_dtype(df["avg_cost_price"])
+        assert ptypes.is_float_dtype(df["close_price"])
+        assert ptypes.is_float_dtype(df["close_value"])
+
+    # Value
+    assert (df["volume"] > 0).all()
+    assert (df["avg_cost_price"] > 0).all()
+    assert (df["close_price"] > 0).all()
+    assert (df["close_value"] > 0).all()
+
+
+def _check_trade_df(df):
+    assert isinstance(df, pd.DataFrame)
+
+    # Column
+    assert_index_equal(df.columns, pd.Index(trade_columns))
+
+    # Data type
+    if not df.empty:
+        assert ptypes.is_datetime64_any_dtype(df["timestamp"])
+        assert ptypes.is_string_dtype(df["symbol"])
+        assert ptypes.is_string_dtype(df["side"])
+        assert ptypes.is_float_dtype(df["volume"])
+        assert ptypes.is_float_dtype(df["price"])
+        assert ptypes.is_float_dtype(df["commission"])
+
+    # Value
+    assert (df["volume"] > 0).all()
+    assert (df["price"] > 0).all()
+    assert (df["commission"] >= 0).all()

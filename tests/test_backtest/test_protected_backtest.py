@@ -602,24 +602,23 @@ def _check_position_df(df):
     assert_index_equal(df.columns, pd.Index(position_columns))
 
     # Data type
-    assert ptypes.is_datetime64_any_dtype(df["timestamp"])
-    # assert ptypes.is_string_dtype(df["symbol"])
-    assert ptypes.is_float_dtype(df["volume"])
-    assert ptypes.is_float_dtype(df["avg_cost_price"])
+    if not df.empty:
+        assert ptypes.is_datetime64_any_dtype(df["timestamp"])
+        assert ptypes.is_string_dtype(df["symbol"])
+        assert ptypes.is_float_dtype(df["volume"])
+        assert ptypes.is_float_dtype(df["avg_cost_price"])
 
 
 def _check_trade_df(df):
     assert isinstance(df, pd.DataFrame)
 
     # Column
-    assert_index_equal(
-        df.columns,
-        pd.Index(trade_columns),
-    )
+    assert_index_equal(df.columns, pd.Index(trade_columns))
 
     # Data type
-    # assert ptypes.is_datetime64_any_dtype(df["timestamp"])
-    # assert ptypes.is_string_dtype(df["symbol"])
-    # assert ptypes.is_float_dtype(df["volume"])
-    # assert ptypes.is_float_dtype(df["price"])
-    # assert ptypes.is_float_dtype(df["pct_commission"])
+    if not df.empty:
+        assert ptypes.is_datetime64_any_dtype(df["timestamp"])
+        assert ptypes.is_string_dtype(df["symbol"])
+        assert ptypes.is_float_dtype(df["volume"])
+        assert ptypes.is_float_dtype(df["price"])
+        assert ptypes.is_float_dtype(df["pct_commission"])
