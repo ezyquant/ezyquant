@@ -1,5 +1,7 @@
 import calendar
+import copy
 from datetime import date, datetime, timedelta
+from functools import lru_cache
 
 import pandas as pd
 
@@ -123,3 +125,40 @@ def _date_range(
 
     out = pd.to_datetime(out)
     return out
+
+
+""" 
+Cache
+"""
+
+
+def _arg_handler(arg):
+    if isinstance(arg, list):
+        return tuple(sorted(arg))
+    else:
+        return arg
+
+
+def cache_wrapper(method):
+    method = lru_cache(maxsize=128)(method)
+
+    def wrapped(*args, **kwargs):
+        new_args = tuple(_arg_handler(i) for i in args)
+        new_kwargs = {k: _arg_handler(v) for k, v in kwargs.items()}
+        out = method(*new_args, **new_kwargs)
+        return copy.deepcopy(out)
+
+    return wrapped
+
+
+class CacheMetaClass(type):
+    def __new__(cls, clsname, bases, attrs):
+        new_attrs = {
+            k: cache_wrapper(v) if not k.startswith("_") and callable(v) else v
+            for k, v in attrs.items()
+        }
+        return type.__new__(cls, clsname, bases, new_attrs)
+
+
+def wrap_cache_class(cls):
+    return CacheMetaClass(cls.__name__, cls.__bases__, cls.__dict__)

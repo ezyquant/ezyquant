@@ -15,7 +15,6 @@ def backtest_target_weight(
     rebalance_freq: str,
     rebalance_at: int,
     # common param
-    sqlite_path: str,
     start_date: str,
     end_date: str,
     initial_cash: float,
@@ -43,8 +42,6 @@ def backtest_target_weight(
         rebalance at. can be 1 to 31 depending on rebalance_freq.
             - 1: first day of month or Monday
             - 5: fifth day of month or Friday
-    sqlite_path : str
-        path to sqlite file e.g. /path/to/sqlite.db
     start_date : str
         start date in format YYYY-MM-DD
     end_date : str
@@ -80,7 +77,6 @@ def backtest_target_weight(
     """
     symbol_list = signal_df.columns.tolist()
     ssc = SETSignalCreator(
-        sqlite_path=sqlite_path,
         start_date=start_date,
         end_date=end_date,
         index_list=[],

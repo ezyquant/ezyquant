@@ -1,8 +1,10 @@
-from typing import List
+import copy
+import string
+from unittest.mock import Mock
 
 import pandas as pd
 import pytest
-from pandas.testing import assert_series_equal
+from pandas.testing import assert_frame_equal, assert_series_equal
 
 from ezyquant import utils
 
@@ -281,3 +283,74 @@ class TestIsRebalanceMonthly:
         )
         expected_s = (day_s == rebalance_at) | (day_s.index == day_s.index.min())
         assert_series_equal(result, expected_s)
+
+
+class TestWrapCacheClass:
+    def _test(
+        self,
+        args1: tuple = tuple(),
+        kwargs1: dict = dict(),
+        args2: tuple = tuple(),
+        kwargs2: dict = dict(),
+        expect_call_count: int = 1,
+    ):
+        # Mock
+        m = Mock(return_value=pd.DataFrame())
+
+        class A:
+            def m1(self, *args, **kwargs):
+                return m()
+
+        # Test
+        A1 = utils.wrap_cache_class(A)
+
+        a: A = A1()  # type: ignore
+
+        r1 = a.m1(*args1, **kwargs1)
+        r2 = a.m1(*args2, **kwargs2)
+
+        # Check
+        assert_frame_equal(r1, r2)
+        assert id(r1) != id(r2)
+        assert m.call_count == expect_call_count
+
+    def test_no_param(self):
+        self._test()
+
+    @pytest.mark.parametrize(
+        "args",
+        [(None,), (1,), ("A",), ("A", "A"), (True,), ([],), (["A"],), (["A", "B"],)],
+    )
+    def test_same_param(self, args: tuple):
+        # args
+        self._test(
+            args1=copy.deepcopy(args), args2=copy.deepcopy(args), expect_call_count=1
+        )
+
+        # kwargs
+        kwargs = {string.ascii_lowercase[i]: args[i] for i in range(len(args))}
+        self._test(
+            kwargs1=copy.deepcopy(kwargs),
+            kwargs2=copy.deepcopy(kwargs),
+            expect_call_count=1,
+        )
+
+    @pytest.mark.parametrize(
+        ("args1", "args2", "expect_call_count"),
+        [
+            ((1,), (1.0,), 1),
+            ((1,), ("1",), 2),
+            ((1,), (2,), 2),
+            ((["A", "B"],), (["B", "A"],), 1),
+            ((1, 1), (1, 2), 2),
+        ],
+    )
+    def test_diff_args(self, args1: tuple, args2: tuple, expect_call_count: int):
+        self._test(args1=args1, args2=args2, expect_call_count=expect_call_count)
+
+        # kwargs
+        kwargs1 = {string.ascii_lowercase[i]: args1[i] for i in range(len(args1))}
+        kwargs2 = {string.ascii_lowercase[i]: args2[i] for i in range(len(args2))}
+        self._test(
+            kwargs1=kwargs1, kwargs2=kwargs2, expect_call_count=expect_call_count
+        )
