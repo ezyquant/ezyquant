@@ -4,7 +4,6 @@ from typing import List
 
 import numpy as np
 import pandas as pd
-import pandas.api.types as ptypes
 from pandas.testing import assert_frame_equal, assert_index_equal, assert_series_equal
 
 
@@ -40,53 +39,6 @@ def check_data_symbol_daily(result):
     # Column
     assert result.columns.is_unique
     assert_index_equal(result.columns, result.columns.str.upper())
-
-
-def check_cash_series(series):
-    assert isinstance(series, pd.Series)
-
-    # Index
-    check_index_daily(series.index)
-
-    # Data type
-    assert ptypes.is_float_dtype(series)
-
-    # Cash
-    assert (series >= 0).all()
-
-    assert not series.empty
-
-
-def check_position_df(df):
-    assert isinstance(df, pd.DataFrame)
-
-    # Column
-    assert_index_equal(
-        df.columns, pd.Index(["timestamp", "symbol", "volume", "avg_cost_price"])
-    )
-
-    # Data type
-    assert ptypes.is_datetime64_any_dtype(df["timestamp"])
-    # assert ptypes.is_string_dtype(df["symbol"])
-    assert ptypes.is_float_dtype(df["volume"])
-    assert ptypes.is_float_dtype(df["avg_cost_price"])
-
-
-def check_trade_df(df):
-    assert isinstance(df, pd.DataFrame)
-
-    # Column
-    assert_index_equal(
-        df.columns,
-        pd.Index(["timestamp", "symbol", "volume", "price", "pct_commission"]),
-    )
-
-    # Data type
-    # assert ptypes.is_datetime64_any_dtype(df["timestamp"])
-    # assert ptypes.is_string_dtype(df["symbol"])
-    # assert ptypes.is_float_dtype(df["volume"])
-    # assert ptypes.is_float_dtype(df["price"])
-    # assert ptypes.is_float_dtype(df["pct_commission"])
 
 
 def is_df_unique(df) -> bool:

@@ -9,13 +9,16 @@ def sqlite_path() -> str:
     return "psims.db"
 
 
-@pytest.fixture(scope="session")
-def sdr(sqlite_path: str) -> SETDataReader:
+@pytest.fixture(scope="session", autouse=True)
+def connect_sqlite(sqlite_path: str):
     ez.connect_sqlite(sqlite_path)
+
+
+@pytest.fixture(scope="session")
+def sdr() -> SETDataReader:
     return SETDataReader()
 
 
 @pytest.fixture
-def ssc(sqlite_path: str) -> SETSignalCreator:
-    ez.connect_sqlite(sqlite_path)
+def ssc() -> SETSignalCreator:
     return SETSignalCreator(index_list=[], symbol_list=[])

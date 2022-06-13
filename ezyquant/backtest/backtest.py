@@ -1,5 +1,3 @@
-from typing import Tuple
-
 import numpy as np
 import pandas as pd
 
@@ -7,7 +5,7 @@ from .. import fields as fld
 from .. import utils
 from ..creator import SETSignalCreator
 from ..errors import InputError
-from . import result as res
+from ..result import SETResult
 from . import validators as vld
 from ._backtest import _backtest_target_weight
 
@@ -26,7 +24,7 @@ def backtest_target_weight(
     buy_price_match_mode: str = "open",
     sell_price_match_mode: str = "open",
     signal_delay_bar: int = 1,
-) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+) -> SETResult:
     """Backtest target weight. Rebalance with rebalance_freq, rebalance_at or
     if signal was changed from yesterday.
 
@@ -75,36 +73,7 @@ def backtest_target_weight(
 
     Returns
     -------
-    Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]
-        Return following dataframe:
-            - summary_df
-                - timestamp (index)
-                - port_value_with_dividend
-                - port_value
-                - total_market_value
-                - cash
-                - cashflow
-                - dividend
-                - cumulative_dividend
-                - commission
-            - position_df
-                - timestamp
-                - symbol
-                - volume
-                - avg_cost_price
-                - close_price
-                - close_value
-            - trade_df
-                - timestamp
-                - symbol
-                - side
-                - volume
-                - price
-                - commission
-            - dividend_df
-                - TODO
-            - stat_df
-                - TODO
+    SETResult
     """
     symbol_list = signal_df.columns.tolist()
     ssc = SETSignalCreator(
@@ -172,27 +141,4 @@ def backtest_target_weight(
         pct_commission=pct_commission,
     )
 
-    # Position df
-    close_price_df = ssc.get_data(field=fld.D_CLOSE, timeframe=fld.TIMEFRAME_DAILY)
-    position_df = res.make_position_df(position_df, close_price_df)
-
-    # Trade df
-    trade_df = res.make_trade_df(trade_df)
-
-    # Dividend df
-    # TODO: [EZ-77] dividend_df
-    dividend_df = pd.DataFrame(columns=["timestamp", "amount"])
-
-    # Summary df
-    summary_df = res.make_summary_df(
-        cash_series=cash_series,
-        trade_df=trade_df,
-        position_df=position_df,
-        dividend_df=dividend_df,
-    )
-
-    # Stat df
-    # TODO: [EZ-76] stat_df
-    stat_df = pd.DataFrame()
-
-    return summary_df, position_df, trade_df, dividend_df, stat_df
+    return SETResult(cash_series, position_df, trade_df)
