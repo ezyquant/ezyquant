@@ -264,8 +264,7 @@ class SETResult:
     def _sub_one_trade_date(self, series: pd.Series) -> pd.Series:
         td_list = self._sdr.get_trading_dates()
 
-        td_df = pd.DataFrame(td_list, columns=["trade_date"])
-        td_df["trade_date"] = pd.to_datetime(td_df["trade_date"])
+        td_df = pd.DataFrame({"trade_date": pd.to_datetime(td_list)})
         td_df["sub_trade_date"] = td_df["trade_date"].shift(1)
 
         df = series.to_frame("trade_date").merge(
