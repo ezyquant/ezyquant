@@ -202,7 +202,7 @@ class SETResult:
             end_date=end_date,
         )
 
-        close_price_df = close_price_df.stack()  # type: ignore
+        close_price_df = close_price_df.stack()
         close_price_df.index.names = ["timestamp", "symbol"]
         close_price_df.name = "close_price"
         close_price_df = close_price_df.reset_index()
@@ -687,7 +687,7 @@ class SETResult:
         pos_df = position_df.copy()
 
         df = pos_df[pos_df["timestamp"] == self.end_date]
-        df = df.rename(columns={"close_price": "price"})  # type: ignore
+        df = df.rename(columns={"close_price": "price"})
         df["side"] = fld.SIDE_SELL
         df["commission"] = 0
         df = df.drop(columns=["close_value"])
@@ -703,9 +703,8 @@ class SETResult:
         df.loc[df["side"] == fld.SIDE_SELL, "datetime_in"] = nan
 
         if not df.empty:
-            df["datetime_in"] = df.groupby(["symbol"]).fillna(method="pad")[  # type: ignore
-                "datetime_in"
-            ]
+            tmp = df.groupby(["symbol"]).fillna(method="pad")  # type: ignore
+            df["datetime_in"] = tmp["datetime_in"]
 
         return df
 
@@ -738,4 +737,4 @@ class SETResult:
 
 def _searchsorted_value(series: pd.DatetimeIndex, value: pd.Series) -> pd.Series:
     idx = series.searchsorted(value.to_list())
-    return series[idx]  # type: ignore
+    return series[idx]
