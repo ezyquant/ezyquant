@@ -466,6 +466,11 @@ class SETDataReader:
                 - ca_type: str - N_CA_TYPE
                 - dps: int - Z_RIGHTS
 
+        Notes
+        -----
+        - ex_date and pay_date can be null.
+        - pay_date can be non trade date.
+
         Examples
         --------
         >>> from ezyquant import SETDataReader
