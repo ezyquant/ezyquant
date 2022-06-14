@@ -2,19 +2,7 @@ from typing import List
 
 import pandas as pd
 
-from .. import fields as fld
 from ..errors import InputError
-
-
-def check_price_mode(price_mode: str) -> None:
-    if price_mode not in [
-        fld.D_OPEN,
-        fld.D_HIGH,
-        fld.D_LOW,
-        fld.D_CLOSE,
-        fld.D_AVERAGE,
-    ]:
-        raise InputError(f"Invalid price mode: {price_mode}")
 
 
 def check_initial_cash(initial_cash: float) -> None:

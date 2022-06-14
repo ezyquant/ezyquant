@@ -542,11 +542,11 @@ class TestBacktestTargetWeightLogic:
 @pytest.mark.parametrize("initial_cash", [1e2, 1e6])
 @pytest.mark.parametrize("pct_commission", [0.0, 0.0025, 0.1])
 @pytest.mark.parametrize(
-    "signal_weight_df", [utils.make_signal_weight_df(n_row=2000, n_col=800)]
+    "signal_weight_df", [utils.make_signal_weight_df(n_row=1000, n_col=100)]
 )
-@pytest.mark.parametrize("buy_price_df", [utils.make_price_df(n_row=2000, n_col=800)])
+@pytest.mark.parametrize("buy_price_df", [utils.make_price_df(n_row=1000, n_col=100)])
 @pytest.mark.parametrize(
-    "sell_price_df", [None, utils.make_price_df(n_row=2000, n_col=800)]
+    "sell_price_df", [None, utils.make_price_df(n_row=1000, n_col=100)]
 )
 def test_random_input(
     initial_cash: float,
