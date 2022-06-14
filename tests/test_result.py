@@ -6,6 +6,7 @@ import pytest
 import utils
 from pandas.testing import assert_frame_equal, assert_index_equal
 
+import ezyquant.fields as fld
 from ezyquant.result import (
     SETResult,
     dividend_columns,
@@ -254,7 +255,7 @@ def test_position_df(
             ),
             pd.DataFrame(
                 [
-                    [pd.Timestamp("2000-01-03"), "AAA", "buy", 100.0, 0.1, 0.1],
+                    [pd.Timestamp("2000-01-03"), "AAA", fld.SIDE_BUY, 100.0, 0.1, 0.1],
                 ],
                 columns=trade_columns,
             ),
@@ -269,8 +270,8 @@ def test_position_df(
             ),
             pd.DataFrame(
                 [
-                    [pd.Timestamp("2000-01-03"), "AAA", "buy", 100.0, 0.1, 0.1],
-                    [pd.Timestamp("2000-01-04"), "AAA", "sell", 100.0, 0.1, 0.1],
+                    [pd.Timestamp("2000-01-03"), "AAA", fld.SIDE_BUY, 100.0, 0.1, 0.1],
+                    [pd.Timestamp("2000-01-04"), "AAA", fld.SIDE_SELL, 100.0, 0.1, 0.1],
                 ],
                 columns=trade_columns,
             ),

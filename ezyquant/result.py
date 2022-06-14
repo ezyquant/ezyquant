@@ -231,7 +231,9 @@ class SETResult:
             - commission
         """
         df = self._trade_df.copy()
-        df["side"] = df["volume"].apply(lambda x: "buy" if x > 0 else "sell")
+        df["side"] = df["volume"].apply(
+            lambda x: fld.SIDE_BUY if x > 0 else fld.SIDE_SELL
+        )
         df["volume"] = df["volume"].abs()
         df["commission"] = df["price"] * df["volume"] * df["pct_commission"]
         df = df.drop(columns=["pct_commission"])
