@@ -399,9 +399,11 @@ class SETResult:
     def pct_exposure(self) -> pd.Series:
         """Stock hold divided by total_market_value."""
         df = self.summary_df
-        return (
-            df["total_market_value"] / df[["port_value", "port_value_with_dividend"]]
-        ).mean()
+        df["port_value"] = df["total_market_value"] / df["port_value"]
+        df["port_value_with_dividend"] = (
+            df["total_market_value"] / df["port_value_with_dividend"]
+        )
+        return df[["port_value", "port_value_with_dividend"]].mean()
 
     @property
     @return_nan_on_failure
