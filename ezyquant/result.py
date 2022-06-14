@@ -446,9 +446,7 @@ class SETResult:
     def maximum_drawdown(self) -> pd.Series:
         """Maximum drawdown."""
         nav = self._nav_df
-        maxcum = nav.cummax()
-        drawdown = nav - maxcum
-        return drawdown.min()
+        return (nav - nav.cummax()).min()
 
     @property
     @return_nan_on_failure
@@ -483,24 +481,20 @@ class SETResult:
     def avg_bar_held(self) -> float:
         """sum of bars in trades / number of trades."""
         df = self._summary_trade_df
-        out = df["hold_days"].mean()
-        assert isinstance(out, float)
-        return out
+        return df["hold_days"].mean()
 
     @property
     @return_nan_on_failure
     def win_trades(self) -> int:
         """Number of win trades."""
-        df = self._summary_trade_df
-        df = df[df["pct_return"] >= 0]
-        return df.shape[0]
+        return self._is_win_trade.sum()
 
     @property
     @return_nan_on_failure
     def total_profit(self) -> float:
         """Total profit."""
         df = self._summary_trade_df
-        df = df[df["return"] > 0]
+        df = df[self._is_win_trade]
         return df["return"].sum()
 
     @property
@@ -508,54 +502,44 @@ class SETResult:
     def avg_profit(self) -> float:
         """Average profit."""
         df = self._summary_trade_df
-        df = df[df["pct_return"] > 0]
-        out = df["return"].mean()
-        assert isinstance(out, float)
-        return out
+        df = df[self._is_win_trade]
+        return df["return"].mean()
 
     @property
     @return_nan_on_failure
     def pct_avg_profit(self) -> float:
         """Percent average profit."""
         df = self._summary_trade_df
-        df = df[df["pct_return"] > 0]
-        out = df["pct_return"].mean()
-        assert isinstance(out, float)
-        return out
+        df = df[self._is_win_trade]
+        return df["pct_return"].mean()
 
     @property
     @return_nan_on_failure
     def avg_win_bar_held(self) -> float:
         """Average win bar held."""
         df = self._summary_trade_df
-        df = df[df["pct_return"] > 0]
-        out = df["hold_days"].mean()
-        assert isinstance(out, float)
-        return out
+        df = df[self._is_win_trade]
+        return df["hold_days"].mean()
 
     @property
     @return_nan_on_failure
     def max_win_consecutive(self) -> int:
         """Maximum win consecutive."""
-        df = self._summary_trade_df
-        is_win = df["pct_return"] > 0
-        cum_win = is_win.cumsum()
-        return cum_win.max()
+        s = self._is_win_trade
+        return (~s).cumsum()[s].value_counts().max()
 
     @property
     @return_nan_on_failure
     def loss_trades(self) -> int:
         """Number of loss trades."""
-        df = self._summary_trade_df
-        df = df[df["pct_return"] < 0]
-        return df.shape[0]
+        return (~self._is_win_trade).sum()
 
     @property
     @return_nan_on_failure
     def total_loss(self) -> float:
         """Total loss."""
         df = self._summary_trade_df
-        df = df[df["return"] <= 0]
+        df = df[~self._is_win_trade]
         return df["return"].sum()
 
     @property
@@ -563,39 +547,31 @@ class SETResult:
     def avg_loss(self) -> float:
         """Average loss."""
         df = self._summary_trade_df
-        df = df[df["pct_return"] <= 0]
-        out = df["return"].mean()
-        assert isinstance(out, float)
-        return out
+        df = df[~self._is_win_trade]
+        return df["return"].mean()
 
     @property
     @return_nan_on_failure
     def pct_avg_loss(self) -> float:
         """Percent average loss."""
         df = self._summary_trade_df
-        df = df[df["pct_return"] <= 0]
-        out = df["pct_return"].mean()
-        assert isinstance(out, float)
-        return out
+        df = df[~self._is_win_trade]
+        return df["pct_return"].mean()
 
     @property
     @return_nan_on_failure
     def avg_lose_bar_held(self) -> float:
         """Average lose bar held."""
         df = self._summary_trade_df
-        df = df[df["pct_return"] <= 0]
-        out = df["hold_days"].mean()
-        assert isinstance(out, float)
-        return out
+        df = df[~self._is_win_trade]
+        return df["hold_days"].mean()
 
     @property
     @return_nan_on_failure
     def max_lose_consecutive(self) -> int:
         """Maximum lose consecutive."""
-        df = self._summary_trade_df
-        is_lose = df["pct_return"] <= 0
-        cum_lose = is_lose.cumsum()
-        return cum_lose.max()
+        s = ~self._is_win_trade
+        return (~s).cumsum()[s].value_counts().max()
 
     @property
     def start_date(self) -> datetime:
@@ -630,6 +606,11 @@ class SETResult:
     def _n_year(self) -> float:
         """Number of years."""
         return (self.end_date - self.start_date).days / 365
+
+    @property
+    def _is_win_trade(self) -> pd.Series:
+        """Is win trade."""
+        return self._summary_trade_df["pct_return"] > 0
 
     """
     Protected
