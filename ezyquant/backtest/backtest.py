@@ -168,18 +168,18 @@ def _get_price(
     ):
         out = _get_data(mode)
     elif mode == fld.PRICE_MATCH_MODE_MEDIAN:
-        h = _get_data(field=fld.PRICE_MATCH_MODE_HIGH)
-        l = _get_data(field=fld.PRICE_MATCH_MODE_LOW)
+        h = _get_data(fld.PRICE_MATCH_MODE_HIGH)
+        l = _get_data(fld.PRICE_MATCH_MODE_LOW)
         out = (h + l) / 2
     elif mode == fld.PRICE_MATCH_MODE_TYPICAL:
-        h = _get_data(field=fld.PRICE_MATCH_MODE_HIGH)
-        l = _get_data(field=fld.PRICE_MATCH_MODE_LOW)
-        c = _get_data(field=fld.PRICE_MATCH_MODE_CLOSE)
+        h = _get_data(fld.PRICE_MATCH_MODE_HIGH)
+        l = _get_data(fld.PRICE_MATCH_MODE_LOW)
+        c = _get_data(fld.PRICE_MATCH_MODE_CLOSE)
         out = (h + l + c) / 3
     elif mode == fld.PRICE_MATCH_MODE_WEIGHTED:
-        h = _get_data(field=fld.PRICE_MATCH_MODE_HIGH)
-        l = _get_data(field=fld.PRICE_MATCH_MODE_LOW)
-        c = _get_data(field=fld.PRICE_MATCH_MODE_CLOSE)
+        h = _get_data(fld.PRICE_MATCH_MODE_HIGH)
+        l = _get_data(fld.PRICE_MATCH_MODE_LOW)
+        c = _get_data(fld.PRICE_MATCH_MODE_CLOSE)
         out = (h + l + c + c) / 4
     else:
         raise InputError(f"Invalid price_match_mode: {mode}")
