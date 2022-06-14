@@ -28,7 +28,7 @@ class TestSummaryDf:
             "cash_series": pd.Series({pd.Timestamp("2000-01-03"): 1.0}),
             "position_df": pd.DataFrame(columns=["timestamp", "close_value"]),
             "trade_df": pd.DataFrame(columns=["timestamp", "commission"]),
-            "dividend_df": pd.DataFrame(columns=["timestamp", "amount"]),
+            "dividend_df": pd.DataFrame(columns=["pay_date", "amount"]),
             "expect_result": pd.DataFrame(
                 [[pd.Timestamp("2000-01-03"), 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]],
                 columns=summary_columns,
@@ -42,7 +42,7 @@ class TestSummaryDf:
                 columns=["timestamp", "close_value"],
             ),
             "trade_df": pd.DataFrame(columns=["timestamp", "commission"]),
-            "dividend_df": pd.DataFrame(columns=["timestamp", "amount"]),
+            "dividend_df": pd.DataFrame(columns=["pay_date", "amount"]),
             "expect_result": pd.DataFrame(
                 [[pd.Timestamp("2000-01-03"), 2.0, 2.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0]],
                 columns=summary_columns,
@@ -55,7 +55,7 @@ class TestSummaryDf:
             "trade_df": pd.DataFrame(
                 [[pd.Timestamp("2000-01-03"), 1.0]], columns=["timestamp", "commission"]
             ),
-            "dividend_df": pd.DataFrame(columns=["timestamp", "amount"]),
+            "dividend_df": pd.DataFrame(columns=["pay_date", "amount"]),
             "expect_result": pd.DataFrame(
                 [[pd.Timestamp("2000-01-03"), 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]],
                 columns=summary_columns,
@@ -67,7 +67,7 @@ class TestSummaryDf:
             "position_df": pd.DataFrame(columns=["timestamp", "close_value"]),
             "trade_df": pd.DataFrame(columns=["timestamp", "commission"]),
             "dividend_df": pd.DataFrame(
-                [[pd.Timestamp("2000-01-03"), 1.0]], columns=["timestamp", "amount"]
+                [[pd.Timestamp("2000-01-03"), 1.0]], columns=["pay_date", "amount"]
             ),
             "expect_result": pd.DataFrame(
                 [[pd.Timestamp("2000-01-03"), 2.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0]],
@@ -82,7 +82,7 @@ class TestSummaryDf:
             "position_df": pd.DataFrame(columns=["timestamp", "close_value"]),
             "trade_df": pd.DataFrame(columns=["timestamp", "commission"]),
             "dividend_df": pd.DataFrame(
-                [[pd.Timestamp("2000-01-03"), 1.0]], columns=["timestamp", "amount"]
+                [[pd.Timestamp("2000-01-03"), 1.0]], columns=["pay_date", "amount"]
             ),
             "expect_result": pd.DataFrame(
                 [

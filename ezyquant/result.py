@@ -1,8 +1,9 @@
 from functools import cached_property
 
 import pandas as pd
-from . import utils
+
 from . import fields as fld
+from . import utils
 from .reader import SETDataReader
 
 summary_columns = [
@@ -31,6 +32,15 @@ trade_columns = [
     "volume",
     "price",
     "commission",
+]
+dividend_columns = [
+    "ex_date",
+    "symbol",
+    "dps",
+    "volume",
+    "amount",
+    "before_ex_date",
+    "pay_date",
 ]
 
 
@@ -100,7 +110,7 @@ class SETResult:
         df["port_value"] = df["total_market_value"] + df["cash"]
 
         df["dividend"] = (
-            self.dividend_df.set_index("timestamp")["amount"].groupby(level=0).sum()
+            self.dividend_df.set_index("pay_date")["amount"].groupby(level=0).sum()
         )
         df["dividend"] = df["dividend"].fillna(0.0)
 
@@ -133,14 +143,15 @@ class SETResult:
         # close df
         if self._position_df.empty:
             return pd.DataFrame(columns=position_columns)
-            
-        start = utils.date_to_str(self._position_df["timestamp"].min())
-        end = utils.date_to_str(self._position_df["timestamp"].max())
+
+        symbol_list = self._position_df["symbol"].unique().tolist()
+        start_date = utils.date_to_str(self._position_df["timestamp"].min())
+        end_date = utils.date_to_str(self._position_df["timestamp"].max())
         close_price_df = self._sdr.get_data_symbol_daily(
             field=fld.D_CLOSE,
-            symbol_list=self._position_df["symbol"].unique().tolist(),
-            start_date=start,
-            end_date=end,
+            symbol_list=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
         )
 
         close_price_df = close_price_df.stack()  # type: ignore
@@ -191,9 +202,43 @@ class SETResult:
         Returns
         -------
         pd.DataFrame
+            - ex_date
+            - symbol
+            - dps
+            - volume
+            - amount
+            - before_ex_date
+            - pay_date
         """
-        # TODO: [EZ-77] dividend_df
-        return pd.DataFrame(columns=["timestamp", "amount"])
+        position_df = self.position_df.copy()
+
+        # Get cash dividend dataframe
+        symbol_list = position_df["symbol"].unique().tolist()
+        start_date = utils.date_to_str(position_df["timestamp"].min())
+        end_date = utils.date_to_str(position_df["timestamp"].max())
+        cash_dvd_df = self._sdr.get_dividend(
+            symbol_list=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
+            ca_type_list=["CD"],
+        )
+
+        cash_dvd_df["pay_date"] = cash_dvd_df["pay_date"].fillna(cash_dvd_df["ex_date"])
+
+        cash_dvd_df["before_ex_date"] = self._sub_one_trade_date(cash_dvd_df["ex_date"])
+
+        position_df = position_df.rename(columns={"timestamp": "before_ex_date"})
+
+        df = cash_dvd_df.merge(
+            position_df, how="inner", on=["before_ex_date", "symbol"], sort=True
+        )
+
+        df["amount"] = df["dps"] * df["volume"]
+
+        # sort column
+        df = df[dividend_columns]
+
+        return df
 
     @cached_property
     def stat_df(self) -> pd.DataFrame:
@@ -205,3 +250,20 @@ class SETResult:
         """
         # TODO: [EZ-76] stat_df
         return pd.DataFrame()
+
+    """
+    Protected
+    """
+
+    def _sub_one_trade_date(self, series: pd.Series) -> pd.Series:
+        td_list = self._sdr.get_trading_dates()
+
+        td_df = pd.DataFrame(td_list, columns=["trade_date"])
+        td_df["trade_date"] = pd.to_datetime(td_df["trade_date"])
+        td_df["sub_trade_date"] = td_df["trade_date"].shift(1)
+
+        df = series.to_frame("trade_date").merge(
+            td_df, how="left", on="trade_date", validate="m:1"
+        )
+
+        return df["sub_trade_date"]
