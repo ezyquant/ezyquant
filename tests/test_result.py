@@ -30,6 +30,7 @@ class TestSummaryDf:
         SETResult.dividend_df = self.dividend_df
 
     @pytest.mark.kwparametrize(
+        # Empty
         {
             "cash_series": pd.Series({pd.Timestamp("2000-01-03"): 1.0}),
             "position_df": pd.DataFrame(columns=["timestamp", "close_value"]),
@@ -77,6 +78,32 @@ class TestSummaryDf:
             ),
             "expect_result": pd.DataFrame(
                 [[pd.Timestamp("2000-01-03"), 2.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0]],
+                columns=summary_columns,
+            ),
+        },
+        # Dividend non trade date
+        {
+            "cash_series": pd.Series({pd.Timestamp("2000-01-03"): 1.0}),
+            "position_df": pd.DataFrame(columns=["timestamp", "close_value"]),
+            "trade_df": pd.DataFrame(columns=["timestamp", "commission"]),
+            "dividend_df": pd.DataFrame(
+                [[pd.Timestamp("2000-01-02"), 1.0]], columns=["pay_date", "amount"]
+            ),
+            "expect_result": pd.DataFrame(
+                [[pd.Timestamp("2000-01-03"), 2.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0]],
+                columns=summary_columns,
+            ),
+        },
+        # Dividend after cash
+        {
+            "cash_series": pd.Series({pd.Timestamp("2000-01-03"): 1.0}),
+            "position_df": pd.DataFrame(columns=["timestamp", "close_value"]),
+            "trade_df": pd.DataFrame(columns=["timestamp", "commission"]),
+            "dividend_df": pd.DataFrame(
+                [[pd.Timestamp("2000-01-04"), 1.0]], columns=["pay_date", "amount"]
+            ),
+            "expect_result": pd.DataFrame(
+                [[pd.Timestamp("2000-01-03"), 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]],
                 columns=summary_columns,
             ),
         },
@@ -135,6 +162,7 @@ class TestSummaryDf:
         SETResult.position_df = PropertyMock(return_value=position_df)
         SETResult.trade_df = PropertyMock(return_value=trade_df)
         SETResult.dividend_df = PropertyMock(return_value=dividend_df)
+        srs._sdr.get_trading_dates = Mock(return_value=utils.make_bdate_range())
 
         # Test
         result = srs.summary_df

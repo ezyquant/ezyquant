@@ -109,10 +109,10 @@ class SETResult:
 
         df["port_value"] = df["total_market_value"] + df["cash"]
 
-        # TODO: pay_date can be non trade date.
-        df["dividend"] = (
-            self.dividend_df.set_index("pay_date")["amount"].groupby(level=0).sum()
-        )
+        # pay_date can be non trade date.
+        tds = pd.to_datetime(self._sdr.get_trading_dates())
+        by = _searchsorted_value(tds, self.dividend_df["pay_date"])
+        df["dividend"] = self.dividend_df["amount"].groupby(by).sum()
         df["dividend"] = df["dividend"].fillna(0.0)
 
         df["cumulative_dividend"] = df["dividend"].cumsum()
@@ -273,3 +273,8 @@ class SETResult:
         )
 
         return df["sub_trade_date"]
+
+
+def _searchsorted_value(series: pd.DatetimeIndex, value: pd.Series) -> pd.Series:
+    idx = series.searchsorted(value.to_list())
+    return series[idx]  # type: ignore
