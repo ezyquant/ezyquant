@@ -1,3 +1,5 @@
+from typing import List
+
 import numpy as np
 import pandas as pd
 
@@ -49,25 +51,29 @@ def backtest_target_weight(
     initial_cash : float
         initial cash
     pct_commission : float, by default 0.0
-        percent commission
+        percent commission ex. 0.01 means 1% commission
     pct_buy_slip : float, by default 0.0
-        percent of buy price increase
+        percent of buy price increase ex. 0.01 means 1% increase
     pct_sell_slip : float, by default 0.0
-        percent of sell price decrease
+        percent of sell price decrease ex. 0.01 means 1% decrease
     buy_price_match_mode : str, by default "open"
         buy price match mode.
             - open
             - high
             - low
             - close
-            - average
+            - median - (high + low)/2
+            - typical - (high + low + close)/3
+            - weighted - (high + low + close + close)/4
     sell_price_match_mode : str, by default "open"
         sell price match mode.
             - open
             - high
             - low
             - close
-            - average
+            - median - (high + low)/2
+            - typical - (high + low + close)/3
+            - weighted - (high + low + close + close)/4
     signal_delay_bar : int, by default 1
         delay bar for signal.
 
@@ -75,25 +81,19 @@ def backtest_target_weight(
     -------
     SETResult
     """
+    # Price df
     symbol_list = signal_df.columns.tolist()
-    ssc = SETSignalCreator(
+    buy_price_df = _get_price(
         start_date=start_date,
         end_date=end_date,
-        index_list=[],
         symbol_list=symbol_list,
+        mode=buy_price_match_mode,
     )
-
-    # Price df
-    # TODO: [EZ-80] more price mode
-    vld.check_price_mode(buy_price_match_mode)
-    vld.check_price_mode(sell_price_match_mode)
-
-    # TODO: cache load price
-    buy_price_df = ssc.get_data(
-        field=buy_price_match_mode, timeframe=fld.TIMEFRAME_DAILY
-    )
-    sell_price_df = ssc.get_data(
-        field=sell_price_match_mode, timeframe=fld.TIMEFRAME_DAILY
+    sell_price_df = _get_price(
+        start_date=start_date,
+        end_date=end_date,
+        symbol_list=symbol_list,
+        mode=sell_price_match_mode,
     )
 
     # Slip
@@ -142,3 +142,46 @@ def backtest_target_weight(
     )
 
     return SETResult(cash_series, position_df, trade_df)
+
+
+def _get_price(
+    start_date: str,
+    end_date: str,
+    symbol_list: List[str],
+    mode: str,
+) -> pd.DataFrame:
+    ssc = SETSignalCreator(
+        start_date=start_date,
+        end_date=end_date,
+        index_list=[],
+        symbol_list=symbol_list,
+    )
+
+    def _get_data(field: str) -> pd.DataFrame:
+        return ssc.get_data(field=field, timeframe=fld.TIMEFRAME_DAILY)
+
+    if mode in (
+        fld.PRICE_MATCH_MODE_OPEN,
+        fld.PRICE_MATCH_MODE_HIGH,
+        fld.PRICE_MATCH_MODE_LOW,
+        fld.PRICE_MATCH_MODE_CLOSE,
+    ):
+        out = _get_data(mode)
+    elif mode == fld.PRICE_MATCH_MODE_MEDIAN:
+        h = _get_data(field=fld.PRICE_MATCH_MODE_HIGH)
+        l = _get_data(field=fld.PRICE_MATCH_MODE_LOW)
+        out = (h + l) / 2
+    elif mode == fld.PRICE_MATCH_MODE_TYPICAL:
+        h = _get_data(field=fld.PRICE_MATCH_MODE_HIGH)
+        l = _get_data(field=fld.PRICE_MATCH_MODE_LOW)
+        c = _get_data(field=fld.PRICE_MATCH_MODE_CLOSE)
+        out = (h + l + c) / 3
+    elif mode == fld.PRICE_MATCH_MODE_WEIGHTED:
+        h = _get_data(field=fld.PRICE_MATCH_MODE_HIGH)
+        l = _get_data(field=fld.PRICE_MATCH_MODE_LOW)
+        c = _get_data(field=fld.PRICE_MATCH_MODE_CLOSE)
+        out = (h + l + c + c) / 4
+    else:
+        raise InputError(f"Invalid price_match_mode: {mode}")
+
+    return out
