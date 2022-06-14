@@ -7,6 +7,8 @@ from . import fields as fld
 from . import utils
 from .reader import SETDataReader
 
+nan = float("nan")
+
 summary_columns = [
     "timestamp",
     "port_value_with_dividend",
@@ -46,7 +48,7 @@ dividend_columns = [
 summary_trade_columns = [
     # timestamp
     "symbol",
-    "cost_price",
+    "avg_cost_price",
     "sell_price",
     "volume",
     "commission",
@@ -62,7 +64,7 @@ def return_nan_on_failure(func):
         try:
             return func(*args, **kwargs)
         except ZeroDivisionError:
-            return float("nan")
+            return nan
 
     return wrapper
 
@@ -276,7 +278,9 @@ class SETResult:
 
         cash_dvd_df["pay_date"] = cash_dvd_df["pay_date"].fillna(cash_dvd_df["ex_date"])
 
-        cash_dvd_df["before_ex_date"] = self._sub_one_trade_date(cash_dvd_df["ex_date"])
+        cash_dvd_df["before_ex_date"] = self._shift_trade_date(
+            cash_dvd_df["ex_date"], periods=1
+        )
 
         position_df = position_df.rename(columns={"timestamp": "before_ex_date"})
 
@@ -599,14 +603,111 @@ class SETResult:
 
     @cached_property
     def _summary_trade_df(self) -> pd.DataFrame:
-        # TODO: summary_trade_df
-        return pd.DataFrame(columns=summary_trade_columns)
+        """Each row is sell.
 
-    def _sub_one_trade_date(self, series: pd.Series) -> pd.Series:
-        td_list = self._sdr.get_trading_dates()
+        Datetime in is nearest buy. Sell all in position.
+        """
+        trade_df = self.trade_df.copy()
+        position_df = self.position_df.copy()
 
-        td_df = pd.DataFrame({"trade_date": pd.to_datetime(td_list)})
-        td_df["sub_trade_date"] = td_df["trade_date"].shift(1)
+        trade_df = self._summary_trade_cost_price(trade_df, position_df)
+
+        # sell all in position
+        trade_df = self._summary_trade_sell_all_position(trade_df, position_df)
+
+        # datetime in
+        trade_df = self._summary_trade_datetime_in(trade_df)
+
+        df = trade_df[trade_df["side"] == fld.SIDE_SELL]
+
+        # sell price
+        df = df.rename(columns={"price": "sell_price"})
+
+        # commission
+        df["commission"] = (
+            (df["sell_price"] + df["avg_cost_price"])
+            * df["volume"]
+            * self.pct_commission
+        )
+
+        # return
+        df["return"] = ((df["sell_price"] - df["avg_cost_price"]) * df["volume"]) - df[
+            "commission"
+        ]
+
+        # pct_return
+        df["pct_return"] = df["return"] / df["avg_cost_price"] / df["volume"]
+
+        # hold days
+        df["hold_days"] = (df["timestamp"] - df["datetime_in"]).dt.days
+
+        df = df.set_index("timestamp")
+
+        return df[summary_trade_columns]
+
+    def _summary_trade_cost_price(
+        self, trade_df: pd.DataFrame, pos_df: pd.DataFrame
+    ) -> pd.DataFrame:
+        """Add avg_cost_price to trade_df."""
+        pos_df = pos_df[["timestamp", "symbol", "avg_cost_price"]]
+
+        # get cost price from tomorrow position
+        pos_df["timestamp"] = self._shift_trade_date(pos_df["timestamp"], periods=-1)
+
+        # set index for merge
+        df = trade_df.merge(pos_df, on=["timestamp", "symbol"], validate="1:1")
+
+        return df
+
+    def _summary_trade_sell_all_position(
+        self, trade_df: pd.DataFrame, position_df: pd.DataFrame
+    ) -> pd.DataFrame:
+        """Add trade if sell all position."""
+        pos_df = position_df.copy()
+
+        df = pos_df[pos_df["timestamp"] == self.end_date]
+        df = df.rename(columns={"close_price": "price"})  # type: ignore
+        df["side"] = fld.SIDE_SELL
+        df["commission"] = 0
+        df = df.drop(columns=["close_value"])
+
+        assert trade_df.columns.sort_values().equals(df.columns.sort_values())
+
+        df = pd.concat([trade_df, df])
+        return df
+
+    @staticmethod
+    def _summary_trade_datetime_in(df: pd.DataFrame) -> pd.DataFrame:
+        """Add datetime_in to trade_df."""
+        df["datetime_in"] = df["timestamp"]
+        df.loc[df["side"] == fld.SIDE_SELL, "datetime_in"] = nan
+
+        if not df.empty:
+            df["datetime_in"] = df.groupby(["symbol"]).fillna(method="pad")[  # type: ignore
+                "datetime_in"
+            ]
+
+        return df
+
+    def _shift_trade_date(self, series: pd.Series, periods: int) -> pd.Series:
+        """Add/sub series trade date by periods.
+
+        Parameters
+        ----------
+        series : pd.Series
+            Series to shift.
+        periods : int
+            periods to shift. 1 is yesterday, -1 is tomorrow.
+
+        Returns
+        -------
+        pd.Series
+            Shifted series.
+        """
+        tds = self._sdr.get_trading_dates()
+
+        td_df = pd.DataFrame({"trade_date": pd.to_datetime(tds)})
+        td_df["sub_trade_date"] = td_df["trade_date"].shift(periods)
 
         df = series.to_frame("trade_date").merge(
             td_df, how="left", on="trade_date", validate="m:1"
