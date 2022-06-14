@@ -372,36 +372,44 @@ class SETResult:
     @property
     @return_nan_on_failure
     def pct_maximum_drawdown(self) -> pd.Series:
+        """Percent maximum drawdown."""
         nav = self._nav_df
         return (nav / nav.cummax() - 1).min()
 
     @property
     @return_nan_on_failure
     def cagr_divided_maxdd(self) -> pd.Series:
-        return self.cagr / -self.pct_maximum_drawdown  # type: ignore
+        """Compound Annual % Return divided by Max.
+
+        system % drawdown.
+        """
+        return self.cagr / self.pct_maximum_drawdown.abs()
 
     @property
     @return_nan_on_failure
     def pct_win_per_trade(self) -> float:
+        """Percent of win trades."""
         return self.win_trades / self.all_trades
 
     @property
     @return_nan_on_failure
     def std(self) -> pd.Series:
+        """Standard deviation of profit/loss."""
         nav = self._nav_df
         return_per_day = nav / nav.shift(1) - 1
-        td_per_year = nav.shape[0] / self._n_year
-        return return_per_day.std() * (td_per_year**0.5)
+        trade_date_per_year = nav.shape[0] / self._n_year
+        return return_per_day.std() * (trade_date_per_year**0.5)
 
     @property
     @return_nan_on_failure
     def cagr_divided_std(self) -> pd.Series:
+        """Compound Annual % Return divided by Standard deviation."""
         return self.cagr / self.std
 
     @property
     @return_nan_on_failure
     def pct_exposure(self) -> pd.Series:
-        """Stock hold divided by total_market_value."""
+        """Percent of exposure."""
         df = self.summary_df
         df["port_value"] = df["total_market_value"] / df["port_value"]
         df["port_value_with_dividend"] = (
@@ -412,26 +420,31 @@ class SETResult:
     @property
     @return_nan_on_failure
     def total_commission(self) -> float:
+        """Total commission."""
         return self.summary_df["commission"].sum()
 
     @property
     @return_nan_on_failure
     def initial_capital(self) -> float:
+        """Initial capital."""
         return self._initial_capital
 
     @property
     @return_nan_on_failure
     def ending_capital(self) -> pd.Series:
+        """Ending capital."""
         return self._nav_df.iloc[-1]
 
     @property
     @return_nan_on_failure
     def net_profit(self) -> pd.Series:
+        """Net profit."""
         return self.ending_capital - self.initial_capital
 
     @property
     @return_nan_on_failure
     def maximum_drawdown(self) -> pd.Series:
+        """Maximum drawdown."""
         nav = self._nav_df
         maxcum = nav.cummax()
         drawdown = nav - maxcum
@@ -440,17 +453,26 @@ class SETResult:
     @property
     @return_nan_on_failure
     def all_trades(self) -> int:
+        """Total number of trades."""
         df = self._summary_trade_df
         return df.shape[0]
 
     @property
     @return_nan_on_failure
-    def avg_profit_loss(self) -> pd.Series:  # TODO: change name to expectancy
+    def avg_profit_loss(self) -> pd.Series:
+        """Average profit/loss.
+
+        also known as Expectancy ($) - (Profit of winners + Loss of losers)/(number of trades), represents expected dollar gain/loss per trade
+        """
         return self.net_profit / self.all_trades
 
     @property
     @return_nan_on_failure
-    def pct_avg_profit_loss(self) -> float:  # TODO: change name to pct_expectancy
+    def pct_avg_profit_loss(self) -> float:
+        """Percent average profit/loss.
+
+        also known as Expectancy (%) - '(% Profit of winners + % Loss of losers)/(number of trades), represents expected percent gain/loss per trade
+        """
         return (
             (self.pct_avg_profit * self.win_trades)
             + (self.pct_avg_loss * self.loss_trades)
@@ -459,6 +481,7 @@ class SETResult:
     @property
     @return_nan_on_failure
     def avg_bar_held(self) -> float:
+        """sum of bars in trades / number of trades."""
         df = self._summary_trade_df
         out = df["hold_days"].mean()
         assert isinstance(out, float)
@@ -467,6 +490,7 @@ class SETResult:
     @property
     @return_nan_on_failure
     def win_trades(self) -> int:
+        """Number of win trades."""
         df = self._summary_trade_df
         df = df[df["pct_return"] >= 0]
         return df.shape[0]
@@ -474,6 +498,7 @@ class SETResult:
     @property
     @return_nan_on_failure
     def total_profit(self) -> float:
+        """Total profit."""
         df = self._summary_trade_df
         df = df[df["return"] > 0]
         return df["return"].sum()
@@ -481,6 +506,7 @@ class SETResult:
     @property
     @return_nan_on_failure
     def avg_profit(self) -> float:
+        """Average profit."""
         df = self._summary_trade_df
         df = df[df["pct_return"] > 0]
         out = df["return"].mean()
@@ -490,6 +516,7 @@ class SETResult:
     @property
     @return_nan_on_failure
     def pct_avg_profit(self) -> float:
+        """Percent average profit."""
         df = self._summary_trade_df
         df = df[df["pct_return"] > 0]
         out = df["pct_return"].mean()
@@ -499,6 +526,7 @@ class SETResult:
     @property
     @return_nan_on_failure
     def avg_win_bar_held(self) -> float:
+        """Average win bar held."""
         df = self._summary_trade_df
         df = df[df["pct_return"] > 0]
         out = df["hold_days"].mean()
@@ -508,6 +536,7 @@ class SETResult:
     @property
     @return_nan_on_failure
     def max_win_consecutive(self) -> int:
+        """Maximum win consecutive."""
         df = self._summary_trade_df
         is_win = df["pct_return"] > 0
         cum_win = is_win.cumsum()
@@ -516,6 +545,7 @@ class SETResult:
     @property
     @return_nan_on_failure
     def loss_trades(self) -> int:
+        """Number of loss trades."""
         df = self._summary_trade_df
         df = df[df["pct_return"] < 0]
         return df.shape[0]
@@ -523,6 +553,7 @@ class SETResult:
     @property
     @return_nan_on_failure
     def total_loss(self) -> float:
+        """Total loss."""
         df = self._summary_trade_df
         df = df[df["return"] <= 0]
         return df["return"].sum()
@@ -530,6 +561,7 @@ class SETResult:
     @property
     @return_nan_on_failure
     def avg_loss(self) -> float:
+        """Average loss."""
         df = self._summary_trade_df
         df = df[df["pct_return"] <= 0]
         out = df["return"].mean()
@@ -539,6 +571,7 @@ class SETResult:
     @property
     @return_nan_on_failure
     def pct_avg_loss(self) -> float:
+        """Percent average loss."""
         df = self._summary_trade_df
         df = df[df["pct_return"] <= 0]
         out = df["pct_return"].mean()
@@ -548,6 +581,7 @@ class SETResult:
     @property
     @return_nan_on_failure
     def avg_lose_bar_held(self) -> float:
+        """Average lose bar held."""
         df = self._summary_trade_df
         df = df[df["pct_return"] <= 0]
         out = df["hold_days"].mean()
@@ -557,6 +591,7 @@ class SETResult:
     @property
     @return_nan_on_failure
     def max_lose_consecutive(self) -> int:
+        """Maximum lose consecutive."""
         df = self._summary_trade_df
         is_lose = df["pct_return"] <= 0
         cum_lose = is_lose.cumsum()
@@ -564,31 +599,36 @@ class SETResult:
 
     @property
     def start_date(self) -> datetime:
+        """Start date."""
         out = self._nav_df.index[0]
         assert isinstance(out, datetime)
         return out
 
     @property
     def end_date(self) -> datetime:
+        """End date."""
         out = self._nav_df.index[-1]
         assert isinstance(out, datetime)
         return out
 
     @property
     def pct_commission(self) -> float:
+        """Percent commission."""
         return self._pct_commission
 
     @property
     def pct_buy_slip(self) -> float:
+        """Percent buy slip."""
         return self._pct_buy_slip
 
     @property
     def pct_sell_slip(self) -> float:
+        """Percent sell slip."""
         return self._pct_sell_slip
 
     @property
     def _n_year(self) -> float:
-        """Number of year."""
+        """Number of years."""
         return (self.end_date - self.start_date).days / 365
 
     """
@@ -676,8 +716,7 @@ class SETResult:
         df = pd.concat([trade_df, df])
         return df
 
-    @staticmethod
-    def _summary_trade_datetime_in(df: pd.DataFrame) -> pd.DataFrame:
+    def _summary_trade_datetime_in(self, df: pd.DataFrame) -> pd.DataFrame:
         """Add datetime_in to trade_df."""
         df["datetime_in"] = df["timestamp"]
         df.loc[df["side"] == fld.SIDE_SELL, "datetime_in"] = nan
