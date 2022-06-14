@@ -8,7 +8,6 @@ from .. import utils
 from ..creator import SETSignalCreator
 from ..errors import InputError
 from ..result import SETResult
-from . import validators as vld
 from ._backtest import _backtest_target_weight
 
 
