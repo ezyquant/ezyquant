@@ -109,6 +109,7 @@ class SETResult:
 
         df["port_value"] = df["total_market_value"] + df["cash"]
 
+        # TODO: pay_date can be non trade date.
         df["dividend"] = (
             self.dividend_df.set_index("pay_date")["amount"].groupby(level=0).sum()
         )
@@ -140,13 +141,15 @@ class SETResult:
             - close_price
             - close_value
         """
-        # close df
-        if self._position_df.empty:
+        position_df = self._position_df.copy()
+
+        if position_df.empty:
             return pd.DataFrame(columns=position_columns)
 
-        symbol_list = self._position_df["symbol"].unique().tolist()
-        start_date = utils.date_to_str(self._position_df["timestamp"].min())
-        end_date = utils.date_to_str(self._position_df["timestamp"].max())
+        # close df
+        symbol_list = position_df["symbol"].unique().tolist()
+        start_date = utils.date_to_str(position_df["timestamp"].min())
+        end_date = utils.date_to_str(position_df["timestamp"].max())
         close_price_df = self._sdr.get_data_symbol_daily(
             field=fld.D_CLOSE,
             symbol_list=symbol_list,
@@ -160,7 +163,7 @@ class SETResult:
         close_price_df = close_price_df.reset_index()
 
         # merge close_price_df and position_df
-        df = self._position_df.merge(
+        df = position_df.merge(
             close_price_df, on=["timestamp", "symbol"], how="left", validate="1:1"
         )
         df["close_value"] = df["close_price"] * df["volume"]
@@ -211,6 +214,9 @@ class SETResult:
             - pay_date
         """
         position_df = self.position_df.copy()
+
+        if position_df.empty:
+            return pd.DataFrame(columns=dividend_columns)
 
         # Get cash dividend dataframe
         symbol_list = position_df["symbol"].unique().tolist()
