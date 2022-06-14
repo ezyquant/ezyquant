@@ -1,3 +1,4 @@
+from datetime import datetime
 from functools import cached_property
 
 import pandas as pd
@@ -42,16 +43,53 @@ dividend_columns = [
     "before_ex_date",
     "pay_date",
 ]
+summary_trade_columns = [
+    # timestamp
+    "symbol",
+    "cost_price",
+    "sell_price",
+    "volume",
+    "commission",
+    "return",
+    "pct_return",
+    "datetime_in",
+    "hold_days",
+]
+
+
+def return_nan_on_failure(func):
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except ZeroDivisionError:
+            return float("nan")
+
+    return wrapper
 
 
 class SETResult:
     def __init__(
-        self, cash_series: pd.Series, position_df: pd.DataFrame, trade_df: pd.DataFrame
+        self,
+        initial_capital: float,
+        pct_commission: float,
+        pct_buy_slip: float,
+        pct_sell_slip: float,
+        cash_series: pd.Series,
+        position_df: pd.DataFrame,
+        trade_df: pd.DataFrame,
     ):
         """SETResult.
 
         Parameters
         ----------
+        initial_capital : float
+            initial capital.
+        pct_commission : float
+            percent commission.
+        pct_buy_slip : float
+            percent of buy price increase.
+        pct_sell_slip : float
+            percent of sell price decrease.
         cash_series : pd.Series
             series of cash.
         position_df : pd.DataFrame
@@ -68,6 +106,11 @@ class SETResult:
                 - price
                 - pct_commission
         """
+        self._initial_capital = initial_capital
+        self._pct_commission = pct_commission
+        self._pct_buy_slip = pct_buy_slip
+        self._pct_sell_slip = pct_sell_slip
+
         self._cash_series = cash_series
         self._position_df = position_df
         self._trade_df = trade_df
@@ -253,13 +296,307 @@ class SETResult:
         Returns
         -------
         pd.DataFrame
+            columns
+                - port_value
+                - port_value_with_dividend
         """
-        # TODO: [EZ-76] stat_df
-        return pd.DataFrame()
+        stat_dict = {
+            # Highlight
+            "pct_net_profit": self.pct_net_profit,
+            "cagr": self.cagr,
+            "pct_maximum_drawdown": self.pct_maximum_drawdown,
+            "cagr_divided_maxdd": self.cagr_divided_maxdd,
+            "pct_win_per_trade": self.pct_win_per_trade,
+            "std": self.std,
+            "cagr_divided_std": self.cagr_divided_std,
+            "pct_exposure": self.pct_exposure,
+            "total_commission": self.total_commission,
+            # Stat
+            "initial_capital": self.initial_capital,
+            "ending_capital": self.ending_capital,
+            "net_profit": self.net_profit,
+            "maximum_drawdown": self.maximum_drawdown,
+            "all_trades": self.all_trades,
+            "avg_profit_loss": self.avg_profit_loss,
+            "pct_avg_profit_loss": self.pct_avg_profit_loss,
+            "avg_bar_held": self.avg_bar_held,
+            "win_trades": self.win_trades,
+            "total_profit": self.total_profit,
+            "avg_profit": self.avg_profit,
+            "pct_avg_profit": self.pct_avg_profit,
+            "avg_win_bar_held": self.avg_win_bar_held,
+            "max_win_consecutive": self.max_win_consecutive,
+            "loss_trades": self.loss_trades,
+            "total_loss": self.total_loss,
+            "avg_loss": self.avg_loss,
+            "pct_avg_loss": self.pct_avg_loss,
+            "avg_lose_bar_held": self.avg_lose_bar_held,
+            "max_lose_consecutive": self.max_lose_consecutive,
+            # Setup
+            "start_date": self.start_date,
+            "end_date": self.end_date,
+            "pct_commission": self.pct_commission,
+            "pct_buy_slip": self.pct_buy_slip,
+            "pct_sell_slip": self.pct_sell_slip,
+        }
+
+        df = pd.DataFrame(stat_dict).T
+
+        # sort columns
+        df = df[self._nav_df.columns]
+
+        return df
+
+    """
+    Stat
+    """
+
+    @property
+    @return_nan_on_failure
+    def pct_net_profit(self) -> pd.Series:
+        """Net profit divided by initial capital."""
+        return self.net_profit / self.initial_capital
+
+    @property
+    @return_nan_on_failure
+    def cagr(self) -> pd.Series:
+        """Compound annual growth rate (CAGR)"""
+        return (self.ending_capital / self.initial_capital) ** (1 / self._n_year) - 1
+
+    @property
+    @return_nan_on_failure
+    def pct_maximum_drawdown(self) -> pd.Series:
+        nav = self._nav_df
+        return (nav / nav.cummax() - 1).min()
+
+    @property
+    @return_nan_on_failure
+    def cagr_divided_maxdd(self) -> pd.Series:
+        return self.cagr / -self.pct_maximum_drawdown  # type: ignore
+
+    @property
+    @return_nan_on_failure
+    def pct_win_per_trade(self) -> float:
+        return self.win_trades / self.all_trades
+
+    @property
+    @return_nan_on_failure
+    def std(self) -> pd.Series:
+        nav = self._nav_df
+        return_per_day = nav / nav.shift(1) - 1
+        td_per_year = nav.shape[0] / self._n_year
+        return return_per_day.std() * (td_per_year**0.5)
+
+    @property
+    @return_nan_on_failure
+    def cagr_divided_std(self) -> pd.Series:
+        return self.cagr / self.std
+
+    @property
+    @return_nan_on_failure
+    def pct_exposure(self) -> pd.Series:
+        """Stock hold divided by total_market_value."""
+        df = self.summary_df
+        return (
+            df["total_market_value"] / df[["port_value", "port_value_with_dividend"]]
+        ).mean()
+
+    @property
+    @return_nan_on_failure
+    def total_commission(self) -> float:
+        return self.summary_df["commission"].sum()
+
+    @property
+    @return_nan_on_failure
+    def initial_capital(self) -> float:
+        return self._initial_capital
+
+    @property
+    @return_nan_on_failure
+    def ending_capital(self) -> pd.Series:
+        return self._nav_df.iloc[-1]
+
+    @property
+    @return_nan_on_failure
+    def net_profit(self) -> pd.Series:
+        return self.ending_capital - self.initial_capital
+
+    @property
+    @return_nan_on_failure
+    def maximum_drawdown(self) -> pd.Series:
+        nav = self._nav_df
+        maxcum = nav.cummax()
+        drawdown = nav - maxcum
+        return drawdown.min()
+
+    @property
+    @return_nan_on_failure
+    def all_trades(self) -> int:
+        df = self._summary_trade_df
+        return df.shape[0]
+
+    @property
+    @return_nan_on_failure
+    def avg_profit_loss(self) -> pd.Series:  # TODO: change name to expectancy
+        return self.net_profit / self.all_trades
+
+    @property
+    @return_nan_on_failure
+    def pct_avg_profit_loss(self) -> float:  # TODO: change name to pct_expectancy
+        return (
+            (self.pct_avg_profit * self.win_trades)
+            + (self.pct_avg_loss * self.loss_trades)
+        ) / self.all_trades
+
+    @property
+    @return_nan_on_failure
+    def avg_bar_held(self) -> float:
+        df = self._summary_trade_df
+        out = df["hold_days"].mean()
+        assert isinstance(out, float)
+        return out
+
+    @property
+    @return_nan_on_failure
+    def win_trades(self) -> int:
+        df = self._summary_trade_df
+        df = df[df["pct_return"] >= 0]
+        return df.shape[0]
+
+    @property
+    @return_nan_on_failure
+    def total_profit(self) -> float:
+        df = self._summary_trade_df
+        df = df[df["return"] > 0]
+        return df["return"].sum()
+
+    @property
+    @return_nan_on_failure
+    def avg_profit(self) -> float:
+        df = self._summary_trade_df
+        df = df[df["pct_return"] > 0]
+        out = df["return"].mean()
+        assert isinstance(out, float)
+        return out
+
+    @property
+    @return_nan_on_failure
+    def pct_avg_profit(self) -> float:
+        df = self._summary_trade_df
+        df = df[df["pct_return"] > 0]
+        out = df["pct_return"].mean()
+        assert isinstance(out, float)
+        return out
+
+    @property
+    @return_nan_on_failure
+    def avg_win_bar_held(self) -> float:
+        df = self._summary_trade_df
+        df = df[df["pct_return"] > 0]
+        out = df["hold_days"].mean()
+        assert isinstance(out, float)
+        return out
+
+    @property
+    @return_nan_on_failure
+    def max_win_consecutive(self) -> int:
+        df = self._summary_trade_df
+        is_win = df["pct_return"] > 0
+        cum_win = is_win.cumsum()
+        return cum_win.max()
+
+    @property
+    @return_nan_on_failure
+    def loss_trades(self) -> int:
+        df = self._summary_trade_df
+        df = df[df["pct_return"] < 0]
+        return df.shape[0]
+
+    @property
+    @return_nan_on_failure
+    def total_loss(self) -> float:
+        df = self._summary_trade_df
+        df = df[df["return"] <= 0]
+        return df["return"].sum()
+
+    @property
+    @return_nan_on_failure
+    def avg_loss(self) -> float:
+        df = self._summary_trade_df
+        df = df[df["pct_return"] <= 0]
+        out = df["return"].mean()
+        assert isinstance(out, float)
+        return out
+
+    @property
+    @return_nan_on_failure
+    def pct_avg_loss(self) -> float:
+        df = self._summary_trade_df
+        df = df[df["pct_return"] <= 0]
+        out = df["pct_return"].mean()
+        assert isinstance(out, float)
+        return out
+
+    @property
+    @return_nan_on_failure
+    def avg_lose_bar_held(self) -> float:
+        df = self._summary_trade_df
+        df = df[df["pct_return"] <= 0]
+        out = df["hold_days"].mean()
+        assert isinstance(out, float)
+        return out
+
+    @property
+    @return_nan_on_failure
+    def max_lose_consecutive(self) -> int:
+        df = self._summary_trade_df
+        is_lose = df["pct_return"] <= 0
+        cum_lose = is_lose.cumsum()
+        return cum_lose.max()
+
+    @property
+    def start_date(self) -> datetime:
+        out = self._nav_df.index[0]
+        assert isinstance(out, datetime)
+        return out
+
+    @property
+    def end_date(self) -> datetime:
+        out = self._nav_df.index[-1]
+        assert isinstance(out, datetime)
+        return out
+
+    @property
+    def pct_commission(self) -> float:
+        return self._pct_commission
+
+    @property
+    def pct_buy_slip(self) -> float:
+        return self._pct_buy_slip
+
+    @property
+    def pct_sell_slip(self) -> float:
+        return self._pct_sell_slip
+
+    @property
+    def _n_year(self) -> float:
+        """Number of year."""
+        return (self.end_date - self.start_date).days / 365
 
     """
     Protected
     """
+
+    @cached_property
+    def _nav_df(self) -> pd.DataFrame:
+        return self.summary_df.set_index("timestamp")[
+            ["port_value", "port_value_with_dividend"]
+        ]
+
+    @cached_property
+    def _summary_trade_df(self) -> pd.DataFrame:
+        # TODO: summary_trade_df
+        return pd.DataFrame(columns=summary_trade_columns)
 
     def _sub_one_trade_date(self, series: pd.Series) -> pd.Series:
         td_list = self._sdr.get_trading_dates()

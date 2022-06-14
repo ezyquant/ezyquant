@@ -140,7 +140,15 @@ def backtest_target_weight(
         pct_commission=pct_commission,
     )
 
-    return SETResult(cash_series, position_df, trade_df)
+    return SETResult(
+        initial_capital=initial_cash,
+        pct_commission=pct_commission,
+        pct_buy_slip=pct_buy_slip,
+        pct_sell_slip=pct_sell_slip,
+        cash_series=cash_series,
+        position_df=position_df,
+        trade_df=trade_df,
+    )
 
 
 def _get_price(
