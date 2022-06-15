@@ -46,7 +46,7 @@ dividend_columns = [
     "pay_date",
 ]
 summary_trade_columns = [
-    # timestamp
+    "datetime_out",
     "symbol",
     "avg_cost_price",
     "sell_price",
@@ -359,6 +359,62 @@ class SETResult:
 
         return df
 
+    @cached_property
+    def summary_trade_df(self) -> pd.DataFrame:
+        """Summary Trade DataFrame. Each row is sell.
+
+        Returns
+        -------
+        pd.DataFrame
+            - timestamp
+            - symbol
+            - avg_cost_price
+            - sell_price
+            - volume
+            - commission
+            - return
+            - pct_return
+            - datetime_in
+            - hold_days
+        """
+        trade_df = self.trade_df.copy()
+
+        # avg cost price
+        trade_df = self._summary_trade_avg_cost_price(trade_df)
+
+        # sell all in position
+        df = self._summary_trade_sell_all_position()
+        assert trade_df.columns.sort_values().equals(df.columns.sort_values())
+        trade_df = pd.concat([trade_df, df])
+
+        # datetime in
+        trade_df = self._summary_trade_datetime_in(trade_df)
+
+        df = trade_df[trade_df["side"] == fld.SIDE_SELL]
+
+        # sell price
+        df = df.rename(columns={"price": "sell_price", "timestamp": "datetime_out"})
+
+        # commission from buy and sell
+        df["commission"] = (
+            (df["sell_price"] + df["avg_cost_price"])
+            * df["volume"]
+            * self.pct_commission
+        ).abs()
+
+        # return
+        df["return"] = ((df["sell_price"] - df["avg_cost_price"]) * df["volume"]) - df[
+            "commission"
+        ]
+
+        # pct_return
+        df["pct_return"] = df["return"] / df["avg_cost_price"] / df["volume"]
+
+        # hold days
+        df["hold_days"] = (df["datetime_out"] - df["datetime_in"]).dt.days
+
+        return df[summary_trade_columns]
+
     """
     Stat
     """
@@ -458,7 +514,7 @@ class SETResult:
     @return_nan_on_failure
     def all_trades(self) -> int:
         """Total number of trades."""
-        df = self._summary_trade_df
+        df = self.summary_trade_df
         return df.shape[0]
 
     @property
@@ -486,7 +542,7 @@ class SETResult:
     @return_nan_on_failure
     def avg_bar_held(self) -> float:
         """sum of bars in trades / number of trades."""
-        df = self._summary_trade_df
+        df = self.summary_trade_df
         return df["hold_days"].mean()
 
     @property
@@ -499,7 +555,7 @@ class SETResult:
     @return_nan_on_failure
     def total_profit(self) -> float:
         """Total profit."""
-        df = self._summary_trade_df
+        df = self.summary_trade_df
         df = df[self._is_win_trade]
         return df["return"].sum()
 
@@ -507,7 +563,7 @@ class SETResult:
     @return_nan_on_failure
     def avg_profit(self) -> float:
         """Average profit."""
-        df = self._summary_trade_df
+        df = self.summary_trade_df
         df = df[self._is_win_trade]
         return df["return"].mean()
 
@@ -515,7 +571,7 @@ class SETResult:
     @return_nan_on_failure
     def pct_avg_profit(self) -> float:
         """Percent average profit."""
-        df = self._summary_trade_df
+        df = self.summary_trade_df
         df = df[self._is_win_trade]
         return df["pct_return"].mean()
 
@@ -523,7 +579,7 @@ class SETResult:
     @return_nan_on_failure
     def avg_win_bar_held(self) -> float:
         """Average win bar held."""
-        df = self._summary_trade_df
+        df = self.summary_trade_df
         df = df[self._is_win_trade]
         return df["hold_days"].mean()
 
@@ -544,7 +600,7 @@ class SETResult:
     @return_nan_on_failure
     def total_loss(self) -> float:
         """Total loss."""
-        df = self._summary_trade_df
+        df = self.summary_trade_df
         df = df[~self._is_win_trade]
         return df["return"].sum()
 
@@ -552,7 +608,7 @@ class SETResult:
     @return_nan_on_failure
     def avg_loss(self) -> float:
         """Average loss."""
-        df = self._summary_trade_df
+        df = self.summary_trade_df
         df = df[~self._is_win_trade]
         return df["return"].mean()
 
@@ -560,7 +616,7 @@ class SETResult:
     @return_nan_on_failure
     def pct_avg_loss(self) -> float:
         """Percent average loss."""
-        df = self._summary_trade_df
+        df = self.summary_trade_df
         df = df[~self._is_win_trade]
         return df["pct_return"].mean()
 
@@ -568,7 +624,7 @@ class SETResult:
     @return_nan_on_failure
     def avg_lose_bar_held(self) -> float:
         """Average lose bar held."""
-        df = self._summary_trade_df
+        df = self.summary_trade_df
         df = df[~self._is_win_trade]
         return df["hold_days"].mean()
 
@@ -616,7 +672,7 @@ class SETResult:
     @property
     def _is_win_trade(self) -> pd.Series:
         """Is win trade."""
-        return self._summary_trade_df["return"] > 0
+        return self.summary_trade_df["return"] > 0
 
     """
     Protected
@@ -627,49 +683,6 @@ class SETResult:
         return self.summary_df.set_index("timestamp")[
             ["port_value", "port_value_with_dividend"]
         ]
-
-    @cached_property
-    def _summary_trade_df(self) -> pd.DataFrame:
-        """Each row is sell."""
-        trade_df = self.trade_df.copy()
-
-        # avg cost price
-        trade_df = self._summary_trade_avg_cost_price(trade_df)
-
-        # sell all in position
-        df = self._summary_trade_sell_all_position()
-        assert trade_df.columns.sort_values().equals(df.columns.sort_values())
-        trade_df = pd.concat([trade_df, df])
-
-        # datetime in
-        trade_df = self._summary_trade_datetime_in(trade_df)
-
-        df = trade_df[trade_df["side"] == fld.SIDE_SELL]
-
-        # sell price
-        df = df.rename(columns={"price": "sell_price"})
-
-        # commission from buy and sell
-        df["commission"] = (
-            (df["sell_price"] + df["avg_cost_price"])
-            * df["volume"]
-            * self.pct_commission
-        ).abs()
-
-        # return
-        df["return"] = ((df["sell_price"] - df["avg_cost_price"]) * df["volume"]) - df[
-            "commission"
-        ]
-
-        # pct_return
-        df["pct_return"] = df["return"] / df["avg_cost_price"] / df["volume"]
-
-        # hold days
-        df["hold_days"] = (df["timestamp"] - df["datetime_in"]).dt.days
-
-        df = df.set_index("timestamp")
-
-        return df[summary_trade_columns]
 
     def _summary_trade_avg_cost_price(self, trade_df: pd.DataFrame) -> pd.DataFrame:
         """Add avg_cost_price to trade_df."""
