@@ -157,7 +157,13 @@ class TestSummaryDf:
     ):
         # Mock
         srs = SETResult(
-            cash_series=cash_series, position_df=pd.DataFrame(), trade_df=pd.DataFrame()
+            initial_capital=0.0,
+            pct_commission=0.0,
+            pct_buy_slip=0.0,
+            pct_sell_slip=0.0,
+            cash_series=cash_series,
+            position_df=pd.DataFrame(),
+            trade_df=pd.DataFrame(),
         )
 
         SETResult.position_df = PropertyMock(return_value=position_df)
@@ -225,6 +231,10 @@ def test_position_df(
 ):
     # Mock
     srs = SETResult(
+        initial_capital=0.0,
+        pct_commission=0.0,
+        pct_buy_slip=0.0,
+        pct_sell_slip=0.0,
         cash_series=pd.Series(),
         position_df=position_df,
         trade_df=pd.DataFrame(),
@@ -281,7 +291,13 @@ def test_position_df(
 def test_trade_df(trade_df: pd.DataFrame, expect_result: pd.DataFrame):
     # Mock
     srs = SETResult(
-        cash_series=pd.Series(), position_df=pd.DataFrame(), trade_df=trade_df
+        initial_capital=0.0,
+        pct_commission=0.0,
+        pct_buy_slip=0.0,
+        pct_sell_slip=0.0,
+        cash_series=pd.Series(),
+        position_df=pd.DataFrame(),
+        trade_df=trade_df,
     )
 
     # Test
@@ -307,6 +323,10 @@ class TestDividendDf:
     ):
         # Mock
         srs = SETResult(
+            initial_capital=0.0,
+            pct_commission=0.0,
+            pct_buy_slip=0.0,
+            pct_sell_slip=0.0,
             cash_series=pd.Series(),
             position_df=pd.DataFrame(),
             trade_df=pd.DataFrame(),
@@ -434,6 +454,16 @@ class TestDividendDf:
         expect_result: pd.DataFrame,
     ):
         self._test(position_df, dividend_df, expect_result)
+
+
+def test_stat_df():
+    # TODO: test_stat_df
+    pass
+
+
+def test_summary_trade_df():
+    # TODO: test_summary_trade_df
+    pass
 
 
 def _check_summary_df(df):

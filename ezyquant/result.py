@@ -311,6 +311,41 @@ class SETResult:
             columns
                 - port_value
                 - port_value_with_dividend
+            indexes
+                - pct_net_profit
+                - cagr
+                - pct_maximum_drawdown
+                - cagr_divided_maxdd
+                - pct_win_per_trade
+                - std
+                - cagr_divided_std
+                - pct_exposure
+                - total_commission
+                - initial_capital
+                - ending_capital
+                - net_profit
+                - maximum_drawdown
+                - all_trades
+                - avg_profit_loss
+                - pct_avg_profit_loss
+                - avg_bar_held
+                - win_trades
+                - total_profit
+                - avg_profit
+                - pct_avg_profit
+                - avg_win_bar_held
+                - max_win_consecutive
+                - loss_trades
+                - total_loss
+                - avg_loss
+                - pct_avg_loss
+                - avg_lose_bar_held
+                - max_lose_consecutive
+                - start_date
+                - end_date
+                - pct_commission
+                - pct_buy_slip
+                - pct_sell_slip
         """
         stat_dict = {
             # Highlight
