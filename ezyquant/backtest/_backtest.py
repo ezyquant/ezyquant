@@ -87,7 +87,10 @@ def _backtest_target_weight(
 
     sig_by_price_df = signal_weight_df / max_price_df
 
-    position_df_list: List[pd.DataFrame] = []
+    position_df_list: List[pd.DataFrame] = [
+        # First dataframe for sort columns
+        pd.DataFrame(columns=position_df_columns, dtype="float64"),
+    ]
 
     def on_interval(buy_price_s: pd.Series) -> float:
         ts = buy_price_s.name
@@ -129,8 +132,6 @@ def _backtest_target_weight(
 
     position_df = pd.concat(position_df_list, ignore_index=True)
     position_df["timestamp"] = pd.to_datetime(position_df["timestamp"])
-    # sort columns
-    position_df = position_df[position_df_columns]
 
     trade_df = pd.DataFrame(pf.trade_list, columns=trade_df_columns)
     trade_df["timestamp"] = pd.to_datetime(trade_df["timestamp"])
