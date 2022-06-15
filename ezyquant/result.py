@@ -4,7 +4,7 @@ import pandas as pd
 
 from . import fields as fld
 from . import utils
-from .reader import SETDataReader
+from .reader import _SETDataReaderCached
 
 summary_columns = [
     "timestamp",
@@ -72,7 +72,7 @@ class SETResult:
         self._position_df = position_df
         self._trade_df = trade_df
 
-        self._sdr = SETDataReader()
+        self._sdr = _SETDataReaderCached()
 
     @cached_property
     def summary_df(self) -> pd.DataFrame:

@@ -8,7 +8,7 @@ from . import fields as fld
 from . import utils
 from .errors import InputError
 from .indicators import TA
-from .reader import SETDataReader
+from .reader import _SETDataReaderCached
 
 
 class SETSignalCreator:
@@ -50,7 +50,7 @@ class SETSignalCreator:
         self._start_date: str = start_date
         self._end_date: Optional[str] = end_date
 
-        self._sdr = SETDataReader()
+        self._sdr = _SETDataReaderCached()
 
     def get_data(
         self,
