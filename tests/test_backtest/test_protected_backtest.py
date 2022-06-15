@@ -14,7 +14,7 @@ position_columns = ["timestamp", "symbol", "volume", "avg_cost_price"]
 trade_columns = ["timestamp", "symbol", "volume", "price", "pct_commission"]
 
 
-class TestBacktestTargetWeightLogicNoTrade:
+class TestProtectedBacktestTargetWeightNoTrade:
     @pytest.mark.parametrize("pct_commission", [0.0, 0.1])
     @pytest.mark.parametrize(
         ("initial_cash", "signal_weight_df", "price_df"),
@@ -90,7 +90,7 @@ class TestBacktestTargetWeightLogicNoTrade:
         ),
     ],
 )
-class TestBacktestTargetWeightLogic:
+class TestProtectedBacktestTargetWeight:
     @pytest.mark.kwparametrize(
         # Buy and hold
         dict(
@@ -602,8 +602,8 @@ def _check_position_df(df):
     assert_index_equal(df.columns, pd.Index(position_columns))
 
     # Data type
+    assert ptypes.is_datetime64_any_dtype(df["timestamp"])
     if not df.empty:
-        assert ptypes.is_datetime64_any_dtype(df["timestamp"])
         assert ptypes.is_string_dtype(df["symbol"])
         assert ptypes.is_float_dtype(df["volume"])
         assert ptypes.is_float_dtype(df["avg_cost_price"])
@@ -616,8 +616,8 @@ def _check_trade_df(df):
     assert_index_equal(df.columns, pd.Index(trade_columns))
 
     # Data type
+    assert ptypes.is_datetime64_any_dtype(df["timestamp"])
     if not df.empty:
-        assert ptypes.is_datetime64_any_dtype(df["timestamp"])
         assert ptypes.is_string_dtype(df["symbol"])
         assert ptypes.is_float_dtype(df["volume"])
         assert ptypes.is_float_dtype(df["price"])
