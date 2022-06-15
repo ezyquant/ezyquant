@@ -7,7 +7,7 @@ from .. import fields as fld
 from .. import utils
 from ..creator import SETSignalCreator
 from ..errors import InputError
-from ..result import SETResult
+from ..report import BacktestReport
 from ._backtest import _backtest_target_weight
 
 
@@ -25,7 +25,7 @@ def backtest_target_weight(
     buy_price_match_mode: str = "open",
     sell_price_match_mode: str = "open",
     signal_delay_bar: int = 1,
-) -> SETResult:
+) -> BacktestReport:
     """Backtest target weight. Rebalance with rebalance_freq, rebalance_at or
     if signal was changed from yesterday.
 
@@ -78,7 +78,7 @@ def backtest_target_weight(
 
     Returns
     -------
-    SETResult
+    BacktestReport
     """
     # Price df
     symbol_list = signal_df.columns.tolist()
@@ -140,7 +140,7 @@ def backtest_target_weight(
         pct_commission=pct_commission,
     )
 
-    return SETResult(
+    return BacktestReport(
         initial_capital=initial_cash,
         pct_commission=pct_commission,
         pct_buy_slip=pct_buy_slip,

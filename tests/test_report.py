@@ -7,8 +7,8 @@ import utils
 from pandas.testing import assert_frame_equal, assert_index_equal
 
 import ezyquant.fields as fld
-from ezyquant.result import (
-    SETResult,
+from ezyquant.report import (
+    BacktestReport,
     dividend_columns,
     position_columns,
     summary_columns,
@@ -21,14 +21,14 @@ trade_in_columns = ["timestamp", "symbol", "volume", "price", "pct_commission"]
 
 class TestSummaryDf:
     def setup_method(self, _):
-        self.position_df = SETResult.position_df
-        self.trade_df = SETResult.trade_df
-        self.dividend_df = SETResult.dividend_df
+        self.position_df = BacktestReport.position_df
+        self.trade_df = BacktestReport.trade_df
+        self.dividend_df = BacktestReport.dividend_df
 
     def teardown_method(self, _):
-        SETResult.position_df = self.position_df
-        SETResult.trade_df = self.trade_df
-        SETResult.dividend_df = self.dividend_df
+        BacktestReport.position_df = self.position_df
+        BacktestReport.trade_df = self.trade_df
+        BacktestReport.dividend_df = self.dividend_df
 
     @pytest.mark.kwparametrize(
         # Empty
@@ -156,7 +156,7 @@ class TestSummaryDf:
         expect_result: pd.DataFrame,
     ):
         # Mock
-        srs = SETResult(
+        br = BacktestReport(
             initial_capital=0.0,
             pct_commission=0.0,
             pct_buy_slip=0.0,
@@ -166,13 +166,13 @@ class TestSummaryDf:
             trade_df=pd.DataFrame(),
         )
 
-        SETResult.position_df = PropertyMock(return_value=position_df)
-        SETResult.trade_df = PropertyMock(return_value=trade_df)
-        SETResult.dividend_df = PropertyMock(return_value=dividend_df)
-        srs._sdr.get_trading_dates = Mock(return_value=utils.make_bdate_range())
+        BacktestReport.position_df = PropertyMock(return_value=position_df)
+        BacktestReport.trade_df = PropertyMock(return_value=trade_df)
+        BacktestReport.dividend_df = PropertyMock(return_value=dividend_df)
+        br._sdr.get_trading_dates = Mock(return_value=utils.make_bdate_range())
 
         # Test
-        result = srs.summary_df
+        result = br.summary_df
 
         # Check
         _check_summary_df(result)
@@ -230,7 +230,7 @@ def test_position_df(
     position_df: pd.DataFrame, close_price_df: pd.DataFrame, expect_result: pd.DataFrame
 ):
     # Mock
-    srs = SETResult(
+    br = BacktestReport(
         initial_capital=0.0,
         pct_commission=0.0,
         pct_buy_slip=0.0,
@@ -239,10 +239,10 @@ def test_position_df(
         position_df=position_df,
         trade_df=pd.DataFrame(),
     )
-    srs._sdr.get_data_symbol_daily = Mock(return_value=close_price_df)
+    br._sdr.get_data_symbol_daily = Mock(return_value=close_price_df)
 
     # Test
-    result = srs.position_df
+    result = br.position_df
 
     # Check
     _check_position_df(result)
@@ -290,7 +290,7 @@ def test_position_df(
 )
 def test_trade_df(trade_df: pd.DataFrame, expect_result: pd.DataFrame):
     # Mock
-    srs = SETResult(
+    br = BacktestReport(
         initial_capital=0.0,
         pct_commission=0.0,
         pct_buy_slip=0.0,
@@ -301,7 +301,7 @@ def test_trade_df(trade_df: pd.DataFrame, expect_result: pd.DataFrame):
     )
 
     # Test
-    result = srs.trade_df
+    result = br.trade_df
 
     # Check
     _check_trade_df(result)
@@ -310,10 +310,10 @@ def test_trade_df(trade_df: pd.DataFrame, expect_result: pd.DataFrame):
 
 class TestDividendDf:
     def setup_method(self, _):
-        self.position_df = SETResult.position_df
+        self.position_df = BacktestReport.position_df
 
     def teardown_method(self, _):
-        SETResult.position_df = self.position_df
+        BacktestReport.position_df = self.position_df
 
     def _test(
         self,
@@ -322,7 +322,7 @@ class TestDividendDf:
         expect_result: pd.DataFrame,
     ):
         # Mock
-        srs = SETResult(
+        br = BacktestReport(
             initial_capital=0.0,
             pct_commission=0.0,
             pct_buy_slip=0.0,
@@ -331,12 +331,12 @@ class TestDividendDf:
             position_df=pd.DataFrame(),
             trade_df=pd.DataFrame(),
         )
-        SETResult.position_df = PropertyMock(return_value=position_df)
-        srs._sdr.get_dividend = Mock(return_value=dividend_df)
-        srs._sdr.get_trading_dates = Mock(return_value=utils.make_bdate_range())
+        BacktestReport.position_df = PropertyMock(return_value=position_df)
+        br._sdr.get_dividend = Mock(return_value=dividend_df)
+        br._sdr.get_trading_dates = Mock(return_value=utils.make_bdate_range())
 
         # Test
-        result = srs.dividend_df
+        result = br.dividend_df
 
         # Check
         _check_dividend_df(result)

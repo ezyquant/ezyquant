@@ -23,7 +23,7 @@ signal_df = (pe_df.rank(axis=1, method="max") <= 10) / 10.00001
 #%% Backtest
 initial_cash = 1e6
 
-result = backtest_target_weight(
+rp = backtest_target_weight(
     signal_df=signal_df,
     rebalance_freq="no",
     rebalance_at=0,
@@ -33,4 +33,4 @@ result = backtest_target_weight(
     initial_cash=initial_cash,
 )
 
-print(result.stat_df)
+print(rp.stat_df)
