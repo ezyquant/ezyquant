@@ -2429,6 +2429,5 @@ class SETDataReader:
 
 
 @lru_cache
-def _set_data_reader_cache() -> SETDataReader:
-    SETDataReaderCached = utils.wrap_cache_class(SETDataReader)
-    return SETDataReaderCached()  # type: ignore
+def _SETDataReaderCached() -> SETDataReader:
+    return utils.wrap_cache_class(SETDataReader)()  # type: ignore
