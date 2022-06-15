@@ -2428,4 +2428,7 @@ class SETDataReader:
         return df
 
 
-SETDataReaderCached = utils.wrap_cache_class(SETDataReader)
+@lru_cache
+def _set_data_reader_cache() -> SETDataReader:
+    SETDataReaderCached = utils.wrap_cache_class(SETDataReader)
+    return SETDataReaderCached()  # type: ignore
