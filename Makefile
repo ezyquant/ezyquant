@@ -15,6 +15,7 @@ format:
 	docformatter -i ezyquant/creator.py
 	docformatter -i ezyquant/indicators.py
 	docformatter -i ezyquant/result.py
+	docformatter -i ezyquant/utils.py
 	docformatter -i ezyquant/backtest/backtest.py
 
 .PHONY: venv

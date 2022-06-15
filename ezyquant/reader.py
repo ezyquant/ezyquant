@@ -2430,4 +2430,16 @@ class SETDataReader:
 
 @lru_cache
 def _SETDataReaderCached() -> SETDataReader:
-    return utils.wrap_cache_class(SETDataReader)()  # type: ignore
+    out: SETDataReader = utils.wrap_cache_class(SETDataReader)()  # type: ignore
+
+    out.get_data_symbol_daily = utils.cache_dataframe_wrapper(out.get_data_symbol_daily)  # type: ignore
+    out.get_data_symbol_quarterly = utils.cache_dataframe_wrapper(  # type: ignore
+        out.get_data_symbol_quarterly
+    )
+    out.get_data_symbol_yearly = utils.cache_dataframe_wrapper(  # type: ignore
+        out.get_data_symbol_yearly
+    )
+    out.get_data_symbol_ttm = utils.cache_dataframe_wrapper(out.get_data_symbol_ttm)  # type: ignore
+    out.get_data_symbol_ytd = utils.cache_dataframe_wrapper(out.get_data_symbol_ytd)  # type: ignore
+
+    return out

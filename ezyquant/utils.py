@@ -2,6 +2,7 @@ import calendar
 import copy
 from datetime import date, datetime, timedelta
 from functools import lru_cache
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 
@@ -34,8 +35,8 @@ def round_df_100(df: pd.DataFrame) -> pd.DataFrame:
 def is_rebalance_weekly(
     trade_date_index: pd.DatetimeIndex, rebalance_at: int
 ) -> pd.Series:
-    """Return a series of bool, True if the date is a rebalance date.
-    Always rebalance on first day of index.
+    """Return a series of bool, True if the date is a rebalance date. Always
+    rebalance on first day of index.
 
     Parameters
     ----------
@@ -64,8 +65,8 @@ def is_rebalance_weekly(
 def is_rebalance_monthly(
     trade_date_index: pd.DatetimeIndex, rebalance_at: int
 ) -> pd.Series:
-    """Return a series of bool, True if the date is a rebalance date.
-    Always rebalance on first day of index.
+    """Return a series of bool, True if the date is a rebalance date. Always
+    rebalance on first day of index.
 
     Parameters
     ----------
@@ -132,15 +133,18 @@ Cache
 """
 
 
-def _arg_handler(arg):
-    if isinstance(arg, list):
-        return tuple(sorted(arg))
-    else:
-        return arg
-
-
 def cache_wrapper(method):
+    """Cache the result of a method using lru_cache.
+
+    Prase list arguments to sorted tuple and return copy of result.
+    """
     method = lru_cache(maxsize=128)(method)
+
+    def _arg_handler(arg):
+        if isinstance(arg, list):
+            return tuple(sorted(arg))
+        else:
+            return arg
 
     def wrapped(*args, **kwargs):
         new_args = tuple(_arg_handler(i) for i in args)
@@ -152,6 +156,8 @@ def cache_wrapper(method):
 
 
 class CacheMetaClass(type):
+    """Meta class for cache_wrapper."""
+
     def __new__(cls, clsname, bases, attrs):
         new_attrs = {
             k: cache_wrapper(v) if not k.startswith("_") and callable(v) else v
@@ -162,3 +168,64 @@ class CacheMetaClass(type):
 
 def wrap_cache_class(cls):
     return CacheMetaClass(cls.__name__, cls.__bases__, cls.__dict__)
+
+
+def cache_dataframe_wrapper(method):
+    call_dict: Dict[str, Dict[str, Any]] = {}
+
+    def wrapped(
+        field: str,
+        symbol_list: Optional[List[str]] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+        *args,
+        **kwargs,
+    ):
+        if field not in call_dict:
+            c_symbol_list = symbol_list
+            c_start_date = start_date
+            c_end_date = end_date
+        else:
+            c_symbol_list = call_dict[field]["symbol_list"]
+            c_start_date = call_dict[field]["start_date"]
+            c_end_date = call_dict[field]["end_date"]
+
+            if c_symbol_list == None or symbol_list == None:
+                c_symbol_list = None
+            elif set(c_symbol_list) - set(symbol_list):
+                c_symbol_list = symbol_list
+
+            if c_start_date == None or start_date == None:
+                c_start_date = None
+            elif c_start_date > start_date:
+                c_start_date = start_date
+
+            if c_end_date == None or end_date == None:
+                c_end_date = None
+            elif c_end_date < end_date:
+                c_end_date = end_date
+
+        df = method(
+            field=field,
+            symbol_list=c_symbol_list,
+            start_date=c_start_date,
+            end_date=c_end_date,
+            *args,
+            **kwargs,
+        )
+        call_dict[field] = {
+            "symbol_list": c_symbol_list,
+            "start_date": c_start_date,
+            "end_date": c_end_date,
+        }
+
+        if symbol_list != None:
+            df = df[symbol_list]
+        if start_date != None:
+            df = df[df.index >= start_date]
+        if end_date != None:
+            df = df[df.index <= end_date]
+
+        return df.copy()
+
+    return wrapped
