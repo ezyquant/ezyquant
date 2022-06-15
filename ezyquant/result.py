@@ -610,7 +610,7 @@ class SETResult:
     @property
     def _is_win_trade(self) -> pd.Series:
         """Is win trade."""
-        return self._summary_trade_df["pct_return"] > 0
+        return self._summary_trade_df["return"] > 0
 
     """
     Protected
@@ -624,17 +624,16 @@ class SETResult:
 
     @cached_property
     def _summary_trade_df(self) -> pd.DataFrame:
-        """Each row is sell.
-
-        Datetime in is nearest buy. Sell all in position.
-        """
+        """Each row is sell."""
         trade_df = self.trade_df.copy()
-        position_df = self.position_df.copy()
 
-        trade_df = self._summary_trade_cost_price(trade_df, position_df)
+        # avg cost price
+        trade_df = self._summary_trade_avg_cost_price(trade_df)
 
         # sell all in position
-        trade_df = self._summary_trade_sell_all_position(trade_df, position_df)
+        df = self._summary_trade_sell_all_position()
+        assert trade_df.columns.sort_values().equals(df.columns.sort_values())
+        trade_df = pd.concat([trade_df, df])
 
         # datetime in
         trade_df = self._summary_trade_datetime_in(trade_df)
@@ -644,12 +643,12 @@ class SETResult:
         # sell price
         df = df.rename(columns={"price": "sell_price"})
 
-        # commission
+        # commission from buy and sell
         df["commission"] = (
             (df["sell_price"] + df["avg_cost_price"])
             * df["volume"]
             * self.pct_commission
-        )
+        ).abs()
 
         # return
         df["return"] = ((df["sell_price"] - df["avg_cost_price"]) * df["volume"]) - df[
@@ -666,11 +665,9 @@ class SETResult:
 
         return df[summary_trade_columns]
 
-    def _summary_trade_cost_price(
-        self, trade_df: pd.DataFrame, pos_df: pd.DataFrame
-    ) -> pd.DataFrame:
+    def _summary_trade_avg_cost_price(self, trade_df: pd.DataFrame) -> pd.DataFrame:
         """Add avg_cost_price to trade_df."""
-        pos_df = pos_df[["timestamp", "symbol", "avg_cost_price"]]
+        pos_df = self.position_df[["timestamp", "symbol", "avg_cost_price"]]
 
         # get cost price from tomorrow position
         pos_df["timestamp"] = self._shift_trade_date(pos_df["timestamp"], periods=-1)
@@ -680,31 +677,30 @@ class SETResult:
 
         return df
 
-    def _summary_trade_sell_all_position(
-        self, trade_df: pd.DataFrame, position_df: pd.DataFrame
-    ) -> pd.DataFrame:
-        """Add trade if sell all position."""
-        pos_df = position_df.copy()
+    def _summary_trade_sell_all_position(self) -> pd.DataFrame:
+        """Add trade if sell all position.
 
-        df = pos_df[pos_df["timestamp"] == self.end_date]
+        No commission. Sell at close price.
+        """
+        df = self.position_df.copy()
+
+        df = df[df["timestamp"] == self.end_date]
         df = df.rename(columns={"close_price": "price"})
         df["side"] = fld.SIDE_SELL
         df["commission"] = 0
         df = df.drop(columns=["close_value"])
 
-        assert trade_df.columns.sort_values().equals(df.columns.sort_values())
-
-        df = pd.concat([trade_df, df])
         return df
 
     def _summary_trade_datetime_in(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Add datetime_in to trade_df."""
-        df["datetime_in"] = df["timestamp"]
-        df.loc[df["side"] == fld.SIDE_SELL, "datetime_in"] = nan
+        """Add datetime_in to trade_df.
 
-        if not df.empty:
-            tmp = df.groupby(["symbol"]).fillna(method="pad")  # type: ignore
-            df["datetime_in"] = tmp["datetime_in"]
+        datetime in is nearest buy.
+        """
+        df["datetime_in"] = df.loc[df["side"] == fld.SIDE_BUY, "timestamp"]
+
+        tmp = df.groupby(["symbol"]).fillna(method="pad")  # type: ignore
+        df["datetime_in"] = tmp["datetime_in"]
 
         return df
 
