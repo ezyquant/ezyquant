@@ -218,7 +218,7 @@ def cache_dataframe_wrapper(method):
         }
 
         if symbol_list != None:
-            df = df[symbol_list]
+            df = df[[i for i in symbol_list if i in df.columns]]
         if start_date != None:
             df = df[df.index >= start_date]
         if end_date != None:
