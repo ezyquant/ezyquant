@@ -190,8 +190,10 @@ def cache_dataframe_wrapper(method):
 
             if c_symbol_list == None or symbol_list == None:
                 c_symbol_list = None
-            elif set(c_symbol_list) - set(symbol_list):
-                c_symbol_list = symbol_list
+            elif set(symbol_list) - set(c_symbol_list):
+                c_symbol_list = c_symbol_list + list(
+                    set(symbol_list) - set(c_symbol_list)
+                )
 
             if c_start_date == None or start_date == None:
                 c_start_date = None
