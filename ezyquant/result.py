@@ -69,7 +69,7 @@ def return_nan_on_failure(func):
     return wrapper
 
 
-class BacktestReport:
+class SETResult:
     def __init__(
         self,
         initial_capital: float,
@@ -80,7 +80,7 @@ class BacktestReport:
         position_df: pd.DataFrame,
         trade_df: pd.DataFrame,
     ):
-        """BacktestReport.
+        """SETResult.
 
         Parameters
         ----------
