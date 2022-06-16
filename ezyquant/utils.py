@@ -2,7 +2,7 @@ import calendar
 import copy
 from datetime import date, datetime, timedelta
 from functools import lru_cache
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 import pandas as pd
 
@@ -128,7 +128,7 @@ def _date_range(
     return out
 
 
-""" 
+"""
 Cache
 """
 
@@ -170,7 +170,20 @@ def wrap_cache_class(cls):
     return CacheMetaClass(cls.__name__, cls.__bases__, cls.__dict__)
 
 
-def cache_dataframe_wrapper(method):
+def cache_dataframe_wrapper(method: Callable):
+    """Wrap a method to cache the result of the method.
+
+    Parameters
+    ----------
+    method : Callable
+        method parameter must be
+            field: str
+            symbol_list: Optional[List[str]] = None
+            start_date: Optional[str] = None
+            end_date: Optional[str] = None
+        method must return dataframe with timestamp as index and symbol as column.
+    """
+
     call_dict: Dict[str, Dict[str, Any]] = {}
 
     def wrapped(
