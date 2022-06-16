@@ -81,12 +81,12 @@ class TestPlaceOrderBuy:
         symbol = "A"
         volume = 100.0
         price = 1.0
-        timestamp = pd.Timestamp("2000-01-01")
+        matched_at = pd.Timestamp("2000-01-01")
         position_dict = copy.deepcopy(position_dict)
 
         # Mock
         expect_trade = Trade(
-            timestamp=timestamp,
+            matched_at=matched_at,
             symbol=symbol,
             volume=volume,
             price=price,
@@ -104,7 +104,7 @@ class TestPlaceOrderBuy:
             symbol=symbol,
             volume=volume,
             price=price,
-            timestamp=timestamp,
+            matched_at=matched_at,
         )
 
         # Check
@@ -117,7 +117,7 @@ class TestPlaceOrderBuy:
         symbol = "A"
         volume = 100.0
         price = 1.0
-        timestamp = pd.Timestamp("2000-01-01")
+        matched_at = pd.Timestamp("2000-01-01")
 
         # Mock
         pf = Portfolio(cash=cash, pct_commission=pct_commission)
@@ -128,7 +128,7 @@ class TestPlaceOrderBuy:
                 symbol=symbol,
                 volume=volume,
                 price=price,
-                timestamp=timestamp,
+                matched_at=matched_at,
             )
         assert e.value.args[0] == "Insufficient cash"
 
@@ -152,7 +152,7 @@ class TestPlaceOrderBuy:
     def test_error_volume(self, volume: float):
         symbol = "A"
         price = 1.0
-        timestamp = pd.Timestamp("2000-01-01")
+        matched_at = pd.Timestamp("2000-01-01")
 
         # Mock
         pf = Portfolio(cash=1e6)
@@ -163,7 +163,7 @@ class TestPlaceOrderBuy:
                 symbol=symbol,
                 volume=volume,
                 price=price,
-                timestamp=timestamp,
+                matched_at=matched_at,
             )
         assert "volume" in e.value.args[0]
 
@@ -204,12 +204,12 @@ class TestPlaceOrderSell:
         symbol = "A"
         volume = -100.0
         price = 1.0
-        timestamp = pd.Timestamp("2000-01-01")
+        matched_at = pd.Timestamp("2000-01-01")
         position_dict = copy.deepcopy(position_dict)
 
         # Mock
         expect_trade = Trade(
-            timestamp=timestamp,
+            matched_at=matched_at,
             symbol=symbol,
             volume=volume,
             price=price,
@@ -227,7 +227,7 @@ class TestPlaceOrderSell:
             symbol=symbol,
             volume=volume,
             price=price,
-            timestamp=timestamp,
+            matched_at=matched_at,
         )
 
         # Check
@@ -247,7 +247,7 @@ class TestPlaceOrderSell:
         symbol = "A"
         volume = -200.0
         price = 1.0
-        timestamp = pd.Timestamp("2000-01-01")
+        matched_at = pd.Timestamp("2000-01-01")
 
         # Mock
         pf = Portfolio(
@@ -262,6 +262,6 @@ class TestPlaceOrderSell:
                 symbol=symbol,
                 volume=volume,
                 price=price,
-                timestamp=timestamp,
+                matched_at=matched_at,
             )
         assert e.value.args[0] == "Insufficient volume"

@@ -11,7 +11,7 @@ from ezyquant.backtest._backtest import _backtest_target_weight
 nan = float("nan")
 
 position_columns = ["timestamp", "symbol", "volume", "avg_cost_price"]
-trade_columns = ["timestamp", "symbol", "volume", "price", "pct_commission"]
+trade_columns = ["matched_at", "symbol", "volume", "price", "pct_commission"]
 
 
 class TestProtectedBacktestTargetWeightNoTrade:
@@ -616,7 +616,7 @@ def _check_trade_df(df):
     assert_index_equal(df.columns, pd.Index(trade_columns))
 
     # Data type
-    assert ptypes.is_datetime64_any_dtype(df["timestamp"])
+    assert ptypes.is_datetime64_any_dtype(df["matched_at"])
     if not df.empty:
         assert ptypes.is_string_dtype(df["symbol"])
         assert ptypes.is_float_dtype(df["volume"])

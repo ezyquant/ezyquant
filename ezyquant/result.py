@@ -29,7 +29,7 @@ position_columns = [
     "close_value",
 ]
 trade_columns = [
-    "timestamp",
+    "matched_at",
     "symbol",
     "side",
     "volume",
@@ -102,7 +102,7 @@ class SETResult:
                 - avg_cost_price
         trade_df : pd.DataFrame
             dataframe of trade.
-                - timestamp
+                - matched_at
                 - symbol
                 - volume
                 - price
@@ -141,7 +141,7 @@ class SETResult:
         df["cashflow"] = df["cash"].diff().fillna(0.0)
 
         df["commission"] = (
-            self.trade_df.set_index("timestamp")["commission"].groupby(level=0).sum()
+            self.trade_df.set_index("matched_at")["commission"].groupby(level=0).sum()
         )
         df["commission"] = df["commission"].fillna(0.0)
 
@@ -227,7 +227,7 @@ class SETResult:
         Returns
         -------
         pd.DataFrame
-            - timestamp
+            - matched_at
             - symbol
             - side
             - volume
@@ -428,7 +428,7 @@ class SETResult:
         df = trade_df[trade_df["side"] == fld.SIDE_SELL]
 
         # sell price
-        df = df.rename(columns={"price": "sell_price", "timestamp": "exit_at"})
+        df = df.rename(columns={"price": "sell_price", "matched_at": "exit_at"})
 
         # commission from buy and sell
         df["commission"] = (
@@ -722,12 +722,13 @@ class SETResult:
     def _summary_trade_avg_cost_price(self, trade_df: pd.DataFrame) -> pd.DataFrame:
         """Add avg_cost_price to trade_df."""
         pos_df = self.position_df[["timestamp", "symbol", "avg_cost_price"]]
+        pos_df = pos_df.rename(columns={"timestamp": "matched_at"})
 
         # get cost price from tomorrow position
-        pos_df["timestamp"] = self._shift_trade_date(pos_df["timestamp"], periods=-1)
+        pos_df["matched_at"] = self._shift_trade_date(pos_df["matched_at"], periods=-1)
 
         # set index for merge
-        df = trade_df.merge(pos_df, on=["timestamp", "symbol"], validate="1:1")
+        df = trade_df.merge(pos_df, on=["matched_at", "symbol"], validate="1:1")
 
         return df
 
@@ -738,7 +739,7 @@ class SETResult:
         """
         df = self.position_df.copy()
 
-        df = df[df["timestamp"] == self.end_date]
+        df = df[df["matched_at"] == self.end_date]
         df = df.rename(columns={"close_price": "price"})
         df["side"] = fld.SIDE_SELL
         df["commission"] = 0
@@ -751,7 +752,7 @@ class SETResult:
 
         datetime in is nearest buy.
         """
-        df["entry_at"] = df.loc[df["side"] == fld.SIDE_BUY, "timestamp"]
+        df["entry_at"] = df.loc[df["side"] == fld.SIDE_BUY, "matched_at"]
 
         tmp = df.groupby(["symbol"]).fillna(method="pad")  # type: ignore
         df["entry_at"] = tmp["entry_at"]

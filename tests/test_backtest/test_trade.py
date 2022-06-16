@@ -6,7 +6,7 @@ from ezyquant.backtest import Trade
 
 
 class TestTrade:
-    @pytest.mark.parametrize("timestamp", [datetime(2000, 1, 1)])
+    @pytest.mark.parametrize("matched_at", [datetime(2000, 1, 1)])
     @pytest.mark.parametrize("symbol", ["A"])
     @pytest.mark.parametrize(
         ("volume", "price", "pct_commission", "expect_value_with_commission"),
@@ -19,7 +19,7 @@ class TestTrade:
     )
     def test_value_with_commission(
         self,
-        timestamp: datetime,
+        matched_at: datetime,
         symbol: str,
         volume: float,
         price: float,
@@ -27,7 +27,7 @@ class TestTrade:
         expect_value_with_commission,
     ):
         t = Trade(
-            timestamp=timestamp,
+            matched_at=matched_at,
             symbol=symbol,
             volume=volume,
             price=price,

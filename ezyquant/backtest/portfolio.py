@@ -45,11 +45,11 @@ class Portfolio:
         symbol: str,
         volume: float,
         price: float,
-        timestamp: datetime,
+        matched_at: datetime,
     ):
         # Create trade
         trade = Trade(
-            timestamp=timestamp,
+            matched_at=matched_at,
             symbol=symbol,
             volume=volume,
             price=price,

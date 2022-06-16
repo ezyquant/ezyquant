@@ -16,7 +16,7 @@ from ezyquant.result import (
 )
 
 position_in_columns = ["timestamp", "symbol", "volume", "avg_cost_price"]
-trade_in_columns = ["timestamp", "symbol", "volume", "price", "pct_commission"]
+trade_in_columns = ["matched_at", "symbol", "volume", "price", "pct_commission"]
 
 
 class TestSummaryDf:
@@ -35,7 +35,7 @@ class TestSummaryDf:
         {
             "cash_series": pd.Series({pd.Timestamp("2000-01-03"): 1.0}),
             "position_df": pd.DataFrame(columns=["timestamp", "close_value"]),
-            "trade_df": pd.DataFrame(columns=["timestamp", "commission"]),
+            "trade_df": pd.DataFrame(columns=["matched_at", "commission"]),
             "dividend_df": pd.DataFrame(columns=["pay_date", "amount"]),
             "expect_result": pd.DataFrame(
                 [[pd.Timestamp("2000-01-03"), 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]],
@@ -49,7 +49,7 @@ class TestSummaryDf:
                 [[pd.Timestamp("2000-01-03"), 1.0]],
                 columns=["timestamp", "close_value"],
             ),
-            "trade_df": pd.DataFrame(columns=["timestamp", "commission"]),
+            "trade_df": pd.DataFrame(columns=["matched_at", "commission"]),
             "dividend_df": pd.DataFrame(columns=["pay_date", "amount"]),
             "expect_result": pd.DataFrame(
                 [[pd.Timestamp("2000-01-03"), 2.0, 2.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0]],
@@ -61,7 +61,8 @@ class TestSummaryDf:
             "cash_series": pd.Series({pd.Timestamp("2000-01-03"): 1.0}),
             "position_df": pd.DataFrame(columns=["timestamp", "close_value"]),
             "trade_df": pd.DataFrame(
-                [[pd.Timestamp("2000-01-03"), 1.0]], columns=["timestamp", "commission"]
+                [[pd.Timestamp("2000-01-03"), 1.0]],
+                columns=["matched_at", "commission"],
             ),
             "dividend_df": pd.DataFrame(columns=["pay_date", "amount"]),
             "expect_result": pd.DataFrame(
@@ -73,7 +74,7 @@ class TestSummaryDf:
         {
             "cash_series": pd.Series({pd.Timestamp("2000-01-03"): 1.0}),
             "position_df": pd.DataFrame(columns=["timestamp", "close_value"]),
-            "trade_df": pd.DataFrame(columns=["timestamp", "commission"]),
+            "trade_df": pd.DataFrame(columns=["matched_at", "commission"]),
             "dividend_df": pd.DataFrame(
                 [[pd.Timestamp("2000-01-03"), 1.0]], columns=["pay_date", "amount"]
             ),
@@ -86,7 +87,7 @@ class TestSummaryDf:
         {
             "cash_series": pd.Series({pd.Timestamp("2000-01-03"): 1.0}),
             "position_df": pd.DataFrame(columns=["timestamp", "close_value"]),
-            "trade_df": pd.DataFrame(columns=["timestamp", "commission"]),
+            "trade_df": pd.DataFrame(columns=["matched_at", "commission"]),
             "dividend_df": pd.DataFrame(
                 [[pd.Timestamp("2000-01-02"), 1.0]], columns=["pay_date", "amount"]
             ),
@@ -99,7 +100,7 @@ class TestSummaryDf:
         {
             "cash_series": pd.Series({pd.Timestamp("2000-01-03"): 1.0}),
             "position_df": pd.DataFrame(columns=["timestamp", "close_value"]),
-            "trade_df": pd.DataFrame(columns=["timestamp", "commission"]),
+            "trade_df": pd.DataFrame(columns=["matched_at", "commission"]),
             "dividend_df": pd.DataFrame(
                 [[pd.Timestamp("2000-01-04"), 1.0]], columns=["pay_date", "amount"]
             ),
@@ -114,7 +115,7 @@ class TestSummaryDf:
                 {pd.Timestamp("2000-01-03"): 1.0, pd.Timestamp("2000-01-04"): 1.0}
             ),
             "position_df": pd.DataFrame(columns=["timestamp", "close_value"]),
-            "trade_df": pd.DataFrame(columns=["timestamp", "commission"]),
+            "trade_df": pd.DataFrame(columns=["matched_at", "commission"]),
             "dividend_df": pd.DataFrame(
                 [[pd.Timestamp("2000-01-03"), 1.0]], columns=["pay_date", "amount"]
             ),
@@ -527,7 +528,7 @@ def _check_trade_df(df):
 
     # Data type
     if not df.empty:
-        assert ptypes.is_datetime64_any_dtype(df["timestamp"])
+        assert ptypes.is_datetime64_any_dtype(df["matched_at"])
         assert ptypes.is_string_dtype(df["symbol"])
         assert ptypes.is_string_dtype(df["side"])
         assert ptypes.is_float_dtype(df["volume"])
