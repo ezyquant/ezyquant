@@ -46,7 +46,7 @@ dividend_columns = [
     "pay_date",
 ]
 summary_trade_columns = [
-    "datetime_out",
+    "exit_at",
     "symbol",
     "avg_cost_price",
     "sell_price",
@@ -54,7 +54,7 @@ summary_trade_columns = [
     "commission",
     "return",
     "pct_return",
-    "datetime_in",
+    "entry_at",
     "hold_days",
 ]
 
@@ -401,7 +401,7 @@ class SETResult:
         Returns
         -------
         pd.DataFrame
-            - timestamp
+            - exit_at
             - symbol
             - avg_cost_price
             - sell_price
@@ -409,7 +409,7 @@ class SETResult:
             - commission
             - return
             - pct_return
-            - datetime_in
+            - entry_at
             - hold_days
         """
         trade_df = self.trade_df.copy()
@@ -423,12 +423,12 @@ class SETResult:
         trade_df = pd.concat([trade_df, df])
 
         # datetime in
-        trade_df = self._summary_trade_datetime_in(trade_df)
+        trade_df = self._summary_trade_entry_at(trade_df)
 
         df = trade_df[trade_df["side"] == fld.SIDE_SELL]
 
         # sell price
-        df = df.rename(columns={"price": "sell_price", "timestamp": "datetime_out"})
+        df = df.rename(columns={"price": "sell_price", "timestamp": "exit_at"})
 
         # commission from buy and sell
         df["commission"] = (
@@ -446,7 +446,7 @@ class SETResult:
         df["pct_return"] = df["return"] / df["avg_cost_price"] / df["volume"]
 
         # hold days
-        df["hold_days"] = (df["datetime_out"] - df["datetime_in"]).dt.days
+        df["hold_days"] = (df["exit_at"] - df["entry_at"]).dt.days
 
         return df[summary_trade_columns]
 
@@ -746,15 +746,15 @@ class SETResult:
 
         return df
 
-    def _summary_trade_datetime_in(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Add datetime_in to trade_df.
+    def _summary_trade_entry_at(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Add entry_at to trade_df.
 
         datetime in is nearest buy.
         """
-        df["datetime_in"] = df.loc[df["side"] == fld.SIDE_BUY, "timestamp"]
+        df["entry_at"] = df.loc[df["side"] == fld.SIDE_BUY, "timestamp"]
 
         tmp = df.groupby(["symbol"]).fillna(method="pad")  # type: ignore
-        df["datetime_in"] = tmp["datetime_in"]
+        df["entry_at"] = tmp["entry_at"]
 
         return df
 
