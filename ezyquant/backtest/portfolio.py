@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field, fields
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, List
 
@@ -45,11 +45,11 @@ class Portfolio:
         symbol: str,
         volume: float,
         price: float,
-        timestamp: datetime,
+        matched_at: datetime,
     ):
         # Create trade
         trade = Trade(
-            timestamp=timestamp,
+            matched_at=matched_at,
             symbol=symbol,
             volume=volume,
             price=price,

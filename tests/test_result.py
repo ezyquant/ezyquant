@@ -6,6 +6,7 @@ import pytest
 import utils
 from pandas.testing import assert_frame_equal, assert_index_equal
 
+import ezyquant.fields as fld
 from ezyquant.result import (
     SETResult,
     dividend_columns,
@@ -15,7 +16,7 @@ from ezyquant.result import (
 )
 
 position_in_columns = ["timestamp", "symbol", "volume", "avg_cost_price"]
-trade_in_columns = ["timestamp", "symbol", "volume", "price", "pct_commission"]
+trade_in_columns = ["matched_at", "symbol", "volume", "price", "pct_commission"]
 
 
 class TestSummaryDf:
@@ -34,7 +35,7 @@ class TestSummaryDf:
         {
             "cash_series": pd.Series({pd.Timestamp("2000-01-03"): 1.0}),
             "position_df": pd.DataFrame(columns=["timestamp", "close_value"]),
-            "trade_df": pd.DataFrame(columns=["timestamp", "commission"]),
+            "trade_df": pd.DataFrame(columns=["matched_at", "commission"]),
             "dividend_df": pd.DataFrame(columns=["pay_date", "amount"]),
             "expect_result": pd.DataFrame(
                 [[pd.Timestamp("2000-01-03"), 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]],
@@ -48,7 +49,7 @@ class TestSummaryDf:
                 [[pd.Timestamp("2000-01-03"), 1.0]],
                 columns=["timestamp", "close_value"],
             ),
-            "trade_df": pd.DataFrame(columns=["timestamp", "commission"]),
+            "trade_df": pd.DataFrame(columns=["matched_at", "commission"]),
             "dividend_df": pd.DataFrame(columns=["pay_date", "amount"]),
             "expect_result": pd.DataFrame(
                 [[pd.Timestamp("2000-01-03"), 2.0, 2.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0]],
@@ -60,7 +61,8 @@ class TestSummaryDf:
             "cash_series": pd.Series({pd.Timestamp("2000-01-03"): 1.0}),
             "position_df": pd.DataFrame(columns=["timestamp", "close_value"]),
             "trade_df": pd.DataFrame(
-                [[pd.Timestamp("2000-01-03"), 1.0]], columns=["timestamp", "commission"]
+                [[pd.Timestamp("2000-01-03"), 1.0]],
+                columns=["matched_at", "commission"],
             ),
             "dividend_df": pd.DataFrame(columns=["pay_date", "amount"]),
             "expect_result": pd.DataFrame(
@@ -72,7 +74,7 @@ class TestSummaryDf:
         {
             "cash_series": pd.Series({pd.Timestamp("2000-01-03"): 1.0}),
             "position_df": pd.DataFrame(columns=["timestamp", "close_value"]),
-            "trade_df": pd.DataFrame(columns=["timestamp", "commission"]),
+            "trade_df": pd.DataFrame(columns=["matched_at", "commission"]),
             "dividend_df": pd.DataFrame(
                 [[pd.Timestamp("2000-01-03"), 1.0]], columns=["pay_date", "amount"]
             ),
@@ -85,7 +87,7 @@ class TestSummaryDf:
         {
             "cash_series": pd.Series({pd.Timestamp("2000-01-03"): 1.0}),
             "position_df": pd.DataFrame(columns=["timestamp", "close_value"]),
-            "trade_df": pd.DataFrame(columns=["timestamp", "commission"]),
+            "trade_df": pd.DataFrame(columns=["matched_at", "commission"]),
             "dividend_df": pd.DataFrame(
                 [[pd.Timestamp("2000-01-02"), 1.0]], columns=["pay_date", "amount"]
             ),
@@ -98,7 +100,7 @@ class TestSummaryDf:
         {
             "cash_series": pd.Series({pd.Timestamp("2000-01-03"): 1.0}),
             "position_df": pd.DataFrame(columns=["timestamp", "close_value"]),
-            "trade_df": pd.DataFrame(columns=["timestamp", "commission"]),
+            "trade_df": pd.DataFrame(columns=["matched_at", "commission"]),
             "dividend_df": pd.DataFrame(
                 [[pd.Timestamp("2000-01-04"), 1.0]], columns=["pay_date", "amount"]
             ),
@@ -113,7 +115,7 @@ class TestSummaryDf:
                 {pd.Timestamp("2000-01-03"): 1.0, pd.Timestamp("2000-01-04"): 1.0}
             ),
             "position_df": pd.DataFrame(columns=["timestamp", "close_value"]),
-            "trade_df": pd.DataFrame(columns=["timestamp", "commission"]),
+            "trade_df": pd.DataFrame(columns=["matched_at", "commission"]),
             "dividend_df": pd.DataFrame(
                 [[pd.Timestamp("2000-01-03"), 1.0]], columns=["pay_date", "amount"]
             ),
@@ -156,7 +158,13 @@ class TestSummaryDf:
     ):
         # Mock
         srs = SETResult(
-            cash_series=cash_series, position_df=pd.DataFrame(), trade_df=pd.DataFrame()
+            initial_capital=0.0,
+            pct_commission=0.0,
+            pct_buy_slip=0.0,
+            pct_sell_slip=0.0,
+            cash_series=cash_series,
+            position_df=pd.DataFrame(),
+            trade_df=pd.DataFrame(),
         )
 
         SETResult.position_df = PropertyMock(return_value=position_df)
@@ -224,6 +232,10 @@ def test_position_df(
 ):
     # Mock
     srs = SETResult(
+        initial_capital=0.0,
+        pct_commission=0.0,
+        pct_buy_slip=0.0,
+        pct_sell_slip=0.0,
         cash_series=pd.Series(),
         position_df=position_df,
         trade_df=pd.DataFrame(),
@@ -254,7 +266,7 @@ def test_position_df(
             ),
             pd.DataFrame(
                 [
-                    [pd.Timestamp("2000-01-03"), "AAA", "buy", 100.0, 0.1, 0.1],
+                    [pd.Timestamp("2000-01-03"), "AAA", fld.SIDE_BUY, 100.0, 0.1, 0.1],
                 ],
                 columns=trade_columns,
             ),
@@ -269,8 +281,8 @@ def test_position_df(
             ),
             pd.DataFrame(
                 [
-                    [pd.Timestamp("2000-01-03"), "AAA", "buy", 100.0, 0.1, 0.1],
-                    [pd.Timestamp("2000-01-04"), "AAA", "sell", 100.0, 0.1, 0.1],
+                    [pd.Timestamp("2000-01-03"), "AAA", fld.SIDE_BUY, 100.0, 0.1, 0.1],
+                    [pd.Timestamp("2000-01-04"), "AAA", fld.SIDE_SELL, 100.0, 0.1, 0.1],
                 ],
                 columns=trade_columns,
             ),
@@ -280,7 +292,13 @@ def test_position_df(
 def test_trade_df(trade_df: pd.DataFrame, expect_result: pd.DataFrame):
     # Mock
     srs = SETResult(
-        cash_series=pd.Series(), position_df=pd.DataFrame(), trade_df=trade_df
+        initial_capital=0.0,
+        pct_commission=0.0,
+        pct_buy_slip=0.0,
+        pct_sell_slip=0.0,
+        cash_series=pd.Series(),
+        position_df=pd.DataFrame(),
+        trade_df=trade_df,
     )
 
     # Test
@@ -306,6 +324,10 @@ class TestDividendDf:
     ):
         # Mock
         srs = SETResult(
+            initial_capital=0.0,
+            pct_commission=0.0,
+            pct_buy_slip=0.0,
+            pct_sell_slip=0.0,
             cash_series=pd.Series(),
             position_df=pd.DataFrame(),
             trade_df=pd.DataFrame(),
@@ -435,6 +457,16 @@ class TestDividendDf:
         self._test(position_df, dividend_df, expect_result)
 
 
+def test_stat_df():
+    # TODO: test_stat_df
+    pass
+
+
+def test_summary_trade_df():
+    # TODO: test_summary_trade_df
+    pass
+
+
 def _check_summary_df(df):
     assert isinstance(df, pd.DataFrame)
 
@@ -496,7 +528,7 @@ def _check_trade_df(df):
 
     # Data type
     if not df.empty:
-        assert ptypes.is_datetime64_any_dtype(df["timestamp"])
+        assert ptypes.is_datetime64_any_dtype(df["matched_at"])
         assert ptypes.is_string_dtype(df["symbol"])
         assert ptypes.is_string_dtype(df["side"])
         assert ptypes.is_float_dtype(df["volume"])

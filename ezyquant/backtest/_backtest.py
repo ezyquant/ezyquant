@@ -55,7 +55,7 @@ def _backtest_target_weight(
                 - volume
                 - avg_cost_price
             - trade_df
-                - timestamp
+                - matched_at
                 - symbol
                 - volume
                 - price
@@ -109,7 +109,7 @@ def _backtest_target_weight(
                 symbol=k,  # type: ignore
                 volume=v,  # type: ignore
                 price=sell_price_s[k],
-                timestamp=ts,  # type: ignore
+                matched_at=ts,  # type: ignore
             )
 
         # Buy
@@ -118,7 +118,7 @@ def _backtest_target_weight(
                 symbol=k,  # type: ignore
                 volume=v,  # type: ignore
                 price=buy_price_s[k],  # type: ignore
-                timestamp=ts,  # type: ignore
+                matched_at=ts,  # type: ignore
             )
 
         pos_df = pf.get_position_df()
@@ -134,4 +134,6 @@ def _backtest_target_weight(
     position_df["timestamp"] = pd.to_datetime(position_df["timestamp"])
 
     trade_df = pd.DataFrame(pf.trade_list, columns=trade_df_columns)
+    trade_df["matched_at"] = pd.to_datetime(trade_df["matched_at"])
+
     return cash_s, position_df, trade_df

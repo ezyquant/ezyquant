@@ -33,4 +33,4 @@ result = backtest_target_weight(
     initial_cash=initial_cash,
 )
 
-print(result.summary_df)
+print(result.stat_df)

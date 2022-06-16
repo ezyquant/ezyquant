@@ -9,8 +9,8 @@ class Trade:
 
     Parameters
     -------
-    timestamp : datetime
-        The timestamp of the trade
+    matched_at : datetime
+        The time when the trade was executed.
     symbol : str
         The symbol of the trade
     volume : float
@@ -21,17 +21,17 @@ class Trade:
         The percentage of commission, must be between 0 and 1
     """
 
-    timestamp: datetime
+    matched_at: datetime
     symbol: str
     volume: float
     price: float
     pct_commission: float
 
     def __post_init__(self):
-        # timestamp
+        # matched_at
         assert isinstance(
-            self.timestamp, datetime
-        ), f"timestamp must be datetime, got {type(self.timestamp)}"
+            self.matched_at, datetime
+        ), f"matched_at must be datetime, got {type(self.matched_at)}"
 
         # symbol
         assert isinstance(
