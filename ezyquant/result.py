@@ -739,11 +739,13 @@ class SETResult:
         """
         df = self.position_df.copy()
 
-        df = df[df["matched_at"] == self.end_date]
+        df = df[df["timestamp"] == self.end_date]
         df = df.rename(columns={"close_price": "price"})
         df["side"] = fld.SIDE_SELL
         df["commission"] = 0
         df = df.drop(columns=["close_value"])
+
+        df = df.rename(columns={"timestamp": "matched_at"})
 
         return df
 
