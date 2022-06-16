@@ -192,6 +192,9 @@ def cache_dataframe_wrapper(method: Callable):
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
     ):
+        if symbol_list != None:
+            symbol_list = [i.upper() for i in symbol_list]
+
         if field not in call_dict:
             c_symbol_list = symbol_list
             c_start_date = start_date
