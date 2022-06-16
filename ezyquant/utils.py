@@ -178,8 +178,6 @@ def cache_dataframe_wrapper(method):
         symbol_list: Optional[List[str]] = None,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
-        *args,
-        **kwargs,
     ):
         if field not in call_dict:
             c_symbol_list = symbol_list
@@ -210,8 +208,6 @@ def cache_dataframe_wrapper(method):
             symbol_list=c_symbol_list,
             start_date=c_start_date,
             end_date=c_end_date,
-            *args,
-            **kwargs,
         )
         call_dict[field] = {
             "symbol_list": c_symbol_list,
