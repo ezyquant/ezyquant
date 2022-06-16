@@ -2,6 +2,7 @@ from datetime import datetime
 from functools import cached_property
 
 import pandas as pd
+from pandas.testing import assert_index_equal
 
 from . import fields as fld
 from . import utils
@@ -419,7 +420,7 @@ class SETResult:
 
         # sell all in position
         df = self._summary_trade_sell_all_position()
-        assert trade_df.columns.sort_values().equals(df.columns.sort_values())
+        assert_index_equal(df.columns.sort_values(), trade_df.columns.sort_values())
         trade_df = pd.concat([trade_df, df])
 
         # datetime in
