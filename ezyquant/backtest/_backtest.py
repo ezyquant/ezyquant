@@ -101,23 +101,34 @@ def _backtest(
 
         trade_volume_s = utils.round_df_100(trade_volume_s)
 
-        # TODO: buy/sell with enough cash/volume
         match_price_s = match_price_df.loc[ts]  # type: ignore
+
         # Sell
         for k, v in trade_volume_s[trade_volume_s < 0].items():
+            symbol: str = k  # type: ignore
+
+            # sell with enough volume
+            v = max(v, -pf.position_dict.get(symbol, Position(symbol=symbol)).volume)
+
             pf._match_order(
                 matched_at=ts,
-                symbol=k,  # type: ignore
+                symbol=symbol,
                 volume=v,
                 price=match_price_s[k],
             )
         # Buy
         for k, v in trade_volume_s[trade_volume_s > 0].items():
+            symbol: str = k  # type: ignore
+            price = match_price_s[k]
+
+            # buy with enough cash
+            v = min(v * price * (1 + pf.pct_commission), pf.cash)
+
             pf._match_order(
                 matched_at=ts,
-                symbol=k,  # type: ignore
+                symbol=symbol,
                 volume=v,
-                price=match_price_s[k],
+                price=price,
             )
 
         pf._update_market_price(close_price_s)
