@@ -1,5 +1,5 @@
 from dataclasses import fields
-from typing import List, Tuple
+from typing import Callable, List, Tuple
 
 import pandas as pd
 
@@ -13,11 +13,13 @@ position_df_columns = ["timestamp"] + [i.name for i in fields(Position)]
 trade_df_columns = [i.name for i in fields(Trade)]
 
 
-def _backtest_target_weight(
+def _backtest(
     initial_cash: float,
-    signal_weight_df: pd.DataFrame,
+    signal_df: pd.DataFrame,
+    apply_trade_volume: Callable[[pd.Timestamp, float, str, Portfolio], float],
     buy_price_df: pd.DataFrame,
     sell_price_df: pd.DataFrame,
+    close_price_df: pd.DataFrame,
     pct_commission: float = 0.0,
 ) -> Tuple[pd.Series, pd.DataFrame, pd.DataFrame]:
     """Backtest Target Weight.
@@ -63,20 +65,21 @@ def _backtest_target_weight(
     """
     vld.check_initial_cash(initial_cash)
     vld.check_pct_commission(pct_commission)
+    # TODO: check close price df
     vld.check_price_df(buy_price_df, sell_price_df)
     vld.check_signal_df(
-        signal_weight_df,
+        signal_df,
         trade_date_list=buy_price_df.index.to_list(),
         symbol_list=buy_price_df.columns.to_list(),
     )
 
     # Select only symbol in signal
-    buy_price_df = buy_price_df[signal_weight_df.columns]
-    sell_price_df = sell_price_df[signal_weight_df.columns]
+    buy_price_df = buy_price_df[signal_df.columns]
+    sell_price_df = sell_price_df[signal_df.columns]
+    close_price_df = close_price_df[signal_df.columns]
 
-    group_price = pd.concat([buy_price_df, sell_price_df]).groupby(level=0)
-    min_price_df = group_price.min() * (1.0 - pct_commission)
-    max_price_df = group_price.max() * (1.0 + pct_commission)
+    # reindex signal_df
+    signal_df = signal_df.reindex(index=close_price_df.index)  # type: ignore
 
     pf = Portfolio(
         cash=initial_cash,
@@ -85,49 +88,57 @@ def _backtest_target_weight(
         trade_list=[],  # TODO: initial trade
     )
 
-    sig_by_price_df = signal_weight_df / max_price_df
-
     position_df_list: List[pd.DataFrame] = [
         # First dataframe for sort columns
         pd.DataFrame(columns=position_df_columns, dtype="float64"),
     ]
 
-    def on_interval(buy_price_s: pd.Series) -> float:
-        ts = buy_price_s.name
+    def on_interval(close_price_s: pd.Series) -> float:
+        ts: pd.Timestamp = close_price_s.name  # type: ignore
 
-        trade_value = pf.cash + (pf.volume_series * min_price_df.loc[ts]).sum()  # type: ignore
-        target_volume_s = trade_value * sig_by_price_df.loc[ts]  # type: ignore
-        trade_volume_s = target_volume_s - pf.volume_series.reindex(
-            target_volume_s.index, fill_value=0
+        signal_s = signal_df.loc[ts]  # type: ignore
+
+        def on_symbol(x):
+            pf.symbol = x[0]
+            return apply_trade_volume(ts, x[1], x[0], pf)
+
+        trade_volume_s = pd.Series(
+            signal_s.reset_index().apply(on_symbol, axis=1).values,
+            index=signal_s.index,
         )
+
         trade_volume_s = utils.round_df_100(trade_volume_s)
 
+        # TODO: buy/sell with enough cash/volume
         # Sell
         sell_price_s = sell_price_df.loc[ts]  # type: ignore
         for k, v in trade_volume_s[trade_volume_s < 0].items():
-            pf.place_order(
+            pf._match_order(
+                matched_at=ts,
                 symbol=k,  # type: ignore
-                volume=v,  # type: ignore
+                volume=v,
                 price=sell_price_s[k],
-                matched_at=ts,  # type: ignore
             )
 
         # Buy
+        buy_price_s = buy_price_df.loc[ts]  # type: ignore
         for k, v in trade_volume_s[trade_volume_s > 0].items():
-            pf.place_order(
+            pf._match_order(
+                matched_at=ts,
                 symbol=k,  # type: ignore
-                volume=v,  # type: ignore
-                price=buy_price_s[k],  # type: ignore
-                matched_at=ts,  # type: ignore
+                volume=v,
+                price=buy_price_s[k],
             )
 
-        pos_df = pf.get_position_df()
+        pf._update_market_price(close_price_s)
+
+        pos_df = pf.position_df
         pos_df["timestamp"] = ts
         position_df_list.append(pos_df)
 
         return pf.cash
 
-    cash_s = buy_price_df.apply(on_interval, axis=1)
+    cash_s = close_price_df.apply(on_interval, axis=1)
     assert isinstance(cash_s, pd.Series)
 
     position_df = pd.concat(position_df_list, ignore_index=True)

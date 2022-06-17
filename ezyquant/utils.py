@@ -27,7 +27,7 @@ def pivot_remove_index_name(df: pd.DataFrame, *args, **kwargs) -> pd.DataFrame:
     return df
 
 
-def round_df_100(df: pd.DataFrame) -> pd.DataFrame:
+def round_df_100(df):
     return df // 100 * 100.0
 
 

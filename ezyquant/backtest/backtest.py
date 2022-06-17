@@ -8,7 +8,7 @@ from .. import utils
 from ..creator import SETSignalCreator
 from ..errors import InputError
 from ..result import SETResult
-from ._backtest import _backtest_target_weight
+from ._backtest import _backtest
 
 
 def backtest_target_weight(
@@ -132,7 +132,7 @@ def backtest_target_weight(
 
     # Backtest
     # TODO: [EZ-79] initial_position_dict
-    cash_series, position_df, trade_df = _backtest_target_weight(
+    cash_series, position_df, trade_df = _backtest(
         initial_cash=initial_cash,
         signal_weight_df=signal_df,
         buy_price_df=buy_price_df,

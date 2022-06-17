@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import pandas as pd
 
@@ -14,6 +14,12 @@ class Portfolio:
     pct_commission: float = 0.0
     position_dict: Dict[str, Position] = field(default_factory=dict)
     trade_list: List[Trade] = field(default_factory=list)
+    symbol: Optional[str] = None
+
+    # Dict[symbol, pct_port]
+    buy_order_dict: Dict[str, float] = field(default_factory=dict)
+    sell_order_dict: Dict[str, float] = field(default_factory=dict)
+    target_order_dict: Dict[str, float] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         # cash
@@ -32,20 +38,40 @@ class Portfolio:
             assert isinstance(i, Trade), "trade_list must be a list of Trade"
 
     @property
+    def total_market_value(self) -> float:
+        return sum(i.market_value for i in self.position_dict.values())
+
+    @property
+    def total_cost_value(self) -> float:
+        return sum(i.cost_value for i in self.position_dict.values())
+
+    @property
+    def port_value(self) -> float:
+        return self.total_market_value + self.cash
+
+    def has_position(self, symbol: str) -> bool:
+        return symbol in self.position_dict
+
+    @property
     def volume_series(self) -> pd.Series:
         return pd.Series(
             {k: v.volume for k, v in self.position_dict.items()}, dtype="float64"
         )
 
-    def get_position_df(self) -> pd.DataFrame:
+    @property
+    def position_df(self) -> pd.DataFrame:
         return pd.DataFrame(self.position_dict.values())  # type: ignore
 
-    def place_order(
+    def _update_market_price(self, price_series: pd.Series):
+        for k, v in self.position_dict.items():
+            v.market_price = price_series[k]
+
+    def _match_order(
         self,
+        matched_at: datetime,
         symbol: str,
         volume: float,
         price: float,
-        matched_at: datetime,
     ):
         # Create trade
         trade = Trade(
@@ -65,7 +91,7 @@ class Portfolio:
         # Add/Remove Position
         if symbol not in self.position_dict:
             self.position_dict[symbol] = Position(symbol=symbol)
-        self.position_dict[symbol].place_order(volume=volume, price=price)
+        self.position_dict[symbol]._match_order(volume=volume, price=price)
         if self.position_dict[symbol].volume == 0:
             del self.position_dict[symbol]
 
