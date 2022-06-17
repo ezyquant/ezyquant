@@ -17,8 +17,7 @@ def _backtest(
     initial_cash: float,
     signal_df: pd.DataFrame,
     apply_trade_volume: Callable[[pd.Timestamp, float, str, Portfolio], float],
-    buy_price_df: pd.DataFrame,
-    sell_price_df: pd.DataFrame,
+    match_price_df: pd.DataFrame,
     close_price_df: pd.DataFrame,
     pct_commission: float = 0.0,
 ) -> Tuple[pd.Series, pd.DataFrame, pd.DataFrame]:
@@ -65,17 +64,10 @@ def _backtest(
     """
     vld.check_initial_cash(initial_cash)
     vld.check_pct_commission(pct_commission)
-    # TODO: check close price df
-    vld.check_price_df(buy_price_df, sell_price_df)
-    vld.check_signal_df(
-        signal_df,
-        trade_date_list=buy_price_df.index.to_list(),
-        symbol_list=buy_price_df.columns.to_list(),
-    )
+    # TODO: check close_price_df and match_price_df
 
     # Select only symbol in signal
-    buy_price_df = buy_price_df[signal_df.columns]
-    sell_price_df = sell_price_df[signal_df.columns]
+    match_price_df = match_price_df[signal_df.columns]
     close_price_df = close_price_df[signal_df.columns]
 
     # reindex signal_df
@@ -110,24 +102,22 @@ def _backtest(
         trade_volume_s = utils.round_df_100(trade_volume_s)
 
         # TODO: buy/sell with enough cash/volume
+        match_price_s = match_price_df.loc[ts]  # type: ignore
         # Sell
-        sell_price_s = sell_price_df.loc[ts]  # type: ignore
         for k, v in trade_volume_s[trade_volume_s < 0].items():
             pf._match_order(
                 matched_at=ts,
                 symbol=k,  # type: ignore
                 volume=v,
-                price=sell_price_s[k],
+                price=match_price_s[k],
             )
-
         # Buy
-        buy_price_s = buy_price_df.loc[ts]  # type: ignore
         for k, v in trade_volume_s[trade_volume_s > 0].items():
             pf._match_order(
                 matched_at=ts,
                 symbol=k,  # type: ignore
                 volume=v,
-                price=buy_price_s[k],
+                price=match_price_s[k],
             )
 
         pf._update_market_price(close_price_s)
