@@ -14,7 +14,8 @@ class Portfolio:
     pct_commission: float = 0.0
     position_dict: Dict[str, Position] = field(default_factory=dict)
     trade_list: List[Trade] = field(default_factory=list)
-    symbol: Optional[str] = None
+    market_price_series: pd.Series = field(default_factory=pd.Series)
+    symbol: Optional[str] = None  #  select symbol for buy/sell method
 
     # Dict[symbol, pct_port]
     buy_order_dict: Dict[str, float] = field(default_factory=dict)
@@ -38,19 +39,16 @@ class Portfolio:
             assert isinstance(i, Trade), "trade_list must be a list of Trade"
 
     @property
+    def port_value(self) -> float:
+        return self.total_market_value + self.cash
+
+    @property
     def total_market_value(self) -> float:
-        return sum(i.market_value for i in self.position_dict.values())
+        return (self.volume_series * self.market_price_series).sum()
 
     @property
     def total_cost_value(self) -> float:
         return sum(i.cost_value for i in self.position_dict.values())
-
-    @property
-    def port_value(self) -> float:
-        return self.total_market_value + self.cash
-
-    def has_position(self, symbol: str) -> bool:
-        return symbol in self.position_dict
 
     @property
     def volume_series(self) -> pd.Series:
@@ -62,9 +60,46 @@ class Portfolio:
     def position_df(self) -> pd.DataFrame:
         return pd.DataFrame(self.position_dict.values())  # type: ignore
 
-    def _update_market_price(self, price_series: pd.Series):
-        for k, v in self.position_dict.items():
-            v.market_price = price_series[k]
+    """
+    Buy/Sell
+    """
+
+    def has_position(self, symbol: str) -> bool:
+        return symbol in self.position_dict
+
+    @property
+    def price(self) -> float:
+        assert self.symbol is not None, "symbol must be set"
+        return self.market_price_series[self.symbol]
+
+    @property
+    def volume(self) -> float:
+        assert self.symbol is not None, "symbol must be set"
+        return self.position_dict[self.symbol].volume
+
+    def buy_pct_port(self, pct_port: float) -> float:
+        return self.buy_value(self.port_value * pct_port)
+
+    def buy_value(self, value: float) -> float:
+        return value / self.price
+
+    def buy_pct_position(self, pct_position: float) -> float:
+        return pct_position * self.volume
+
+    def sell_pct_port(self, pct_port: float) -> float:
+        return -self.buy_pct_port(pct_port)
+
+    def sell_value(self, value: float) -> float:
+        return -self.buy_value(value)
+
+    def sell_pct_position(self, pct_position: float) -> float:
+        return -self.buy_pct_position(pct_position)
+
+    def target_pct_port(self, pct_port: float) -> float:
+        return self.buy_pct_port(pct_port) - self.volume
+
+    def target_value(self, value: float) -> float:
+        return self.buy_value(value) - self.volume
 
     def _match_order(
         self,

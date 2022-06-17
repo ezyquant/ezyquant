@@ -78,7 +78,11 @@ def _backtest(
         pct_commission=pct_commission,
         position_dict={},  # TODO: [EZ-79] initial position dict
         trade_list=[],  # TODO: initial trade
+        market_price_series=close_price_df.iloc[0],
     )
+
+    # TODO: Load more close price
+    # close_price_df = close_price_df.iloc[1:]
 
     position_df_list: List[pd.DataFrame] = [
         # First dataframe for sort columns
@@ -131,7 +135,7 @@ def _backtest(
                 price=price,
             )
 
-        pf._update_market_price(close_price_s)
+        pf.market_price_series = close_price_s
 
         pos_df = pf.position_df
         pos_df["timestamp"] = ts
