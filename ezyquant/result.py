@@ -421,7 +421,7 @@ class SETResult:
         # sell all in position
         df = self._summary_trade_sell_all_position()
         assert_index_equal(df.columns.sort_values(), trade_df.columns.sort_values())
-        trade_df = pd.concat([trade_df, df])
+        trade_df = pd.concat([trade_df, df], ignore_index=True)
 
         # datetime in
         trade_df = self._summary_trade_entry_at(trade_df)

@@ -100,7 +100,7 @@ class TestPlaceOrderBuy:
         )
 
         # Test
-        result = pf.place_order(
+        result = pf._match_order(
             symbol=symbol,
             volume=volume,
             price=price,
@@ -124,7 +124,7 @@ class TestPlaceOrderBuy:
 
         # Test
         with pytest.raises(ValueError) as e:
-            pf.place_order(
+            pf._match_order(
                 symbol=symbol,
                 volume=volume,
                 price=price,
@@ -159,7 +159,7 @@ class TestPlaceOrderBuy:
 
         # Test
         with pytest.raises(AssertionError) as e:
-            pf.place_order(
+            pf._match_order(
                 symbol=symbol,
                 volume=volume,
                 price=price,
@@ -223,7 +223,7 @@ class TestPlaceOrderSell:
         )
 
         # Test
-        result = pf.place_order(
+        result = pf._match_order(
             symbol=symbol,
             volume=volume,
             price=price,
@@ -258,7 +258,7 @@ class TestPlaceOrderSell:
 
         # Test
         with pytest.raises(ValueError) as e:
-            pf.place_order(
+            pf._match_order(
                 symbol=symbol,
                 volume=volume,
                 price=price,
