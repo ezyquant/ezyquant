@@ -64,7 +64,7 @@ class Portfolio:
 
     @property
     def price(self) -> float:
-        """Get price of selected symbol"""
+        """Get last close price of selected symbol"""
         assert self.selected_symbol is not None, "symbol must be selected"
         return self.market_price_series[self.selected_symbol]
 

@@ -2,6 +2,8 @@ import numpy as np
 
 import ezyquant as ez
 from ezyquant import SETSignalCreator, backtest_target_weight
+from datetime import datetime
+from ezyquant.backtest.portfolio import Portfolio
 
 ez.connect_sqlite("psims.db")
 
@@ -20,14 +22,17 @@ pe_df = pe_df.replace(0, np.nan)
 
 signal_df = (pe_df.rank(axis=1, method="max") <= 10) / 10.00001
 
+
+def apply_trade_volume(ts: datetime, signal: float, symbol: str, pf: Portfolio):
+    return pf.target_pct_port(signal)
+
+
 #%% Backtest
 initial_cash = 1e6
 
 result = backtest_target_weight(
     signal_df=signal_df,
-    rebalance_freq="no",
-    rebalance_at=0,
-    # common param
+    apply_trade_volume=apply_trade_volume,
     start_date=start_date,
     end_date=end_date,
     initial_cash=initial_cash,

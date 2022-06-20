@@ -139,6 +139,9 @@ def _backtest(
             v = min(v, pf.cash / price / ratio_commission)
             v = utils.round_df_100(v)
 
+            if v == 0.0:
+                continue
+
             pf._match_order(
                 matched_at=ts,
                 symbol=symbol,
