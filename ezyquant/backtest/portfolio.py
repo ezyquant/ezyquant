@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime
+from functools import cached_property
 from typing import Dict, List, Optional
 
 import pandas as pd
@@ -15,7 +16,7 @@ class Portfolio:
     position_dict: Dict[str, Position] = field(default_factory=dict)
     trade_list: List[Trade] = field(default_factory=list)
     market_price_series: pd.Series = field(default_factory=pd.Series)
-    selected_symbol: Optional[str] = None  #  select symbol for buy/sell method
+    selected_symbol: Optional[str] = None  # select symbol for buy/sell method
 
     def __post_init__(self) -> None:
         # cash
@@ -37,7 +38,7 @@ class Portfolio:
     def port_value(self) -> float:
         return self.total_market_value + self.cash
 
-    @property
+    @cached_property
     def total_market_value(self) -> float:
         return (self.volume_series * self.market_price_series).sum()
 
@@ -231,3 +232,7 @@ class Portfolio:
             del self.position_dict[symbol]
 
         return trade
+
+    def _cache_clear(self):
+        if "total_market_value" in self.__dict__:
+            del self.__dict__["total_market_value"]

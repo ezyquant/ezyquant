@@ -150,6 +150,7 @@ def _backtest(
             )
 
         pf.market_price_series = close_price_s
+        pf._cache_clear()
 
         pos_df = pf.position_df
         pos_df["timestamp"] = ts
