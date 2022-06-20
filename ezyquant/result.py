@@ -285,9 +285,7 @@ class SETResult:
 
         cash_dvd_df["pay_date"] = cash_dvd_df["pay_date"].fillna(cash_dvd_df["ex_date"])
 
-        cash_dvd_df["before_ex_date"] = self._shift_trade_date(
-            cash_dvd_df["ex_date"], periods=1
-        )
+        cash_dvd_df["before_ex_date"] = cash_dvd_df["ex_date"] - self._sdr._custom_business_day(1)  # type: ignore
 
         position_df = position_df.rename(columns={"timestamp": "before_ex_date"})
 
@@ -726,7 +724,7 @@ class SETResult:
         pos_df = pos_df.rename(columns={"timestamp": "matched_at"})
 
         # get cost price from tomorrow position
-        pos_df["matched_at"] = self._shift_trade_date(pos_df["matched_at"], periods=-1)
+        pos_df["matched_at"] += self._sdr._custom_business_day(1)  # type: ignore
 
         # set index for merge
         df = trade_df.merge(pos_df, on=["matched_at", "symbol"], validate="1:1")
@@ -761,32 +759,6 @@ class SETResult:
         df["entry_at"] = tmp["entry_at"]
 
         return df
-
-    def _shift_trade_date(self, series: pd.Series, periods: int) -> pd.Series:
-        """Add/sub series trade date by periods.
-
-        Parameters
-        ----------
-        series : pd.Series
-            Series to shift.
-        periods : int
-            periods to shift. 1 is yesterday, -1 is tomorrow.
-
-        Returns
-        -------
-        pd.Series
-            Shifted series.
-        """
-        tds = self._sdr.get_trading_dates()
-
-        td_df = pd.DataFrame({"trade_date": pd.to_datetime(tds)})
-        td_df["sub_trade_date"] = td_df["trade_date"].shift(periods)
-
-        df = series.to_frame("trade_date").merge(
-            td_df, how="left", on="trade_date", validate="m:1"
-        )
-
-        return df["sub_trade_date"]
 
 
 def _searchsorted_value(series: pd.DatetimeIndex, value: pd.Series) -> pd.Series:

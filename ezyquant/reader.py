@@ -2423,8 +2423,8 @@ class SETDataReader:
     Custom business day functions
     """
 
-    @cached_property
-    def _holidays(self) -> List[pd.Timestamp]:
+    @lru_cache
+    def _get_holidays(self) -> List[pd.Timestamp]:
         tds = self.get_trading_dates()
         return (
             pd.concat(
@@ -2438,7 +2438,7 @@ class SETDataReader:
         )
 
     def _custom_business_day(self, n: int = 1) -> CustomBusinessDay:
-        return CustomBusinessDay(n, holidays=self._holidays)  # type: ignore
+        return CustomBusinessDay(n, holidays=self._get_holidays())  # type: ignore
 
     """
     Static methods
