@@ -12,7 +12,7 @@ from ._backtest import _backtest
 from .portfolio import Portfolio
 
 
-def backtest_target_weight(
+def backtest(
     signal_df: pd.DataFrame,
     apply_trade_volume: Callable[[pd.Timestamp, float, str, Portfolio], float],
     start_date: str,

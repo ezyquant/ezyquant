@@ -3,7 +3,7 @@ from datetime import datetime
 import numpy as np
 
 import ezyquant as ez
-from ezyquant import SETSignalCreator, backtest_target_weight
+from ezyquant import SETSignalCreator, backtest
 from ezyquant.backtest.portfolio import Portfolio
 
 ez.connect_sqlite("psims.db")
@@ -31,7 +31,7 @@ def apply_trade_volume(ts: datetime, signal: float, symbol: str, pf: Portfolio):
 #%% Backtest
 initial_cash = 1e6
 
-result = backtest_target_weight(
+result = backtest(
     signal_df=signal_df,
     apply_trade_volume=apply_trade_volume,
     start_date=start_date,
