@@ -87,8 +87,7 @@ def _backtest(
         market_price_series=close_price_df.iloc[0],
     )
 
-    # TODO: Load more close price
-    # close_price_df = close_price_df.iloc[1:]
+    close_price_df = close_price_df.iloc[1:]
 
     position_df_list: List[pd.DataFrame] = [
         # First dataframe for sort columns

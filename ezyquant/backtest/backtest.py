@@ -3,8 +3,10 @@ from typing import Callable, List
 import pandas as pd
 
 from .. import fields as fld
+from .. import utils
 from ..creator import SETSignalCreator
 from ..errors import InputError
+from ..reader import SETDataReader
 from ..result import SETResult
 from ._backtest import _backtest
 from .portfolio import Portfolio
@@ -77,6 +79,9 @@ def backtest_target_weight(
     SETResult
     """
     # Price df
+    before_start_date = utils.date_to_str(
+        pd.Timestamp(start_date) - SETDataReader()._custom_business_day()
+    )
     symbol_list = signal_df.columns.tolist()
     price_match_df = _get_price(
         start_date=start_date,
@@ -85,7 +90,7 @@ def backtest_target_weight(
         mode=price_match_mode,
     )
     close_price_df = _get_price(
-        start_date=start_date,
+        start_date=before_start_date,
         end_date=end_date,
         symbol_list=symbol_list,
         mode=fld.D_CLOSE,
