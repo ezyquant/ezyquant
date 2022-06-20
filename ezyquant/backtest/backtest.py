@@ -94,11 +94,6 @@ def backtest_target_weight(
     # Signal df
     signal_df = signal_df.shift(signal_delay_bar)
 
-    # Baned symbol
-    is_banned = price_match_df.isna()
-    is_force_sell = ~is_banned & is_banned.shift(-1, fill_value=False)
-    signal_df = signal_df.mask(is_force_sell, 0)
-
     # Backtest
     # TODO: [EZ-79] initial_position_dict
     cash_series, position_df, trade_df = _backtest(
