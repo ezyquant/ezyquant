@@ -1,8 +1,9 @@
+from datetime import datetime
+
 import numpy as np
 
 import ezyquant as ez
 from ezyquant import SETSignalCreator, backtest_target_weight
-from datetime import datetime
 from ezyquant.backtest.portfolio import Portfolio
 
 ez.connect_sqlite("psims.db")
