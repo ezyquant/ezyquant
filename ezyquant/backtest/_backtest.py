@@ -17,9 +17,11 @@ def _backtest(
     initial_cash: float,
     signal_df: pd.DataFrame,
     apply_trade_volume: Callable[[pd.Timestamp, float, str, Portfolio], float],
-    match_price_df: pd.DataFrame,
     close_price_df: pd.DataFrame,
-    pct_commission: float = 0.0,
+    price_match_df: pd.DataFrame,
+    pct_buy_slip: float,
+    pct_sell_slip: float,
+    pct_commission: float,
 ) -> Tuple[pd.Series, pd.DataFrame, pd.DataFrame]:
     """Backtest Target Weight.
 
@@ -64,10 +66,14 @@ def _backtest(
     """
     vld.check_initial_cash(initial_cash)
     vld.check_pct_commission(pct_commission)
-    # TODO: check close_price_df and match_price_df
+    # TODO: check close_price_df and price_match_df
+
+    ratio_buy_slip = 1.0 + pct_buy_slip
+    ratio_sell_slip = 1.0 - pct_sell_slip
+    ratio_commission = 1.0 + pct_commission
 
     # Select only symbol in signal
-    match_price_df = match_price_df[signal_df.columns]
+    price_match_df = price_match_df[signal_df.columns]
     close_price_df = close_price_df[signal_df.columns]
 
     # reindex signal_df
@@ -102,31 +108,36 @@ def _backtest(
             signal_s.reset_index().apply(on_symbol, axis=1).values,
             index=signal_s.index,
         )
-
         trade_volume_s = utils.round_df_100(trade_volume_s)
 
-        match_price_s = match_price_df.loc[ts]  # type: ignore
+        match_price_s = price_match_df.loc[ts]  # type: ignore
 
         # Sell
         for k, v in trade_volume_s[trade_volume_s < 0].items():
             symbol: str = k  # type: ignore
+            price = match_price_s[k] * ratio_sell_slip
 
             # sell with enough volume
-            v = max(v, -pf.position_dict.get(symbol, Position(symbol=symbol)).volume)
+            if symbol not in pf.position_dict:
+                continue
+
+            v = max(v, -pf.position_dict[symbol].volume)
 
             pf._match_order(
                 matched_at=ts,
                 symbol=symbol,
                 volume=v,
-                price=match_price_s[k],
+                price=price,
             )
+
         # Buy
         for k, v in trade_volume_s[trade_volume_s > 0].items():
             symbol: str = k  # type: ignore
-            price = match_price_s[k]
+            price = match_price_s[k] * ratio_buy_slip
 
             # buy with enough cash
-            v = min(v * price * (1 + pf.pct_commission), pf.cash)
+            v = min(v, pf.cash / price / ratio_commission)
+            v = utils.round_df_100(v)
 
             pf._match_order(
                 matched_at=ts,
