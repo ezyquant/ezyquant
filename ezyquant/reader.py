@@ -1,10 +1,11 @@
 import os.path
 from datetime import date
-from functools import lru_cache
+from functools import cached_property, lru_cache
 from typing import Dict, List, Optional
 
 import pandas as pd
 import sqlalchemy as sa
+from pandas.tseries.offsets import CustomBusinessDay
 from sqlalchemy import Column, MetaData, Table, and_, case, func, select
 from sqlalchemy.exc import DatabaseError
 from sqlalchemy.sql import Select
@@ -2417,6 +2418,27 @@ class SETDataReader:
 
         result = self._execute(stmt).all()
         return dict(result)  # type: ignore
+
+    """
+    Custom business day functions
+    """
+
+    @cached_property
+    def _holidays(self) -> List[pd.Timestamp]:
+        tds = self.get_trading_dates()
+        return (
+            pd.concat(
+                [
+                    pd.bdate_range(tds[0], tds[-1]).to_series(),
+                    pd.DatetimeIndex(tds).to_series(),
+                ]
+            )
+            .drop_duplicates(keep=False)
+            .tolist()
+        )
+
+    def _custom_business_day(self, n: int = 1) -> CustomBusinessDay:
+        return CustomBusinessDay(n, holidays=self._holidays)  # type: ignore
 
     """
     Static methods

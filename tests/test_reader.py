@@ -1921,3 +1921,58 @@ class TestGetLastAsOfDateInSecurityIndex:
         for k, v in result.items():
             assert isinstance(k, str)
             datetime.strptime(v, "%Y-%m-%d")
+
+
+class TestCustomBusinessDay:
+    @pytest.mark.parametrize(
+        ("inp", "n", "expected"),
+        [
+            (pd.Timestamp("2022-01-05"), -2, pd.Timestamp("2021-12-30")),
+            (pd.Timestamp("2022-01-05"), -1, pd.Timestamp("2022-01-04")),
+            (pd.Timestamp("2022-01-05"), 0, pd.Timestamp("2022-01-05")),
+            (pd.Timestamp("2022-01-05"), 1, pd.Timestamp("2022-01-06")),
+            (pd.Timestamp("2022-01-05"), 2, pd.Timestamp("2022-01-07")),
+            (pd.Timestamp("2022-01-05"), 3, pd.Timestamp("2022-01-10")),
+        ],
+    )
+    def test_timestamp(self, sdr: SETDataReader, inp, n: int, expected):
+        # Test
+        result = inp + sdr._custom_business_day(n)
+
+        # Check
+        assert result == expected
+
+    @pytest.mark.parametrize(
+        ("inp", "n", "expected"),
+        [
+            (
+                pd.date_range("2022-01-01", "2022-01-07"),
+                1,
+                pd.DatetimeIndex(
+                    [
+                        "2022-01-04",
+                        "2022-01-04",
+                        "2022-01-04",
+                        "2022-01-05",
+                        "2022-01-06",
+                        "2022-01-07",
+                        "2022-01-10",
+                    ]
+                ),
+            ),
+        ],
+    )
+    def test_datetime_index(self, sdr: SETDataReader, inp, n: int, expected):
+        # Test
+        result = inp + sdr._custom_business_day(n)
+
+        # Check
+        assert_index_equal(result, expected)
+
+    @pytest.mark.parametrize("n", [-1, 0, 1])
+    def test_nat(self, sdr: SETDataReader, n: int):
+        # Test
+        result = pd.NaT + sdr._custom_business_day(n)  # type: ignore
+
+        # Check
+        assert pd.isnull(result)
