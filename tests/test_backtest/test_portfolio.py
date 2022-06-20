@@ -45,7 +45,7 @@ def test_volume_series(
     assert_series_equal(result, expected_volume_series)
 
 
-class TestPlaceOrderBuy:
+class TestMatchOrderBuy:
     @pytest.mark.parametrize(
         ("cash", "pct_commission", "expect_cash"),
         [(100.0, 0.0, 0.0), (200.0, 0.0, 100.0), (110.0, 0.1, 0.0)],
@@ -168,7 +168,7 @@ class TestPlaceOrderBuy:
         assert "volume" in e.value.args[0]
 
 
-class TestPlaceOrderSell:
+class TestMatchOrderSell:
     @pytest.mark.parametrize(
         ("cash", "pct_commission", "expect_cash"),
         [(0.0, 0.0, 100.0), (100.0, 0.0, 200.0), (0.0, 0.1, 90.0)],
