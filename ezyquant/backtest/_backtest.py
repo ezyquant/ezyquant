@@ -95,7 +95,7 @@ def _backtest(
         signal_s = signal_df.loc[ts]  # type: ignore
 
         def on_symbol(x):
-            pf.symbol = x[0]
+            pf.selected_symbol = x[0]
             return apply_trade_volume(ts, x[1], x[0], pf)
 
         trade_volume_s = pd.Series(

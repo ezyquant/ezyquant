@@ -15,12 +15,7 @@ class Portfolio:
     position_dict: Dict[str, Position] = field(default_factory=dict)
     trade_list: List[Trade] = field(default_factory=list)
     market_price_series: pd.Series = field(default_factory=pd.Series)
-    symbol: Optional[str] = None  #  select symbol for buy/sell method
-
-    # Dict[symbol, pct_port]
-    buy_order_dict: Dict[str, float] = field(default_factory=dict)
-    sell_order_dict: Dict[str, float] = field(default_factory=dict)
-    target_order_dict: Dict[str, float] = field(default_factory=dict)
+    selected_symbol: Optional[str] = None  #  select symbol for buy/sell method
 
     def __post_init__(self) -> None:
         # cash
@@ -69,36 +64,141 @@ class Portfolio:
 
     @property
     def price(self) -> float:
-        assert self.symbol is not None, "symbol must be set"
-        return self.market_price_series[self.symbol]
+        """Get price of selected symbol"""
+        assert self.selected_symbol is not None, "symbol must be selected"
+        return self.market_price_series[self.selected_symbol]
 
     @property
     def volume(self) -> float:
-        assert self.symbol is not None, "symbol must be set"
-        return self.position_dict[self.symbol].volume
+        """Get volume of selected symbol"""
+        assert self.selected_symbol is not None, "symbol must be selected"
+        if self.has_position(self.selected_symbol):
+            return self.position_dict[self.selected_symbol].volume
+        else:
+            return 0.0
 
     def buy_pct_port(self, pct_port: float) -> float:
+        """Calculate buy volume from percentage of portfolio.
+        Using last close price.
+
+        Parameters
+        ----------
+        pct_port : float
+            percentage of portfolio
+
+        Returns
+        -------
+        float
+            buy volume, always positive, not round 100
+        """
         return self.buy_value(self.port_value * pct_port)
 
     def buy_value(self, value: float) -> float:
+        """Calculate buy volume from value.
+        Using last close price.
+
+        Parameters
+        ----------
+        value : float
+            value
+
+        Returns
+        -------
+        float
+            buy volume, always positive, not round 100
+        """
         return value / self.price
 
     def buy_pct_position(self, pct_position: float) -> float:
+        """Calculate buy volume from percentage of current position.
+
+        Parameters
+        ----------
+        pct_position : float
+            percentage of position
+
+        Returns
+        -------
+        float
+            buy volume, always positive, not round 100
+        """
         return pct_position * self.volume
 
     def sell_pct_port(self, pct_port: float) -> float:
+        """Calculate sell volume from percentage of portfolio.
+        Using last close price.
+
+        Parameters
+        ----------
+        pct_port : float
+            percentage of portfolio
+
+        Returns
+        -------
+        float
+            sell volume, always negative, not round 100
+        """
         return -self.buy_pct_port(pct_port)
 
     def sell_value(self, value: float) -> float:
+        """Calculate sell volume from value.
+        Using last close price.
+
+        Parameters
+        ----------
+        value : float
+            value
+
+        Returns
+        -------
+        float
+            sell volume, always negative, not round 100
+        """
         return -self.buy_value(value)
 
     def sell_pct_position(self, pct_position: float) -> float:
+        """Calculate sell volume from percentage of current position.
+
+        Parameters
+        ----------
+        pct_position : float
+            percentage of position
+
+        Returns
+        -------
+        float
+            sell volume, always negative, not round 100
+        """
         return -self.buy_pct_position(pct_position)
 
     def target_pct_port(self, pct_port: float) -> float:
+        """Calculate buy/sell volume to make position reach percentage of portfolio.
+        Using last close price.
+
+        Parameters
+        ----------
+        pct_port : float
+            percentage of portfolio
+
+        Returns
+        -------
+        float
+            buy/sell volume, not round 100
+        """
         return self.buy_pct_port(pct_port) - self.volume
 
     def target_value(self, value: float) -> float:
+        """Calculate buy/sell volume to make position reach value.
+        Parameters
+        ----------
+        value : float
+            value
+
+        Returns
+        -------
+        float
+            buy/sell volume, not round 100
+        """
         return self.buy_value(value) - self.volume
 
     def _match_order(
