@@ -15,7 +15,7 @@ class SETAccount:
     pct_commission: float = 0.0
     position_dict: Dict[str, Position] = field(default_factory=dict)
     trade_list: List[Trade] = field(default_factory=list)
-    market_price_series: pd.Series = field(default_factory=pd.Series)
+    market_price_series: pd.Series = field(default_factory=pd.Series, repr=False)
     selected_symbol: Optional[str] = None  # select symbol for buy/sell method
 
     def __post_init__(self) -> None:
@@ -64,13 +64,13 @@ class SETAccount:
         return symbol in self.position_dict
 
     @property
-    def price(self) -> float:
+    def _price(self) -> float:
         """Get last close price of selected symbol"""
         assert self.selected_symbol is not None, "symbol must be selected"
         return self.market_price_series[self.selected_symbol]
 
     @property
-    def volume(self) -> float:
+    def _volume(self) -> float:
         """Get volume of selected symbol"""
         assert self.selected_symbol is not None, "symbol must be selected"
         if self.has_position(self.selected_symbol):
@@ -108,7 +108,7 @@ class SETAccount:
         float
             buy volume, always positive, not round 100
         """
-        return value / self.price
+        return value / self._price
 
     def buy_pct_position(self, pct_position: float) -> float:
         """Calculate buy volume from percentage of current position.
@@ -123,7 +123,7 @@ class SETAccount:
         float
             buy volume, always positive, not round 100
         """
-        return pct_position * self.volume
+        return pct_position * self._volume
 
     def sell_pct_port(self, pct_port: float) -> float:
         """Calculate sell volume from percentage of SETAccount.
@@ -139,7 +139,7 @@ class SETAccount:
         float
             sell volume, always negative, not round 100
         """
-        return -self.buy_pct_port(pct_port)
+        return self.buy_pct_port(-pct_port)
 
     def sell_value(self, value: float) -> float:
         """Calculate sell volume from value.
@@ -155,7 +155,7 @@ class SETAccount:
         float
             sell volume, always negative, not round 100
         """
-        return -self.buy_value(value)
+        return self.buy_value(-value)
 
     def sell_pct_position(self, pct_position: float) -> float:
         """Calculate sell volume from percentage of current position.
@@ -170,7 +170,7 @@ class SETAccount:
         float
             sell volume, always negative, not round 100
         """
-        return -self.buy_pct_position(pct_position)
+        return self.buy_pct_position(-pct_position)
 
     def target_pct_port(self, pct_port: float) -> float:
         """Calculate buy/sell volume to make position reach percentage of SETAccount.
@@ -186,7 +186,7 @@ class SETAccount:
         float
             buy/sell volume, not round 100
         """
-        return self.buy_pct_port(pct_port) - self.volume
+        return self.buy_pct_port(pct_port) - self._volume
 
     def target_value(self, value: float) -> float:
         """Calculate buy/sell volume to make position reach value.
@@ -200,7 +200,11 @@ class SETAccount:
         float
             buy/sell volume, not round 100
         """
-        return self.buy_value(value) - self.volume
+        return self.buy_value(value) - self._volume
+
+    """
+    Protected methods
+    """
 
     def _match_order(
         self,
