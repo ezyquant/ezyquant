@@ -52,13 +52,6 @@ class SETAccount:
         return sum(i.cost_value for i in self.position_dict.values())
 
     @property
-    def volume_series(self) -> pd.Series:
-        # TODO: remove this method
-        return pd.Series(
-            {k: v.volume for k, v in self.position_dict.items()}, dtype="float64"
-        )
-
-    @property
     def position_df(self) -> pd.DataFrame:
         return pd.DataFrame(self.position_dict.values())  # type: ignore
 
@@ -211,6 +204,17 @@ class SETAccount:
     """
     Protected methods
     """
+
+    def _set_market_price_dict(self, market_price_dict: Dict[str, float]) -> None:
+        """Set market price dict.
+
+        Parameters
+        ----------
+        market_price_dict : dict
+            dict of symbol and last close price
+        """
+        self._cache_clear()
+        self.market_price_dict = market_price_dict
 
     def _match_order(
         self,

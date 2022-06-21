@@ -11,43 +11,6 @@ nan = float("nan")
 
 
 @pytest.mark.parametrize(
-    ("position_dict", "expected_volume_series"),
-    [
-        ({}, pd.Series(dtype="float64")),
-        (
-            {"A": Position(symbol="A", volume=100)},
-            pd.Series({"A": 100.0}),
-        ),
-        (
-            {
-                "A": Position(symbol="A", volume=100),
-                "B": Position(symbol="B", volume=200),
-            },
-            pd.Series({"A": 100.0, "B": 200.0}),
-        ),
-    ],
-)
-def test_volume_series(
-    position_dict: Dict[str, Position], expected_volume_series: pd.Series
-):
-    # Mock
-    acct = SETAccount(cash=0.0, position_dict=position_dict)
-
-    # Test
-    result = acct.volume_series
-
-    # Check
-    assert_series_equal(result, expected_volume_series)
-
-    # Test copy
-    result[:] = 0
-    result = acct.volume_series
-
-    # Check
-    assert_series_equal(result, expected_volume_series)
-
-
-@pytest.mark.parametrize(
     ("position_dict", "market_price_dict", "expect_result"),
     [
         ({}, {}, 0.0),

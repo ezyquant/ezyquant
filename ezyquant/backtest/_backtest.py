@@ -98,11 +98,13 @@ def _backtest(
         pd.DataFrame(columns=position_df_columns, dtype="float64"),
     ]
 
-    def on_interval(ts: pd.Timestamp, close_price_dict: Dict[str, float]) -> float:
+    def calculate_trade_volume(
+        ts: pd.Timestamp,
+    ) -> Tuple[Dict[str, float], Dict[str, float]]:
         signal_d = signal_dict.get(ts, dict())
 
-        buy_volume_d: Dict[str, float] = dict()
-        sell_volume_d: Dict[str, float] = dict()
+        buy_volume_d = dict()
+        sell_volume_d = dict()
 
         for k, v in signal_d.items():
             acct.selected_symbol = k
@@ -113,9 +115,11 @@ def _backtest(
             elif trade_volume < 0:
                 sell_volume_d[k] = trade_volume
 
+        return buy_volume_d, sell_volume_d
+
+    def execute_sell(ts: pd.Timestamp, sell_volume_d: Dict[str, float]):
         price_match_d = price_match_dict[ts]
 
-        # Sell
         for k, v in sell_volume_d.items():
             price = price_match_d[k] * ratio_sell_slip
 
@@ -137,7 +141,9 @@ def _backtest(
                 price=price,
             )
 
-        # Buy
+    def execute_buy(ts: pd.Timestamp, buy_volume_d: Dict[str, float]):
+        price_match_d = price_match_dict[ts]
+
         for k, v in buy_volume_d.items():
             price = price_match_d[k] * ratio_buy_slip
 
@@ -159,8 +165,13 @@ def _backtest(
                 price=price,
             )
 
-        acct._cache_clear()
-        acct.market_price_dict = close_price_dict
+    def on_interval(ts: pd.Timestamp, close_price_dict: Dict[str, float]) -> float:
+        buy_volume_d, sell_volume_d = calculate_trade_volume(ts)
+
+        execute_sell(ts, sell_volume_d)
+        execute_buy(ts, buy_volume_d)
+
+        acct._set_market_price_dict(close_price_dict)
 
         pos_df = acct.position_df
         pos_df["timestamp"] = ts
