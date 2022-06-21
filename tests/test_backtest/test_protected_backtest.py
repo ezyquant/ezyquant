@@ -57,7 +57,7 @@ class TestNoTrade:
         )
 
     @pytest.mark.parametrize(
-        "price_df", [utils.make_data_df(0), utils.make_data_df(nan)]
+        "price_match_df", [utils.make_data_df(0), utils.make_data_df(nan)]
     )
     @pytest.mark.parametrize(
         "apply_trade_volume",
@@ -66,13 +66,13 @@ class TestNoTrade:
     def test_no_price(
         self,
         apply_trade_volume: Callable,
-        price_df: pd.DataFrame,
+        price_match_df: pd.DataFrame,
         pct_buy_slip: float,
         pct_sell_slip: float,
         pct_commission: float,
     ):
         self._test(
-            price_df=price_df,
+            price_match_df=price_match_df,
             apply_trade_volume=apply_trade_volume,
             pct_buy_slip=pct_buy_slip,
             pct_sell_slip=pct_sell_slip,
@@ -99,7 +99,8 @@ class TestNoTrade:
         initial_cash: float = 1000.0,
         signal_df: pd.DataFrame = utils.make_signal_weight_df(),
         apply_trade_volume: Callable = lambda ts, sig, sym, pf: pf.target_pct_port(sig),
-        price_df: pd.DataFrame = utils.make_price_df(),
+        close_price_df: pd.DataFrame = utils.make_close_price_df(),
+        price_match_df: pd.DataFrame = utils.make_price_df(),
         pct_buy_slip: float = 0.0,
         pct_sell_slip: float = 0.0,
         pct_commission: float = 0.0,
@@ -109,8 +110,8 @@ class TestNoTrade:
             initial_cash=initial_cash,
             signal_df=signal_df,
             apply_trade_volume=apply_trade_volume,
-            close_price_df=price_df,
-            price_match_df=price_df,
+            close_price_df=close_price_df,
+            price_match_df=price_match_df,
             pct_buy_slip=pct_buy_slip,
             pct_sell_slip=pct_sell_slip,
             pct_commission=pct_commission,
@@ -119,7 +120,7 @@ class TestNoTrade:
         # Check
         # cash_series
         _check_cash_series(cash_series)
-        assert_index_equal(price_df.index, cash_series.index)
+        assert_index_equal(price_match_df.index, cash_series.index)
         assert (cash_series == initial_cash).all()
 
         # position_df
@@ -141,7 +142,9 @@ class TestNoTrade:
         )
     ],
 )
-@pytest.mark.parametrize("close_price_df", [utils.make_price_df(n_row=1000, n_col=100)])
+@pytest.mark.parametrize(
+    "close_price_df", [utils.make_close_price_df(n_row=1000, n_col=100)]
+)
 @pytest.mark.parametrize("price_match_df", [utils.make_price_df(n_row=1000, n_col=100)])
 @pytest.mark.parametrize("pct_buy_slip", [0.0, 0.1])
 @pytest.mark.parametrize("pct_sell_slip", [0.0, 0.1])
@@ -171,7 +174,7 @@ def test_random_input(
     # Check
     # cash_series
     _check_cash_series(cash_series)
-    assert_index_equal(close_price_df.index, cash_series.index)
+    assert_index_equal(price_match_df.index, cash_series.index)
 
     # position_df
     _check_position_df(position_df)

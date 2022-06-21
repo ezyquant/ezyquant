@@ -5,6 +5,7 @@ from typing import List
 import numpy as np
 import pandas as pd
 from pandas.testing import assert_frame_equal, assert_index_equal, assert_series_equal
+from pandas.tseries.offsets import BusinessDay
 
 
 def sort_index_column(df: pd.DataFrame) -> pd.DataFrame:
@@ -94,4 +95,11 @@ def make_price_df(n_row: int = N_ROW, n_col: int = N_COL) -> pd.DataFrame:
     """Make random price from a normal (Gaussian) distribution."""
     df = make_data_df(np.random.normal(1, 0.1, size=(n_row, n_col)), n_row, n_col)
     df = df.cumprod()
+    return df
+
+
+def make_close_price_df(n_row: int = N_ROW, n_col: int = N_COL) -> pd.DataFrame:
+    """Make random price from a normal (Gaussian) distribution."""
+    df = make_price_df(n_row=n_row + 1, n_col=n_col)
+    df.index -= BusinessDay(1)
     return df
