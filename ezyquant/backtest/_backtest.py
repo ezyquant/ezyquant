@@ -79,7 +79,7 @@ def _backtest(
     # reindex signal_df
     signal_df = signal_df.reindex(index=close_price_df.index)  # type: ignore
 
-    pf = SETAccount(
+    acct = SETAccount(
         cash=initial_cash,
         pct_commission=pct_commission,
         position_dict={},  # TODO: [EZ-79] initial position dict
@@ -99,11 +99,11 @@ def _backtest(
 
         signal_s = signal_df.loc[ts]  # type: ignore
         df = signal_s.to_frame("signal")
-        df["close_price"] = pf.market_price_series
+        df["close_price"] = acct.market_price_series
 
         def on_symbol(x):
-            pf.selected_symbol = x.name
-            return apply_trade_volume(ts, x.name, x["signal"], x["close_price"], pf)
+            acct.selected_symbol = x.name
+            return apply_trade_volume(ts, x.name, x["signal"], x["close_price"], acct)
 
         trade_volume_s = df.apply(on_symbol, axis=1)
         trade_volume_s = utils.round_df_100(trade_volume_s)
@@ -119,12 +119,12 @@ def _backtest(
             price = match_price_s[k] * ratio_sell_slip
 
             # sell with enough volume
-            if symbol not in pf.position_dict:
+            if symbol not in acct.position_dict:
                 continue
 
-            v = max(v, -pf.position_dict[symbol].volume)
+            v = max(v, -acct.position_dict[symbol].volume)
 
-            pf._match_order(
+            acct._match_order(
                 matched_at=ts,
                 symbol=symbol,
                 volume=v,
@@ -137,27 +137,27 @@ def _backtest(
             price = match_price_s[k] * ratio_buy_slip
 
             # buy with enough cash
-            v = min(v, pf.cash / price / ratio_commission)
+            v = min(v, acct.cash / price / ratio_commission)
             v = utils.round_df_100(v)
 
             if v == 0.0:
                 continue
 
-            pf._match_order(
+            acct._match_order(
                 matched_at=ts,
                 symbol=symbol,
                 volume=v,
                 price=price,
             )
 
-        pf._cache_clear()
-        pf.market_price_series = close_price_s
+        acct._cache_clear()
+        acct.market_price_series = close_price_s
 
-        pos_df = pf.position_df
+        pos_df = acct.position_df
         pos_df["timestamp"] = ts
         position_df_list.append(pos_df)
 
-        return pf.cash
+        return acct.cash
 
     cash_s = close_price_df.apply(on_interval, axis=1)
     assert isinstance(cash_s, pd.Series)
@@ -165,7 +165,7 @@ def _backtest(
     position_df = pd.concat(position_df_list, ignore_index=True)
     position_df["timestamp"] = pd.to_datetime(position_df["timestamp"])
 
-    trade_df = pd.DataFrame(pf.trade_list, columns=trade_df_columns)
+    trade_df = pd.DataFrame(acct.trade_list, columns=trade_df_columns)
     trade_df["matched_at"] = pd.to_datetime(trade_df["matched_at"])
 
     return cash_s, position_df, trade_df

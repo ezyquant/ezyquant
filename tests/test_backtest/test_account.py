@@ -31,17 +31,17 @@ def test_volume_series(
     position_dict: Dict[str, Position], expected_volume_series: pd.Series
 ):
     # Mock
-    pf = SETAccount(cash=0.0, position_dict=position_dict)
+    acct = SETAccount(cash=0.0, position_dict=position_dict)
 
     # Test
-    result = pf.volume_series
+    result = acct.volume_series
 
     # Check
     assert_series_equal(result, expected_volume_series)
 
     # Test copy
     result[:] = 0
-    result = pf.volume_series
+    result = acct.volume_series
 
     # Check
     assert_series_equal(result, expected_volume_series)
@@ -66,12 +66,12 @@ def test_total_market_value(
     expect_result: float,
 ):
     # Mock
-    pf = SETAccount(
+    acct = SETAccount(
         cash=0.0, position_dict=position_dict, market_price_series=market_price_series
     )
 
     # Test
-    result = pf.total_market_value
+    result = acct.total_market_value
 
     # Check
     assert result == expect_result
@@ -125,14 +125,14 @@ class TestMatchOrderBuy:
             pct_commission=pct_commission,
         )
 
-        pf = SETAccount(
+        acct = SETAccount(
             cash=cash,
             pct_commission=pct_commission,
             position_dict=position_dict,
         )
 
         # Test
-        result = pf._match_order(
+        result = acct._match_order(
             symbol=symbol,
             volume=volume,
             price=price,
@@ -141,8 +141,8 @@ class TestMatchOrderBuy:
 
         # Check
         assert result == expect_trade
-        assert pf.cash == expect_cash
-        assert pf.position_dict == expect_position_dict
+        assert acct.cash == expect_cash
+        assert acct.position_dict == expect_position_dict
 
     @pytest.mark.parametrize(("cash", "pct_commission"), [(99.0, 0.0), (109.0, 0.1)])
     def test_error_insufficient_cash(self, cash: float, pct_commission: float):
@@ -152,11 +152,11 @@ class TestMatchOrderBuy:
         matched_at = pd.Timestamp("2000-01-01")
 
         # Mock
-        pf = SETAccount(cash=cash, pct_commission=pct_commission)
+        acct = SETAccount(cash=cash, pct_commission=pct_commission)
 
         # Test
         with pytest.raises(ValueError) as e:
-            pf._match_order(
+            acct._match_order(
                 symbol=symbol,
                 volume=volume,
                 price=price,
@@ -187,11 +187,11 @@ class TestMatchOrderBuy:
         matched_at = pd.Timestamp("2000-01-01")
 
         # Mock
-        pf = SETAccount(cash=1e6)
+        acct = SETAccount(cash=1e6)
 
         # Test
         with pytest.raises(AssertionError) as e:
-            pf._match_order(
+            acct._match_order(
                 symbol=symbol,
                 volume=volume,
                 price=price,
@@ -248,14 +248,14 @@ class TestMatchOrderSell:
             pct_commission=pct_commission,
         )
 
-        pf = SETAccount(
+        acct = SETAccount(
             cash=cash,
             pct_commission=pct_commission,
             position_dict=position_dict,
         )
 
         # Test
-        result = pf._match_order(
+        result = acct._match_order(
             symbol=symbol,
             volume=volume,
             price=price,
@@ -264,8 +264,8 @@ class TestMatchOrderSell:
 
         # Check
         assert result == expect_trade
-        assert pf.cash == expect_cash
-        assert pf.position_dict == expect_position_dict
+        assert acct.cash == expect_cash
+        assert acct.position_dict == expect_position_dict
 
     @pytest.mark.parametrize(
         "position_dict",
@@ -282,7 +282,7 @@ class TestMatchOrderSell:
         matched_at = pd.Timestamp("2000-01-01")
 
         # Mock
-        pf = SETAccount(
+        acct = SETAccount(
             cash=0.0,
             pct_commission=0.0,
             position_dict=position_dict,
@@ -290,7 +290,7 @@ class TestMatchOrderSell:
 
         # Test
         with pytest.raises(ValueError) as e:
-            pf._match_order(
+            acct._match_order(
                 symbol=symbol,
                 volume=volume,
                 price=price,

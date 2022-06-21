@@ -61,7 +61,7 @@ class TestNoTrade:
     )
     @pytest.mark.parametrize(
         "apply_trade_volume",
-        [lambda ts, sym, sig, price, pf: pf.target_pct_port(sig), lambda *args: 100.0],
+        [lambda ts, sym, sig, price, acct: acct.target_pct_port(sig), lambda *args: 100.0],
     )
     def test_no_price(
         self,
@@ -98,7 +98,7 @@ class TestNoTrade:
         self,
         initial_cash: float = 1000.0,
         signal_df: pd.DataFrame = utils.make_signal_weight_df(),
-        apply_trade_volume: Callable = lambda ts, sym, sig, price, pf: pf.target_pct_port(
+        apply_trade_volume: Callable = lambda ts, sym, sig, price, acct: acct.target_pct_port(
             sig
         ),
         close_price_df: pd.DataFrame = utils.make_close_price_df(),
@@ -140,7 +140,7 @@ class TestNoTrade:
     [
         (
             utils.make_signal_weight_df(n_row=1000, n_col=100),
-            lambda ts, sym, sig, price, pf: pf.target_pct_port(sig),
+            lambda ts, sym, sig, price, acct: acct.target_pct_port(sig),
         )
     ],
 )
