@@ -45,6 +45,18 @@ def test_volume_series(
     assert_series_equal(result, expected_volume_series)
 
 
+def test_total_market_value():
+    # TODO: total_market_value
+    # Mock
+    pf = SETAccount(cash=0.0, position_dict={})
+
+    # Test
+    result = pf.total_market_value
+
+    # Check
+    assert result == 0.0
+
+
 class TestMatchOrderBuy:
     @pytest.mark.parametrize(
         ("cash", "pct_commission", "expect_cash"),
