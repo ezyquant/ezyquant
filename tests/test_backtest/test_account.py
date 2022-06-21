@@ -48,26 +48,23 @@ def test_volume_series(
 
 
 @pytest.mark.parametrize(
-    ("position_dict", "market_price_series", "expect_result"),
+    ("position_dict", "market_price_dict", "expect_result"),
     [
-        ({}, pd.Series(), 0.0),
-        ({}, pd.Series({"A": 0.0}), 0.0),
-        ({}, pd.Series({"A": nan}), 0.0),
-        ({}, pd.Series({"A": 1.0}), 0.0),
-        ({"A": Position("A", 100.0)}, pd.Series(), 0.0),
-        ({"A": Position("A", 100.0)}, pd.Series({"A": 0.0}), 0.0),
-        ({"A": Position("A", 100.0)}, pd.Series({"A": nan}), 0.0),
-        ({"A": Position("A", 100.0)}, pd.Series({"A": 1.0}), 100.0),
+        ({}, {}, 0.0),
+        ({}, {"A": 0.0}, 0.0),
+        ({}, {"A": 1.0}, 0.0),
+        ({"A": Position("A", 100.0)}, {"A": 0.0}, 0.0),
+        ({"A": Position("A", 100.0)}, {"A": 1.0}, 100.0),
     ],
 )
 def test_total_market_value(
     position_dict: Dict[str, Position],
-    market_price_series: pd.Series,
+    market_price_dict: Dict[str, float],
     expect_result: float,
 ):
     # Mock
     acct = SETAccount(
-        cash=0.0, position_dict=position_dict, market_price_series=market_price_series
+        cash=0.0, position_dict=position_dict, market_price_dict=market_price_dict
     )
 
     # Test

@@ -61,7 +61,10 @@ class TestNoTrade:
     )
     @pytest.mark.parametrize(
         "apply_trade_volume",
-        [lambda ts, sym, sig, price, acct: acct.target_pct_port(sig), lambda *args: 100.0],
+        [
+            lambda ts, sym, sig, price, acct: acct.target_pct_port(sig),
+            lambda *args: 100.0,
+        ],
     )
     def test_no_price(
         self,

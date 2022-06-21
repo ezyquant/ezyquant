@@ -1,5 +1,5 @@
 from dataclasses import fields
-from typing import Callable, List, Tuple
+from typing import Callable, Dict, List, Tuple
 
 import pandas as pd
 
@@ -66,75 +66,84 @@ def _backtest(
     """
     vld.check_initial_cash(initial_cash)
     vld.check_pct_commission(pct_commission)
-    # TODO: check close_price_df and price_match_df
+    # TODO: check price and signal
 
     ratio_buy_slip = 1.0 + pct_buy_slip
     ratio_sell_slip = 1.0 - pct_sell_slip
     ratio_commission = 1.0 + pct_commission
 
-    # Select only symbol in signal
-    price_match_df = price_match_df[signal_df.columns]
-    close_price_df = close_price_df[signal_df.columns]
-
-    # reindex signal_df
-    signal_df = signal_df.reindex(index=close_price_df.index)  # type: ignore
-
+    # Account
     acct = SETAccount(
         cash=initial_cash,
         pct_commission=pct_commission,
         position_dict={},  # TODO: [EZ-79] initial position dict
         trade_list=[],  # TODO: initial trade
-        market_price_series=close_price_df.iloc[0],
+        market_price_dict=close_price_df.iloc[0].to_dict(),
     )
 
-    close_price_df = close_price_df.iloc[1:]
+    # remove first close row
+    close_price_df = close_price_df.iloc[1:]  # type: ignore
+
+    # Dict
+    signal_dict: Dict[pd.Timestamp, Dict[str, float]] = signal_df.to_dict("index")  # type: ignore
+    close_price_dict: Dict[pd.Timestamp, Dict[str, float]] = close_price_df.to_dict(
+        "index"
+    )  # type: ignore
+    price_match_dict: Dict[pd.Timestamp, Dict[str, float]] = price_match_df.to_dict(
+        "index"
+    )  # type: ignore
 
     position_df_list: List[pd.DataFrame] = [
         # First dataframe for sort columns
         pd.DataFrame(columns=position_df_columns, dtype="float64"),
     ]
 
-    def on_interval(close_price_s: pd.Series) -> float:
-        ts: pd.Timestamp = close_price_s.name  # type: ignore
+    def on_interval(ts: pd.Timestamp, close_price_dict: Dict[str, float]) -> float:
+        signal_d = signal_dict.get(ts, dict())
 
-        signal_s = signal_df.loc[ts]  # type: ignore
-        df = signal_s.to_frame("signal")
-        df["close_price"] = acct.market_price_series
+        buy_volume_d: Dict[str, float] = dict()
+        sell_volume_d: Dict[str, float] = dict()
 
-        def on_symbol(x):
-            acct.selected_symbol = x.name
-            return apply_trade_volume(ts, x.name, x["signal"], x["close_price"], acct)
+        for k, v in signal_d.items():
+            acct.selected_symbol = k
+            trade_volume = apply_trade_volume(ts, k, v, acct.market_price_dict[k], acct)
 
-        trade_volume_s = df.apply(on_symbol, axis=1)
-        trade_volume_s = utils.round_df_100(trade_volume_s)
+            if trade_volume > 0:
+                buy_volume_d[k] = trade_volume
+            elif trade_volume < 0:
+                sell_volume_d[k] = trade_volume
 
-        match_price_s = price_match_df.loc[ts]  # type: ignore
-
-        # ignore no price
-        trade_volume_s = trade_volume_s[match_price_s > 0]
+        price_match_d = price_match_dict[ts]
 
         # Sell
-        for k, v in trade_volume_s[trade_volume_s < 0].items():
-            symbol: str = k  # type: ignore
-            price = match_price_s[k] * ratio_sell_slip
+        for k, v in sell_volume_d.items():
+            price = price_match_d[k] * ratio_sell_slip
 
-            # sell with enough volume
-            if symbol not in acct.position_dict:
+            if not price > 0:
+                # continue if 0, negative, nan
                 continue
 
-            v = max(v, -acct.position_dict[symbol].volume)
+            # sell with enough volume
+            if k not in acct.position_dict:
+                continue
+
+            v = max(v, -acct.position_dict[k].volume)
+            v = utils.round_df_100(v)
 
             acct._match_order(
                 matched_at=ts,
-                symbol=symbol,
+                symbol=k,
                 volume=v,
                 price=price,
             )
 
         # Buy
-        for k, v in trade_volume_s[trade_volume_s > 0].items():
-            symbol: str = k  # type: ignore
-            price = match_price_s[k] * ratio_buy_slip
+        for k, v in buy_volume_d.items():
+            price = price_match_d[k] * ratio_buy_slip
+
+            if not price > 0:
+                # continue if 0, negative, nan
+                continue
 
             # buy with enough cash
             v = min(v, acct.cash / price / ratio_commission)
@@ -145,13 +154,13 @@ def _backtest(
 
             acct._match_order(
                 matched_at=ts,
-                symbol=symbol,
+                symbol=k,
                 volume=v,
                 price=price,
             )
 
         acct._cache_clear()
-        acct.market_price_series = close_price_s
+        acct.market_price_dict = close_price_dict
 
         pos_df = acct.position_df
         pos_df["timestamp"] = ts
@@ -159,7 +168,7 @@ def _backtest(
 
         return acct.cash
 
-    cash_s = close_price_df.apply(on_interval, axis=1)
+    cash_s = pd.Series({k: on_interval(k, v) for k, v in close_price_dict.items()})
     assert isinstance(cash_s, pd.Series)
 
     position_df = pd.concat(position_df_list, ignore_index=True)

@@ -15,7 +15,7 @@ class SETAccount:
     pct_commission: float = 0.0
     position_dict: Dict[str, Position] = field(default_factory=dict)
     trade_list: List[Trade] = field(default_factory=list)
-    market_price_series: pd.Series = field(default_factory=pd.Series, repr=False)
+    market_price_dict: Dict[str, float] = field(default_factory=dict, repr=False)
     selected_symbol: Optional[str] = None  # select symbol for buy/sell method
 
     def __post_init__(self) -> None:
@@ -40,7 +40,12 @@ class SETAccount:
 
     @cached_property
     def total_market_value(self) -> float:
-        return (self.volume_series * self.market_price_series).sum()
+        return float(
+            sum(
+                v.volume * self.market_price_dict[v.symbol]
+                for v in self.position_dict.values()
+            )
+        )
 
     @property
     def total_cost_value(self) -> float:
@@ -48,6 +53,7 @@ class SETAccount:
 
     @property
     def volume_series(self) -> pd.Series:
+        # TODO: remove this method
         return pd.Series(
             {k: v.volume for k, v in self.position_dict.items()}, dtype="float64"
         )
@@ -67,7 +73,7 @@ class SETAccount:
     def _price(self) -> float:
         """Get last close price of selected symbol"""
         assert self.selected_symbol is not None, "symbol must be selected"
-        return self.market_price_series[self.selected_symbol]
+        return self.market_price_dict[self.selected_symbol]
 
     @property
     def _volume(self) -> float:
