@@ -7,6 +7,8 @@ from pandas.testing import assert_series_equal
 
 from ezyquant.backtest import Position, SETAccount, Trade
 
+nan = float("nan")
+
 
 @pytest.mark.parametrize(
     ("position_dict", "expected_volume_series"),
@@ -45,16 +47,34 @@ def test_volume_series(
     assert_series_equal(result, expected_volume_series)
 
 
-def test_total_market_value():
-    # TODO: total_market_value
+@pytest.mark.parametrize(
+    ("position_dict", "market_price_series", "expect_result"),
+    [
+        ({}, pd.Series(), 0.0),
+        ({}, pd.Series({"A": 0.0}), 0.0),
+        ({}, pd.Series({"A": nan}), 0.0),
+        ({}, pd.Series({"A": 1.0}), 0.0),
+        ({"A": Position("A", 100.0)}, pd.Series(), 0.0),
+        ({"A": Position("A", 100.0)}, pd.Series({"A": 0.0}), 0.0),
+        ({"A": Position("A", 100.0)}, pd.Series({"A": nan}), 0.0),
+        ({"A": Position("A", 100.0)}, pd.Series({"A": 1.0}), 100.0),
+    ],
+)
+def test_total_market_value(
+    position_dict: Dict[str, Position],
+    market_price_series: pd.Series,
+    expect_result: float,
+):
     # Mock
-    pf = SETAccount(cash=0.0, position_dict={})
+    pf = SETAccount(
+        cash=0.0, position_dict=position_dict, market_price_series=market_price_series
+    )
 
     # Test
     result = pf.total_market_value
 
     # Check
-    assert result == 0.0
+    assert result == expect_result
 
 
 class TestMatchOrderBuy:
