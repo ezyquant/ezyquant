@@ -24,7 +24,9 @@ pe_df = pe_df.replace(0, np.nan)
 signal_df = (pe_df.rank(axis=1, method="max") <= 10) / 10.00001
 
 
-def apply_trade_volume(ts: datetime, signal: float, symbol: str, pf: SETAccount):
+def apply_trade_volume(
+    ts: datetime, symbol: str, signal: float, close_price: float, pf: SETAccount
+):
     return pf.target_pct_port(signal)
 
 

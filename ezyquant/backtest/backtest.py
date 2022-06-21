@@ -14,7 +14,7 @@ from .account import SETAccount
 
 def backtest(
     signal_df: pd.DataFrame,
-    apply_trade_volume: Callable[[pd.Timestamp, float, str, SETAccount], float],
+    apply_trade_volume: Callable[[pd.Timestamp, str, float, float, SETAccount], float],
     start_date: str,
     end_date: str,
     initial_cash: float,

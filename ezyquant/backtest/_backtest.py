@@ -16,7 +16,7 @@ trade_df_columns = [i.name for i in fields(Trade)]
 def _backtest(
     initial_cash: float,
     signal_df: pd.DataFrame,
-    apply_trade_volume: Callable[[pd.Timestamp, float, str, SETAccount], float],
+    apply_trade_volume: Callable[[pd.Timestamp, str, float, float, SETAccount], float],
     close_price_df: pd.DataFrame,
     price_match_df: pd.DataFrame,
     pct_buy_slip: float,
@@ -98,18 +98,20 @@ def _backtest(
         ts: pd.Timestamp = close_price_s.name  # type: ignore
 
         signal_s = signal_df.loc[ts]  # type: ignore
+        df = signal_s.to_frame("signal")
+        df["close_price"] = pf.market_price_series
 
         def on_symbol(x):
-            pf.selected_symbol = x[0]
-            return apply_trade_volume(ts, x[1], x[0], pf)
+            pf.selected_symbol = x.name
+            return apply_trade_volume(ts, x.name, x["signal"], x["close_price"], pf)
 
-        trade_volume_s = pd.Series(
-            signal_s.reset_index().apply(on_symbol, axis=1).values,
-            index=signal_s.index,
-        )
+        trade_volume_s = df.apply(on_symbol, axis=1)
         trade_volume_s = utils.round_df_100(trade_volume_s)
 
         match_price_s = price_match_df.loc[ts]  # type: ignore
+
+        # ignore no price
+        trade_volume_s = trade_volume_s[match_price_s > 0]
 
         # Sell
         for k, v in trade_volume_s[trade_volume_s < 0].items():
@@ -148,8 +150,8 @@ def _backtest(
                 price=price,
             )
 
-        pf.market_price_series = close_price_s
         pf._cache_clear()
+        pf.market_price_series = close_price_s
 
         pos_df = pf.position_df
         pos_df["timestamp"] = ts
