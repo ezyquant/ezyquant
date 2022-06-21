@@ -16,6 +16,7 @@ format:
 	docformatter -i ezyquant/indicators.py
 	docformatter -i ezyquant/report.py
 	docformatter -i ezyquant/backtest/backtest.py
+	docformatter -i ezyquant/backtest/account.py
 
 .PHONY: venv
 venv:

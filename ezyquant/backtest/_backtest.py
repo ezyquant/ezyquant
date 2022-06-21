@@ -68,14 +68,12 @@ def _backtest(
     vld.check_pct_commission(pct_commission)
     # TODO: check price and signal
 
-    ratio_buy_slip = 1.0 + pct_buy_slip
-    ratio_sell_slip = 1.0 - pct_sell_slip
-    ratio_commission = 1.0 + pct_commission
-
     # Account
     acct = SETAccount(
         cash=initial_cash,
         pct_commission=pct_commission,
+        pct_buy_slip=pct_buy_slip,
+        pct_sell_slip=pct_sell_slip,
         position_dict={},  # TODO: [EZ-79] initial position dict
         trade_list=[],  # TODO: initial trade
         market_price_dict=close_price_df.iloc[0].to_dict(),
@@ -115,64 +113,27 @@ def _backtest(
             elif trade_volume < 0:
                 sell_volume_d[k] = trade_volume
 
+            # teardown
+            acct.selected_symbol = None
+
         return buy_volume_d, sell_volume_d
-
-    def execute_sell(ts: pd.Timestamp, sell_volume_d: Dict[str, float]):
-        price_match_d = price_match_dict[ts]
-
-        for k, v in sell_volume_d.items():
-            price = price_match_d[k] * ratio_sell_slip
-
-            if not price > 0:
-                # continue if 0, negative, nan
-                continue
-
-            # sell with enough volume
-            if k not in acct.position_dict:
-                continue
-
-            v = max(v, -acct.position_dict[k].volume)
-            v = utils.round_df_100(v)
-
-            acct._match_order(
-                matched_at=ts,
-                symbol=k,
-                volume=v,
-                price=price,
-            )
-
-    def execute_buy(ts: pd.Timestamp, buy_volume_d: Dict[str, float]):
-        price_match_d = price_match_dict[ts]
-
-        for k, v in buy_volume_d.items():
-            price = price_match_d[k] * ratio_buy_slip
-
-            if not price > 0:
-                # continue if 0, negative, nan
-                continue
-
-            # buy with enough cash
-            v = min(v, acct.cash / price / ratio_commission)
-            v = utils.round_df_100(v)
-
-            if v == 0.0:
-                continue
-
-            acct._match_order(
-                matched_at=ts,
-                symbol=k,
-                volume=v,
-                price=price,
-            )
 
     def on_interval(ts: pd.Timestamp, close_price_dict: Dict[str, float]) -> float:
         buy_volume_d, sell_volume_d = calculate_trade_volume(ts)
 
-        execute_sell(ts, sell_volume_d)
-        execute_buy(ts, buy_volume_d)
+        # Trade
+        acct._set_market_price_dict(price_match_dict[ts])
+        for k, v in sell_volume_d.items():
+            acct.selected_symbol = k
+            acct._sell(ts, v)
+            acct.selected_symbol = None
+        for k, v in buy_volume_d.items():
+            acct.selected_symbol = k
+            acct._buy(ts, v)
+            acct.selected_symbol = None
 
+        # Snap
         acct._set_market_price_dict(close_price_dict)
-
         pos_df = acct.position_df
         pos_df["timestamp"] = ts
         position_df_list.append(pos_df)

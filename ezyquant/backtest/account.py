@@ -5,6 +5,7 @@ from typing import Dict, List, Optional
 
 import pandas as pd
 
+from .. import utils
 from .position import Position
 from .trade import Trade
 
@@ -13,6 +14,8 @@ from .trade import Trade
 class SETAccount:
     cash: float
     pct_commission: float = 0.0
+    pct_buy_slip: float = 0.0
+    pct_sell_slip: float = 0.0
     position_dict: Dict[str, Position] = field(default_factory=dict)
     trade_list: List[Trade] = field(default_factory=list)
     market_price_dict: Dict[str, float] = field(default_factory=dict, repr=False)
@@ -33,6 +36,10 @@ class SETAccount:
         # trade_list
         for i in self.trade_list:
             assert isinstance(i, Trade), "trade_list must be a list of Trade"
+
+        self.ratio_buy_slip = 1.0 + self.pct_buy_slip
+        self.ratio_sell_slip = 1.0 - self.pct_sell_slip
+        self.ratio_commission = 1.0 + self.pct_commission
 
     @property
     def port_value(self) -> float:
@@ -64,13 +71,13 @@ class SETAccount:
 
     @property
     def _price(self) -> float:
-        """Get last close price of selected symbol"""
+        """Get last close price of selected symbol."""
         assert self.selected_symbol is not None, "symbol must be selected"
         return self.market_price_dict[self.selected_symbol]
 
     @property
     def _volume(self) -> float:
-        """Get volume of selected symbol"""
+        """Get volume of selected symbol."""
         assert self.selected_symbol is not None, "symbol must be selected"
         if self.has_position(self.selected_symbol):
             return self.position_dict[self.selected_symbol].volume
@@ -78,8 +85,8 @@ class SETAccount:
             return 0.0
 
     def buy_pct_port(self, pct_port: float) -> float:
-        """Calculate buy volume from percentage of SETAccount.
-        Using last close price.
+        """Calculate buy volume from percentage of SETAccount. Using last close
+        price. Symbol must be selected.
 
         Parameters
         ----------
@@ -94,8 +101,8 @@ class SETAccount:
         return self.buy_value(self.port_value * pct_port)
 
     def buy_value(self, value: float) -> float:
-        """Calculate buy volume from value.
-        Using last close price.
+        """Calculate buy volume from value. Using last close price. Symbol must
+        be selected.
 
         Parameters
         ----------
@@ -110,7 +117,8 @@ class SETAccount:
         return value / self._price
 
     def buy_pct_position(self, pct_position: float) -> float:
-        """Calculate buy volume from percentage of current position.
+        """Calculate buy volume from percentage of current position. Symbol
+        must be selected.
 
         Parameters
         ----------
@@ -125,8 +133,8 @@ class SETAccount:
         return pct_position * self._volume
 
     def sell_pct_port(self, pct_port: float) -> float:
-        """Calculate sell volume from percentage of SETAccount.
-        Using last close price.
+        """Calculate sell volume from percentage of SETAccount. Using last
+        close price. Symbol must be selected.
 
         Parameters
         ----------
@@ -141,8 +149,8 @@ class SETAccount:
         return self.buy_pct_port(-pct_port)
 
     def sell_value(self, value: float) -> float:
-        """Calculate sell volume from value.
-        Using last close price.
+        """Calculate sell volume from value. Using last close price. Symbol
+        must be selected.
 
         Parameters
         ----------
@@ -157,7 +165,8 @@ class SETAccount:
         return self.buy_value(-value)
 
     def sell_pct_position(self, pct_position: float) -> float:
-        """Calculate sell volume from percentage of current position.
+        """Calculate sell volume from percentage of current position. Symbol
+        must be selected.
 
         Parameters
         ----------
@@ -172,8 +181,8 @@ class SETAccount:
         return self.buy_pct_position(-pct_position)
 
     def target_pct_port(self, pct_port: float) -> float:
-        """Calculate buy/sell volume to make position reach percentage of SETAccount.
-        Using last close price.
+        """Calculate buy/sell volume to make position reach percentage of
+        SETAccount. Using last close price. Symbol must be selected.
 
         Parameters
         ----------
@@ -188,7 +197,9 @@ class SETAccount:
         return self.buy_pct_port(pct_port) - self._volume
 
     def target_value(self, value: float) -> float:
-        """Calculate buy/sell volume to make position reach value.
+        """Calculate buy/sell volume to make position reach value. Symbol must
+        be selected.
+
         Parameters
         ----------
         value : float
@@ -215,6 +226,74 @@ class SETAccount:
         """
         self._cache_clear()
         self.market_price_dict = market_price_dict
+
+    def _buy(self, matched_at: datetime, volume: float):
+        """Buy with enough cash. Symbol must be selected. Market price must be
+        set. skip if price is invalid (<=0, NaN).
+
+        Parameters
+        ----------
+        matched_at : datetime
+            matched datetime
+        volume : float
+            volume to buy, positive, don't need round 100
+        """
+        assert volume > 0, "volume must be positive"
+        assert self.selected_symbol != None, "symbol must be selected"
+
+        price = self._price * self.ratio_buy_slip
+
+        # return if 0, negative, nan
+        if not price > 0:
+            return
+
+        # buy with enough cash
+        volume = min(volume, self.cash / price / self.ratio_commission)
+        volume = utils.round_df_100(volume)
+
+        if volume == 0.0:
+            return
+
+        return self._match_order(
+            matched_at=matched_at,
+            symbol=self.selected_symbol,
+            volume=volume,
+            price=price,
+        )
+
+    def _sell(self, matched_at: datetime, volume: float):
+        """Sell with enough position. Symbol must be selected. Market price
+        must be set. skip if price is invalid (<=0, NaN).
+
+        Parameters
+        ----------
+        matched_at : datetime
+            matched datetime
+        volume : float
+            volume to sell, negative, don't need round 100
+        """
+        assert volume < 0, "volume must be negative"
+        assert self.selected_symbol != None, "symbol must be selected"
+
+        price = self._price * self.ratio_sell_slip
+
+        # return if 0, negative, nan
+        if not price > 0:
+            return
+
+        # sell with enough volume
+        volume = max(volume, -self._volume)
+        volume = utils.round_df_100(volume)
+
+        if volume == 0.0:
+            return
+
+        return self._match_order(
+            matched_at=matched_at,
+            symbol=self.selected_symbol,
+            volume=volume,
+            price=price,
+        )
 
     def _match_order(
         self,
