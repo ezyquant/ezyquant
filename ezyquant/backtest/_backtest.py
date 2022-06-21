@@ -5,7 +5,7 @@ import pandas as pd
 
 from .. import utils
 from . import validators as vld
-from .portfolio import Portfolio
+from .account import SETAccount
 from .position import Position
 from .trade import Trade
 
@@ -16,7 +16,7 @@ trade_df_columns = [i.name for i in fields(Trade)]
 def _backtest(
     initial_cash: float,
     signal_df: pd.DataFrame,
-    apply_trade_volume: Callable[[pd.Timestamp, float, str, Portfolio], float],
+    apply_trade_volume: Callable[[pd.Timestamp, float, str, SETAccount], float],
     close_price_df: pd.DataFrame,
     price_match_df: pd.DataFrame,
     pct_buy_slip: float,
@@ -79,7 +79,7 @@ def _backtest(
     # reindex signal_df
     signal_df = signal_df.reindex(index=close_price_df.index)  # type: ignore
 
-    pf = Portfolio(
+    pf = SETAccount(
         cash=initial_cash,
         pct_commission=pct_commission,
         position_dict={},  # TODO: [EZ-79] initial position dict

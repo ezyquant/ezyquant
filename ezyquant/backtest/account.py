@@ -10,7 +10,7 @@ from .trade import Trade
 
 
 @dataclass
-class Portfolio:
+class SETAccount:
     cash: float
     pct_commission: float = 0.0
     position_dict: Dict[str, Position] = field(default_factory=dict)
@@ -79,13 +79,13 @@ class Portfolio:
             return 0.0
 
     def buy_pct_port(self, pct_port: float) -> float:
-        """Calculate buy volume from percentage of portfolio.
+        """Calculate buy volume from percentage of SETAccount.
         Using last close price.
 
         Parameters
         ----------
         pct_port : float
-            percentage of portfolio
+            percentage of SETAccount
 
         Returns
         -------
@@ -126,13 +126,13 @@ class Portfolio:
         return pct_position * self.volume
 
     def sell_pct_port(self, pct_port: float) -> float:
-        """Calculate sell volume from percentage of portfolio.
+        """Calculate sell volume from percentage of SETAccount.
         Using last close price.
 
         Parameters
         ----------
         pct_port : float
-            percentage of portfolio
+            percentage of SETAccount
 
         Returns
         -------
@@ -173,13 +173,13 @@ class Portfolio:
         return -self.buy_pct_position(pct_position)
 
     def target_pct_port(self, pct_port: float) -> float:
-        """Calculate buy/sell volume to make position reach percentage of portfolio.
+        """Calculate buy/sell volume to make position reach percentage of SETAccount.
         Using last close price.
 
         Parameters
         ----------
         pct_port : float
-            percentage of portfolio
+            percentage of SETAccount
 
         Returns
         -------

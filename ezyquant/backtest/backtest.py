@@ -9,12 +9,12 @@ from ..errors import InputError
 from ..reader import SETDataReader
 from ..result import SETResult
 from ._backtest import _backtest
-from .portfolio import Portfolio
+from .account import SETAccount
 
 
 def backtest(
     signal_df: pd.DataFrame,
-    apply_trade_volume: Callable[[pd.Timestamp, float, str, Portfolio], float],
+    apply_trade_volume: Callable[[pd.Timestamp, float, str, SETAccount], float],
     start_date: str,
     end_date: str,
     initial_cash: float,

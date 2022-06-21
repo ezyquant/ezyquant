@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 from pandas.testing import assert_series_equal
 
-from ezyquant.backtest import Portfolio, Position, Trade
+from ezyquant.backtest import Position, SETAccount, Trade
 
 
 @pytest.mark.parametrize(
@@ -29,7 +29,7 @@ def test_volume_series(
     position_dict: Dict[str, Position], expected_volume_series: pd.Series
 ):
     # Mock
-    pf = Portfolio(cash=0.0, position_dict=position_dict)
+    pf = SETAccount(cash=0.0, position_dict=position_dict)
 
     # Test
     result = pf.volume_series
@@ -93,7 +93,7 @@ class TestMatchOrderBuy:
             pct_commission=pct_commission,
         )
 
-        pf = Portfolio(
+        pf = SETAccount(
             cash=cash,
             pct_commission=pct_commission,
             position_dict=position_dict,
@@ -120,7 +120,7 @@ class TestMatchOrderBuy:
         matched_at = pd.Timestamp("2000-01-01")
 
         # Mock
-        pf = Portfolio(cash=cash, pct_commission=pct_commission)
+        pf = SETAccount(cash=cash, pct_commission=pct_commission)
 
         # Test
         with pytest.raises(ValueError) as e:
@@ -155,7 +155,7 @@ class TestMatchOrderBuy:
         matched_at = pd.Timestamp("2000-01-01")
 
         # Mock
-        pf = Portfolio(cash=1e6)
+        pf = SETAccount(cash=1e6)
 
         # Test
         with pytest.raises(AssertionError) as e:
@@ -216,7 +216,7 @@ class TestMatchOrderSell:
             pct_commission=pct_commission,
         )
 
-        pf = Portfolio(
+        pf = SETAccount(
             cash=cash,
             pct_commission=pct_commission,
             position_dict=position_dict,
@@ -250,7 +250,7 @@ class TestMatchOrderSell:
         matched_at = pd.Timestamp("2000-01-01")
 
         # Mock
-        pf = Portfolio(
+        pf = SETAccount(
             cash=0.0,
             pct_commission=0.0,
             position_dict=position_dict,
