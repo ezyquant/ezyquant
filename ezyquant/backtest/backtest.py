@@ -7,7 +7,7 @@ from .. import utils
 from ..creator import SETSignalCreator
 from ..errors import InputError
 from ..reader import SETDataReader
-from ..result import SETResult
+from ..report import SETBacktestReport
 from ._backtest import _backtest
 from .account import SETAccount
 
@@ -23,7 +23,7 @@ def backtest(
     pct_sell_slip: float = 0.0,
     price_match_mode: str = "open",
     signal_delay_bar: int = 1,
-) -> SETResult:
+) -> SETBacktestReport:
     """Backtest target weight. Rebalance with rebalance_freq, rebalance_at or
     if signal was changed from yesterday.
 
@@ -76,7 +76,7 @@ def backtest(
 
     Returns
     -------
-    SETResult
+    SETBacktestReport
     """
     # Price df
     before_start_date = utils.date_to_str(
@@ -112,7 +112,7 @@ def backtest(
         pct_commission=pct_commission,
     )
 
-    return SETResult(
+    return SETBacktestReport(
         initial_capital=initial_cash,
         pct_commission=pct_commission,
         pct_buy_slip=pct_buy_slip,
