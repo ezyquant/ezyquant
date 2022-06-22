@@ -3,7 +3,6 @@ from typing import Callable, Dict, List, Tuple
 
 import pandas as pd
 
-from .. import utils
 from . import validators as vld
 from .account import SETAccount
 from .position import Position
@@ -24,6 +23,7 @@ def _backtest(
     pct_commission: float,
 ) -> Tuple[pd.Series, pd.DataFrame, pd.DataFrame]:
     """Backtest Target Weight.
+    # TODO: Update doc
 
     Parameters
     ----------
@@ -68,12 +68,14 @@ def _backtest(
     vld.check_pct_commission(pct_commission)
     # TODO: check price and signal
 
+    # Ratio
+    ratio_buy_slip = 1.0 + pct_buy_slip
+    ratio_sell_slip = 1.0 - pct_sell_slip
+
     # Account
     acct = SETAccount(
         cash=initial_cash,
         pct_commission=pct_commission,
-        pct_buy_slip=pct_buy_slip,
-        pct_sell_slip=pct_sell_slip,
         position_dict={},  # TODO: [EZ-79] initial position dict
         trade_list=[],  # TODO: initial trade
         market_price_dict=close_price_df.iloc[0].to_dict(),
@@ -124,13 +126,11 @@ def _backtest(
         # Trade
         acct._set_market_price_dict(price_match_dict[ts])
         for k, v in sell_volume_d.items():
-            acct.selected_symbol = k
-            acct._sell(ts, v)
-            acct.selected_symbol = None
+            price = price_match_dict[ts][k] * ratio_sell_slip
+            acct._match_order_if_possible(ts, symbol=k, volume=v, price=price)
         for k, v in buy_volume_d.items():
-            acct.selected_symbol = k
-            acct._buy(ts, v)
-            acct.selected_symbol = None
+            price = price_match_dict[ts][k] * ratio_buy_slip
+            acct._match_order_if_possible(ts, symbol=k, volume=v, price=price)
 
         # Snap
         acct._set_market_price_dict(close_price_dict)

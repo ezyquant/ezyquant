@@ -27,6 +27,8 @@ def backtest(
     """Backtest target weight. Rebalance with rebalance_freq, rebalance_at or
     if signal was changed from yesterday.
 
+    # TODO: Update doc
+
     Parameters
     ----------
     signal_df : pd.DataFrame

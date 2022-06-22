@@ -14,8 +14,6 @@ from .trade import Trade
 class SETAccount:
     cash: float
     pct_commission: float = 0.0
-    pct_buy_slip: float = 0.0
-    pct_sell_slip: float = 0.0
     position_dict: Dict[str, Position] = field(default_factory=dict)
     trade_list: List[Trade] = field(default_factory=list)
     market_price_dict: Dict[str, float] = field(default_factory=dict, repr=False)
@@ -37,8 +35,6 @@ class SETAccount:
         for i in self.trade_list:
             assert isinstance(i, Trade), "trade_list must be a list of Trade"
 
-        self.ratio_buy_slip = 1.0 + self.pct_buy_slip
-        self.ratio_sell_slip = 1.0 - self.pct_sell_slip
         self.ratio_commission = 1.0 + self.pct_commission
 
     @property
@@ -79,7 +75,7 @@ class SETAccount:
     def _volume(self) -> float:
         """Get volume of selected symbol."""
         assert self.selected_symbol is not None, "symbol must be selected"
-        if self.has_position(self.selected_symbol):
+        if self.selected_symbol in self.position_dict:
             return self.position_dict[self.selected_symbol].volume
         else:
             return 0.0
@@ -227,28 +223,41 @@ class SETAccount:
         self._cache_clear()
         self.market_price_dict = market_price_dict
 
-    def _buy(self, matched_at: datetime, volume: float):
-        """Buy with enough cash. Symbol must be selected. Market price must be
-        set. skip if price is invalid (<=0, NaN).
+    def _match_order_if_possible(
+        self,
+        matched_at: datetime,
+        symbol: str,
+        volume: float,
+        price: float,
+    ):
+        """Buy/Sell with enough cash/position. skip if price is invalid (<=0,
+        NaN).
 
         Parameters
         ----------
         matched_at : datetime
             matched datetime
+        symbol : str
+            symbol
         volume : float
-            volume to buy, positive, don't need round 100
+            volume, don't need round 100
+        price : float
+            price
         """
-        assert volume > 0, "volume must be positive"
-        assert self.selected_symbol != None, "symbol must be selected"
-
-        price = self._price * self.ratio_buy_slip
-
         # return if 0, negative, nan
         if not price > 0:
             return
 
-        # buy with enough cash
-        volume = min(volume, self.cash / price / self.ratio_commission)
+        if volume > 0:
+            # buy with enough cash
+            volume = min(volume, self.cash / price / self.ratio_commission)
+        elif volume < 0:
+            # sell with enough volume
+            if symbol in self.position_dict:
+                volume = max(volume, -self.position_dict[symbol].volume)
+            else:
+                return
+
         volume = utils.round_df_100(volume)
 
         if volume == 0.0:
@@ -256,41 +265,7 @@ class SETAccount:
 
         return self._match_order(
             matched_at=matched_at,
-            symbol=self.selected_symbol,
-            volume=volume,
-            price=price,
-        )
-
-    def _sell(self, matched_at: datetime, volume: float):
-        """Sell with enough position. Symbol must be selected. Market price
-        must be set. skip if price is invalid (<=0, NaN).
-
-        Parameters
-        ----------
-        matched_at : datetime
-            matched datetime
-        volume : float
-            volume to sell, negative, don't need round 100
-        """
-        assert volume < 0, "volume must be negative"
-        assert self.selected_symbol != None, "symbol must be selected"
-
-        price = self._price * self.ratio_sell_slip
-
-        # return if 0, negative, nan
-        if not price > 0:
-            return
-
-        # sell with enough volume
-        volume = max(volume, -self._volume)
-        volume = utils.round_df_100(volume)
-
-        if volume == 0.0:
-            return
-
-        return self._match_order(
-            matched_at=matched_at,
-            symbol=self.selected_symbol,
+            symbol=symbol,
             volume=volume,
             price=price,
         )
