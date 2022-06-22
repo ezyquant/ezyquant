@@ -1938,7 +1938,7 @@ class TestCustomBusinessDay:
     )
     def test_timestamp(self, sdr: SETDataReader, inp, n: int, expected):
         # Test
-        result = inp + sdr._custom_business_day(n)
+        result = inp + sdr._SETBusinessDay(n)
 
         # Check
         assert result == expected
@@ -1965,7 +1965,7 @@ class TestCustomBusinessDay:
     )
     def test_datetime_index(self, sdr: SETDataReader, inp, n: int, expected):
         # Test
-        result = inp + sdr._custom_business_day(n)
+        result = inp + sdr._SETBusinessDay(n)
 
         # Check
         assert_index_equal(result, expected)
@@ -1973,7 +1973,7 @@ class TestCustomBusinessDay:
     @pytest.mark.parametrize("n", [-1, 0, 1])
     def test_nat(self, sdr: SETDataReader, n: int):
         # Test
-        result = pd.NaT + sdr._custom_business_day(n)  # type: ignore
+        result = pd.NaT + sdr._SETBusinessDay(n)  # type: ignore
 
         # Check
         assert pd.isnull(result)

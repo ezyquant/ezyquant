@@ -285,7 +285,7 @@ class SETBacktestReport:
 
         cash_dvd_df["pay_date"] = cash_dvd_df["pay_date"].fillna(cash_dvd_df["ex_date"])
 
-        cash_dvd_df["before_ex_date"] = cash_dvd_df["ex_date"] - self._sdr._custom_business_day(1)  # type: ignore
+        cash_dvd_df["before_ex_date"] = cash_dvd_df["ex_date"] - self._sdr._SETBusinessDay(1)  # type: ignore
 
         position_df = position_df.rename(columns={"timestamp": "before_ex_date"})
 
@@ -724,7 +724,7 @@ class SETBacktestReport:
         pos_df = pos_df.rename(columns={"timestamp": "matched_at"})
 
         # get cost price from tomorrow position
-        pos_df["matched_at"] += self._sdr._custom_business_day(1)  # type: ignore
+        pos_df["matched_at"] += self._sdr._SETBusinessDay(1)  # type: ignore
 
         # set index for merge
         df = trade_df.merge(pos_df, on=["matched_at", "symbol"], validate="1:1")

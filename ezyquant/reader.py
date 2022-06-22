@@ -2437,7 +2437,7 @@ class SETDataReader:
             .tolist()
         )
 
-    def _custom_business_day(self, n: int = 1) -> CustomBusinessDay:
+    def _SETBusinessDay(self, n: int = 1) -> CustomBusinessDay:
         return CustomBusinessDay(n, holidays=self._get_holidays())  # type: ignore
 
     """
@@ -2453,3 +2453,7 @@ class SETDataReader:
 @lru_cache
 def _SETDataReaderCached() -> SETDataReader:
     return utils.wrap_cache_class(SETDataReader)()  # type: ignore
+
+
+def SETBusinessDay(n: int = 1) -> CustomBusinessDay:
+    return _SETDataReaderCached()._SETBusinessDay(n)

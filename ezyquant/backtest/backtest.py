@@ -6,7 +6,7 @@ from .. import fields as fld
 from .. import utils
 from ..creator import SETSignalCreator
 from ..errors import InputError
-from ..reader import SETDataReader
+from ..reader import SETBusinessDay
 from ..report import SETBacktestReport
 from ._backtest import _backtest
 from .account import SETAccount
@@ -24,25 +24,22 @@ def backtest(
     price_match_mode: str = "open",
     signal_delay_bar: int = 1,
 ) -> SETBacktestReport:
-    """Backtest target weight. Rebalance with rebalance_freq, rebalance_at or
-    if signal was changed from yesterday.
-
-    # TODO: Update doc
+    """Backtest function.
 
     Parameters
     ----------
     signal_df : pd.DataFrame
         signal dataframe.
-    rebalance_freq : str
-        rebalance frequency.
-            - no
-            - daily
-            - weekly
-            - monthly
-    rebalance_at : int
-        rebalance at. can be 1 to 31 depending on rebalance_freq.
-            - 1: first day of month or Monday
-            - 5: fifth day of month or Friday
+    apply_trade_volume: Callable[[pd.Timestamp, str, float, float, SETAccount], float],
+        function to calculate trade volume.
+        Parameters:
+            - timestamp: pd.Timestamp
+            - symbol: str
+            - signal: float
+            - close_price: float
+            - account: SETAccount
+        Return:
+            - trade_volume: float
     start_date : str
         start date in format YYYY-MM-DD
     end_date : str
@@ -55,17 +52,8 @@ def backtest(
         percent of buy price increase ex. 0.01 means 1% increase
     pct_sell_slip : float, by default 0.0
         percent of sell price decrease ex. 0.01 means 1% decrease
-    buy_price_match_mode : str, by default "open"
-        buy price match mode.
-            - open
-            - high
-            - low
-            - close
-            - median - (high + low)/2
-            - typical - (high + low + close)/3
-            - weighted - (high + low + close + close)/4
-    sell_price_match_mode : str, by default "open"
-        sell price match mode.
+    price_match_mode : str, by default "open"
+        price match mode.
             - open
             - high
             - low
@@ -74,16 +62,14 @@ def backtest(
             - typical - (high + low + close)/3
             - weighted - (high + low + close + close)/4
     signal_delay_bar : int, by default 1
-        delay bar for signal.
+        delay bar for shift signal.
 
     Returns
     -------
     SETBacktestReport
     """
     # Price df
-    before_start_date = utils.date_to_str(
-        pd.Timestamp(start_date) - SETDataReader()._custom_business_day()
-    )
+    before_start_date = utils.date_to_str(pd.Timestamp(start_date) - SETBusinessDay())
     symbol_list = signal_df.columns.tolist()
     price_match_df = _get_price(
         start_date=start_date,
