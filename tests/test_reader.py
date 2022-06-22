@@ -1924,7 +1924,7 @@ class TestGetLastAsOfDateInSecurityIndex:
             datetime.strptime(v, "%Y-%m-%d")
 
 
-class TestCustomBusinessDay:
+class TestSETBusinessDay:
     @pytest.mark.parametrize(
         ("inp", "n", "expected"),
         [
@@ -1934,6 +1934,7 @@ class TestCustomBusinessDay:
             (pd.Timestamp("2022-01-05"), 1, pd.Timestamp("2022-01-06")),
             (pd.Timestamp("2022-01-05"), 2, pd.Timestamp("2022-01-07")),
             (pd.Timestamp("2022-01-05"), 3, pd.Timestamp("2022-01-10")),
+            (pd.Timestamp("2022-01-01"), 0, pd.Timestamp("2022-01-04")),
         ],
     )
     def test_timestamp(self, sdr: SETDataReader, inp, n: int, expected):
