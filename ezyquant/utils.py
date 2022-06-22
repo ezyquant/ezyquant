@@ -12,8 +12,12 @@ def date_to_str(value: date) -> str:
     return value.strftime("%Y-%m-%d")
 
 
+def str_to_datetime(value: str) -> datetime:
+    return datetime.strptime(value, "%Y-%m-%d")
+
+
 def str_to_date(value: str) -> date:
-    return datetime.strptime(value, "%Y-%m-%d").date()
+    return str_to_datetime(value).date()
 
 
 def str_date_add_timedelta(value: str, delta: timedelta) -> str:
