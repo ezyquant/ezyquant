@@ -1,51 +1,164 @@
 import copy
+from datetime import datetime
 from typing import Dict
 
 import pandas as pd
 import pytest
-from pandas.testing import assert_series_equal
 
-from ezyquant.backtest import Portfolio, Position, Trade
+from ezyquant.backtest import Position, SETAccount, Trade
+
+nan = float("nan")
 
 
 @pytest.mark.parametrize(
-    ("position_dict", "expected_volume_series"),
+    ("position_dict", "market_price_dict", "expect_result"),
     [
-        ({}, pd.Series(dtype="float64")),
-        (
-            {"A": Position(symbol="A", volume=100)},
-            pd.Series({"A": 100.0}),
-        ),
-        (
-            {
-                "A": Position(symbol="A", volume=100),
-                "B": Position(symbol="B", volume=200),
-            },
-            pd.Series({"A": 100.0, "B": 200.0}),
-        ),
+        ({}, {}, 0.0),
+        ({}, {"A": 0.0}, 0.0),
+        ({}, {"A": 1.0}, 0.0),
+        # ({"A": Position("A", 100.0)}, {}, 100.0),
+        ({"A": Position("A", 100.0)}, {"A": nan}, 0.0),
+        ({"A": Position("A", 100.0)}, {"A": 0.0}, 0.0),
+        ({"A": Position("A", 100.0)}, {"A": 1.0}, 100.0),
     ],
 )
-def test_volume_series(
-    position_dict: Dict[str, Position], expected_volume_series: pd.Series
+def test_total_market_value(
+    position_dict: Dict[str, Position],
+    market_price_dict: Dict[str, float],
+    expect_result: float,
 ):
     # Mock
-    pf = Portfolio(cash=0.0, position_dict=position_dict)
+    acct = SETAccount(
+        cash=0.0, position_dict=position_dict, market_price_dict=market_price_dict
+    )
 
     # Test
-    result = pf.volume_series
+    result = acct.total_market_value
 
     # Check
-    assert_series_equal(result, expected_volume_series)
-
-    # Test copy
-    result[:] = 0
-    result = pf.volume_series
-
-    # Check
-    assert_series_equal(result, expected_volume_series)
+    assert result == expect_result
 
 
-class TestPlaceOrderBuy:
+class TestMatchOrderIfPossible:
+    @pytest.mark.parametrize(
+        ("cash", "pct_commission", "expect_trade_volume_list"),
+        [
+            (200.0, 0.0, [200.0]),
+            (220.0, 0.1, [200.0]),
+            (200.0, 0.1, [100.0]),
+            (99.0, 0.0, []),
+            (0.0, 0.0, []),
+        ],
+    )
+    def test_buy_with_enough_cash(
+        self, cash: float, pct_commission: float, expect_trade_volume_list: list
+    ):
+        self._test(
+            cash=cash,
+            pct_commission=pct_commission,
+            volume=200.0,
+            price=1.0,
+        )
+
+        assert self.acct.trade_list == [
+            Trade(
+                matched_at=datetime(2000, 1, 1),
+                symbol="A",
+                volume=i,
+                price=1.0,
+                pct_commission=pct_commission,
+            )
+            for i in expect_trade_volume_list
+        ]
+
+    @pytest.mark.parametrize(
+        ("position_volume", "expect_trade_volume_list"),
+        [
+            (200.0, [-200.0]),
+            (100.0, [-100]),
+            (0.0, []),
+        ],
+    )
+    def test_sell_with_enough_volume(
+        self, position_volume: float, expect_trade_volume_list: list
+    ):
+        self._test(
+            position_dict={"A": Position("A", position_volume)}
+            if position_volume
+            else {},
+            volume=-200.0,
+        )
+
+        assert self.acct.trade_list == [
+            Trade(
+                matched_at=datetime(2000, 1, 1),
+                symbol="A",
+                volume=i,
+                price=1.0,
+                pct_commission=0.0,
+            )
+            for i in expect_trade_volume_list
+        ]
+
+    @pytest.mark.parametrize(
+        ("volume", "expect_trade_volume_list"),
+        [
+            (100.01, [100.0]),
+            (100.0, [100.0]),
+            (99.99, []),
+            (1.0, []),
+            (0.01, []),
+            (-0.01, []),
+            (-1.0, []),
+            (-99.99, []),
+            (-100.0, [-100.0]),
+            (-100.01, [-100.0]),
+        ],
+    )
+    def test_round_volume(self, volume: float, expect_trade_volume_list: list):
+        self._test(volume=volume)
+
+        assert self.acct.trade_list == [
+            Trade(
+                matched_at=datetime(2000, 1, 1),
+                symbol="A",
+                volume=i,
+                price=1.0,
+                pct_commission=0.0,
+            )
+            for i in expect_trade_volume_list
+        ]
+
+    @pytest.mark.parametrize("price", [-1.0, -0.01, 0.0, nan])
+    def test_invalid_price(self, price: float):
+        self._test(price=price)
+        assert self.acct.trade_list == []
+
+    def _test(
+        self,
+        cash: float = 1000.0,
+        pct_commission: float = 0.0,
+        position_dict: Dict[str, Position] = {"A": Position("A", 1000.0)},
+        matched_at: datetime = datetime(2000, 1, 1),
+        symbol: str = "A",
+        volume: float = 0.0,
+        price: float = 1.0,
+    ):
+        self.acct = SETAccount(
+            cash=cash,
+            pct_commission=pct_commission,
+            position_dict=position_dict.copy(),
+        )
+
+        self.acct._match_order_if_possible(
+            matched_at=matched_at,
+            symbol=symbol,
+            volume=volume,
+            price=price,
+        )
+
+
+class TestMatchOrderBuy:
     @pytest.mark.parametrize(
         ("cash", "pct_commission", "expect_cash"),
         [(100.0, 0.0, 0.0), (200.0, 0.0, 100.0), (110.0, 0.1, 0.0)],
@@ -93,14 +206,14 @@ class TestPlaceOrderBuy:
             pct_commission=pct_commission,
         )
 
-        pf = Portfolio(
+        acct = SETAccount(
             cash=cash,
             pct_commission=pct_commission,
             position_dict=position_dict,
         )
 
         # Test
-        result = pf.place_order(
+        result = acct._match_order(
             symbol=symbol,
             volume=volume,
             price=price,
@@ -109,8 +222,9 @@ class TestPlaceOrderBuy:
 
         # Check
         assert result == expect_trade
-        assert pf.cash == expect_cash
-        assert pf.position_dict == expect_position_dict
+        assert acct.trade_list[0] == expect_trade
+        assert acct.cash == expect_cash
+        assert acct.position_dict == expect_position_dict
 
     @pytest.mark.parametrize(("cash", "pct_commission"), [(99.0, 0.0), (109.0, 0.1)])
     def test_error_insufficient_cash(self, cash: float, pct_commission: float):
@@ -120,11 +234,11 @@ class TestPlaceOrderBuy:
         matched_at = pd.Timestamp("2000-01-01")
 
         # Mock
-        pf = Portfolio(cash=cash, pct_commission=pct_commission)
+        acct = SETAccount(cash=cash, pct_commission=pct_commission)
 
         # Test
         with pytest.raises(ValueError) as e:
-            pf.place_order(
+            acct._match_order(
                 symbol=symbol,
                 volume=volume,
                 price=price,
@@ -155,11 +269,11 @@ class TestPlaceOrderBuy:
         matched_at = pd.Timestamp("2000-01-01")
 
         # Mock
-        pf = Portfolio(cash=1e6)
+        acct = SETAccount(cash=1e6)
 
         # Test
         with pytest.raises(AssertionError) as e:
-            pf.place_order(
+            acct._match_order(
                 symbol=symbol,
                 volume=volume,
                 price=price,
@@ -168,7 +282,7 @@ class TestPlaceOrderBuy:
         assert "volume" in e.value.args[0]
 
 
-class TestPlaceOrderSell:
+class TestMatchOrderSell:
     @pytest.mark.parametrize(
         ("cash", "pct_commission", "expect_cash"),
         [(0.0, 0.0, 100.0), (100.0, 0.0, 200.0), (0.0, 0.1, 90.0)],
@@ -216,14 +330,14 @@ class TestPlaceOrderSell:
             pct_commission=pct_commission,
         )
 
-        pf = Portfolio(
+        acct = SETAccount(
             cash=cash,
             pct_commission=pct_commission,
             position_dict=position_dict,
         )
 
         # Test
-        result = pf.place_order(
+        result = acct._match_order(
             symbol=symbol,
             volume=volume,
             price=price,
@@ -232,8 +346,9 @@ class TestPlaceOrderSell:
 
         # Check
         assert result == expect_trade
-        assert pf.cash == expect_cash
-        assert pf.position_dict == expect_position_dict
+        assert acct.trade_list[0] == expect_trade
+        assert acct.cash == expect_cash
+        assert acct.position_dict == expect_position_dict
 
     @pytest.mark.parametrize(
         "position_dict",
@@ -250,7 +365,7 @@ class TestPlaceOrderSell:
         matched_at = pd.Timestamp("2000-01-01")
 
         # Mock
-        pf = Portfolio(
+        acct = SETAccount(
             cash=0.0,
             pct_commission=0.0,
             position_dict=position_dict,
@@ -258,7 +373,7 @@ class TestPlaceOrderSell:
 
         # Test
         with pytest.raises(ValueError) as e:
-            pf.place_order(
+            acct._match_order(
                 symbol=symbol,
                 volume=volume,
                 price=price,

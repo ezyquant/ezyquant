@@ -166,6 +166,8 @@ class SETSignalCreator:
         value_by = value_by.lower()
         method = method.lower()
 
+        # TODO: load mare data for shift
+
         if period < 1:
             raise InputError(f"period must be greater than 0. but {period} is given.")
         if shift < 0:

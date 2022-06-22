@@ -8,6 +8,7 @@ from pandas._testing import assert_frame_equal, assert_index_equal, assert_serie
 
 import ezyquant.fields as fld
 from ezyquant import SETDataReader
+from ezyquant import validators as vld
 from ezyquant.errors import InputError
 
 
@@ -1075,7 +1076,7 @@ class TestGetAdjustFactor:
 class TestGetDataSymbolDaily:
     """source: https://www.tradingview.com/chart/?symbol=SET:COM7"""
 
-    _check = staticmethod(utils.check_data_symbol_daily)
+    _check = staticmethod(vld.check_df_symbol_daily)
 
     @pytest.mark.parametrize(
         "field", [fld.D_AVERAGE, fld.D_VALUE, fld.D_TURNOVER, fld.D_12M_DVD_YIELD]
@@ -1288,7 +1289,7 @@ class TestGetDataSymbolDaily:
 
 
 class TestGetDataSymbolQuarterly:
-    _check = staticmethod(utils.check_data_symbol_daily)
+    _check = staticmethod(vld.check_df_symbol_daily)
 
     @pytest.mark.parametrize(
         "field",
@@ -1386,7 +1387,7 @@ class TestGetDataSymbolQuarterly:
 
 
 class TestGetDataSymbolYearly:
-    _check = staticmethod(utils.check_data_symbol_daily)
+    _check = staticmethod(vld.check_df_symbol_daily)
 
     @pytest.mark.parametrize(
         "field",
@@ -1474,7 +1475,7 @@ class TestGetDataSymbolYearly:
 
 
 class TestGetDataSymbolTtm:
-    _check = staticmethod(utils.check_data_symbol_daily)
+    _check = staticmethod(vld.check_df_symbol_daily)
 
     @pytest.mark.parametrize(
         "field",
@@ -1550,7 +1551,7 @@ class TestGetDataSymbolTtm:
 
 
 class TestGetDataSymbolYtd:
-    _check = staticmethod(utils.check_data_symbol_daily)
+    _check = staticmethod(vld.check_df_symbol_daily)
 
     @pytest.mark.parametrize(
         "field",
@@ -1921,3 +1922,59 @@ class TestGetLastAsOfDateInSecurityIndex:
         for k, v in result.items():
             assert isinstance(k, str)
             datetime.strptime(v, "%Y-%m-%d")
+
+
+class TestSETBusinessDay:
+    @pytest.mark.parametrize(
+        ("inp", "n", "expected"),
+        [
+            (pd.Timestamp("2022-01-05"), -2, pd.Timestamp("2021-12-30")),
+            (pd.Timestamp("2022-01-05"), -1, pd.Timestamp("2022-01-04")),
+            (pd.Timestamp("2022-01-05"), 0, pd.Timestamp("2022-01-05")),
+            (pd.Timestamp("2022-01-05"), 1, pd.Timestamp("2022-01-06")),
+            (pd.Timestamp("2022-01-05"), 2, pd.Timestamp("2022-01-07")),
+            (pd.Timestamp("2022-01-05"), 3, pd.Timestamp("2022-01-10")),
+            (pd.Timestamp("2022-01-01"), 0, pd.Timestamp("2022-01-04")),
+        ],
+    )
+    def test_timestamp(self, sdr: SETDataReader, inp, n: int, expected):
+        # Test
+        result = inp + sdr._SETBusinessDay(n)
+
+        # Check
+        assert result == expected
+
+    @pytest.mark.parametrize(
+        ("inp", "n", "expected"),
+        [
+            (
+                pd.date_range("2022-01-01", "2022-01-07"),
+                1,
+                pd.DatetimeIndex(
+                    [
+                        "2022-01-04",
+                        "2022-01-04",
+                        "2022-01-04",
+                        "2022-01-05",
+                        "2022-01-06",
+                        "2022-01-07",
+                        "2022-01-10",
+                    ]
+                ),
+            ),
+        ],
+    )
+    def test_datetime_index(self, sdr: SETDataReader, inp, n: int, expected):
+        # Test
+        result = inp + sdr._SETBusinessDay(n)
+
+        # Check
+        assert_index_equal(result, expected)
+
+    @pytest.mark.parametrize("n", [-1, 0, 1])
+    def test_nat(self, sdr: SETDataReader, n: int):
+        # Test
+        result = pd.NaT + sdr._SETBusinessDay(n)  # type: ignore
+
+        # Check
+        assert pd.isnull(result)

@@ -70,7 +70,7 @@ def return_nan_on_failure(func):
     return wrapper
 
 
-class SETResult:
+class SETBacktestReport:
     def __init__(
         self,
         initial_capital: float,
@@ -81,7 +81,7 @@ class SETResult:
         position_df: pd.DataFrame,
         trade_df: pd.DataFrame,
     ):
-        """SETResult.
+        """SETBacktestReport.
 
         Parameters
         ----------
@@ -156,9 +156,11 @@ class SETResult:
         df["port_value"] = df["total_market_value"] + df["cash"]
 
         # pay_date can be non trade date.
-        tds = pd.to_datetime(self._sdr.get_trading_dates())
-        by = _searchsorted_value(tds, self.dividend_df["pay_date"])
-        df["dividend"] = self.dividend_df["amount"].groupby(by).sum()
+        dividend_df = self.dividend_df.copy()
+        dividend_df["pay_date"] += self._sdr._SETBusinessDay(0)  # type: ignore
+        df["dividend"] = (
+            dividend_df.set_index("pay_date")["amount"].groupby(level=0).sum()
+        )
         df["dividend"] = df["dividend"].fillna(0.0)
 
         df["cumulative_dividend"] = df["dividend"].cumsum()
@@ -285,9 +287,7 @@ class SETResult:
 
         cash_dvd_df["pay_date"] = cash_dvd_df["pay_date"].fillna(cash_dvd_df["ex_date"])
 
-        cash_dvd_df["before_ex_date"] = self._shift_trade_date(
-            cash_dvd_df["ex_date"], periods=1
-        )
+        cash_dvd_df["before_ex_date"] = cash_dvd_df["ex_date"] - self._sdr._SETBusinessDay(1)  # type: ignore
 
         position_df = position_df.rename(columns={"timestamp": "before_ex_date"})
 
@@ -421,7 +421,7 @@ class SETResult:
         # sell all in position
         df = self._summary_trade_sell_all_position()
         assert_index_equal(df.columns.sort_values(), trade_df.columns.sort_values())
-        trade_df = pd.concat([trade_df, df])
+        trade_df = pd.concat([trade_df, df], ignore_index=True)
 
         # datetime in
         trade_df = self._summary_trade_entry_at(trade_df)
@@ -726,7 +726,7 @@ class SETResult:
         pos_df = pos_df.rename(columns={"timestamp": "matched_at"})
 
         # get cost price from tomorrow position
-        pos_df["matched_at"] = self._shift_trade_date(pos_df["matched_at"], periods=-1)
+        pos_df["matched_at"] += self._sdr._SETBusinessDay(1)  # type: ignore
 
         # set index for merge
         df = trade_df.merge(pos_df, on=["matched_at", "symbol"], validate="1:1")
@@ -761,34 +761,3 @@ class SETResult:
         df["entry_at"] = tmp["entry_at"]
 
         return df
-
-    def _shift_trade_date(self, series: pd.Series, periods: int) -> pd.Series:
-        """Add/sub series trade date by periods.
-
-        Parameters
-        ----------
-        series : pd.Series
-            Series to shift.
-        periods : int
-            periods to shift. 1 is yesterday, -1 is tomorrow.
-
-        Returns
-        -------
-        pd.Series
-            Shifted series.
-        """
-        tds = self._sdr.get_trading_dates()
-
-        td_df = pd.DataFrame({"trade_date": pd.to_datetime(tds)})
-        td_df["sub_trade_date"] = td_df["trade_date"].shift(periods)
-
-        df = series.to_frame("trade_date").merge(
-            td_df, how="left", on="trade_date", validate="m:1"
-        )
-
-        return df["sub_trade_date"]
-
-
-def _searchsorted_value(series: pd.DatetimeIndex, value: pd.Series) -> pd.Series:
-    idx = series.searchsorted(value.to_list())
-    return series[idx]

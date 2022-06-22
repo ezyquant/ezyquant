@@ -1,6 +1,5 @@
 from datetime import datetime
 
-import numpy as np
 import pandas as pd
 
 import ezyquant as ez
@@ -12,7 +11,7 @@ from ezyquant.reader import SETBusinessDay
 ez.connect_sqlite("psims.db")
 
 start_date = "2010-01-01"
-start_load_date = ezutils.date_to_str(pd.Timestamp(start_date) - SETBusinessDay(1))
+start_load_date = ezutils.date_to_str(pd.Timestamp(start_date) - SETBusinessDay(20))
 end_date = "2019-12-31"
 
 #%% create signal
@@ -21,11 +20,18 @@ ssc = SETSignalCreator(
     end_date=end_date,
     index_list=["SET100"],
 )
-pe_df = ssc.get_data("pe", "daily")
-pe_df *= ssc.is_universe("SET100")
-pe_df = pe_df.replace(0, np.nan)
 
-signal_df = (pe_df.rank(axis=1, method="max") <= 10) / 10.00001
+close_df = ssc.get_data("close", "daily")
+
+ema10_df = ssc.ta.ema(close_df, 10)
+ema20_df = ssc.ta.ema(close_df, 20)
+
+cross_up_df = ema10_df > ema20_df
+first_cross_up_df = cross_up_df & ~cross_up_df.shift(1, fill_value=True)
+first_cross_down_df = ~cross_up_df & cross_up_df.shift(1, fill_value=False)
+
+signal_df = (first_cross_up_df * 0.1) + (first_cross_down_df * -0.1)
+signal_df *= ssc.is_universe("SET100")
 signal_df = signal_df.shift(1)
 signal_df = signal_df[signal_df.index >= pd.Timestamp(start_date)]  # type: ignore
 assert isinstance(signal_df, pd.DataFrame)
@@ -34,7 +40,7 @@ assert isinstance(signal_df, pd.DataFrame)
 def apply_trade_volume(
     ts: datetime, symbol: str, signal: float, close_price: float, acct: SETAccount
 ):
-    return acct.target_pct_port(signal)
+    return acct.buy_pct_port(signal)
 
 
 #%% Backtest

@@ -13,8 +13,12 @@ def date_to_str(value: date) -> str:
     return value.strftime("%Y-%m-%d")
 
 
+def str_to_datetime(value: str) -> datetime:
+    return datetime.strptime(value, "%Y-%m-%d")
+
+
 def str_to_date(value: str) -> date:
-    return datetime.strptime(value, "%Y-%m-%d").date()
+    return str_to_datetime(value).date()
 
 
 def str_date_add_timedelta(value: str, delta: timedelta) -> str:
@@ -28,8 +32,8 @@ def pivot_remove_index_name(df: pd.DataFrame, *args, **kwargs) -> pd.DataFrame:
     return df
 
 
-def round_df_100(df: pd.DataFrame) -> pd.DataFrame:
-    return df // 100 * 100.0
+def round_100(value):
+    return int(value / 100) * 100.0
 
 
 def is_rebalance_weekly(

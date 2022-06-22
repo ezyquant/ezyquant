@@ -3,9 +3,9 @@ import string
 import numpy as np
 import pandas as pd
 import pytest
-import utils
 
 from ezyquant import SETSignalCreator
+from ezyquant import validators as vld
 from ezyquant.errors import InputError
 
 
@@ -20,7 +20,7 @@ def make_random_df(n_row: int = 1, n_col: int = 1):
 
 
 class TestTa:
-    _check = staticmethod(utils.check_data_symbol_daily)
+    _check = staticmethod(vld.check_df_symbol_daily)
 
     @pytest.mark.parametrize("n_row", [1, 20])
     @pytest.mark.parametrize("n_col", [1, 20])
@@ -214,7 +214,7 @@ class TestTa:
 
 
 class TestTaEmpty:
-    _check = staticmethod(utils.check_data_symbol_daily)
+    _check = staticmethod(vld.check_df_symbol_daily)
 
     @pytest.mark.parametrize(("n_row", "n_col"), [(0, 0), (0, 1), (1, 0)])
     def test_sma(self, n_row: int, n_col: int):

@@ -29,7 +29,7 @@ class Position:
     def cost_value(self) -> float:
         return self.volume * self.avg_cost_price
 
-    def place_order(self, volume: float, price: float) -> float:
+    def _match_order(self, volume: float, price: float) -> float:
         if volume > 0:
             self.avg_cost_price = (self.cost_value + (volume * price)) / (
                 self.volume + volume
