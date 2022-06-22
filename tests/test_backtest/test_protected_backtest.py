@@ -1,12 +1,15 @@
-from typing import Callable, Optional
+from typing import Callable, Tuple
+from unittest.mock import ANY, Mock, call
 
 import pandas as pd
 import pandas.api.types as ptypes
 import pytest
 import utils
-from pandas.testing import assert_index_equal, assert_series_equal
+from pandas.testing import assert_frame_equal, assert_index_equal, assert_series_equal
+from pandas.tseries.offsets import BusinessDay
 
 from ezyquant.backtest._backtest import _backtest
+from ezyquant.backtest.account import SETAccount
 
 nan = float("nan")
 
@@ -14,10 +17,92 @@ position_columns = ["timestamp", "symbol", "volume", "avg_cost_price"]
 trade_columns = ["matched_at", "symbol", "volume", "price", "pct_commission"]
 
 
-class TestProtectedBacktest:
-    def _test(self):
-        # TODO: TestProtectedBacktest
-        pass
+@pytest.mark.parametrize("return_volume", [100.0, 100, 101, 101.0, 199, 199.0])
+def test_apply_trade_volume(return_volume: float):
+    # Mock
+    index = pd.bdate_range("2000-01-01", periods=4)
+
+    initial_cash = 1e6
+    signal_df = pd.DataFrame(
+        [[3.0, 4.0], [5.0, 6.0], [7.0, 8.0], [9.0, 10.0]],
+        index=index,
+        columns=["A", "B"],
+    )
+    apply_trade_volume = Mock(return_value=return_volume)
+    close_price_df = pd.DataFrame(
+        [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0], [9.0, 10.0]],
+        index=pd.bdate_range("2000-01-01", periods=5) - BusinessDay(),
+        columns=["A", "B"],
+    )
+    close_price_df.index.freq = index.freq  # type: ignore
+    price_match_df = signal_df.copy()
+    pct_buy_slip = 0.0
+    pct_sell_slip = 0.0
+    pct_commission = 0.0
+
+    # Test
+    cash_series, position_df, trade_df = _backtest_and_check(
+        initial_cash=initial_cash,
+        signal_df=signal_df,
+        apply_trade_volume=apply_trade_volume,
+        close_price_df=close_price_df,
+        price_match_df=price_match_df,
+        pct_buy_slip=pct_buy_slip,
+        pct_sell_slip=pct_sell_slip,
+        pct_commission=pct_commission,
+    )
+
+    # Check
+    assert apply_trade_volume.call_count == 8
+    apply_trade_volume.assert_has_calls(
+        [
+            call(pd.Timestamp("2000-01-03"), "A", 3.0, 1.0, ANY),
+            call(pd.Timestamp("2000-01-03"), "B", 4.0, 2.0, ANY),
+            call(pd.Timestamp("2000-01-04"), "A", 5.0, 3.0, ANY),
+            call(pd.Timestamp("2000-01-04"), "B", 6.0, 4.0, ANY),
+            call(pd.Timestamp("2000-01-05"), "A", 7.0, 5.0, ANY),
+            call(pd.Timestamp("2000-01-05"), "B", 8.0, 6.0, ANY),
+            call(pd.Timestamp("2000-01-06"), "A", 9.0, 7.0, ANY),
+            call(pd.Timestamp("2000-01-06"), "B", 10.0, 8.0, ANY),
+        ]
+    )
+
+    assert_series_equal(
+        cash_series,
+        pd.Series([999300.0, 998200.0, 996700.0, 994800.0], index=index),
+    )
+    assert_frame_equal(
+        position_df,
+        pd.DataFrame(
+            [
+                [pd.Timestamp("2000-01-03"), "A", 100.0, 3.0],
+                [pd.Timestamp("2000-01-03"), "B", 100.0, 4.0],
+                [pd.Timestamp("2000-01-04"), "A", 200.0, 4.0],
+                [pd.Timestamp("2000-01-04"), "B", 200.0, 5.0],
+                [pd.Timestamp("2000-01-05"), "A", 300.0, 5.0],
+                [pd.Timestamp("2000-01-05"), "B", 300.0, 6.0],
+                [pd.Timestamp("2000-01-06"), "A", 400.0, 6.0],
+                [pd.Timestamp("2000-01-06"), "B", 400.0, 7.0],
+            ],
+            columns=position_columns,
+        ),
+    )
+    assert_frame_equal(
+        trade_df,
+        pd.DataFrame(
+            [
+                [pd.Timestamp("2000-01-03"), "A", 100.0, 3.0, 0.0],
+                [pd.Timestamp("2000-01-03"), "B", 100.0, 4.0, 0.0],
+                [pd.Timestamp("2000-01-04"), "A", 100.0, 5.0, 0.0],
+                [pd.Timestamp("2000-01-04"), "B", 100.0, 6.0, 0.0],
+                [pd.Timestamp("2000-01-05"), "A", 100.0, 7.0, 0.0],
+                [pd.Timestamp("2000-01-05"), "B", 100.0, 8.0, 0.0],
+                [pd.Timestamp("2000-01-06"), "A", 100.0, 9.0, 0.0],
+                [pd.Timestamp("2000-01-06"), "B", 100.0, 10.0, 0.0],
+            ],
+            columns=trade_columns,
+        ),
+    )
 
 
 @pytest.mark.parametrize("pct_buy_slip", [0.0, 0.1])
@@ -111,7 +196,7 @@ class TestNoTrade:
         pct_commission: float = 0.0,
     ):
         # Test
-        cash_series, position_df, trade_df = _backtest(
+        cash_series, position_df, trade_df = _backtest_and_check(
             initial_cash=initial_cash,
             signal_df=signal_df,
             apply_trade_volume=apply_trade_volume,
@@ -123,17 +208,8 @@ class TestNoTrade:
         )
 
         # Check
-        # cash_series
-        _check_cash_series(cash_series)
-        assert_index_equal(price_match_df.index, cash_series.index)
         assert (cash_series == initial_cash).all()
-
-        # position_df
-        _check_position_df(position_df)
         assert position_df.empty
-
-        # trade_df
-        _check_trade_df(trade_df)
         assert trade_df.empty
 
 
@@ -164,6 +240,28 @@ def test_random_input(
     pct_sell_slip: float,
     pct_commission: float,
 ):
+    _backtest_and_check(
+        initial_cash=initial_cash,
+        signal_df=signal_df,
+        apply_trade_volume=apply_trade_volume,
+        close_price_df=close_price_df,
+        price_match_df=price_match_df,
+        pct_buy_slip=pct_buy_slip,
+        pct_sell_slip=pct_sell_slip,
+        pct_commission=pct_commission,
+    )
+
+
+def _backtest_and_check(
+    initial_cash: float,
+    signal_df: pd.DataFrame,
+    apply_trade_volume: Callable[[pd.Timestamp, str, float, float, SETAccount], float],
+    close_price_df: pd.DataFrame,
+    price_match_df: pd.DataFrame,
+    pct_buy_slip: float,
+    pct_sell_slip: float,
+    pct_commission: float,
+) -> Tuple[pd.Series, pd.DataFrame, pd.DataFrame]:
     # Test
     cash_series, position_df, trade_df = _backtest(
         initial_cash=initial_cash,
@@ -186,6 +284,8 @@ def test_random_input(
 
     # trade_df
     _check_trade_df(trade_df)
+
+    return cash_series, position_df, trade_df
 
 
 def _check_cash_series(series):

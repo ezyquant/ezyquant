@@ -140,7 +140,10 @@ def _backtest(
 
         return acct.cash
 
-    cash_s = pd.Series({k: on_interval(k, v) for k, v in close_price_dict.items()})
+    cash_s = pd.Series(
+        [on_interval(k, v) for k, v in close_price_dict.items()],
+        index=close_price_df.index,
+    )
     assert isinstance(cash_s, pd.Series)
 
     position_df = pd.concat(position_df_list, ignore_index=True)
