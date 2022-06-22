@@ -2,6 +2,7 @@ from dataclasses import fields
 from typing import Callable, Dict, List, Tuple
 
 import pandas as pd
+from pandas.testing import assert_index_equal
 
 from .. import validators as vld
 from .account import SETAccount
@@ -22,26 +23,39 @@ def _backtest(
     pct_sell_slip: float,
     pct_commission: float,
 ) -> Tuple[pd.Series, pd.DataFrame, pd.DataFrame]:
-    """Backtest Target Weight.
-    # TODO: Update doc
+    """Backtest function without load any data. apply_trade_volume will be
+    called depend on signal_df.
 
     Parameters
     ----------
     initial_cash : float
         cash at the beginning of the backtest
-    signal_weight_df : pd.DataFrame
-        dataframe of signal weight.
-        index is trade date, columns are symbol, values are weight.
-        values must be positive and sum must not more than 1 each day.
-        missing index or nan row is not rebalance.
-    buy_price_df : pd.DataFrame
+    signal_df : pd.DataFrame
+        dataframe of signal.
+        index is trade date, columns are symbol, values are signal.
+    apply_trade_volume: Callable[[pd.Timestamp, str, float, float, SETAccount], float],
+        function to calculate trade volume.
+        Parameters:
+            - timestamp: pd.Timestamp
+            - symbol: str
+            - signal: float
+            - close_price: float
+            - account: SETAccount
+        Return:
+            - trade_volume: float
+    close_price_df : pd.DataFrame
         dataframe of buy price.
         index is trade date, columns are symbol, values are weight.
-        index and columns must be same as or more than signal_weight_df.
-    sell_price_df : pd.DataFrame
+        index and columns must be same as or more than signal_df.
+        first row will be used as initial price.
+    price_match_df : pd.DataFrame
         dataframe of sell price.
         index is trade date, columns are symbol, values are weight.
-        index and columns must be same as or more than signal_weight_df.
+        index and columns must be same as or more than signal_df.
+    pct_buy_slip : float, default 0.0
+        percentage of buy slip, higher value means higher buy price
+    pct_sell_slip : float, default 0.0
+        percentage of sell slip, higher value means lower sell price
     pct_commission : float, default 0.0
         percentage of commission fee
 
@@ -68,10 +82,6 @@ def _backtest(
     vld.check_pct(pct_buy_slip)
     vld.check_pct(pct_sell_slip)
     vld.check_pct(pct_commission)
-    vld.check_df_symbol_daily(signal_df)
-    vld.check_df_symbol_daily(close_price_df)
-    vld.check_df_symbol_daily(price_match_df)
-    # TODO: check price and signal
 
     # Ratio
     ratio_buy_slip = 1.0 + pct_buy_slip
@@ -88,6 +98,9 @@ def _backtest(
 
     # remove first close row
     close_price_df = close_price_df.iloc[1:]  # type: ignore
+
+    # Check after remove first close row
+    _check_df_input(signal_df, close_price_df, price_match_df)
 
     # Dict
     signal_dict: Dict[pd.Timestamp, Dict[str, float]] = signal_df.to_dict("index")  # type: ignore
@@ -158,3 +171,19 @@ def _backtest(
     trade_df["matched_at"] = pd.to_datetime(trade_df["matched_at"])
 
     return cash_s, position_df, trade_df
+
+
+def _check_df_input(
+    signal_df: pd.DataFrame,
+    close_price_df: pd.DataFrame,
+    price_match_df: pd.DataFrame,
+):
+    vld.check_df_symbol_daily(signal_df)
+    vld.check_df_symbol_daily(close_price_df)
+    vld.check_df_symbol_daily(price_match_df)
+
+    assert_index_equal(close_price_df.index, price_match_df.index)
+    assert_index_equal(close_price_df.columns, price_match_df.columns)
+
+    assert signal_df.index.isin(close_price_df.index).all()
+    assert signal_df.columns.isin(close_price_df.columns).all()
