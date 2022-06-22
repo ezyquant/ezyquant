@@ -34,15 +34,21 @@ def _backtest(
         dataframe of signal.
         index is trade date, columns are symbol, values are signal.
     apply_trade_volume: Callable[[pd.Timestamp, str, float, float, SETAccount], float],
-        function to calculate trade volume.
+        function for calculate trade volume.
         Parameters:
             - timestamp: pd.Timestamp
+                timestamp of bar.
             - symbol: str
+                selected symbol for trade.
             - signal: float
+                signal from signal_df
             - close_price: float
+                close price of last bar
             - account: SETAccount
+                account object
         Return:
             - trade_volume: float
+                positive for buy, negative for sell, 0 or nan for no trade
     close_price_df : pd.DataFrame
         dataframe of buy price.
         index is trade date, columns are symbol, values are weight.
