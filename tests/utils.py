@@ -23,25 +23,6 @@ def assert_frame_equal_sort_index(
     assert_frame_equal(df1, df2, check_dtype=check_dtype)  # type: ignore
 
 
-def check_index_daily(result, is_unique=True):
-    assert isinstance(result, pd.DatetimeIndex)
-    assert result.is_monotonic
-    if is_unique:
-        assert result.is_unique
-    assert_index_equal(result, result.normalize())  # type: ignore
-
-
-def check_data_symbol_daily(result):
-    assert isinstance(result, pd.DataFrame)
-
-    # Index
-    check_index_daily(result.index)
-
-    # Column
-    assert result.columns.is_unique
-    assert_index_equal(result.columns, result.columns.str.upper())
-
-
 def is_df_unique(df) -> bool:
     return (df.groupby([i for i in df.columns]).size() == 1).all()
 

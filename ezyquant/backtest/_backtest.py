@@ -3,7 +3,7 @@ from typing import Callable, Dict, List, Tuple
 
 import pandas as pd
 
-from . import validators as vld
+from .. import validators as vld
 from .account import SETAccount
 from .position import Position
 from .trade import Trade
@@ -64,8 +64,13 @@ def _backtest(
                 - price
                 - pct_commission
     """
-    vld.check_initial_cash(initial_cash)
-    vld.check_pct_commission(pct_commission)
+    vld.check_cash(initial_cash)
+    vld.check_pct(pct_buy_slip)
+    vld.check_pct(pct_sell_slip)
+    vld.check_pct(pct_commission)
+    vld.check_df_symbol_daily(signal_df)
+    vld.check_df_symbol_daily(close_price_df)
+    vld.check_df_symbol_daily(price_match_df)
     # TODO: check price and signal
 
     # Ratio

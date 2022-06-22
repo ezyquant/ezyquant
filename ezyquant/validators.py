@@ -1,5 +1,8 @@
 from typing import List, Optional
 
+import pandas as pd
+from pandas.testing import assert_frame_equal, assert_index_equal, assert_series_equal
+
 from . import utils
 from .errors import InputError
 
@@ -34,3 +37,33 @@ def check_duplicate(data_list: Optional[List[str]]):
         return
 
     raise InputError(f"Input was duplicate ({data_list})")
+
+
+def check_cash(cash: float) -> None:
+    if cash < 0:
+        raise InputError("cash must be positive")
+
+
+def check_pct(pct: float) -> None:
+    if pct < 0 or pct > 1:
+        raise InputError("pct must be between 0 and 1")
+
+
+def check_df_symbol_daily(df):
+    assert isinstance(df, pd.DataFrame)
+    check_df_index_daily(df)
+    check_df_column_symbol(df)
+
+
+def check_df_index_daily(df):
+    index = df.index
+    assert isinstance(index, pd.DatetimeIndex)
+    assert index.is_monotonic
+    assert index.is_unique
+    assert_index_equal(index, index.normalize())  # type: ignore
+
+
+def check_df_column_symbol(df):
+    column = df.columns
+    assert column.is_unique
+    assert_index_equal(column, column.str.upper())

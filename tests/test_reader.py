@@ -8,6 +8,7 @@ from pandas._testing import assert_frame_equal, assert_index_equal, assert_serie
 
 import ezyquant.fields as fld
 from ezyquant import SETDataReader
+from ezyquant import validators as vld
 from ezyquant.errors import InputError
 
 
@@ -1075,7 +1076,7 @@ class TestGetAdjustFactor:
 class TestGetDataSymbolDaily:
     """source: https://www.tradingview.com/chart/?symbol=SET:COM7"""
 
-    _check = staticmethod(utils.check_data_symbol_daily)
+    _check = staticmethod(vld.check_df_symbol_daily)
 
     @pytest.mark.parametrize(
         "field", [fld.D_AVERAGE, fld.D_VALUE, fld.D_TURNOVER, fld.D_12M_DVD_YIELD]
@@ -1288,7 +1289,7 @@ class TestGetDataSymbolDaily:
 
 
 class TestGetDataSymbolQuarterly:
-    _check = staticmethod(utils.check_data_symbol_daily)
+    _check = staticmethod(vld.check_df_symbol_daily)
 
     @pytest.mark.parametrize(
         "field",
@@ -1386,7 +1387,7 @@ class TestGetDataSymbolQuarterly:
 
 
 class TestGetDataSymbolYearly:
-    _check = staticmethod(utils.check_data_symbol_daily)
+    _check = staticmethod(vld.check_df_symbol_daily)
 
     @pytest.mark.parametrize(
         "field",
@@ -1474,7 +1475,7 @@ class TestGetDataSymbolYearly:
 
 
 class TestGetDataSymbolTtm:
-    _check = staticmethod(utils.check_data_symbol_daily)
+    _check = staticmethod(vld.check_df_symbol_daily)
 
     @pytest.mark.parametrize(
         "field",
@@ -1550,7 +1551,7 @@ class TestGetDataSymbolTtm:
 
 
 class TestGetDataSymbolYtd:
-    _check = staticmethod(utils.check_data_symbol_daily)
+    _check = staticmethod(vld.check_df_symbol_daily)
 
     @pytest.mark.parametrize(
         "field",

@@ -10,6 +10,7 @@ from pandas.testing import assert_frame_equal, assert_series_equal
 
 import ezyquant.fields as fld
 from ezyquant import SETSignalCreator
+from ezyquant import validators as vld
 from ezyquant.errors import InputError
 
 IDX_2020_01_02_TO_2020_01_15 = pd.DatetimeIndex(
@@ -100,7 +101,7 @@ class TestGetSymbolInUniverse:
 
 
 class TestGetData:
-    _check = staticmethod(utils.check_data_symbol_daily)
+    _check = staticmethod(vld.check_df_symbol_daily)
 
     def test_sector_daily(self, ssc: SETSignalCreator):
         # Mock
@@ -547,7 +548,7 @@ class TestIsUniverse:
 
     @staticmethod
     def _check(result):
-        utils.check_data_symbol_daily(result)
+        vld.check_df_symbol_daily(result)
 
         assert (result.dtypes == bool).all()
         assert result.notna().all().all()

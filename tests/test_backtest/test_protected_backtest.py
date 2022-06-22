@@ -8,6 +8,7 @@ import utils
 from pandas.testing import assert_frame_equal, assert_index_equal, assert_series_equal
 from pandas.tseries.offsets import BusinessDay
 
+from ezyquant import validators as vld
 from ezyquant.backtest._backtest import _backtest
 from ezyquant.backtest.account import SETAccount
 
@@ -292,7 +293,7 @@ def _check_cash_series(series):
     assert isinstance(series, pd.Series)
 
     # Index
-    utils.check_index_daily(series.index)
+    vld.check_df_index_daily(series)
 
     # Data type
     assert ptypes.is_float_dtype(series)
