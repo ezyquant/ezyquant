@@ -27,8 +27,8 @@ def pivot_remove_index_name(df: pd.DataFrame, *args, **kwargs) -> pd.DataFrame:
     return df
 
 
-def round_df_100(df):
-    return df // 100 * 100.0
+def round_100(value):
+    return int(value / 100) * 100.0
 
 
 def is_rebalance_weekly(

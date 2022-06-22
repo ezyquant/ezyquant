@@ -47,6 +47,7 @@ class SETAccount:
             sum(
                 v.volume * self.market_price_dict[v.symbol]
                 for v in self.position_dict.values()
+                if pd.notna(self.market_price_dict[v.symbol])
             )
         )
 
@@ -231,7 +232,7 @@ class SETAccount:
         price: float,
     ):
         """Buy/Sell with enough cash/position. skip if price is invalid (<=0,
-        NaN).
+        NaN). Volume don't need to round 100.
 
         Parameters
         ----------
@@ -240,7 +241,7 @@ class SETAccount:
         symbol : str
             symbol
         volume : float
-            volume, don't need round 100
+            volume, don't need round 100, positive for buy, negative for sell
         price : float
             price
         """
@@ -250,7 +251,10 @@ class SETAccount:
 
         if volume > 0:
             # buy with enough cash
-            volume = min(volume, self.cash / price / self.ratio_commission)
+            can_buy_volume = (
+                self.cash / price / self.ratio_commission + 1e-10
+            )  # fix for floating point error
+            volume = min(volume, can_buy_volume)
         elif volume < 0:
             # sell with enough volume
             if symbol in self.position_dict:
@@ -258,7 +262,7 @@ class SETAccount:
             else:
                 return
 
-        volume = utils.round_df_100(volume)
+        volume = utils.round_100(volume)
 
         if volume == 0.0:
             return
