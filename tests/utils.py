@@ -10,7 +10,7 @@ from pandas.tseries.offsets import BusinessDay
 
 def sort_index_column(df: pd.DataFrame) -> pd.DataFrame:
     if not df.empty:
-        assert isinstance(df.index, pd.RangeIndex), "Index must be RangeIndex"
+        assert df.index.is_integer()
     df = df.sort_index(axis=1)
     df = df.sort_values(by=df.columns.to_list()).reset_index(drop=True)
     return df
