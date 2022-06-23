@@ -748,9 +748,12 @@ class SETBacktestReport:
 
         df = df.rename(columns={"timestamp": "matched_at"})
 
+        df = df.reset_index(drop=True)
+
         return df
 
-    def _summary_trade_entry_at(self, df: pd.DataFrame) -> pd.DataFrame:
+    @staticmethod
+    def _summary_trade_entry_at(df: pd.DataFrame) -> pd.DataFrame:
         """Add entry_at to trade_df.
 
         datetime in is nearest buy.

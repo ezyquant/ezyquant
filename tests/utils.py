@@ -4,12 +4,13 @@ from typing import List
 
 import numpy as np
 import pandas as pd
-from pandas.testing import assert_frame_equal, assert_index_equal, assert_series_equal
+from pandas.testing import assert_frame_equal
 from pandas.tseries.offsets import BusinessDay
 
 
 def sort_index_column(df: pd.DataFrame) -> pd.DataFrame:
-    assert isinstance(df.index, pd.RangeIndex), "Index must be RangeIndex"
+    if not df.empty:
+        assert df.index.is_integer()
     df = df.sort_index(axis=1)
     df = df.sort_values(by=df.columns.to_list()).reset_index(drop=True)
     return df
