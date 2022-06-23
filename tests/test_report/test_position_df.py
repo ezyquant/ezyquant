@@ -1,24 +1,13 @@
-from unittest.mock import Mock
-
 import pandas as pd
 import pandas.api.types as ptypes
 import pytest
 from pandas.testing import assert_frame_equal, assert_index_equal
 
 from ezyquant.report import SETBacktestReport, position_columns
-from tests import utils
 
-position_in_columns = ["timestamp", "symbol", "volume", "avg_cost_price"]
+position_in_columns = ["timestamp", "symbol", "volume", "avg_cost_price", "close_price"]
 
 
-@pytest.mark.parametrize(
-    "close_price_df",
-    [
-        utils.make_data_df(
-            [[1.0, 4.0, 7.0], [2.0, 5.0, 8.0], [3.0, 6.0, 9.0]], n_col=3, n_row=3
-        )
-    ],
-)
 @pytest.mark.parametrize(
     ("position_df", "expect_result"),
     [
@@ -29,7 +18,7 @@ position_in_columns = ["timestamp", "symbol", "volume", "avg_cost_price"]
         (
             pd.DataFrame(
                 [
-                    [pd.Timestamp("2000-01-03"), "AAA", 100.0, 0.1],
+                    [pd.Timestamp("2000-01-03"), "AAA", 100.0, 0.1, 1.0],
                 ],
                 columns=position_in_columns,
             ),
@@ -43,8 +32,8 @@ position_in_columns = ["timestamp", "symbol", "volume", "avg_cost_price"]
         (
             pd.DataFrame(
                 [
-                    [pd.Timestamp("2000-01-03"), "AAA", 100.0, 0.1],
-                    [pd.Timestamp("2000-01-04"), "AAA", 100.0, 0.1],
+                    [pd.Timestamp("2000-01-03"), "AAA", 100.0, 0.1, 1.0],
+                    [pd.Timestamp("2000-01-04"), "AAA", 100.0, 0.1, 2.0],
                 ],
                 columns=position_in_columns,
             ),
@@ -58,9 +47,7 @@ position_in_columns = ["timestamp", "symbol", "volume", "avg_cost_price"]
         ),
     ],
 )
-def test_position_df(
-    position_df: pd.DataFrame, close_price_df: pd.DataFrame, expect_result: pd.DataFrame
-):
+def test_position_df(position_df: pd.DataFrame, expect_result: pd.DataFrame):
     # Mock
     sbr = SETBacktestReport(
         initial_capital=0.0,
@@ -71,8 +58,6 @@ def test_position_df(
         position_df=position_df,
         trade_df=pd.DataFrame(),
     )
-    sbr._sdr.get_data_symbol_daily = Mock(return_value=close_price_df)
-
     # Test
     result = sbr.position_df
 

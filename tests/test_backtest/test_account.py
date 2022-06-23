@@ -5,7 +5,7 @@ from typing import Dict
 import pandas as pd
 import pytest
 
-from ezyquant.backtest import Position, SETAccount, Trade
+from ezyquant.backtest import SETAccount, SETPosition, SETTrade
 
 nan = float("nan")
 
@@ -16,21 +16,20 @@ nan = float("nan")
         ({}, {}, 0.0),
         ({}, {"A": 0.0}, 0.0),
         ({}, {"A": 1.0}, 0.0),
-        # ({"A": Position("A", 100.0)}, {}, 100.0),
-        ({"A": Position("A", 100.0)}, {"A": nan}, 0.0),
-        ({"A": Position("A", 100.0)}, {"A": 0.0}, 0.0),
-        ({"A": Position("A", 100.0)}, {"A": 1.0}, 100.0),
+        # ({"A": SETPosition("A", 100.0)}, {}, 100.0),
+        ({"A": SETPosition("A", 100.0)}, {"A": nan}, 0.0),
+        ({"A": SETPosition("A", 100.0)}, {"A": 0.0}, 0.0),
+        ({"A": SETPosition("A", 100.0)}, {"A": 1.0}, 100.0),
     ],
 )
 def test_total_market_value(
-    position_dict: Dict[str, Position],
+    position_dict: Dict[str, SETPosition],
     market_price_dict: Dict[str, float],
     expect_result: float,
 ):
     # Mock
-    acct = SETAccount(
-        cash=0.0, position_dict=position_dict, market_price_dict=market_price_dict
-    )
+    acct = SETAccount(cash=0.0, position_dict=position_dict)
+    acct._set_market_price_dict(market_price_dict)
 
     # Test
     result = acct.total_market_value
@@ -61,7 +60,7 @@ class TestMatchOrderIfPossible:
         )
 
         assert self.acct.trade_list == [
-            Trade(
+            SETTrade(
                 matched_at=datetime(2000, 1, 1),
                 symbol="A",
                 volume=i,
@@ -83,14 +82,14 @@ class TestMatchOrderIfPossible:
         self, position_volume: float, expect_trade_volume_list: list
     ):
         self._test(
-            position_dict={"A": Position("A", position_volume)}
+            position_dict={"A": SETPosition("A", position_volume)}
             if position_volume
             else {},
             volume=-200.0,
         )
 
         assert self.acct.trade_list == [
-            Trade(
+            SETTrade(
                 matched_at=datetime(2000, 1, 1),
                 symbol="A",
                 volume=i,
@@ -119,7 +118,7 @@ class TestMatchOrderIfPossible:
         self._test(volume=volume)
 
         assert self.acct.trade_list == [
-            Trade(
+            SETTrade(
                 matched_at=datetime(2000, 1, 1),
                 symbol="A",
                 volume=i,
@@ -138,7 +137,7 @@ class TestMatchOrderIfPossible:
         self,
         cash: float = 1000.0,
         pct_commission: float = 0.0,
-        position_dict: Dict[str, Position] = {"A": Position("A", 1000.0)},
+        position_dict: Dict[str, SETPosition] = {"A": SETPosition("A", 1000.0)},
         matched_at: datetime = datetime(2000, 1, 1),
         symbol: str = "A",
         volume: float = 0.0,
@@ -168,17 +167,17 @@ class TestMatchOrderBuy:
         [
             (
                 {},
-                {"A": Position(symbol="A", volume=100.0, avg_cost_price=1.0)},
+                {"A": SETPosition(symbol="A", volume=100.0, avg_cost_price=1.0)},
             ),
             (
-                {"A": Position(symbol="A", volume=100.0, avg_cost_price=2.0)},
-                {"A": Position(symbol="A", volume=200.0, avg_cost_price=1.5)},
+                {"A": SETPosition(symbol="A", volume=100.0, avg_cost_price=2.0)},
+                {"A": SETPosition(symbol="A", volume=200.0, avg_cost_price=1.5)},
             ),
             (
-                {"B": Position(symbol="B", volume=200.0, avg_cost_price=2.0)},
+                {"B": SETPosition(symbol="B", volume=200.0, avg_cost_price=2.0)},
                 {
-                    "A": Position(symbol="A", volume=100.0, avg_cost_price=1.0),
-                    "B": Position(symbol="B", volume=200.0, avg_cost_price=2.0),
+                    "A": SETPosition(symbol="A", volume=100.0, avg_cost_price=1.0),
+                    "B": SETPosition(symbol="B", volume=200.0, avg_cost_price=2.0),
                 },
             ),
         ],
@@ -187,9 +186,9 @@ class TestMatchOrderBuy:
         self,
         cash: float,
         pct_commission: float,
-        position_dict: Dict[str, Position],
+        position_dict: Dict[str, SETPosition],
         expect_cash: float,
-        expect_position_dict: Dict[str, Position],
+        expect_position_dict: Dict[str, SETPosition],
     ):
         symbol = "A"
         volume = 100.0
@@ -198,7 +197,7 @@ class TestMatchOrderBuy:
         position_dict = copy.deepcopy(position_dict)
 
         # Mock
-        expect_trade = Trade(
+        expect_trade = SETTrade(
             matched_at=matched_at,
             symbol=symbol,
             volume=volume,
@@ -291,19 +290,19 @@ class TestMatchOrderSell:
         ("position_dict", "expect_position_dict"),
         [
             (
-                {"A": Position(symbol="A", volume=100.0, avg_cost_price=1.0)},
+                {"A": SETPosition(symbol="A", volume=100.0, avg_cost_price=1.0)},
                 {},
             ),
             (
-                {"A": Position(symbol="A", volume=200.0, avg_cost_price=1.5)},
-                {"A": Position(symbol="A", volume=100.0, avg_cost_price=1.5)},
+                {"A": SETPosition(symbol="A", volume=200.0, avg_cost_price=1.5)},
+                {"A": SETPosition(symbol="A", volume=100.0, avg_cost_price=1.5)},
             ),
             (
                 {
-                    "A": Position(symbol="A", volume=100.0, avg_cost_price=1.0),
-                    "B": Position(symbol="B", volume=200.0, avg_cost_price=2.0),
+                    "A": SETPosition(symbol="A", volume=100.0, avg_cost_price=1.0),
+                    "B": SETPosition(symbol="B", volume=200.0, avg_cost_price=2.0),
                 },
-                {"B": Position(symbol="B", volume=200.0, avg_cost_price=2.0)},
+                {"B": SETPosition(symbol="B", volume=200.0, avg_cost_price=2.0)},
             ),
         ],
     )
@@ -311,9 +310,9 @@ class TestMatchOrderSell:
         self,
         cash: float,
         pct_commission: float,
-        position_dict: Dict[str, Position],
+        position_dict: Dict[str, SETPosition],
         expect_cash: float,
-        expect_position_dict: Dict[str, Position],
+        expect_position_dict: Dict[str, SETPosition],
     ):
         symbol = "A"
         volume = -100.0
@@ -322,7 +321,7 @@ class TestMatchOrderSell:
         position_dict = copy.deepcopy(position_dict)
 
         # Mock
-        expect_trade = Trade(
+        expect_trade = SETTrade(
             matched_at=matched_at,
             symbol=symbol,
             volume=volume,
@@ -354,11 +353,11 @@ class TestMatchOrderSell:
         "position_dict",
         [
             {},
-            {"A": Position(symbol="A", volume=100.0, avg_cost_price=1.0)},
-            {"B": Position(symbol="B", volume=200.0, avg_cost_price=1.0)},
+            {"A": SETPosition(symbol="A", volume=100.0, avg_cost_price=1.0)},
+            {"B": SETPosition(symbol="B", volume=200.0, avg_cost_price=1.0)},
         ],
     )
-    def test_error_insufficient_position(self, position_dict: Dict[str, Position]):
+    def test_error_insufficient_position(self, position_dict: Dict[str, SETPosition]):
         symbol = "A"
         volume = -200.0
         price = 1.0

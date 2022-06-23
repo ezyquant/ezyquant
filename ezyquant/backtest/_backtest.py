@@ -6,25 +6,24 @@ from pandas.testing import assert_index_equal
 
 from .. import validators as vld
 from .account import SETAccount
-from .position import Position
-from .trade import Trade
+from .position import SETPosition
+from .trade import SETTrade
 
-position_df_columns = ["timestamp"] + [i.name for i in fields(Position)]
-trade_df_columns = [i.name for i in fields(Trade)]
+position_df_columns = ["timestamp"] + [i.name for i in fields(SETPosition)]
+trade_df_columns = [i.name for i in fields(SETTrade)]
 
 
 def _backtest(
     initial_cash: float,
     signal_df: pd.DataFrame,
-    apply_trade_volume: Callable[[pd.Timestamp, str, float, float, SETAccount], float],
+    backtest_algorithm: Callable[[pd.Timestamp, float, SETPosition, SETAccount], float],
     close_price_df: pd.DataFrame,
     price_match_df: pd.DataFrame,
     pct_buy_slip: float,
     pct_sell_slip: float,
     pct_commission: float,
 ) -> Tuple[pd.Series, pd.DataFrame, pd.DataFrame]:
-    """Backtest function without load any data. apply_trade_volume will be
-    called depend on signal_df.
+    """Backtest function without load any data.
 
     Parameters
     ----------
@@ -33,17 +32,23 @@ def _backtest(
     signal_df : pd.DataFrame
         dataframe of signal.
         index is trade date, columns are symbol, values are signal.
-    apply_trade_volume: Callable[[pd.Timestamp, str, float, float, SETAccount], float],
+        missing signal in trade date will be filled with nan.
+    backtest_algorithm: Callable[[pd.Timestamp, float, SETPosition, SETAccount], float],
         function for calculate trade volume.
         Parameters:
             - timestamp: pd.Timestamp
                 timestamp of bar.
-            - symbol: str
-                selected symbol for trade.
             - signal: float
                 signal from signal_df
-            - close_price: float
-                close price of last bar
+            - position: SETPosition
+                - symbol: str
+                    symbol of position
+                - volume: float
+                    volume of position
+                - close_price: float
+                    close price of position
+                - avg_cost_price: float
+                    average cost price of position
             - account: SETAccount
                 account object
         Return:
@@ -52,18 +57,17 @@ def _backtest(
     close_price_df : pd.DataFrame
         dataframe of buy price.
         index is trade date, columns are symbol, values are weight.
-        index and columns must be same as or more than signal_df.
-        first row will be used as initial price.
+        first row will be used as initial close price.
     price_match_df : pd.DataFrame
         dataframe of sell price.
         index is trade date, columns are symbol, values are weight.
-        index and columns must be same as or more than signal_df.
+        index and columns must be same as or more than close_price_df.
     pct_buy_slip : float, default 0.0
-        percentage of buy slip, higher value means higher buy price
+        percentage of buy slip, higher value means higher buy price ex. 0.01 means 1% increase
     pct_sell_slip : float, default 0.0
-        percentage of sell slip, higher value means lower sell price
+        percentage of sell slip, higher value means lower sell price ex. 0.01 means 1% decrease
     pct_commission : float, default 0.0
-        percentage of commission fee
+        percentage of commission fee ex. 0.01 means 1% fee
 
     Returns
     -------
@@ -99,11 +103,14 @@ def _backtest(
         pct_commission=pct_commission,
         position_dict={},  # TODO: [EZ-79] initial position dict
         trade_list=[],  # TODO: initial trade
-        market_price_dict=close_price_df.iloc[0].to_dict(),
     )
+    acct._set_market_price_dict(close_price_df.iloc[0].to_dict())
 
     # remove first close row
     close_price_df = close_price_df.iloc[1:]  # type: ignore
+
+    # reindex signal
+    signal_df = signal_df.reindex(close_price_df.index)  # type: ignore
 
     # Check after remove first close row
     _check_df_input(signal_df, close_price_df, price_match_df)
@@ -132,7 +139,7 @@ def _backtest(
 
         for k, v in signal_d.items():
             acct.selected_symbol = k
-            trade_volume = apply_trade_volume(ts, k, v, acct.market_price_dict[k], acct)
+            trade_volume = backtest_algorithm(ts, v, acct._position, acct)
 
             if trade_volume > 0:
                 buy_volume_d[k] = trade_volume
@@ -148,7 +155,6 @@ def _backtest(
         buy_volume_d, sell_volume_d = calculate_trade_volume(ts)
 
         # Trade
-        acct._set_market_price_dict(price_match_dict[ts])
         for k, v in sell_volume_d.items():
             price = price_match_dict[ts][k] * ratio_sell_slip
             acct._match_order_if_possible(ts, symbol=k, volume=v, price=price)
@@ -191,5 +197,5 @@ def _check_df_input(
     assert_index_equal(close_price_df.index, price_match_df.index)
     assert_index_equal(close_price_df.columns, price_match_df.columns)
 
-    assert signal_df.index.isin(close_price_df.index).all()
-    assert signal_df.columns.isin(close_price_df.columns).all()
+    assert_index_equal(close_price_df.index, signal_df.index)
+    assert_index_equal(close_price_df.columns, signal_df.columns)

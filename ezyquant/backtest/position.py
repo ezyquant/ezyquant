@@ -1,11 +1,14 @@
 from dataclasses import dataclass
 
+import pandas as pd
+
 
 @dataclass
-class Position:
+class SETPosition:
     symbol: str
     volume: float = 0.0
     avg_cost_price: float = 0.0
+    close_price: float = float("nan")
 
     def __post_init__(self):
         # symbol
@@ -28,6 +31,13 @@ class Position:
     @property
     def cost_value(self) -> float:
         return self.volume * self.avg_cost_price
+
+    @property
+    def close_value(self) -> float:
+        if pd.notna(self.close_price):
+            return self.volume * self.close_price
+        else:
+            return 0.0
 
     def _match_order(self, volume: float, price: float) -> float:
         if volume > 0:

@@ -177,7 +177,7 @@ class SETBacktestReport:
 
     @cached_property
     def position_df(self) -> pd.DataFrame:
-        """Position DataFrame.
+        """SETPosition DataFrame.
 
         Returns
         -------
@@ -196,26 +196,6 @@ class SETBacktestReport:
             df["timestamp"] = pd.to_datetime(df["timestamp"])
             return df
 
-        # close df
-        symbol_list = df["symbol"].unique().tolist()
-        start_date = utils.date_to_str(df["timestamp"].min())
-        end_date = utils.date_to_str(df["timestamp"].max())
-        close_price_df = self._sdr.get_data_symbol_daily(
-            field=fld.D_CLOSE,
-            symbol_list=symbol_list,
-            start_date=start_date,
-            end_date=end_date,
-        )
-
-        close_price_df = close_price_df.stack()
-        close_price_df.index.names = ["timestamp", "symbol"]
-        close_price_df.name = "close_price"
-        close_price_df = close_price_df.reset_index()
-
-        # merge close_price_df and position_df
-        df = df.merge(
-            close_price_df, on=["timestamp", "symbol"], how="left", validate="1:1"
-        )
         df["close_value"] = df["close_price"] * df["volume"]
 
         # sort column
@@ -435,7 +415,7 @@ class SETBacktestReport:
         df["commission"] = (
             (df["sell_price"] + df["avg_cost_price"])
             * df["volume"]
-            * self.pct_commission
+            * self._pct_commission
         ).abs()
 
         # return
@@ -688,17 +668,17 @@ class SETBacktestReport:
     @property
     def pct_commission(self) -> float:
         """Percent commission."""
-        return self._pct_commission
+        return self._pct_commission * 100
 
     @property
     def pct_buy_slip(self) -> float:
         """Percent buy slip."""
-        return self._pct_buy_slip
+        return self._pct_buy_slip * 100
 
     @property
     def pct_sell_slip(self) -> float:
         """Percent sell slip."""
-        return self._pct_sell_slip
+        return self._pct_sell_slip * 100
 
     @property
     def _n_year(self) -> float:

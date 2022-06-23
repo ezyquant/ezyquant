@@ -6,20 +6,22 @@ from typing import Dict, List, Optional
 import pandas as pd
 
 from .. import utils
-from .position import Position
-from .trade import Trade
+from .position import SETPosition
+from .trade import SETTrade
 
 
 @dataclass
 class SETAccount:
     cash: float
     pct_commission: float = 0.0
-    position_dict: Dict[str, Position] = field(default_factory=dict)
-    trade_list: List[Trade] = field(default_factory=list)
-    market_price_dict: Dict[str, float] = field(default_factory=dict, repr=False)
+    position_dict: Dict[str, SETPosition] = field(default_factory=dict)
+    trade_list: List[SETTrade] = field(default_factory=list)
     selected_symbol: Optional[str] = None  # select symbol for buy/sell method
+    market_price_dict: Dict[str, float] = field(
+        default_factory=dict, init=False, repr=False
+    )
 
-    def __post_init__(self) -> None:
+    def __post_init__(self):
         # cash
         assert self.cash >= 0, "cash must be positive"
 
@@ -28,12 +30,14 @@ class SETAccount:
 
         # position_dict
         for k, v in self.position_dict.items():
-            assert isinstance(v, Position), "position_dict must be a dict of Position"
-            assert v.symbol == k, "position_dict must be a dict of Position"
+            assert isinstance(
+                v, SETPosition
+            ), "position_dict must be a dict of SETPosition"
+            assert v.symbol == k, "position_dict must be a dict of SETPosition"
 
         # trade_list
         for i in self.trade_list:
-            assert isinstance(i, Trade), "trade_list must be a list of Trade"
+            assert isinstance(i, SETTrade), "trade_list must be a list of SETTrade"
 
         self.ratio_commission = 1.0 + self.pct_commission
 
@@ -43,13 +47,7 @@ class SETAccount:
 
     @cached_property
     def total_market_value(self) -> float:
-        return float(
-            sum(
-                v.volume * self.market_price_dict[v.symbol]
-                for v in self.position_dict.values()
-                if pd.notna(self.market_price_dict[v.symbol])
-            )
-        )
+        return float(sum(v.close_value for v in self.position_dict.values()))
 
     @property
     def total_cost_value(self) -> float:
@@ -73,13 +71,17 @@ class SETAccount:
         return self.market_price_dict[self.selected_symbol]
 
     @property
+    def _position(self) -> SETPosition:
+        assert self.selected_symbol is not None, "symbol must be selected"
+        return self.position_dict.get(
+            self.selected_symbol,
+            SETPosition(self.selected_symbol, close_price=self._price),
+        )
+
+    @property
     def _volume(self) -> float:
         """Get volume of selected symbol."""
-        assert self.selected_symbol is not None, "symbol must be selected"
-        if self.selected_symbol in self.position_dict:
-            return self.position_dict[self.selected_symbol].volume
-        else:
-            return 0.0
+        return self._position.volume
 
     def buy_pct_port(self, pct_port: float) -> float:
         """Calculate buy volume from percentage of SETAccount. Using last close
@@ -213,7 +215,7 @@ class SETAccount:
     Protected methods
     """
 
-    def _set_market_price_dict(self, market_price_dict: Dict[str, float]) -> None:
+    def _set_market_price_dict(self, market_price_dict: Dict[str, float]):
         """Set market price dict.
 
         Parameters
@@ -223,6 +225,8 @@ class SETAccount:
         """
         self._cache_clear()
         self.market_price_dict = market_price_dict
+        for k, v in self.position_dict.items():
+            v.close_price = self.market_price_dict[k]
 
     def _match_order_if_possible(
         self,
@@ -282,7 +286,7 @@ class SETAccount:
         price: float,
     ):
         # Create trade
-        trade = Trade(
+        trade = SETTrade(
             matched_at=matched_at,
             symbol=symbol,
             volume=volume,
@@ -296,9 +300,9 @@ class SETAccount:
         if self.cash < 0:
             raise ValueError("Insufficient cash")
 
-        # Add/Remove Position
+        # Add/Remove SETPosition
         if symbol not in self.position_dict:
-            self.position_dict[symbol] = Position(symbol=symbol)
+            self.position_dict[symbol] = SETPosition(symbol=symbol)
         self.position_dict[symbol]._match_order(volume=volume, price=price)
         if self.position_dict[symbol].volume == 0:
             del self.position_dict[symbol]
@@ -306,5 +310,4 @@ class SETAccount:
         return trade
 
     def _cache_clear(self):
-        if "total_market_value" in self.__dict__:
-            del self.__dict__["total_market_value"]
+        self.__dict__.pop("total_market_value", None)

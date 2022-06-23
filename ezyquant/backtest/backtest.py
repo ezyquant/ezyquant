@@ -10,11 +10,12 @@ from ..reader import SETBusinessDay
 from ..report import SETBacktestReport
 from ._backtest import _backtest
 from .account import SETAccount
+from .position import SETPosition
 
 
 def backtest(
     signal_df: pd.DataFrame,
-    apply_trade_volume: Callable[[pd.Timestamp, str, float, float, SETAccount], float],
+    backtest_algorithm: Callable[[pd.Timestamp, float, SETPosition, SETAccount], float],
     start_date: str,
     end_date: str,
     initial_cash: float,
@@ -29,18 +30,25 @@ def backtest(
     Parameters
     ----------
     signal_df : pd.DataFrame
-        signal dataframe.
-    apply_trade_volume: Callable[[pd.Timestamp, str, float, float, SETAccount], float],
+        dataframe of signal.
+        index is trade date, columns are symbol, values are signal.
+        missing signal in trade date will be filled with nan.
+    backtest_algorithm: Callable[[pd.Timestamp, float, SETPosition, SETAccount], float],
         function for calculate trade volume.
         Parameters:
             - timestamp: pd.Timestamp
                 timestamp of bar.
-            - symbol: str
-                selected symbol for trade.
             - signal: float
                 signal from signal_df
-            - close_price: float
-                close price of last bar
+            - position: SETPosition
+                - symbol: str
+                    symbol of position
+                - volume: float
+                    volume of position
+                - close_price: float
+                    close price of position
+                - avg_cost_price: float
+                    average cost price of position
             - account: SETAccount
                 account object
         Return:
@@ -51,13 +59,13 @@ def backtest(
     end_date : str
         end date in format YYYY-MM-DD
     initial_cash : float
-        initial cash
-    pct_commission : float, by default 0.0
-        percent commission ex. 0.01 means 1% commission
-    pct_buy_slip : float, by default 0.0
-        percent of buy price increase ex. 0.01 means 1% increase
-    pct_sell_slip : float, by default 0.0
-        percent of sell price decrease ex. 0.01 means 1% decrease
+        cash at the beginning of the backtest
+    pct_buy_slip : float, default 0.0
+        percentage of buy slip, higher value means higher buy price ex. 1.0 means 1% increase
+    pct_sell_slip : float, default 0.0
+        percentage of sell slip, higher value means lower sell price ex. 1.0 means 1% decrease
+    pct_commission : float, default 0.0
+        percentage of commission fee ex. 1.0 means 1% fee
     price_match_mode : str, by default "open"
         price match mode.
             - open
@@ -92,13 +100,22 @@ def backtest(
 
     # Signal df
     signal_df = signal_df.shift(signal_delay_bar)
+    signal_df = signal_df[
+        (signal_df.index >= pd.Timestamp(start_date))  # type: ignore
+        & (signal_df.index <= pd.Timestamp(end_date))  # type: ignore
+    ]
+
+    # Percentage
+    pct_commission /= 100
+    pct_buy_slip /= 100
+    pct_sell_slip /= 100
 
     # Backtest
     # TODO: [EZ-79] initial_position_dict
     cash_series, position_df, trade_df = _backtest(
         initial_cash=initial_cash,
         signal_df=signal_df,
-        apply_trade_volume=apply_trade_volume,
+        backtest_algorithm=backtest_algorithm,
         close_price_df=close_price_df,
         price_match_df=price_match_df,
         pct_buy_slip=pct_buy_slip,

@@ -2,10 +2,10 @@ from datetime import datetime
 
 import pytest
 
-from ezyquant.backtest import Trade
+from ezyquant.backtest import SETTrade
 
 
-class TestTrade:
+class TestSETTrade:
     @pytest.mark.parametrize("matched_at", [datetime(2000, 1, 1)])
     @pytest.mark.parametrize("symbol", ["A"])
     @pytest.mark.parametrize(
@@ -26,7 +26,7 @@ class TestTrade:
         pct_commission: float,
         expect_value_with_commission,
     ):
-        t = Trade(
+        t = SETTrade(
             matched_at=matched_at,
             symbol=symbol,
             volume=volume,
