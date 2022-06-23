@@ -415,7 +415,7 @@ class SETBacktestReport:
         df["commission"] = (
             (df["sell_price"] + df["avg_cost_price"])
             * df["volume"]
-            * self.pct_commission
+            * self._pct_commission
         ).abs()
 
         # return
@@ -668,17 +668,17 @@ class SETBacktestReport:
     @property
     def pct_commission(self) -> float:
         """Percent commission."""
-        return self._pct_commission
+        return self._pct_commission * 100
 
     @property
     def pct_buy_slip(self) -> float:
         """Percent buy slip."""
-        return self._pct_buy_slip
+        return self._pct_buy_slip * 100
 
     @property
     def pct_sell_slip(self) -> float:
         """Percent sell slip."""
-        return self._pct_sell_slip
+        return self._pct_sell_slip * 100
 
     @property
     def _n_year(self) -> float:
