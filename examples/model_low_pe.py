@@ -6,7 +6,7 @@ import pandas as pd
 import ezyquant as ez
 from ezyquant import SETSignalCreator, backtest
 from ezyquant import utils as ezutils
-from ezyquant.backtest import Position, SETAccount
+from ezyquant.backtest import SETAccount, SETPosition
 from ezyquant.reader import SETBusinessDay
 
 ez.connect_sqlite("psims.db")
@@ -31,7 +31,7 @@ signal_df = signal_df.dropna(axis=1, how="all")
 
 
 def backtest_algorithm(
-    ts: datetime, sig: float, pos: Position, acct: SETAccount
+    ts: datetime, sig: float, pos: SETPosition, acct: SETAccount
 ) -> float:
     return acct.target_pct_port(sig)
 

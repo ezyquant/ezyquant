@@ -4,7 +4,7 @@ import pandas as pd
 
 
 @dataclass
-class Position:
+class SETPosition:
     symbol: str
     volume: float = 0.0
     avg_cost_price: float = 0.0

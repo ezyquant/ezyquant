@@ -1,6 +1,6 @@
 import pytest
 
-from ezyquant.backtest import Position
+from ezyquant.backtest import SETPosition
 
 
 class TestCostPrice:
@@ -21,10 +21,10 @@ class TestCostPrice:
         price2: float,
         expect_avg_cost_price: float,
     ):
-        p1 = Position(symbol="A", volume=volume1, avg_cost_price=price1)
+        p1 = SETPosition(symbol="A", volume=volume1, avg_cost_price=price1)
         result1 = p1._match_order(volume=volume2, price=price2)
 
-        p2 = Position(symbol="A", volume=volume2, avg_cost_price=price2)
+        p2 = SETPosition(symbol="A", volume=volume2, avg_cost_price=price2)
         result2 = p2._match_order(volume=volume1, price=price1)
 
         assert result1 == result2 == volume1 + volume2
@@ -39,7 +39,7 @@ class TestCostPrice:
         volume2: float,
         price: float,
     ):
-        p = Position(symbol="A", volume=volume1, avg_cost_price=price)
+        p = SETPosition(symbol="A", volume=volume1, avg_cost_price=price)
 
         result = p._match_order(volume=volume2, price=price)
 
@@ -57,7 +57,7 @@ class TestCostPrice:
         volume2: float,
         price2: float,
     ):
-        p = Position(symbol="A", volume=volume1, avg_cost_price=price1)
+        p = SETPosition(symbol="A", volume=volume1, avg_cost_price=price1)
 
         result = p._match_order(volume=volume2, price=price2)
 

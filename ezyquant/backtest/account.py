@@ -6,7 +6,7 @@ from typing import Dict, List, Optional
 import pandas as pd
 
 from .. import utils
-from .position import Position
+from .position import SETPosition
 from .trade import Trade
 
 
@@ -14,7 +14,7 @@ from .trade import Trade
 class SETAccount:
     cash: float
     pct_commission: float = 0.0
-    position_dict: Dict[str, Position] = field(default_factory=dict)
+    position_dict: Dict[str, SETPosition] = field(default_factory=dict)
     trade_list: List[Trade] = field(default_factory=list)
     selected_symbol: Optional[str] = None  # select symbol for buy/sell method
     market_price_dict: Dict[str, float] = field(
@@ -30,8 +30,10 @@ class SETAccount:
 
         # position_dict
         for k, v in self.position_dict.items():
-            assert isinstance(v, Position), "position_dict must be a dict of Position"
-            assert v.symbol == k, "position_dict must be a dict of Position"
+            assert isinstance(
+                v, SETPosition
+            ), "position_dict must be a dict of SETPosition"
+            assert v.symbol == k, "position_dict must be a dict of SETPosition"
 
         # trade_list
         for i in self.trade_list:
@@ -69,11 +71,11 @@ class SETAccount:
         return self.market_price_dict[self.selected_symbol]
 
     @property
-    def _position(self) -> Position:
+    def _position(self) -> SETPosition:
         assert self.selected_symbol is not None, "symbol must be selected"
         return self.position_dict.get(
             self.selected_symbol,
-            Position(self.selected_symbol, close_price=self._price),
+            SETPosition(self.selected_symbol, close_price=self._price),
         )
 
     @property
@@ -298,9 +300,9 @@ class SETAccount:
         if self.cash < 0:
             raise ValueError("Insufficient cash")
 
-        # Add/Remove Position
+        # Add/Remove SETPosition
         if symbol not in self.position_dict:
-            self.position_dict[symbol] = Position(symbol=symbol)
+            self.position_dict[symbol] = SETPosition(symbol=symbol)
         self.position_dict[symbol]._match_order(volume=volume, price=price)
         if self.position_dict[symbol].volume == 0:
             del self.position_dict[symbol]

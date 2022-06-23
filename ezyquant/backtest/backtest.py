@@ -10,12 +10,12 @@ from ..reader import SETBusinessDay
 from ..report import SETBacktestReport
 from ._backtest import _backtest
 from .account import SETAccount
-from .position import Position
+from .position import SETPosition
 
 
 def backtest(
     signal_df: pd.DataFrame,
-    backtest_algorithm: Callable[[pd.Timestamp, float, Position, SETAccount], float],
+    backtest_algorithm: Callable[[pd.Timestamp, float, SETPosition, SETAccount], float],
     start_date: str,
     end_date: str,
     initial_cash: float,
@@ -33,14 +33,14 @@ def backtest(
         dataframe of signal.
         index is trade date, columns are symbol, values are signal.
         missing signal in trade date will be filled with nan.
-    backtest_algorithm: Callable[[pd.Timestamp, float, Position, SETAccount], float],
+    backtest_algorithm: Callable[[pd.Timestamp, float, SETPosition, SETAccount], float],
         function for calculate trade volume.
         Parameters:
             - timestamp: pd.Timestamp
                 timestamp of bar.
             - signal: float
                 signal from signal_df
-            - position: Position
+            - position: SETPosition
                 - symbol: str
                     symbol of position
                 - volume: float

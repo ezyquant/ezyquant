@@ -6,25 +6,24 @@ from pandas.testing import assert_index_equal
 
 from .. import validators as vld
 from .account import SETAccount
-from .position import Position
+from .position import SETPosition
 from .trade import Trade
 
-position_df_columns = ["timestamp"] + [i.name for i in fields(Position)]
+position_df_columns = ["timestamp"] + [i.name for i in fields(SETPosition)]
 trade_df_columns = [i.name for i in fields(Trade)]
 
 
 def _backtest(
     initial_cash: float,
     signal_df: pd.DataFrame,
-    backtest_algorithm: Callable[[pd.Timestamp, float, Position, SETAccount], float],
+    backtest_algorithm: Callable[[pd.Timestamp, float, SETPosition, SETAccount], float],
     close_price_df: pd.DataFrame,
     price_match_df: pd.DataFrame,
     pct_buy_slip: float,
     pct_sell_slip: float,
     pct_commission: float,
 ) -> Tuple[pd.Series, pd.DataFrame, pd.DataFrame]:
-    """Backtest function without load any data. backtest_algorithm will be
-    called depend on signal_df.
+    """Backtest function without load any data.
 
     Parameters
     ----------
@@ -34,14 +33,14 @@ def _backtest(
         dataframe of signal.
         index is trade date, columns are symbol, values are signal.
         missing signal in trade date will be filled with nan.
-    backtest_algorithm: Callable[[pd.Timestamp, float, Position, SETAccount], float],
+    backtest_algorithm: Callable[[pd.Timestamp, float, SETPosition, SETAccount], float],
         function for calculate trade volume.
         Parameters:
             - timestamp: pd.Timestamp
                 timestamp of bar.
             - signal: float
                 signal from signal_df
-            - position: Position
+            - position: SETPosition
                 - symbol: str
                     symbol of position
                 - volume: float

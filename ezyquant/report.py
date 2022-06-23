@@ -177,7 +177,7 @@ class SETBacktestReport:
 
     @cached_property
     def position_df(self) -> pd.DataFrame:
-        """Position DataFrame.
+        """SETPosition DataFrame.
 
         Returns
         -------

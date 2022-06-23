@@ -11,7 +11,7 @@ from pandas.tseries.offsets import BusinessDay
 from ezyquant import validators as vld
 from ezyquant.backtest._backtest import _backtest
 from ezyquant.backtest.account import SETAccount
-from ezyquant.backtest.position import Position
+from ezyquant.backtest.position import SETPosition
 
 nan = float("nan")
 
@@ -58,8 +58,8 @@ def test_backtest_algorithm(return_volume: float):
     assert backtest_algorithm.call_count == 8
     backtest_algorithm.assert_has_calls(
         [
-            call(pd.Timestamp("2000-01-03"), 3.0, Position("A", 0.0, 0.0, 1.0), ANY),
-            call(pd.Timestamp("2000-01-03"), 4.0, Position("B", 0.0, 0.0, 2.0), ANY),
+            call(pd.Timestamp("2000-01-03"), 3.0, SETPosition("A", 0.0, 0.0, 1.0), ANY),
+            call(pd.Timestamp("2000-01-03"), 4.0, SETPosition("B", 0.0, 0.0, 2.0), ANY),
             call(pd.Timestamp("2000-01-04"), 5.0, ANY, ANY),
             call(pd.Timestamp("2000-01-04"), 6.0, ANY, ANY),
             call(pd.Timestamp("2000-01-05"), 7.0, ANY, ANY),
@@ -257,7 +257,7 @@ def test_random_input(
 def _backtest_and_check(
     initial_cash: float,
     signal_df: pd.DataFrame,
-    backtest_algorithm: Callable[[pd.Timestamp, float, Position, SETAccount], float],
+    backtest_algorithm: Callable[[pd.Timestamp, float, SETPosition, SETAccount], float],
     close_price_df: pd.DataFrame,
     price_match_df: pd.DataFrame,
     pct_buy_slip: float,
