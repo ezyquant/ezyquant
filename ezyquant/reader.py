@@ -1,10 +1,12 @@
 import os.path
+import warnings
 from datetime import date
-from functools import cached_property, lru_cache
+from functools import lru_cache
 from typing import Dict, List, Optional
 
 import pandas as pd
 import sqlalchemy as sa
+from pandas.errors import PerformanceWarning
 from pandas.tseries.offsets import CustomBusinessDay
 from sqlalchemy import Column, MetaData, Table, and_, case, func, select
 from sqlalchemy.exc import DatabaseError
@@ -15,6 +17,8 @@ from . import fields as fld
 from . import utils
 from . import validators as vld
 from .errors import InputError
+
+warnings.filterwarnings("ignore", category=PerformanceWarning)
 
 TRADE_DATE = "trade_date"
 NAME = "name"
