@@ -31,9 +31,9 @@ signal_df = signal_df.dropna(axis=1, how="all")
 
 
 def backtest_algorithm(
-    ts: datetime, signal: float, position: Position, acct: SETAccount
+    ts: datetime, sig: float, pos: Position, acct: SETAccount
 ) -> float:
-    return acct.target_pct_port(signal)
+    return acct.target_pct_port(sig)
 
 
 #%% Backtest
@@ -45,6 +45,7 @@ result = backtest(
     start_date=start_date,
     end_date=end_date,
     initial_cash=initial_cash,
+    pct_commission=0.25,
     signal_delay_bar=1,
 )
 

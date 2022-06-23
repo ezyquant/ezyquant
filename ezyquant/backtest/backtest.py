@@ -30,7 +30,9 @@ def backtest(
     Parameters
     ----------
     signal_df : pd.DataFrame
-        signal dataframe.
+        dataframe of signal.
+        index is trade date, columns are symbol, values are signal.
+        missing signal in trade date will be filled with nan.
     backtest_algorithm: Callable[[pd.Timestamp, float, Position, SETAccount], float],
         function for calculate trade volume.
         Parameters:
@@ -57,13 +59,13 @@ def backtest(
     end_date : str
         end date in format YYYY-MM-DD
     initial_cash : float
-        initial cash
-    pct_commission : float, by default 0.0
-        percent commission ex. 0.01 means 1% commission
-    pct_buy_slip : float, by default 0.0
-        percent of buy price increase ex. 0.01 means 1% increase
-    pct_sell_slip : float, by default 0.0
-        percent of sell price decrease ex. 0.01 means 1% decrease
+        cash at the beginning of the backtest
+    pct_buy_slip : float, default 0.0
+        percentage of buy slip, higher value means higher buy price ex. 1.0 means 1% increase
+    pct_sell_slip : float, default 0.0
+        percentage of sell slip, higher value means lower sell price ex. 1.0 means 1% decrease
+    pct_commission : float, default 0.0
+        percentage of commission fee ex. 1.0 means 1% fee
     price_match_mode : str, by default "open"
         price match mode.
             - open

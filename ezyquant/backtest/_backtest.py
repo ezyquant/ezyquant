@@ -33,6 +33,7 @@ def _backtest(
     signal_df : pd.DataFrame
         dataframe of signal.
         index is trade date, columns are symbol, values are signal.
+        missing signal in trade date will be filled with nan.
     backtest_algorithm: Callable[[pd.Timestamp, float, Position, SETAccount], float],
         function for calculate trade volume.
         Parameters:
@@ -57,18 +58,17 @@ def _backtest(
     close_price_df : pd.DataFrame
         dataframe of buy price.
         index is trade date, columns are symbol, values are weight.
-        index and columns must be same as or more than signal_df.
-        first row will be used as initial price.
+        first row will be used as initial close price.
     price_match_df : pd.DataFrame
         dataframe of sell price.
         index is trade date, columns are symbol, values are weight.
-        index and columns must be same as or more than signal_df.
+        index and columns must be same as or more than close_price_df.
     pct_buy_slip : float, default 0.0
-        percentage of buy slip, higher value means higher buy price
+        percentage of buy slip, higher value means higher buy price ex. 0.01 means 1% increase
     pct_sell_slip : float, default 0.0
-        percentage of sell slip, higher value means lower sell price
+        percentage of sell slip, higher value means lower sell price ex. 0.01 means 1% decrease
     pct_commission : float, default 0.0
-        percentage of commission fee
+        percentage of commission fee ex. 0.01 means 1% fee
 
     Returns
     -------
