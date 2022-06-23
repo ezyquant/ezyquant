@@ -4,8 +4,8 @@ from functools import cached_property
 
 
 @dataclass(frozen=True)
-class Trade:
-    """Trade
+class SETTrade:
+    """SETTrade
 
     Parameters
     -------

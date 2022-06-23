@@ -7,7 +7,7 @@ import pandas as pd
 
 from .. import utils
 from .position import SETPosition
-from .trade import Trade
+from .trade import SETTrade
 
 
 @dataclass
@@ -15,7 +15,7 @@ class SETAccount:
     cash: float
     pct_commission: float = 0.0
     position_dict: Dict[str, SETPosition] = field(default_factory=dict)
-    trade_list: List[Trade] = field(default_factory=list)
+    trade_list: List[SETTrade] = field(default_factory=list)
     selected_symbol: Optional[str] = None  # select symbol for buy/sell method
     market_price_dict: Dict[str, float] = field(
         default_factory=dict, init=False, repr=False
@@ -37,7 +37,7 @@ class SETAccount:
 
         # trade_list
         for i in self.trade_list:
-            assert isinstance(i, Trade), "trade_list must be a list of Trade"
+            assert isinstance(i, SETTrade), "trade_list must be a list of SETTrade"
 
         self.ratio_commission = 1.0 + self.pct_commission
 
@@ -286,7 +286,7 @@ class SETAccount:
         price: float,
     ):
         # Create trade
-        trade = Trade(
+        trade = SETTrade(
             matched_at=matched_at,
             symbol=symbol,
             volume=volume,

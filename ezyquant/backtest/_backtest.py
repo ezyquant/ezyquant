@@ -7,10 +7,10 @@ from pandas.testing import assert_index_equal
 from .. import validators as vld
 from .account import SETAccount
 from .position import SETPosition
-from .trade import Trade
+from .trade import SETTrade
 
 position_df_columns = ["timestamp"] + [i.name for i in fields(SETPosition)]
-trade_df_columns = [i.name for i in fields(Trade)]
+trade_df_columns = [i.name for i in fields(SETTrade)]
 
 
 def _backtest(

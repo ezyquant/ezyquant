@@ -5,7 +5,7 @@ from typing import Dict
 import pandas as pd
 import pytest
 
-from ezyquant.backtest import SETAccount, SETPosition, Trade
+from ezyquant.backtest import SETAccount, SETPosition, SETTrade
 
 nan = float("nan")
 
@@ -60,7 +60,7 @@ class TestMatchOrderIfPossible:
         )
 
         assert self.acct.trade_list == [
-            Trade(
+            SETTrade(
                 matched_at=datetime(2000, 1, 1),
                 symbol="A",
                 volume=i,
@@ -89,7 +89,7 @@ class TestMatchOrderIfPossible:
         )
 
         assert self.acct.trade_list == [
-            Trade(
+            SETTrade(
                 matched_at=datetime(2000, 1, 1),
                 symbol="A",
                 volume=i,
@@ -118,7 +118,7 @@ class TestMatchOrderIfPossible:
         self._test(volume=volume)
 
         assert self.acct.trade_list == [
-            Trade(
+            SETTrade(
                 matched_at=datetime(2000, 1, 1),
                 symbol="A",
                 volume=i,
@@ -197,7 +197,7 @@ class TestMatchOrderBuy:
         position_dict = copy.deepcopy(position_dict)
 
         # Mock
-        expect_trade = Trade(
+        expect_trade = SETTrade(
             matched_at=matched_at,
             symbol=symbol,
             volume=volume,
@@ -321,7 +321,7 @@ class TestMatchOrderSell:
         position_dict = copy.deepcopy(position_dict)
 
         # Mock
-        expect_trade = Trade(
+        expect_trade = SETTrade(
             matched_at=matched_at,
             symbol=symbol,
             volume=volume,
