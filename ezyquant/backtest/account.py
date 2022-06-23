@@ -308,5 +308,4 @@ class SETAccount:
         return trade
 
     def _cache_clear(self):
-        if "total_market_value" in self.__dict__:
-            del self.__dict__["total_market_value"]
+        self.__dict__.pop("total_market_value", None)
