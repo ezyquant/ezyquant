@@ -1,5 +1,3 @@
-from unittest.mock import PropertyMock
-
 import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
@@ -63,7 +61,7 @@ def test_summary_trade_avg_cost_price(
     expect_result["matched_at"] = pd.to_datetime(expect_result["matched_at"])
 
     # Mock
-    SETBacktestReport.position_df = PropertyMock(return_value=position_df)
+    sbr.__dict__["position_df"] = position_df
 
     # Test
     result = sbr._summary_trade_avg_cost_price(trade_df=trade_df)
@@ -143,10 +141,8 @@ def test_summary_trade_sell_all_position(
     position_df["timestamp"] = pd.to_datetime(position_df["timestamp"])
     expect_result["matched_at"] = pd.to_datetime(expect_result["matched_at"])
 
-    SETBacktestReport.end_date = PropertyMock(  # type: ignore
-        return_value=pd.Timestamp("2000-01-01")
-    )  # type: ignore
-    SETBacktestReport.position_df = PropertyMock(return_value=position_df)
+    sbr.__dict__["end_date"] = pd.Timestamp("2000-01-01")
+    sbr.__dict__["position_df"] = position_df
 
     # Test
     result = sbr._summary_trade_sell_all_position()

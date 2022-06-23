@@ -1,4 +1,4 @@
-from unittest.mock import Mock, PropertyMock
+from unittest.mock import Mock
 
 import pandas as pd
 import pandas.api.types as ptypes
@@ -156,10 +156,9 @@ class TestSummaryDf:
             position_df=pd.DataFrame(),
             trade_df=pd.DataFrame(),
         )
-
-        SETBacktestReport.position_df = PropertyMock(return_value=position_df)
-        SETBacktestReport.trade_df = PropertyMock(return_value=trade_df)
-        SETBacktestReport.dividend_df = PropertyMock(return_value=dividend_df)
+        sbr.__dict__["position_df"] = position_df
+        sbr.__dict__["trade_df"] = trade_df
+        sbr.__dict__["dividend_df"] = dividend_df
         sbr._sdr.get_trading_dates = Mock(return_value=utils.make_bdate_range())
 
         # Test

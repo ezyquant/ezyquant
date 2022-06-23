@@ -671,14 +671,14 @@ class SETBacktestReport:
         s = ~self._is_win_trade
         return (~s).cumsum()[s].value_counts().max()
 
-    @property
+    @cached_property
     def start_date(self) -> datetime:
         """Start date."""
         out = self._nav_df.index[0]
         assert isinstance(out, datetime)
         return out
 
-    @property
+    @cached_property
     def end_date(self) -> datetime:
         """End date."""
         out = self._nav_df.index[-1]
