@@ -11,10 +11,11 @@ from pandas.tseries.offsets import BusinessDay
 from ezyquant import validators as vld
 from ezyquant.backtest._backtest import _backtest
 from ezyquant.backtest.account import SETAccount
+from ezyquant.backtest.position import Position
 
 nan = float("nan")
 
-position_columns = ["timestamp", "symbol", "volume", "avg_cost_price"]
+position_columns = ["timestamp", "symbol", "volume", "avg_cost_price", "close_price"]
 trade_columns = ["matched_at", "symbol", "volume", "price", "pct_commission"]
 
 
@@ -57,14 +58,14 @@ def test_apply_trade_volume(return_volume: float):
     assert apply_trade_volume.call_count == 8
     apply_trade_volume.assert_has_calls(
         [
-            call(pd.Timestamp("2000-01-03"), "A", 3.0, 1.0, ANY),
-            call(pd.Timestamp("2000-01-03"), "B", 4.0, 2.0, ANY),
-            call(pd.Timestamp("2000-01-04"), "A", 5.0, 3.0, ANY),
-            call(pd.Timestamp("2000-01-04"), "B", 6.0, 4.0, ANY),
-            call(pd.Timestamp("2000-01-05"), "A", 7.0, 5.0, ANY),
-            call(pd.Timestamp("2000-01-05"), "B", 8.0, 6.0, ANY),
-            call(pd.Timestamp("2000-01-06"), "A", 9.0, 7.0, ANY),
-            call(pd.Timestamp("2000-01-06"), "B", 10.0, 8.0, ANY),
+            call(pd.Timestamp("2000-01-03"), 3.0, Position("A", 0.0, 0.0, 1.0), ANY),
+            call(pd.Timestamp("2000-01-03"), 4.0, Position("B", 0.0, 0.0, 2.0), ANY),
+            call(pd.Timestamp("2000-01-04"), 5.0, ANY, ANY),
+            call(pd.Timestamp("2000-01-04"), 6.0, ANY, ANY),
+            call(pd.Timestamp("2000-01-05"), 7.0, ANY, ANY),
+            call(pd.Timestamp("2000-01-05"), 8.0, ANY, ANY),
+            call(pd.Timestamp("2000-01-06"), 9.0, ANY, ANY),
+            call(pd.Timestamp("2000-01-06"), 10.0, ANY, ANY),
         ]
     )
 
@@ -76,14 +77,14 @@ def test_apply_trade_volume(return_volume: float):
         position_df,
         pd.DataFrame(
             [
-                [pd.Timestamp("2000-01-03"), "A", 100.0, 3.0],
-                [pd.Timestamp("2000-01-03"), "B", 100.0, 4.0],
-                [pd.Timestamp("2000-01-04"), "A", 200.0, 4.0],
-                [pd.Timestamp("2000-01-04"), "B", 200.0, 5.0],
-                [pd.Timestamp("2000-01-05"), "A", 300.0, 5.0],
-                [pd.Timestamp("2000-01-05"), "B", 300.0, 6.0],
-                [pd.Timestamp("2000-01-06"), "A", 400.0, 6.0],
-                [pd.Timestamp("2000-01-06"), "B", 400.0, 7.0],
+                [pd.Timestamp("2000-01-03"), "A", 100.0, 3.0, 3.0],
+                [pd.Timestamp("2000-01-03"), "B", 100.0, 4.0, 4.0],
+                [pd.Timestamp("2000-01-04"), "A", 200.0, 4.0, 5.0],
+                [pd.Timestamp("2000-01-04"), "B", 200.0, 5.0, 6.0],
+                [pd.Timestamp("2000-01-05"), "A", 300.0, 5.0, 7.0],
+                [pd.Timestamp("2000-01-05"), "B", 300.0, 6.0, 8.0],
+                [pd.Timestamp("2000-01-06"), "A", 400.0, 6.0, 9.0],
+                [pd.Timestamp("2000-01-06"), "B", 400.0, 7.0, 10.0],
             ],
             columns=position_columns,
         ),
@@ -148,7 +149,7 @@ class TestNoTrade:
     @pytest.mark.parametrize(
         "apply_trade_volume",
         [
-            lambda ts, sym, sig, price, acct: acct.target_pct_port(sig),
+            lambda ts, sig, pos, acct: acct.target_pct_port(sig),
             lambda *args: 100.0,
         ],
     )
@@ -187,7 +188,7 @@ class TestNoTrade:
         self,
         initial_cash: float = 1000.0,
         signal_df: pd.DataFrame = utils.make_signal_weight_df(),
-        apply_trade_volume: Callable = lambda ts, sym, sig, price, acct: acct.target_pct_port(
+        apply_trade_volume: Callable = lambda ts, sig, pos, acct: acct.target_pct_port(
             sig
         ),
         close_price_df: pd.DataFrame = utils.make_close_price_df(),
@@ -220,7 +221,7 @@ class TestNoTrade:
     [
         (
             utils.make_signal_weight_df(n_row=1000, n_col=100),
-            lambda ts, sym, sig, price, acct: acct.target_pct_port(sig),
+            lambda ts, sig, pos, acct: acct.target_pct_port(sig),
         )
     ],
 )
@@ -256,7 +257,7 @@ def test_random_input(
 def _backtest_and_check(
     initial_cash: float,
     signal_df: pd.DataFrame,
-    apply_trade_volume: Callable[[pd.Timestamp, str, float, float, SETAccount], float],
+    apply_trade_volume: Callable[[pd.Timestamp, float, Position, SETAccount], float],
     close_price_df: pd.DataFrame,
     price_match_df: pd.DataFrame,
     pct_buy_slip: float,

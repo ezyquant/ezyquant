@@ -28,9 +28,8 @@ def test_total_market_value(
     expect_result: float,
 ):
     # Mock
-    acct = SETAccount(
-        cash=0.0, position_dict=position_dict, market_price_dict=market_price_dict
-    )
+    acct = SETAccount(cash=0.0, position_dict=position_dict)
+    acct._set_market_price_dict(market_price_dict)
 
     # Test
     result = acct.total_market_value

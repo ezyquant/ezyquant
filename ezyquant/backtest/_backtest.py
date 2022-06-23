@@ -104,8 +104,8 @@ def _backtest(
         pct_commission=pct_commission,
         position_dict={},  # TODO: [EZ-79] initial position dict
         trade_list=[],  # TODO: initial trade
-        market_price_dict=close_price_df.iloc[0].to_dict(),
     )
+    acct._set_market_price_dict(close_price_df.iloc[0].to_dict())
 
     # remove first close row
     close_price_df = close_price_df.iloc[1:]  # type: ignore

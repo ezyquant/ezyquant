@@ -16,8 +16,10 @@ class SETAccount:
     pct_commission: float = 0.0
     position_dict: Dict[str, Position] = field(default_factory=dict)
     trade_list: List[Trade] = field(default_factory=list)
-    market_price_dict: Dict[str, float] = field(default_factory=dict, repr=False)
     selected_symbol: Optional[str] = None  # select symbol for buy/sell method
+    market_price_dict: Dict[str, float] = field(
+        default_factory=dict, init=False, repr=False
+    )
 
     def __post_init__(self):
         # cash

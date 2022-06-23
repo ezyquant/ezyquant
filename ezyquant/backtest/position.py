@@ -8,7 +8,7 @@ class Position:
     symbol: str
     volume: float = 0.0
     avg_cost_price: float = 0.0
-    close_price: float = 0.0
+    close_price: float = float("nan")
 
     def __post_init__(self):
         # symbol
