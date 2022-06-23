@@ -43,13 +43,7 @@ class SETAccount:
 
     @cached_property
     def total_market_value(self) -> float:
-        return float(
-            sum(
-                v.volume * self.market_price_dict[v.symbol]
-                for v in self.position_dict.values()
-                if pd.notna(self.market_price_dict[v.symbol])
-            )
-        )
+        return float(sum(v.close_value for v in self.position_dict.values()))
 
     @property
     def total_cost_value(self) -> float:

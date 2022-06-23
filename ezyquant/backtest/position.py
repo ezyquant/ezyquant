@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+import pandas as pd
+
 
 @dataclass
 class Position:
@@ -32,7 +34,10 @@ class Position:
 
     @property
     def close_value(self) -> float:
-        return self.volume * self.close_price
+        if pd.notna(self.close_price):
+            return self.volume * self.close_price
+        else:
+            return 0.0
 
     def _match_order(self, volume: float, price: float) -> float:
         if volume > 0:
