@@ -110,6 +110,9 @@ def _backtest(
     # remove first close row
     close_price_df = close_price_df.iloc[1:]  # type: ignore
 
+    # reindex signal
+    signal_df = signal_df.reindex(close_price_df.index)  # type: ignore
+
     # Check after remove first close row
     _check_df_input(signal_df, close_price_df, price_match_df)
 
@@ -195,5 +198,5 @@ def _check_df_input(
     assert_index_equal(close_price_df.index, price_match_df.index)
     assert_index_equal(close_price_df.columns, price_match_df.columns)
 
-    assert signal_df.index.isin(close_price_df.index).all()
-    assert signal_df.columns.isin(close_price_df.columns).all()
+    assert_index_equal(close_price_df.index, signal_df.index)
+    assert_index_equal(close_price_df.columns, signal_df.columns)
