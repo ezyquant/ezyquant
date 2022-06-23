@@ -30,7 +30,7 @@ signal_df = (pe_df.rank(axis=1, method="max") <= 10) / 10.00001
 
 def apply_trade_volume(
     ts: datetime, signal: float, position: Position, acct: SETAccount
-):
+) -> float:
     return acct.target_pct_port(signal)
 
 

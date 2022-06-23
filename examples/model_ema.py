@@ -36,8 +36,11 @@ signal_df *= ssc.is_universe("SET100")
 
 def apply_trade_volume(
     ts: datetime, signal: float, position: Position, acct: SETAccount
-):
-    return acct.buy_pct_port(signal)
+) -> float:
+    if len(acct.position_dict) < 10:
+        return acct.target_pct_port(signal)
+    else:
+        return 0.0
 
 
 #%% Backtest
