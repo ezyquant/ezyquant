@@ -196,26 +196,6 @@ class SETBacktestReport:
             df["timestamp"] = pd.to_datetime(df["timestamp"])
             return df
 
-        # close df
-        symbol_list = df["symbol"].unique().tolist()
-        start_date = utils.date_to_str(df["timestamp"].min())
-        end_date = utils.date_to_str(df["timestamp"].max())
-        close_price_df = self._sdr.get_data_symbol_daily(
-            field=fld.D_CLOSE,
-            symbol_list=symbol_list,
-            start_date=start_date,
-            end_date=end_date,
-        )
-
-        close_price_df = close_price_df.stack()
-        close_price_df.index.names = ["timestamp", "symbol"]
-        close_price_df.name = "close_price"
-        close_price_df = close_price_df.reset_index()
-
-        # merge close_price_df and position_df
-        df = df.merge(
-            close_price_df, on=["timestamp", "symbol"], how="left", validate="1:1"
-        )
         df["close_value"] = df["close_price"] * df["volume"]
 
         # sort column
