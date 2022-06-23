@@ -7,7 +7,7 @@ from pandas.testing import assert_frame_equal, assert_index_equal
 
 from ezyquant.report import SETBacktestReport, dividend_columns
 from tests import utils
-from tests.test_report.utils import _make_empty_backtest_report
+from tests.test_report.conftest import _make_empty_backtest_report
 
 
 class TestDividendDf:
@@ -24,13 +24,13 @@ class TestDividendDf:
         expect_result: pd.DataFrame,
     ):
         # Mock
-        srs = _make_empty_backtest_report()
+        sbr = _make_empty_backtest_report()
         SETBacktestReport.position_df = PropertyMock(return_value=position_df)
-        srs._sdr.get_dividend = Mock(return_value=dividend_df)
-        srs._sdr.get_trading_dates = Mock(return_value=utils.make_bdate_range())
+        sbr._sdr.get_dividend = Mock(return_value=dividend_df)
+        sbr._sdr.get_trading_dates = Mock(return_value=utils.make_bdate_range())
 
         # Test
-        result = srs.dividend_df
+        result = sbr.dividend_df
 
         # Check
         _check_dividend_df(result)

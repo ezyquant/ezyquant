@@ -1,6 +1,12 @@
 import pandas as pd
+import pytest
 
 from ezyquant.report import SETBacktestReport
+
+
+@pytest.fixture
+def sbr():
+    return _make_empty_backtest_report()
 
 
 def _make_empty_backtest_report():

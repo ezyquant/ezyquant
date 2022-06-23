@@ -50,7 +50,7 @@ trade_in_columns = ["matched_at", "symbol", "volume", "price", "pct_commission"]
 )
 def test_trade_df(trade_df: pd.DataFrame, expect_result: pd.DataFrame):
     # Mock
-    srs = SETBacktestReport(
+    sbr = SETBacktestReport(
         initial_capital=0.0,
         pct_commission=0.0,
         pct_buy_slip=0.0,
@@ -61,7 +61,7 @@ def test_trade_df(trade_df: pd.DataFrame, expect_result: pd.DataFrame):
     )
 
     # Test
-    result = srs.trade_df
+    result = sbr.trade_df
 
     # Check
     _check_trade_df(result)

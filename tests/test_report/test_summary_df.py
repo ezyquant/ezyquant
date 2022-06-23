@@ -147,7 +147,7 @@ class TestSummaryDf:
         expect_result: pd.DataFrame,
     ):
         # Mock
-        srs = SETBacktestReport(
+        sbr = SETBacktestReport(
             initial_capital=0.0,
             pct_commission=0.0,
             pct_buy_slip=0.0,
@@ -160,10 +160,10 @@ class TestSummaryDf:
         SETBacktestReport.position_df = PropertyMock(return_value=position_df)
         SETBacktestReport.trade_df = PropertyMock(return_value=trade_df)
         SETBacktestReport.dividend_df = PropertyMock(return_value=dividend_df)
-        srs._sdr.get_trading_dates = Mock(return_value=utils.make_bdate_range())
+        sbr._sdr.get_trading_dates = Mock(return_value=utils.make_bdate_range())
 
         # Test
-        result = srs.summary_df
+        result = sbr.summary_df
 
         # Check
         _check_summary_df(result)

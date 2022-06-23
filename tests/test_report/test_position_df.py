@@ -62,7 +62,7 @@ def test_position_df(
     position_df: pd.DataFrame, close_price_df: pd.DataFrame, expect_result: pd.DataFrame
 ):
     # Mock
-    srs = SETBacktestReport(
+    sbr = SETBacktestReport(
         initial_capital=0.0,
         pct_commission=0.0,
         pct_buy_slip=0.0,
@@ -71,10 +71,10 @@ def test_position_df(
         position_df=position_df,
         trade_df=pd.DataFrame(),
     )
-    srs._sdr.get_data_symbol_daily = Mock(return_value=close_price_df)
+    sbr._sdr.get_data_symbol_daily = Mock(return_value=close_price_df)
 
     # Test
-    result = srs.position_df
+    result = sbr.position_df
 
     # Check
     _check_position_df(result)

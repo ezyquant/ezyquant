@@ -7,7 +7,6 @@ from pandas.testing import assert_frame_equal
 import ezyquant.fields as fld
 from ezyquant.report import SETBacktestReport, position_columns
 from tests import utils
-from tests.test_report.utils import _make_empty_backtest_report
 
 
 @pytest.mark.parametrize(
@@ -54,18 +53,20 @@ from tests.test_report.utils import _make_empty_backtest_report
     ],
 )
 def test_summary_trade_avg_cost_price(
-    position_df: pd.DataFrame, trade_df: pd.DataFrame, expect_result: pd.DataFrame
+    sbr: SETBacktestReport,
+    position_df: pd.DataFrame,
+    trade_df: pd.DataFrame,
+    expect_result: pd.DataFrame,
 ):
     position_df["timestamp"] = pd.to_datetime(position_df["timestamp"])
     trade_df["matched_at"] = pd.to_datetime(trade_df["matched_at"])
     expect_result["matched_at"] = pd.to_datetime(expect_result["matched_at"])
 
     # Mock
-    srs = _make_empty_backtest_report()
     SETBacktestReport.position_df = PropertyMock(return_value=position_df)
 
     # Test
-    result = srs._summary_trade_avg_cost_price(trade_df=trade_df)
+    result = sbr._summary_trade_avg_cost_price(trade_df=trade_df)
 
     # Check
     assert_frame_equal(result, expect_result)
@@ -136,20 +137,19 @@ def test_summary_trade_avg_cost_price(
     ],
 )
 def test_summary_trade_sell_all_position(
-    position_df: pd.DataFrame, expect_result: pd.DataFrame
+    sbr: SETBacktestReport, position_df: pd.DataFrame, expect_result: pd.DataFrame
 ):
     # Mock
     position_df["timestamp"] = pd.to_datetime(position_df["timestamp"])
     expect_result["matched_at"] = pd.to_datetime(expect_result["matched_at"])
 
-    srs = _make_empty_backtest_report()
     SETBacktestReport.end_date = PropertyMock(  # type: ignore
         return_value=pd.Timestamp("2000-01-01")
     )  # type: ignore
     SETBacktestReport.position_df = PropertyMock(return_value=position_df)
 
     # Test
-    result = srs._summary_trade_sell_all_position()
+    result = sbr._summary_trade_sell_all_position()
 
     # Check
     utils.assert_frame_equal_sort_index(result, expect_result, check_dtype=False)
