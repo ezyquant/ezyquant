@@ -6,6 +6,7 @@ class Position:
     symbol: str
     volume: float = 0.0
     avg_cost_price: float = 0.0
+    close_price: float = 0.0
 
     def __post_init__(self):
         # symbol
@@ -28,6 +29,10 @@ class Position:
     @property
     def cost_value(self) -> float:
         return self.volume * self.avg_cost_price
+
+    @property
+    def close_value(self) -> float:
+        return self.volume * self.close_price
 
     def _match_order(self, volume: float, price: float) -> float:
         if volume > 0:

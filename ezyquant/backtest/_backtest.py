@@ -16,7 +16,7 @@ trade_df_columns = [i.name for i in fields(Trade)]
 def _backtest(
     initial_cash: float,
     signal_df: pd.DataFrame,
-    apply_trade_volume: Callable[[pd.Timestamp, str, float, float, SETAccount], float],
+    apply_trade_volume: Callable[[pd.Timestamp, float, Position, SETAccount], float],
     close_price_df: pd.DataFrame,
     price_match_df: pd.DataFrame,
     pct_buy_slip: float,
@@ -33,17 +33,22 @@ def _backtest(
     signal_df : pd.DataFrame
         dataframe of signal.
         index is trade date, columns are symbol, values are signal.
-    apply_trade_volume: Callable[[pd.Timestamp, str, float, float, SETAccount], float],
+    apply_trade_volume: Callable[[pd.Timestamp, float, Position, SETAccount], float],
         function for calculate trade volume.
         Parameters:
             - timestamp: pd.Timestamp
                 timestamp of bar.
-            - symbol: str
-                selected symbol for trade.
             - signal: float
                 signal from signal_df
-            - close_price: float
-                close price of last bar
+            - position: Position
+                - symbol: str
+                    symbol of position
+                - volume: float
+                    volume of position
+                - close_price: float
+                    close price of position
+                - avg_cost_price: float
+                    average cost price of position
             - account: SETAccount
                 account object
         Return:
@@ -132,7 +137,7 @@ def _backtest(
 
         for k, v in signal_d.items():
             acct.selected_symbol = k
-            trade_volume = apply_trade_volume(ts, k, v, acct.market_price_dict[k], acct)
+            trade_volume = apply_trade_volume(ts, v, acct._position, acct)
 
             if trade_volume > 0:
                 buy_volume_d[k] = trade_volume
@@ -148,7 +153,6 @@ def _backtest(
         buy_volume_d, sell_volume_d = calculate_trade_volume(ts)
 
         # Trade
-        acct._set_market_price_dict(price_match_dict[ts])
         for k, v in sell_volume_d.items():
             price = price_match_dict[ts][k] * ratio_sell_slip
             acct._match_order_if_possible(ts, symbol=k, volume=v, price=price)

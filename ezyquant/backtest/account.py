@@ -19,7 +19,7 @@ class SETAccount:
     market_price_dict: Dict[str, float] = field(default_factory=dict, repr=False)
     selected_symbol: Optional[str] = None  # select symbol for buy/sell method
 
-    def __post_init__(self) -> None:
+    def __post_init__(self):
         # cash
         assert self.cash >= 0, "cash must be positive"
 
@@ -73,13 +73,17 @@ class SETAccount:
         return self.market_price_dict[self.selected_symbol]
 
     @property
+    def _position(self) -> Position:
+        assert self.selected_symbol is not None, "symbol must be selected"
+        return self.position_dict.get(
+            self.selected_symbol,
+            Position(self.selected_symbol, close_price=self._price),
+        )
+
+    @property
     def _volume(self) -> float:
         """Get volume of selected symbol."""
-        assert self.selected_symbol is not None, "symbol must be selected"
-        if self.selected_symbol in self.position_dict:
-            return self.position_dict[self.selected_symbol].volume
-        else:
-            return 0.0
+        return self._position.volume
 
     def buy_pct_port(self, pct_port: float) -> float:
         """Calculate buy volume from percentage of SETAccount. Using last close
@@ -213,7 +217,7 @@ class SETAccount:
     Protected methods
     """
 
-    def _set_market_price_dict(self, market_price_dict: Dict[str, float]) -> None:
+    def _set_market_price_dict(self, market_price_dict: Dict[str, float]):
         """Set market price dict.
 
         Parameters
@@ -223,6 +227,8 @@ class SETAccount:
         """
         self._cache_clear()
         self.market_price_dict = market_price_dict
+        for k, v in self.position_dict.items():
+            v.close_price = self.market_price_dict[k]
 
     def _match_order_if_possible(
         self,

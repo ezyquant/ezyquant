@@ -10,11 +10,12 @@ from ..reader import SETBusinessDay
 from ..report import SETBacktestReport
 from ._backtest import _backtest
 from .account import SETAccount
+from .position import Position
 
 
 def backtest(
     signal_df: pd.DataFrame,
-    apply_trade_volume: Callable[[pd.Timestamp, str, float, float, SETAccount], float],
+    apply_trade_volume: Callable[[pd.Timestamp, float, Position, SETAccount], float],
     start_date: str,
     end_date: str,
     initial_cash: float,
@@ -30,17 +31,22 @@ def backtest(
     ----------
     signal_df : pd.DataFrame
         signal dataframe.
-    apply_trade_volume: Callable[[pd.Timestamp, str, float, float, SETAccount], float],
+    apply_trade_volume: Callable[[pd.Timestamp, float, Position, SETAccount], float],
         function for calculate trade volume.
         Parameters:
             - timestamp: pd.Timestamp
                 timestamp of bar.
-            - symbol: str
-                selected symbol for trade.
             - signal: float
                 signal from signal_df
-            - close_price: float
-                close price of last bar
+            - position: Position
+                - symbol: str
+                    symbol of position
+                - volume: float
+                    volume of position
+                - close_price: float
+                    close price of position
+                - avg_cost_price: float
+                    average cost price of position
             - account: SETAccount
                 account object
         Return:
