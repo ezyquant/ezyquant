@@ -6,7 +6,7 @@ import pandas as pd
 import ezyquant as ez
 from ezyquant import SETSignalCreator, backtest
 from ezyquant import utils as ezutils
-from ezyquant.backtest.account import SETAccount
+from ezyquant.backtest import Position, SETAccount
 from ezyquant.reader import SETBusinessDay
 
 ez.connect_sqlite("psims.db")
@@ -26,13 +26,10 @@ pe_df *= ssc.is_universe("SET100")
 pe_df = pe_df.replace(0, np.nan)
 
 signal_df = (pe_df.rank(axis=1, method="max") <= 10) / 10.00001
-signal_df = signal_df.shift(1)
-signal_df = signal_df[signal_df.index >= pd.Timestamp(start_date)]  # type: ignore
-assert isinstance(signal_df, pd.DataFrame)
 
 
 def apply_trade_volume(
-    ts: datetime, symbol: str, signal: float, close_price: float, acct: SETAccount
+    ts: datetime, signal: float, position: Position, acct: SETAccount
 ):
     return acct.target_pct_port(signal)
 
@@ -46,7 +43,7 @@ result = backtest(
     start_date=start_date,
     end_date=end_date,
     initial_cash=initial_cash,
-    signal_delay_bar=0,
+    signal_delay_bar=1,
 )
 
 print(result.stat_df)
