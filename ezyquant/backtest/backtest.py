@@ -103,6 +103,11 @@ def backtest(
         & (signal_df.index <= pd.Timestamp(end_date))  # type: ignore
     ]
 
+    # Percentage
+    pct_commission /= 100
+    pct_buy_slip /= 100
+    pct_sell_slip /= 100
+
     # Backtest
     # TODO: [EZ-79] initial_position_dict
     cash_series, position_df, trade_df = _backtest(
