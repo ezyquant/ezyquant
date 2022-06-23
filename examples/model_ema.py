@@ -33,6 +33,8 @@ first_cross_down_df = ~cross_up_df & cross_up_df.shift(1, fill_value=False)
 signal_df = (first_cross_up_df * 0.1) + (first_cross_down_df * -0.1)
 signal_df *= ssc.is_universe("SET100")
 
+signal_df = signal_df.dropna(axis=1, how="all")
+
 
 def apply_trade_volume(
     ts: datetime, signal: float, position: Position, acct: SETAccount
