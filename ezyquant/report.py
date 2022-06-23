@@ -624,7 +624,7 @@ class SETBacktestReport:
     def max_win_consecutive(self) -> int:
         """Maximum win consecutive."""
         s = self._is_win_trade
-        return (~s).cumsum()[s].value_counts().max()
+        return utils.count_true_consecutive(s)
 
     @property
     @return_nan_on_failure
@@ -669,7 +669,7 @@ class SETBacktestReport:
     def max_lose_consecutive(self) -> int:
         """Maximum lose consecutive."""
         s = ~self._is_win_trade
-        return (~s).cumsum()[s].value_counts().max()
+        return utils.count_true_consecutive(s)
 
     @cached_property
     def start_date(self) -> datetime:
