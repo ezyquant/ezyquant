@@ -30,7 +30,7 @@ signal_df = (pe_df.rank(axis=1, method="max") <= 10) / 10.00001
 signal_df = signal_df.dropna(axis=1, how="all")
 
 
-def apply_trade_volume(
+def backtest_algorithm(
     ts: datetime, signal: float, position: Position, acct: SETAccount
 ) -> float:
     return acct.target_pct_port(signal)
@@ -41,7 +41,7 @@ initial_cash = 1e6
 
 result = backtest(
     signal_df=signal_df,
-    apply_trade_volume=apply_trade_volume,
+    backtest_algorithm=backtest_algorithm,
     start_date=start_date,
     end_date=end_date,
     initial_cash=initial_cash,

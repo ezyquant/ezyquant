@@ -16,14 +16,14 @@ trade_df_columns = [i.name for i in fields(Trade)]
 def _backtest(
     initial_cash: float,
     signal_df: pd.DataFrame,
-    apply_trade_volume: Callable[[pd.Timestamp, float, Position, SETAccount], float],
+    backtest_algorithm: Callable[[pd.Timestamp, float, Position, SETAccount], float],
     close_price_df: pd.DataFrame,
     price_match_df: pd.DataFrame,
     pct_buy_slip: float,
     pct_sell_slip: float,
     pct_commission: float,
 ) -> Tuple[pd.Series, pd.DataFrame, pd.DataFrame]:
-    """Backtest function without load any data. apply_trade_volume will be
+    """Backtest function without load any data. backtest_algorithm will be
     called depend on signal_df.
 
     Parameters
@@ -33,7 +33,7 @@ def _backtest(
     signal_df : pd.DataFrame
         dataframe of signal.
         index is trade date, columns are symbol, values are signal.
-    apply_trade_volume: Callable[[pd.Timestamp, float, Position, SETAccount], float],
+    backtest_algorithm: Callable[[pd.Timestamp, float, Position, SETAccount], float],
         function for calculate trade volume.
         Parameters:
             - timestamp: pd.Timestamp
@@ -140,7 +140,7 @@ def _backtest(
 
         for k, v in signal_d.items():
             acct.selected_symbol = k
-            trade_volume = apply_trade_volume(ts, v, acct._position, acct)
+            trade_volume = backtest_algorithm(ts, v, acct._position, acct)
 
             if trade_volume > 0:
                 buy_volume_d[k] = trade_volume

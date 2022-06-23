@@ -15,7 +15,7 @@ from .position import Position
 
 def backtest(
     signal_df: pd.DataFrame,
-    apply_trade_volume: Callable[[pd.Timestamp, float, Position, SETAccount], float],
+    backtest_algorithm: Callable[[pd.Timestamp, float, Position, SETAccount], float],
     start_date: str,
     end_date: str,
     initial_cash: float,
@@ -31,7 +31,7 @@ def backtest(
     ----------
     signal_df : pd.DataFrame
         signal dataframe.
-    apply_trade_volume: Callable[[pd.Timestamp, float, Position, SETAccount], float],
+    backtest_algorithm: Callable[[pd.Timestamp, float, Position, SETAccount], float],
         function for calculate trade volume.
         Parameters:
             - timestamp: pd.Timestamp
@@ -108,7 +108,7 @@ def backtest(
     cash_series, position_df, trade_df = _backtest(
         initial_cash=initial_cash,
         signal_df=signal_df,
-        apply_trade_volume=apply_trade_volume,
+        backtest_algorithm=backtest_algorithm,
         close_price_df=close_price_df,
         price_match_df=price_match_df,
         pct_buy_slip=pct_buy_slip,
