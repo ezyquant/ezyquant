@@ -25,7 +25,7 @@ position_columns = [
     "timestamp",
     "symbol",
     "volume",
-    "avg_cost_price",
+    "cost_price",
     "close_price",
     "close_value",
 ]
@@ -49,7 +49,7 @@ dividend_columns = [
 summary_trade_columns = [
     "exit_at",
     "symbol",
-    "avg_cost_price",
+    "cost_price",
     "sell_price",
     "volume",
     "commission",
@@ -100,7 +100,7 @@ class SETBacktestReport:
                 - timestamp
                 - symbol
                 - volume
-                - avg_cost_price
+                - cost_price
         trade_df : pd.DataFrame
             dataframe of trade.
                 - matched_at
@@ -185,7 +185,7 @@ class SETBacktestReport:
             - timestamp
             - symbol
             - volume
-            - avg_cost_price
+            - cost_price
             - close_price
             - close_value
         """
@@ -384,7 +384,7 @@ class SETBacktestReport:
         pd.DataFrame
             - exit_at
             - symbol
-            - avg_cost_price
+            - cost_price
             - sell_price
             - volume
             - commission
@@ -396,7 +396,7 @@ class SETBacktestReport:
         trade_df = self.trade_df.copy()
 
         # avg cost price
-        trade_df = self._summary_trade_avg_cost_price(trade_df)
+        trade_df = self._summary_trade_cost_price(trade_df)
 
         # sell all in position
         df = self._summary_trade_sell_all_position()
@@ -413,18 +413,16 @@ class SETBacktestReport:
 
         # commission from buy and sell
         df["commission"] = (
-            (df["sell_price"] + df["avg_cost_price"])
-            * df["volume"]
-            * self._pct_commission
+            (df["sell_price"] + df["cost_price"]) * df["volume"] * self._pct_commission
         ).abs()
 
         # return
-        df["return"] = ((df["sell_price"] - df["avg_cost_price"]) * df["volume"]) - df[
+        df["return"] = ((df["sell_price"] - df["cost_price"]) * df["volume"]) - df[
             "commission"
         ]
 
         # pct_return
-        df["pct_return"] = df["return"] / df["avg_cost_price"] / df["volume"]
+        df["pct_return"] = df["return"] / df["cost_price"] / df["volume"]
 
         # hold days
         df["hold_days"] = (df["exit_at"] - df["entry_at"]).dt.days
@@ -700,9 +698,9 @@ class SETBacktestReport:
             ["port_value", "port_value_with_dividend"]
         ]
 
-    def _summary_trade_avg_cost_price(self, trade_df: pd.DataFrame) -> pd.DataFrame:
-        """Add avg_cost_price to trade_df."""
-        pos_df = self.position_df[["timestamp", "symbol", "avg_cost_price"]]
+    def _summary_trade_cost_price(self, trade_df: pd.DataFrame) -> pd.DataFrame:
+        """Add cost_price to trade_df."""
+        pos_df = self.position_df[["timestamp", "symbol", "cost_price"]]
         pos_df = pos_df.rename(columns={"timestamp": "matched_at"})
 
         # get cost price from tomorrow position

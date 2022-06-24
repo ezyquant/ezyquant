@@ -6,6 +6,7 @@ from pandas.testing import assert_index_equal
 
 from .. import validators as vld
 from .account import SETAccount
+from .context import Context
 from .position import SETPosition
 from .trade import SETTrade
 
@@ -16,7 +17,7 @@ trade_df_columns = [i.name for i in fields(SETTrade)]
 def _backtest(
     initial_cash: float,
     signal_df: pd.DataFrame,
-    backtest_algorithm: Callable[[pd.Timestamp, float, SETPosition, SETAccount], float],
+    backtest_algorithm: Callable[[Context], float],
     close_price_df: pd.DataFrame,
     price_match_df: pd.DataFrame,
     pct_buy_slip: float,
@@ -33,33 +34,20 @@ def _backtest(
         dataframe of signal.
         index is trade date, columns are symbol, values are signal.
         missing signal in trade date will be filled with nan.
-    backtest_algorithm: Callable[[pd.Timestamp, float, SETPosition, SETAccount], float],
+    backtest_algorithm: Callable[[Context], float],
         function for calculate trade volume.
         Parameters:
-            - timestamp: pd.Timestamp
-                timestamp of bar.
-            - signal: float
-                signal from signal_df
-            - position: SETPosition
-                - symbol: str
-                    symbol of position
-                - volume: float
-                    volume of position
-                - close_price: float
-                    close price of position
-                - avg_cost_price: float
-                    average cost price of position
-            - account: SETAccount
-                account object
+            - context: Context
+                context for backtest
         Return:
             - trade_volume: float
                 positive for buy, negative for sell, 0 or nan for no trade
     close_price_df : pd.DataFrame
-        dataframe of buy price.
+        dataframe of close price.
         index is trade date, columns are symbol, values are weight.
         first row will be used as initial close price.
     price_match_df : pd.DataFrame
-        dataframe of sell price.
+        dataframe of match price.
         index is trade date, columns are symbol, values are weight.
         index and columns must be same as or more than close_price_df.
     pct_buy_slip : float, default 0.0
@@ -80,7 +68,8 @@ def _backtest(
                 - timestamp
                 - symbol
                 - volume
-                - avg_cost_price
+                - cost_price
+                - close_price
             - trade_df
                 - matched_at
                 - symbol
@@ -104,7 +93,7 @@ def _backtest(
         position_dict={},  # TODO: [EZ-79] initial position dict
         trade_list=[],  # TODO: initial trade
     )
-    acct._set_market_price_dict(close_price_df.iloc[0].to_dict())
+    acct.set_position_close_price(close_price_df.iloc[0].to_dict())
 
     # remove first close row
     close_price_df = close_price_df.iloc[1:]  # type: ignore
@@ -132,22 +121,38 @@ def _backtest(
     def calculate_trade_volume(
         ts: pd.Timestamp,
     ) -> Tuple[Dict[str, float], Dict[str, float]]:
-        signal_d = signal_dict.get(ts, dict())
+        signal_d = signal_dict[ts]
 
         buy_volume_d = dict()
         sell_volume_d = dict()
 
+        ctx = Context(
+            ts=ts,
+            cash=acct.cash,
+            total_cost_value=acct.total_cost_value,
+            total_market_value=acct.total_market_value,
+            port_value=acct.port_value,
+        )
+
         for k, v in signal_d.items():
-            acct.selected_symbol = k
-            trade_volume = backtest_algorithm(ts, v, acct._position, acct)
+            # Setup ctx
+            ctx.symbol = k
+            ctx.signal = v
+            ctx.close_price = acct.close_price_dict[k]
+            if k in acct.position_dict:
+                pos = acct.position_dict[k]
+                ctx.volume = pos.volume
+                ctx.cost_price = pos.cost_price
+            else:
+                ctx.volume = 0.0
+                ctx.cost_price = 0.0
+
+            trade_volume = backtest_algorithm(ctx)
 
             if trade_volume > 0:
                 buy_volume_d[k] = trade_volume
             elif trade_volume < 0:
                 sell_volume_d[k] = trade_volume
-
-            # teardown
-            acct.selected_symbol = None
 
         return buy_volume_d, sell_volume_d
 
@@ -157,13 +162,13 @@ def _backtest(
         # Trade
         for k, v in sell_volume_d.items():
             price = price_match_dict[ts][k] * ratio_sell_slip
-            acct._match_order_if_possible(ts, symbol=k, volume=v, price=price)
+            acct.match_order_if_possible(ts, symbol=k, volume=v, price=price)
         for k, v in buy_volume_d.items():
             price = price_match_dict[ts][k] * ratio_buy_slip
-            acct._match_order_if_possible(ts, symbol=k, volume=v, price=price)
+            acct.match_order_if_possible(ts, symbol=k, volume=v, price=price)
 
         # Snap
-        acct._set_market_price_dict(close_price_dict)
+        acct.set_position_close_price(close_price_dict)
         pos_df = acct.position_df
         pos_df["timestamp"] = ts
         position_df_list.append(pos_df)

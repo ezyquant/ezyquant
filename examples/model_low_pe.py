@@ -1,12 +1,10 @@
-from datetime import datetime
-
 import numpy as np
 import pandas as pd
 
 import ezyquant as ez
 from ezyquant import SETSignalCreator, backtest
 from ezyquant import utils as ezutils
-from ezyquant.backtest import SETAccount, SETPosition
+from ezyquant.backtest import Context
 from ezyquant.reader import SETBusinessDay
 
 ez.connect_sqlite("psims.db")
@@ -30,10 +28,8 @@ signal_df = (pe_df.rank(axis=1, method="max") <= 10) / 10.00001
 signal_df = signal_df.dropna(axis=1, how="all")
 
 
-def backtest_algorithm(
-    ts: datetime, sig: float, pos: SETPosition, acct: SETAccount
-) -> float:
-    return acct.target_pct_port(sig)
+def backtest_algorithm(ctx: Context) -> float:
+    return ctx.target_pct_port(ctx.signal)
 
 
 #%% Backtest

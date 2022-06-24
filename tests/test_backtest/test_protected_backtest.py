@@ -1,5 +1,6 @@
+import dataclasses as dclass
 from typing import Callable, Tuple
-from unittest.mock import ANY, Mock, call
+from unittest.mock import Mock, call
 
 import pandas as pd
 import pandas.api.types as ptypes
@@ -9,13 +10,12 @@ from pandas.testing import assert_frame_equal, assert_index_equal, assert_series
 from pandas.tseries.offsets import BusinessDay
 
 from ezyquant import validators as vld
+from ezyquant.backtest import Context
 from ezyquant.backtest._backtest import _backtest
-from ezyquant.backtest.account import SETAccount
-from ezyquant.backtest.position import SETPosition
 
 nan = float("nan")
 
-position_columns = ["timestamp", "symbol", "volume", "avg_cost_price", "close_price"]
+position_columns = ["timestamp", "symbol", "volume", "cost_price", "close_price"]
 trade_columns = ["matched_at", "symbol", "volume", "price", "pct_commission"]
 
 
@@ -30,7 +30,8 @@ def test_backtest_algorithm(return_volume: float):
         index=index,
         columns=["A", "B"],
     )
-    backtest_algorithm = Mock(return_value=return_volume)
+    m = Mock(return_value=return_volume)
+    backtest_algorithm = lambda ctx: m(dclass.replace(ctx))
     close_price_df = pd.DataFrame(
         [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0], [9.0, 10.0]],
         index=pd.bdate_range("2000-01-01", periods=5) - BusinessDay(),
@@ -55,17 +56,121 @@ def test_backtest_algorithm(return_volume: float):
     )
 
     # Check
-    assert backtest_algorithm.call_count == 8
-    backtest_algorithm.assert_has_calls(
+    assert m.call_count == 8
+    m.assert_has_calls(
         [
-            call(pd.Timestamp("2000-01-03"), 3.0, SETPosition("A", 0.0, 0.0, 1.0), ANY),
-            call(pd.Timestamp("2000-01-03"), 4.0, SETPosition("B", 0.0, 0.0, 2.0), ANY),
-            call(pd.Timestamp("2000-01-04"), 5.0, ANY, ANY),
-            call(pd.Timestamp("2000-01-04"), 6.0, ANY, ANY),
-            call(pd.Timestamp("2000-01-05"), 7.0, ANY, ANY),
-            call(pd.Timestamp("2000-01-05"), 8.0, ANY, ANY),
-            call(pd.Timestamp("2000-01-06"), 9.0, ANY, ANY),
-            call(pd.Timestamp("2000-01-06"), 10.0, ANY, ANY),
+            call(
+                Context(
+                    ts=pd.Timestamp("2000-01-03 00:00:00"),
+                    symbol="A",
+                    signal=3.0,
+                    close_price=1.0,
+                    volume=0.0,
+                    cost_price=0.0,
+                    cash=1000000.0,
+                    total_cost_value=0.0,
+                    total_market_value=0.0,
+                    port_value=1000000.0,
+                )
+            ),
+            call(
+                Context(
+                    ts=pd.Timestamp("2000-01-03 00:00:00"),
+                    symbol="B",
+                    signal=4.0,
+                    close_price=2.0,
+                    volume=0.0,
+                    cost_price=0.0,
+                    cash=1000000.0,
+                    total_cost_value=0.0,
+                    total_market_value=0.0,
+                    port_value=1000000.0,
+                )
+            ),
+            call(
+                Context(
+                    ts=pd.Timestamp("2000-01-04 00:00:00"),
+                    symbol="A",
+                    signal=5.0,
+                    close_price=3.0,
+                    volume=100.0,
+                    cost_price=3.0,
+                    cash=999300.0,
+                    total_cost_value=700.0,
+                    total_market_value=700.0,
+                    port_value=1000000.0,
+                )
+            ),
+            call(
+                Context(
+                    ts=pd.Timestamp("2000-01-04 00:00:00"),
+                    symbol="B",
+                    signal=6.0,
+                    close_price=4.0,
+                    volume=100.0,
+                    cost_price=4.0,
+                    cash=999300.0,
+                    total_cost_value=700.0,
+                    total_market_value=700.0,
+                    port_value=1000000.0,
+                )
+            ),
+            call(
+                Context(
+                    ts=pd.Timestamp("2000-01-05 00:00:00"),
+                    symbol="A",
+                    signal=7.0,
+                    close_price=5.0,
+                    volume=200.0,
+                    cost_price=4.0,
+                    cash=998200.0,
+                    total_cost_value=1800.0,
+                    total_market_value=2200.0,
+                    port_value=1000400.0,
+                )
+            ),
+            call(
+                Context(
+                    ts=pd.Timestamp("2000-01-05 00:00:00"),
+                    symbol="B",
+                    signal=8.0,
+                    close_price=6.0,
+                    volume=200.0,
+                    cost_price=5.0,
+                    cash=998200.0,
+                    total_cost_value=1800.0,
+                    total_market_value=2200.0,
+                    port_value=1000400.0,
+                )
+            ),
+            call(
+                Context(
+                    ts=pd.Timestamp("2000-01-06 00:00:00"),
+                    symbol="A",
+                    signal=9.0,
+                    close_price=7.0,
+                    volume=300.0,
+                    cost_price=5.0,
+                    cash=996700.0,
+                    total_cost_value=3300.0,
+                    total_market_value=4500.0,
+                    port_value=1001200.0,
+                )
+            ),
+            call(
+                Context(
+                    ts=pd.Timestamp("2000-01-06 00:00:00"),
+                    symbol="B",
+                    signal=10.0,
+                    close_price=8.0,
+                    volume=300.0,
+                    cost_price=6.0,
+                    cash=996700.0,
+                    total_cost_value=3300.0,
+                    total_market_value=4500.0,
+                    port_value=1001200.0,
+                )
+            ),
         ]
     )
 
@@ -149,8 +254,8 @@ class TestNoTrade:
     @pytest.mark.parametrize(
         "backtest_algorithm",
         [
-            lambda ts, sig, pos, acct: acct.target_pct_port(sig),
-            lambda *args: 100.0,
+            lambda ctx: ctx.target_pct_port(ctx.signal),
+            lambda ctx: 100.0,
         ],
     )
     def test_no_price(
@@ -169,7 +274,7 @@ class TestNoTrade:
             pct_commission=pct_commission,
         )
 
-    @pytest.mark.parametrize("backtest_algorithm", [lambda *args: 0, lambda *args: nan])
+    @pytest.mark.parametrize("backtest_algorithm", [lambda ctx: 0, lambda ctx: nan])
     def test_backtest_algorithm(
         self,
         backtest_algorithm: Callable,
@@ -188,9 +293,7 @@ class TestNoTrade:
         self,
         initial_cash: float = 1000.0,
         signal_df: pd.DataFrame = utils.make_signal_weight_df(),
-        backtest_algorithm: Callable = lambda ts, sig, pos, acct: acct.target_pct_port(
-            sig
-        ),
+        backtest_algorithm: Callable = lambda ctx: ctx.target_pct_port(ctx.signal),
         close_price_df: pd.DataFrame = utils.make_close_price_df(),
         price_match_df: pd.DataFrame = utils.make_price_df(),
         pct_buy_slip: float = 0.0,
@@ -221,7 +324,7 @@ class TestNoTrade:
     [
         (
             utils.make_signal_weight_df(n_row=1000, n_col=100),
-            lambda ts, sig, pos, acct: acct.target_pct_port(sig),
+            lambda ctx: ctx.target_pct_port(ctx.signal),
         )
     ],
 )
@@ -257,7 +360,7 @@ def test_random_input(
 def _backtest_and_check(
     initial_cash: float,
     signal_df: pd.DataFrame,
-    backtest_algorithm: Callable[[pd.Timestamp, float, SETPosition, SETAccount], float],
+    backtest_algorithm: Callable[[Context], float],
     close_price_df: pd.DataFrame,
     price_match_df: pd.DataFrame,
     pct_buy_slip: float,
@@ -316,7 +419,7 @@ def _check_position_df(df):
     if not df.empty:
         assert ptypes.is_string_dtype(df["symbol"])
         assert ptypes.is_float_dtype(df["volume"])
-        assert ptypes.is_float_dtype(df["avg_cost_price"])
+        assert ptypes.is_float_dtype(df["cost_price"])
 
 
 def _check_trade_df(df):

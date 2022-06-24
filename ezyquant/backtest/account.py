@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime
-from functools import cached_property
-from typing import Dict, List, Optional
+from decimal import Decimal
+from typing import Dict, List
 
 import pandas as pd
 
@@ -16,8 +16,7 @@ class SETAccount:
     pct_commission: float = 0.0
     position_dict: Dict[str, SETPosition] = field(default_factory=dict)
     trade_list: List[SETTrade] = field(default_factory=list)
-    selected_symbol: Optional[str] = None  # select symbol for buy/sell method
-    market_price_dict: Dict[str, float] = field(
+    close_price_dict: Dict[str, float] = field(
         default_factory=dict, init=False, repr=False
     )
 
@@ -45,190 +44,31 @@ class SETAccount:
     def port_value(self) -> float:
         return self.total_market_value + self.cash
 
-    @cached_property
+    @property
     def total_market_value(self) -> float:
         return float(sum(v.close_value for v in self.position_dict.values()))
 
     @property
     def total_cost_value(self) -> float:
-        return sum(i.cost_value for i in self.position_dict.values())
+        return float(sum(i.cost_value for i in self.position_dict.values()))
 
     @property
     def position_df(self) -> pd.DataFrame:
         return pd.DataFrame(self.position_dict.values())  # type: ignore
 
-    """
-    Buy/Sell
-    """
-
-    def has_position(self, symbol: str) -> bool:
-        return symbol in self.position_dict
-
-    @property
-    def _price(self) -> float:
-        """Get last close price of selected symbol."""
-        assert self.selected_symbol is not None, "symbol must be selected"
-        return self.market_price_dict[self.selected_symbol]
-
-    @property
-    def _position(self) -> SETPosition:
-        assert self.selected_symbol is not None, "symbol must be selected"
-        return self.position_dict.get(
-            self.selected_symbol,
-            SETPosition(self.selected_symbol, close_price=self._price),
-        )
-
-    @property
-    def _volume(self) -> float:
-        """Get volume of selected symbol."""
-        return self._position.volume
-
-    def buy_pct_port(self, pct_port: float) -> float:
-        """Calculate buy volume from percentage of SETAccount. Using last close
-        price. Symbol must be selected.
+    def set_position_close_price(self, close_price_dict: Dict[str, float]):
+        """Set position close price.
 
         Parameters
         ----------
-        pct_port : float
-            percentage of SETAccount
-
-        Returns
-        -------
-        float
-            buy volume, always positive, not round 100
+        close_price_dict : dict
+            dict of symbol and close price
         """
-        return self.buy_value(self.port_value * pct_port)
-
-    def buy_value(self, value: float) -> float:
-        """Calculate buy volume from value. Using last close price. Symbol must
-        be selected.
-
-        Parameters
-        ----------
-        value : float
-            value
-
-        Returns
-        -------
-        float
-            buy volume, always positive, not round 100
-        """
-        return value / self._price
-
-    def buy_pct_position(self, pct_position: float) -> float:
-        """Calculate buy volume from percentage of current position. Symbol
-        must be selected.
-
-        Parameters
-        ----------
-        pct_position : float
-            percentage of position
-
-        Returns
-        -------
-        float
-            buy volume, always positive, not round 100
-        """
-        return pct_position * self._volume
-
-    def sell_pct_port(self, pct_port: float) -> float:
-        """Calculate sell volume from percentage of SETAccount. Using last
-        close price. Symbol must be selected.
-
-        Parameters
-        ----------
-        pct_port : float
-            percentage of SETAccount
-
-        Returns
-        -------
-        float
-            sell volume, always negative, not round 100
-        """
-        return self.buy_pct_port(-pct_port)
-
-    def sell_value(self, value: float) -> float:
-        """Calculate sell volume from value. Using last close price. Symbol
-        must be selected.
-
-        Parameters
-        ----------
-        value : float
-            value
-
-        Returns
-        -------
-        float
-            sell volume, always negative, not round 100
-        """
-        return self.buy_value(-value)
-
-    def sell_pct_position(self, pct_position: float) -> float:
-        """Calculate sell volume from percentage of current position. Symbol
-        must be selected.
-
-        Parameters
-        ----------
-        pct_position : float
-            percentage of position
-
-        Returns
-        -------
-        float
-            sell volume, always negative, not round 100
-        """
-        return self.buy_pct_position(-pct_position)
-
-    def target_pct_port(self, pct_port: float) -> float:
-        """Calculate buy/sell volume to make position reach percentage of
-        SETAccount. Using last close price. Symbol must be selected.
-
-        Parameters
-        ----------
-        pct_port : float
-            percentage of SETAccount
-
-        Returns
-        -------
-        float
-            buy/sell volume, not round 100
-        """
-        return self.buy_pct_port(pct_port) - self._volume
-
-    def target_value(self, value: float) -> float:
-        """Calculate buy/sell volume to make position reach value. Symbol must
-        be selected.
-
-        Parameters
-        ----------
-        value : float
-            value
-
-        Returns
-        -------
-        float
-            buy/sell volume, not round 100
-        """
-        return self.buy_value(value) - self._volume
-
-    """
-    Protected methods
-    """
-
-    def _set_market_price_dict(self, market_price_dict: Dict[str, float]):
-        """Set market price dict.
-
-        Parameters
-        ----------
-        market_price_dict : dict
-            dict of symbol and last close price
-        """
-        self._cache_clear()
-        self.market_price_dict = market_price_dict
+        self.close_price_dict = close_price_dict
         for k, v in self.position_dict.items():
-            v.close_price = self.market_price_dict[k]
+            v.close_price = close_price_dict[k]
 
-    def _match_order_if_possible(
+    def match_order_if_possible(
         self,
         matched_at: datetime,
         symbol: str,
@@ -255,8 +95,10 @@ class SETAccount:
 
         if volume > 0:
             # buy with enough cash
-            can_buy_volume = (
-                self.cash / price / self.ratio_commission + 1e-10
+            can_buy_volume = float(
+                Decimal(str(self.cash))
+                / Decimal(str(price))
+                / Decimal(str(self.ratio_commission))
             )  # fix for floating point error
             volume = min(volume, can_buy_volume)
         elif volume < 0:
@@ -271,14 +113,14 @@ class SETAccount:
         if volume == 0.0:
             return
 
-        return self._match_order(
+        return self.match_order(
             matched_at=matched_at,
             symbol=symbol,
             volume=volume,
             price=price,
         )
 
-    def _match_order(
+    def match_order(
         self,
         matched_at: datetime,
         symbol: str,
@@ -303,11 +145,8 @@ class SETAccount:
         # Add/Remove SETPosition
         if symbol not in self.position_dict:
             self.position_dict[symbol] = SETPosition(symbol=symbol)
-        self.position_dict[symbol]._match_order(volume=volume, price=price)
+        self.position_dict[symbol].match_order(volume=volume, price=price)
         if self.position_dict[symbol].volume == 0:
             del self.position_dict[symbol]
 
         return trade
-
-    def _cache_clear(self):
-        self.__dict__.pop("total_market_value", None)

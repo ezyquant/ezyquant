@@ -7,7 +7,7 @@ import pandas as pd
 class SETPosition:
     symbol: str
     volume: float = 0.0
-    avg_cost_price: float = 0.0
+    cost_price: float = 0.0
     close_price: float = float("nan")
 
     def __post_init__(self):
@@ -15,7 +15,6 @@ class SETPosition:
         assert isinstance(
             self.symbol, str
         ), f"symbol must be str, got {type(self.symbol)}"
-        assert self.symbol != "", f"symbol must not be empty, got {self.symbol}"
 
         # volume
         assert self.volume >= 0, f"volume must be positive, got {self.volume}"
@@ -25,12 +24,12 @@ class SETPosition:
 
         # price
         assert (
-            self.avg_cost_price >= 0
-        ), f"avg_cost_price must be positive, got {self.avg_cost_price}"
+            self.cost_price >= 0
+        ), f"cost_price must be positive, got {self.cost_price}"
 
     @property
     def cost_value(self) -> float:
-        return self.volume * self.avg_cost_price
+        return self.volume * self.cost_price
 
     @property
     def close_value(self) -> float:
@@ -39,9 +38,9 @@ class SETPosition:
         else:
             return 0.0
 
-    def _match_order(self, volume: float, price: float) -> float:
+    def match_order(self, volume: float, price: float) -> float:
         if volume > 0:
-            self.avg_cost_price = (self.cost_value + (volume * price)) / (
+            self.cost_price = (self.cost_value + (volume * price)) / (
                 self.volume + volume
             )
 
