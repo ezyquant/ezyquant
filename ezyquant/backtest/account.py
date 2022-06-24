@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from functools import cached_property
 from typing import Dict, List
 
 import pandas as pd
@@ -45,7 +44,7 @@ class SETAccount:
     def port_value(self) -> float:
         return self.total_market_value + self.cash
 
-    @cached_property
+    @property
     def total_market_value(self) -> float:
         return float(sum(v.close_value for v in self.position_dict.values()))
 
