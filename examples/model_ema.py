@@ -1,11 +1,9 @@
-from datetime import datetime
-
 import pandas as pd
 
 import ezyquant as ez
 from ezyquant import SETSignalCreator, backtest
 from ezyquant import utils as ezutils
-from ezyquant.backtest import SETAccount, SETPosition
+from ezyquant.backtest import Context
 from ezyquant.reader import SETBusinessDay
 
 ez.connect_sqlite("psims.db")
@@ -36,10 +34,8 @@ signal_df *= ssc.is_universe("SET100")
 signal_df = signal_df.dropna(axis=1, how="all")
 
 
-def backtest_algorithm(
-    ts: datetime, sig: float, pos: SETPosition, acct: SETAccount
-) -> float:
-    return acct.buy_pct_port(sig)
+def backtest_algorithm(ctx: Context) -> float:
+    return ctx.buy_pct_port(ctx.signal)
 
 
 #%% Backtest
