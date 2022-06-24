@@ -42,8 +42,6 @@ class SETAccount:
 
         self.ratio_commission = 1.0 + self.pct_commission
 
-        self._empty_pos = SETPosition("")  # For faster get position
-
     @property
     def port_value(self) -> float:
         return self.total_market_value + self.cash
@@ -76,12 +74,10 @@ class SETAccount:
     @property
     def _position(self) -> SETPosition:
         assert self.selected_symbol is not None, "symbol must be selected"
-        if self.selected_symbol in self.position_dict:
-            return self.position_dict[self.selected_symbol]
-        else:
-            self._empty_pos.symbol = self.selected_symbol
-            self._empty_pos.close_price = self._price
-            return self._empty_pos
+        return self.position_dict.get(
+            self.selected_symbol,
+            SETPosition(self.selected_symbol, close_price=self._price),
+        )
 
     @property
     def _volume(self) -> float:
