@@ -58,8 +58,8 @@ def test_backtest_algorithm(return_volume: float):
     assert backtest_algorithm.call_count == 8
     backtest_algorithm.assert_has_calls(
         [
-            call(pd.Timestamp("2000-01-03"), 3.0, SETPosition("A", 0.0, 0.0, 1.0), ANY),
-            call(pd.Timestamp("2000-01-03"), 4.0, SETPosition("B", 0.0, 0.0, 2.0), ANY),
+            call(pd.Timestamp("2000-01-03"), 3.0, ANY, ANY),
+            call(pd.Timestamp("2000-01-03"), 4.0, ANY, ANY),
             call(pd.Timestamp("2000-01-04"), 5.0, ANY, ANY),
             call(pd.Timestamp("2000-01-04"), 6.0, ANY, ANY),
             call(pd.Timestamp("2000-01-05"), 7.0, ANY, ANY),
