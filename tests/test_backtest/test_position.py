@@ -22,10 +22,10 @@ class TestCostPrice:
         expect_cost_price: float,
     ):
         p1 = SETPosition(symbol="A", volume=volume1, cost_price=price1)
-        result1 = p1._match_order(volume=volume2, price=price2)
+        result1 = p1.match_order(volume=volume2, price=price2)
 
         p2 = SETPosition(symbol="A", volume=volume2, cost_price=price2)
-        result2 = p2._match_order(volume=volume1, price=price1)
+        result2 = p2.match_order(volume=volume1, price=price1)
 
         assert result1 == result2 == volume1 + volume2
         assert p1.cost_price == p2.cost_price == expect_cost_price
@@ -41,7 +41,7 @@ class TestCostPrice:
     ):
         p = SETPosition(symbol="A", volume=volume1, cost_price=price)
 
-        result = p._match_order(volume=volume2, price=price)
+        result = p.match_order(volume=volume2, price=price)
 
         assert result == volume1 + volume2
         assert p.cost_price == price
@@ -59,7 +59,7 @@ class TestCostPrice:
     ):
         p = SETPosition(symbol="A", volume=volume1, cost_price=price1)
 
-        result = p._match_order(volume=volume2, price=price2)
+        result = p.match_order(volume=volume2, price=price2)
 
         assert result == volume1 + volume2
         assert p.cost_price == price1

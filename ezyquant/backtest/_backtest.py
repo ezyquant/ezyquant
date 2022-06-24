@@ -69,6 +69,7 @@ def _backtest(
                 - symbol
                 - volume
                 - cost_price
+                - close_price
             - trade_df
                 - matched_at
                 - symbol
@@ -92,7 +93,7 @@ def _backtest(
         position_dict={},  # TODO: [EZ-79] initial position dict
         trade_list=[],  # TODO: initial trade
     )
-    acct._set_market_price_dict(close_price_df.iloc[0].to_dict())
+    acct.set_position_close_price(close_price_df.iloc[0].to_dict())
 
     # remove first close row
     close_price_df = close_price_df.iloc[1:]  # type: ignore
@@ -120,32 +121,31 @@ def _backtest(
     def calculate_trade_volume(
         ts: pd.Timestamp,
     ) -> Tuple[Dict[str, float], Dict[str, float]]:
-        signal_d = signal_dict.get(ts, dict())
+        signal_d = signal_dict[ts]
 
         buy_volume_d = dict()
         sell_volume_d = dict()
 
+        ctx = Context(
+            ts=ts,
+            cash=acct.cash,
+            total_cost_value=acct.total_cost_value,
+            total_market_value=acct.total_market_value,
+            port_value=acct.port_value,
+        )
+
         for k, v in signal_d.items():
+            # Setup ctx
+            ctx.symbol = k
+            ctx.signal = v
+            ctx.close_price = acct.close_price_dict[k]
             if k in acct.position_dict:
                 pos = acct.position_dict[k]
-                volume = pos.volume
-                cost_price = pos.cost_price
+                ctx.volume = pos.volume
+                ctx.cost_price = pos.cost_price
             else:
-                volume = 0.0
-                cost_price = 0.0
-
-            ctx = Context(
-                ts=ts,
-                symbol=k,
-                signal=v,
-                close_price=acct.market_price_dict[k],
-                volume=volume,
-                cost_price=cost_price,
-                cash=acct.cash,
-                total_cost_value=acct.total_cost_value,
-                total_market_value=acct.total_market_value,
-                port_value=acct.port_value,
-            )
+                ctx.volume = 0.0
+                ctx.cost_price = 0.0
 
             trade_volume = backtest_algorithm(ctx)
 
@@ -162,13 +162,13 @@ def _backtest(
         # Trade
         for k, v in sell_volume_d.items():
             price = price_match_dict[ts][k] * ratio_sell_slip
-            acct._match_order_if_possible(ts, symbol=k, volume=v, price=price)
+            acct.match_order_if_possible(ts, symbol=k, volume=v, price=price)
         for k, v in buy_volume_d.items():
             price = price_match_dict[ts][k] * ratio_buy_slip
-            acct._match_order_if_possible(ts, symbol=k, volume=v, price=price)
+            acct.match_order_if_possible(ts, symbol=k, volume=v, price=price)
 
         # Snap
-        acct._set_market_price_dict(close_price_dict)
+        acct.set_position_close_price(close_price_dict)
         pos_df = acct.position_df
         pos_df["timestamp"] = ts
         position_df_list.append(pos_df)

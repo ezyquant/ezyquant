@@ -3,6 +3,8 @@ from typing import Any
 
 import pandas as pd
 
+nan = float("nan")
+
 
 @dataclass
 class Context:
@@ -11,16 +13,16 @@ class Context:
     """
 
     ts: pd.Timestamp
-    symbol: str
-    signal: Any
-    close_price: float
-    volume: float
-    cost_price: float
+    symbol: str = ""
+    signal: Any = nan
+    close_price: float = nan
+    volume: float = nan
+    cost_price: float = nan
 
-    cash: float
-    total_cost_value: float
-    total_market_value: float
-    port_value: float
+    cash: float = nan
+    total_cost_value: float = nan
+    total_market_value: float = nan
+    port_value: float = nan
 
     def buy_pct_port(self, pct_port: float) -> float:
         """Calculate buy volume from percentage of SETAccount. Using last close

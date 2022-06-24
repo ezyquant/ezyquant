@@ -29,7 +29,7 @@ def test_total_market_value(
 ):
     # Mock
     acct = SETAccount(cash=0.0, position_dict=position_dict)
-    acct._set_market_price_dict(market_price_dict)
+    acct.set_position_close_price(market_price_dict)
 
     # Test
     result = acct.total_market_value
@@ -149,7 +149,7 @@ class TestMatchOrderIfPossible:
             position_dict=position_dict.copy(),
         )
 
-        self.acct._match_order_if_possible(
+        self.acct.match_order_if_possible(
             matched_at=matched_at,
             symbol=symbol,
             volume=volume,
@@ -212,7 +212,7 @@ class TestMatchOrderBuy:
         )
 
         # Test
-        result = acct._match_order(
+        result = acct.match_order(
             symbol=symbol,
             volume=volume,
             price=price,
@@ -237,7 +237,7 @@ class TestMatchOrderBuy:
 
         # Test
         with pytest.raises(ValueError) as e:
-            acct._match_order(
+            acct.match_order(
                 symbol=symbol,
                 volume=volume,
                 price=price,
@@ -272,7 +272,7 @@ class TestMatchOrderBuy:
 
         # Test
         with pytest.raises(AssertionError) as e:
-            acct._match_order(
+            acct.match_order(
                 symbol=symbol,
                 volume=volume,
                 price=price,
@@ -336,7 +336,7 @@ class TestMatchOrderSell:
         )
 
         # Test
-        result = acct._match_order(
+        result = acct.match_order(
             symbol=symbol,
             volume=volume,
             price=price,
@@ -372,7 +372,7 @@ class TestMatchOrderSell:
 
         # Test
         with pytest.raises(ValueError) as e:
-            acct._match_order(
+            acct.match_order(
                 symbol=symbol,
                 volume=volume,
                 price=price,

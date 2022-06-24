@@ -38,7 +38,7 @@ class SETPosition:
         else:
             return 0.0
 
-    def _match_order(self, volume: float, price: float) -> float:
+    def match_order(self, volume: float, price: float) -> float:
         if volume > 0:
             self.cost_price = (self.cost_value + (volume * price)) / (
                 self.volume + volume
