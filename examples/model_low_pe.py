@@ -46,3 +46,4 @@ result = backtest(
 )
 
 print(result.stat_df)
+result.to_excel("result.xlsx")

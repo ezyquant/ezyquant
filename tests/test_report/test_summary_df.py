@@ -148,7 +148,7 @@ class TestSummaryDf:
     ):
         # Mock
         sbr = SETBacktestReport(
-            initial_capital=0.0,
+            initial_capital=1.0,
             pct_commission=0.0,
             pct_buy_slip=0.0,
             pct_sell_slip=0.0,

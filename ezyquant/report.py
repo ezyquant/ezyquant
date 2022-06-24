@@ -139,7 +139,9 @@ class SETBacktestReport:
         """
         df = self._cash_series.to_frame("cash")
 
-        df["cashflow"] = df["cash"].diff().fillna(0.0)
+        df["cashflow"] = df["cash"] - df["cash"].shift(
+            1, fill_value=self.initial_capital
+        )
 
         df["commission"] = (
             self.trade_df.set_index("matched_at")["commission"].groupby(level=0).sum()
@@ -429,6 +431,30 @@ class SETBacktestReport:
 
         return df[summary_trade_columns]
 
+    def to_excel(self, path: str):
+        """Export to Excel.
+
+        Parameters
+        ----------
+        path : str
+            Path to Excel file.
+        """
+        with pd.ExcelWriter(
+            path, engine="xlsxwriter", datetime_format="YYYY-MM-DD"
+        ) as writer:
+            self.summary_df.to_excel(writer, sheet_name="summary", index=False)
+            self.position_df.to_excel(writer, sheet_name="position", index=False)
+            self.trade_df.to_excel(writer, sheet_name="trade", index=False)
+            self.stat_df.to_excel(writer, sheet_name="stat")
+            self.summary_trade_df.to_excel(
+                writer, sheet_name="summary_trade", index=False
+            )
+            # self.cumulative_return_df.to_excel(writer, sheet_name="cumulative_return")
+            # self.monthly_return_df.to_excel(writer, sheet_name="monthly_return")
+            self.dividend_df.to_excel(writer, sheet_name="dividend", index=False)
+            # self.price_distribution_df.to_excel(writer, sheet_name="price_distribution")
+            # self.drawdown_percent_df.to_excel(writer, sheet_name="drawdown_percent")
+
     """
     Stat
     """
@@ -486,7 +512,7 @@ class SETBacktestReport:
     @return_nan_on_failure
     def pct_exposure(self) -> pd.Series:
         """Percent of exposure."""
-        df = self.summary_df
+        df = self.summary_df.copy()
         df["port_value"] = df["total_market_value"] / df["port_value"]
         df["port_value_with_dividend"] = (
             df["total_market_value"] / df["port_value_with_dividend"]
@@ -707,7 +733,9 @@ class SETBacktestReport:
         pos_df["matched_at"] += self._sdr._SETBusinessDay(1)  # type: ignore
 
         # set index for merge
-        df = trade_df.merge(pos_df, on=["matched_at", "symbol"], validate="1:1")
+        df = trade_df.merge(
+            pos_df, how="left", on=["matched_at", "symbol"], validate="1:1"
+        )
 
         return df
 
