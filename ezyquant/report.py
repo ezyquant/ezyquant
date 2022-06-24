@@ -733,7 +733,9 @@ class SETBacktestReport:
         pos_df["matched_at"] += self._sdr._SETBusinessDay(1)  # type: ignore
 
         # set index for merge
-        df = trade_df.merge(pos_df, on=["matched_at", "symbol"], validate="1:1")
+        df = trade_df.merge(
+            pos_df, how="left", on=["matched_at", "symbol"], validate="1:1"
+        )
 
         return df
 
