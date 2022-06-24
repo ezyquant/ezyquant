@@ -1,3 +1,5 @@
+from typing import List
+
 import pandas as pd
 import pytest
 from pandas.testing import assert_series_equal
@@ -19,7 +21,7 @@ from tests import utils
     ],
 )
 def test_pct_maximum_drawdown(
-    sbr: SETBacktestReport, nav_list: pd.DataFrame, expected_result: float
+    sbr: SETBacktestReport, nav_list: List[float], expected_result: float
 ):
     # Mock
     summary_df = pd.DataFrame(
@@ -56,7 +58,7 @@ def test_pct_maximum_drawdown(
     ],
 )
 def test_maximum_drawdown(
-    sbr: SETBacktestReport, nav_list: pd.DataFrame, expected_result: float
+    sbr: SETBacktestReport, nav_list: List[float], expected_result: float
 ):
     # Mock
     summary_df = pd.DataFrame(
@@ -70,6 +72,46 @@ def test_maximum_drawdown(
 
     # Test
     result = sbr.maximum_drawdown
+
+    # Check
+    assert_series_equal(
+        result,
+        pd.Series(
+            {"port_value": expected_result, "port_value_with_dividend": expected_result}
+        ),
+    )
+
+
+@pytest.mark.parametrize(
+    ("nav_list", "mkt_value_list", "expected_result"),
+    [
+        ([100.0], [0.0], 0.0),
+        ([100.0], [100.0], 1.0),
+        ([100.0, 100.0], [0.0, 0.0], 0.0),
+        ([100.0, 100.0], [0.0, 100.0], 0.5),
+        ([100.0, 100.0], [100.0, 0.0], 0.5),
+        ([100.0, 100.0], [100.0, 100.0], 1.0),
+    ],
+)
+def test_pct_exposure(
+    sbr: SETBacktestReport,
+    nav_list: List[float],
+    mkt_value_list: List[float],
+    expected_result: float,
+):
+    # Mock
+    summary_df = pd.DataFrame(
+        {
+            "port_value": nav_list,
+            "port_value_with_dividend": nav_list,
+            "total_market_value": mkt_value_list,
+        }
+    )
+    sbr.__dict__["summary_df"] = summary_df
+
+    # Test
+    result = sbr.pct_exposure
+    print(result)
 
     # Check
     assert_series_equal(
