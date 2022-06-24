@@ -139,7 +139,9 @@ class SETBacktestReport:
         """
         df = self._cash_series.to_frame("cash")
 
-        df["cashflow"] = df["cash"].diff().fillna(0.0)
+        df["cashflow"] = df["cash"] - df["cash"].shift(
+            1, fill_value=self.initial_capital
+        )
 
         df["commission"] = (
             self.trade_df.set_index("matched_at")["commission"].groupby(level=0).sum()
