@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime
+from decimal import Decimal
 from functools import cached_property
 from typing import Dict, List, Optional
 
@@ -255,8 +256,10 @@ class SETAccount:
 
         if volume > 0:
             # buy with enough cash
-            can_buy_volume = (
-                self.cash / price / self.ratio_commission + 1e-10
+            can_buy_volume = float(
+                Decimal(str(self.cash))
+                / Decimal(str(price))
+                / Decimal(str(self.ratio_commission))
             )  # fix for floating point error
             volume = min(volume, can_buy_volume)
         elif volume < 0:
