@@ -512,7 +512,7 @@ class SETBacktestReport:
     @return_nan_on_failure
     def pct_exposure(self) -> pd.Series:
         """Percent of exposure."""
-        df = self.summary_df
+        df = self.summary_df.copy()
         df["port_value"] = df["total_market_value"] / df["port_value"]
         df["port_value_with_dividend"] = (
             df["total_market_value"] / df["port_value_with_dividend"]
