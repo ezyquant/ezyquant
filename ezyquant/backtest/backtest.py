@@ -47,7 +47,7 @@ def backtest(
                     volume of position
                 - close_price: float
                     close price of position
-                - avg_cost_price: float
+                - cost_price: float
                     average cost price of position
             - account: SETAccount
                 account object

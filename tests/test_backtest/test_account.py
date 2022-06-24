@@ -167,17 +167,17 @@ class TestMatchOrderBuy:
         [
             (
                 {},
-                {"A": SETPosition(symbol="A", volume=100.0, avg_cost_price=1.0)},
+                {"A": SETPosition(symbol="A", volume=100.0, cost_price=1.0)},
             ),
             (
-                {"A": SETPosition(symbol="A", volume=100.0, avg_cost_price=2.0)},
-                {"A": SETPosition(symbol="A", volume=200.0, avg_cost_price=1.5)},
+                {"A": SETPosition(symbol="A", volume=100.0, cost_price=2.0)},
+                {"A": SETPosition(symbol="A", volume=200.0, cost_price=1.5)},
             ),
             (
-                {"B": SETPosition(symbol="B", volume=200.0, avg_cost_price=2.0)},
+                {"B": SETPosition(symbol="B", volume=200.0, cost_price=2.0)},
                 {
-                    "A": SETPosition(symbol="A", volume=100.0, avg_cost_price=1.0),
-                    "B": SETPosition(symbol="B", volume=200.0, avg_cost_price=2.0),
+                    "A": SETPosition(symbol="A", volume=100.0, cost_price=1.0),
+                    "B": SETPosition(symbol="B", volume=200.0, cost_price=2.0),
                 },
             ),
         ],
@@ -290,19 +290,19 @@ class TestMatchOrderSell:
         ("position_dict", "expect_position_dict"),
         [
             (
-                {"A": SETPosition(symbol="A", volume=100.0, avg_cost_price=1.0)},
+                {"A": SETPosition(symbol="A", volume=100.0, cost_price=1.0)},
                 {},
             ),
             (
-                {"A": SETPosition(symbol="A", volume=200.0, avg_cost_price=1.5)},
-                {"A": SETPosition(symbol="A", volume=100.0, avg_cost_price=1.5)},
+                {"A": SETPosition(symbol="A", volume=200.0, cost_price=1.5)},
+                {"A": SETPosition(symbol="A", volume=100.0, cost_price=1.5)},
             ),
             (
                 {
-                    "A": SETPosition(symbol="A", volume=100.0, avg_cost_price=1.0),
-                    "B": SETPosition(symbol="B", volume=200.0, avg_cost_price=2.0),
+                    "A": SETPosition(symbol="A", volume=100.0, cost_price=1.0),
+                    "B": SETPosition(symbol="B", volume=200.0, cost_price=2.0),
                 },
-                {"B": SETPosition(symbol="B", volume=200.0, avg_cost_price=2.0)},
+                {"B": SETPosition(symbol="B", volume=200.0, cost_price=2.0)},
             ),
         ],
     )
@@ -353,8 +353,8 @@ class TestMatchOrderSell:
         "position_dict",
         [
             {},
-            {"A": SETPosition(symbol="A", volume=100.0, avg_cost_price=1.0)},
-            {"B": SETPosition(symbol="B", volume=200.0, avg_cost_price=1.0)},
+            {"A": SETPosition(symbol="A", volume=100.0, cost_price=1.0)},
+            {"B": SETPosition(symbol="B", volume=200.0, cost_price=1.0)},
         ],
     )
     def test_error_insufficient_position(self, position_dict: Dict[str, SETPosition]):

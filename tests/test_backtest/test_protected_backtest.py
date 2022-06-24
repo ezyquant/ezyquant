@@ -15,7 +15,7 @@ from ezyquant.backtest.position import SETPosition
 
 nan = float("nan")
 
-position_columns = ["timestamp", "symbol", "volume", "avg_cost_price", "close_price"]
+position_columns = ["timestamp", "symbol", "volume", "cost_price", "close_price"]
 trade_columns = ["matched_at", "symbol", "volume", "price", "pct_commission"]
 
 
@@ -316,7 +316,7 @@ def _check_position_df(df):
     if not df.empty:
         assert ptypes.is_string_dtype(df["symbol"])
         assert ptypes.is_float_dtype(df["volume"])
-        assert ptypes.is_float_dtype(df["avg_cost_price"])
+        assert ptypes.is_float_dtype(df["cost_price"])
 
 
 def _check_trade_df(df):

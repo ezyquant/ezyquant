@@ -11,46 +11,46 @@ from tests import utils
     ("position_df", "trade_df", "expect_result"),
     [
         (
-            pd.DataFrame(columns=["timestamp", "symbol", "avg_cost_price"]),
+            pd.DataFrame(columns=["timestamp", "symbol", "cost_price"]),
             pd.DataFrame(columns=["matched_at", "symbol"]),
-            pd.DataFrame(columns=["matched_at", "symbol", "avg_cost_price"]),
+            pd.DataFrame(columns=["matched_at", "symbol", "cost_price"]),
         ),
         (
             pd.DataFrame(
                 [["2022-01-04", "A", 1.0]],
-                columns=["timestamp", "symbol", "avg_cost_price"],
+                columns=["timestamp", "symbol", "cost_price"],
             ),
             pd.DataFrame([["2022-01-05", "A"]], columns=["matched_at", "symbol"]),
             pd.DataFrame(
                 [["2022-01-05", "A", 1.0]],
-                columns=["matched_at", "symbol", "avg_cost_price"],
+                columns=["matched_at", "symbol", "cost_price"],
             ),
         ),
         (
             pd.DataFrame(
                 [["2022-01-04", "A", 1.0]],
-                columns=["timestamp", "symbol", "avg_cost_price"],
+                columns=["timestamp", "symbol", "cost_price"],
             ),
             pd.DataFrame([["2022-01-05", "A"]], columns=["matched_at", "symbol"]),
             pd.DataFrame(
                 [["2022-01-05", "A", 1.0]],
-                columns=["matched_at", "symbol", "avg_cost_price"],
+                columns=["matched_at", "symbol", "cost_price"],
             ),
         ),
         (
             pd.DataFrame(
                 [["2022-01-07", "A", 1.0]],
-                columns=["timestamp", "symbol", "avg_cost_price"],
+                columns=["timestamp", "symbol", "cost_price"],
             ),
             pd.DataFrame([["2022-01-10", "A"]], columns=["matched_at", "symbol"]),
             pd.DataFrame(
                 [["2022-01-10", "A", 1.0]],
-                columns=["matched_at", "symbol", "avg_cost_price"],
+                columns=["matched_at", "symbol", "cost_price"],
             ),
         ),
     ],
 )
-def test_summary_trade_avg_cost_price(
+def test_summary_trade_cost_price(
     sbr: SETBacktestReport,
     position_df: pd.DataFrame,
     trade_df: pd.DataFrame,
@@ -64,7 +64,7 @@ def test_summary_trade_avg_cost_price(
     sbr.__dict__["position_df"] = position_df
 
     # Test
-    result = sbr._summary_trade_avg_cost_price(trade_df=trade_df)
+    result = sbr._summary_trade_cost_price(trade_df=trade_df)
 
     # Check
     assert_frame_equal(result, expect_result)
@@ -83,7 +83,7 @@ def test_summary_trade_avg_cost_price(
                     "volume",
                     "price",
                     "commission",
-                    "avg_cost_price",
+                    "cost_price",
                 ]
             ),
         ),
@@ -100,7 +100,7 @@ def test_summary_trade_avg_cost_price(
                     "volume",
                     "price",
                     "commission",
-                    "avg_cost_price",
+                    "cost_price",
                 ]
             ),
         ),
@@ -128,7 +128,7 @@ def test_summary_trade_avg_cost_price(
                     "volume",
                     "price",
                     "commission",
-                    "avg_cost_price",
+                    "cost_price",
                 ],
             ),
         ),

@@ -47,7 +47,7 @@ def _backtest(
                     volume of position
                 - close_price: float
                     close price of position
-                - avg_cost_price: float
+                - cost_price: float
                     average cost price of position
             - account: SETAccount
                 account object
@@ -80,7 +80,7 @@ def _backtest(
                 - timestamp
                 - symbol
                 - volume
-                - avg_cost_price
+                - cost_price
             - trade_df
                 - matched_at
                 - symbol

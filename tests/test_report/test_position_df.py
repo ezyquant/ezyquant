@@ -5,7 +5,7 @@ from pandas.testing import assert_frame_equal, assert_index_equal
 
 from ezyquant.report import SETBacktestReport, position_columns
 
-position_in_columns = ["timestamp", "symbol", "volume", "avg_cost_price", "close_price"]
+position_in_columns = ["timestamp", "symbol", "volume", "cost_price", "close_price"]
 
 
 @pytest.mark.parametrize(
@@ -77,12 +77,12 @@ def _check_position_df(df):
         assert ptypes.is_datetime64_any_dtype(df["timestamp"])
         assert ptypes.is_string_dtype(df["symbol"])
         assert ptypes.is_float_dtype(df["volume"])
-        assert ptypes.is_float_dtype(df["avg_cost_price"])
+        assert ptypes.is_float_dtype(df["cost_price"])
         assert ptypes.is_float_dtype(df["close_price"])
         assert ptypes.is_float_dtype(df["close_value"])
 
     # Value
     assert (df["volume"] > 0).all()
-    assert (df["avg_cost_price"] > 0).all()
+    assert (df["cost_price"] > 0).all()
     assert (df["close_price"] > 0).all()
     assert (df["close_value"] > 0).all()
