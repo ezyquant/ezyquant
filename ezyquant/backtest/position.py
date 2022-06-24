@@ -15,7 +15,6 @@ class SETPosition:
         assert isinstance(
             self.symbol, str
         ), f"symbol must be str, got {type(self.symbol)}"
-        assert self.symbol != "", f"symbol must not be empty, got {self.symbol}"
 
         # volume
         assert self.volume >= 0, f"volume must be positive, got {self.volume}"
