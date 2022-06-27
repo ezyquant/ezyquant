@@ -764,17 +764,17 @@ class SETBacktestReport:
     @property
     def pct_commission(self) -> float:
         """Percent commission."""
-        return self._pct_commission * 100
+        return self._pct_commission
 
     @property
     def pct_buy_slip(self) -> float:
         """Percent buy slip."""
-        return self._pct_buy_slip * 100
+        return self._pct_buy_slip
 
     @property
     def pct_sell_slip(self) -> float:
         """Percent sell slip."""
-        return self._pct_sell_slip * 100
+        return self._pct_sell_slip
 
     @property
     def _n_year(self) -> float:
