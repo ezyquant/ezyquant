@@ -1,4 +1,4 @@
-import calendar
+from calendar import month_abbr
 from datetime import datetime
 from functools import cached_property
 
@@ -827,27 +827,26 @@ class SETBacktestReport:
         pd.DataFrame
             Return by period.
         """
-        if period == "M":
-            value_name = "value"
-        elif period == "Y":
-            value_name = "YTD"
-        else:
-            raise ValueError("period must be 'M' or 'Y'")
-
         df = df.resample(period).last()  # type: ignore
+        df = df.sort_index()
         df = (df / df.shift(fill_value=init_cap)) - 1
 
-        df = df.melt(var_name="nav_name", value_name=value_name, ignore_index=False)
+        df = df.melt(var_name="name", value_name="value", ignore_index=False)
 
         df["year"] = df.index.year  # type: ignore
         df["month"] = df.index.month  # type: ignore
 
         if period == "M":
             df = pd.pivot_table(
-                df, index=["nav_name", "year"], columns="month", values=value_name
+                df, index=["name", "year"], columns="month", values="value"
             )
-            df = df.rename(columns={i: calendar.month_abbr[i] for i in range(1, 13)})
+            df = df.rename(
+                columns={i: month_abbr[i] for i in range(1, len(month_abbr))}
+            )
+            df = df.reindex(columns=month_abbr[1:])  # type: ignore
         else:
-            df = pd.pivot_table(df, index=["nav_name", "year"], values=value_name)
+            df = pd.pivot_table(df, index=["name", "year"], values="value")
+            df = df.rename(columns={"value": "YTD"})
+            df.columns.name = "month"
 
         return df
