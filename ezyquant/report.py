@@ -431,6 +431,17 @@ class SETBacktestReport:
 
         return df[summary_trade_columns]
 
+    @cached_property
+    def cumulative_return_df(self) -> pd.DataFrame:
+        """Cumulative Return DataFrame.
+
+        Returns
+        -------
+        pd.DataFrame
+            index is trade date, columns is "port_value", "port_value_with_dividend"
+        """
+        return self._nav_df / self.initial_capital
+
     def to_excel(self, path: str):
         """Export to Excel.
 
@@ -449,7 +460,7 @@ class SETBacktestReport:
             self.summary_trade_df.to_excel(
                 writer, sheet_name="summary_trade", index=False
             )
-            # self.cumulative_return_df.to_excel(writer, sheet_name="cumulative_return")
+            self.cumulative_return_df.to_excel(writer, sheet_name="cumulative_return")
             # self.monthly_return_df.to_excel(writer, sheet_name="monthly_return")
             self.dividend_df.to_excel(writer, sheet_name="dividend", index=False)
             # self.price_distribution_df.to_excel(writer, sheet_name="price_distribution")
