@@ -445,11 +445,11 @@ class SETBacktestReport:
 
     @cached_property
     def monthly_return_df(self) -> pd.DataFrame:
-        """
-        df: pd.DataFrame
-            result.get_nav_df()
-        initial_capital: pd.Series
-            result.initial_capital()
+        """Monthly Return DataFrame.
+
+        Returns
+        -------
+        pd.DataFrame
         """
         df = self._nav_df
         init_cap = self.initial_capital
