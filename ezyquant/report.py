@@ -410,6 +410,7 @@ class SETBacktestReport:
         trade_df = self._summary_trade_entry_at(trade_df)
 
         df = trade_df[trade_df["side"] == fld.SIDE_SELL]
+        df = df.reset_index(drop=True)
 
         # sell price
         df = df.rename(columns={"price": "sell_price", "matched_at": "exit_at"})
