@@ -58,7 +58,7 @@ report = backtest(
 )
 ```
 
-Backtes report:
+Backtest report:
 
 ```
                                port_value port_value_with_dividend
