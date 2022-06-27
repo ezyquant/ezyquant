@@ -1,3 +1,4 @@
+import calendar
 from datetime import datetime
 from functools import cached_property
 
@@ -442,6 +443,66 @@ class SETBacktestReport:
         """
         return self._nav_df / self.initial_capital
 
+    @cached_property
+    def monthly_return_df(self) -> pd.DataFrame:
+        """
+        df: pd.DataFrame
+            result.get_nav_df()
+        initial_capital: pd.Series
+            result.initial_capital()
+        """
+        df = self._nav_df
+        initial_capital = self.initial_capital
+
+        # Monthly return
+        monthly_last_price = df.resample("M").last()
+        monthly_last_price_shift = monthly_last_price.shift()
+        monthly_last_price_shift = monthly_last_price_shift.fillna(initial_capital)
+
+        monthly_return = (monthly_last_price / monthly_last_price_shift) - 1
+
+        monthly_return = monthly_return.melt(
+            var_name="nav_name", value_name="value", ignore_index=False
+        )
+
+        monthly_return["year"] = monthly_return.index.year  # type: ignore
+        monthly_return["month"] = monthly_return.index.month  # type: ignore
+
+        monthly_return = pd.pivot_table(
+            monthly_return, index=["nav_name", "year"], columns="month", values="value"
+        )
+
+        monthly_return = monthly_return.rename(
+            columns={i: calendar.month_abbr[i] for i in range(13)}
+        )
+
+        # Yearly return
+        yearly_last_price = df.resample("Y").last()
+        yearly_last_price_shift = yearly_last_price.shift()
+        yearly_last_price_shift = yearly_last_price_shift.fillna(initial_capital)
+
+        yearly_return = (yearly_last_price / yearly_last_price_shift) - 1
+
+        yearly_return = yearly_return.melt(
+            var_name="nav_name", value_name="YTD", ignore_index=False
+        )
+
+        yearly_return["year"] = yearly_return.index.year  # type: ignore
+
+        yearly_return = pd.pivot_table(
+            yearly_return, index=["nav_name", "year"], values="YTD"
+        )
+
+        out = monthly_return.merge(
+            yearly_return,
+            how="inner",
+            left_index=True,
+            right_index=True,
+            validate="1:1",
+        )
+
+        return out
+
     def to_excel(self, path: str):
         """Export to Excel.
 
@@ -461,7 +522,7 @@ class SETBacktestReport:
                 writer, sheet_name="summary_trade", index=False
             )
             self.cumulative_return_df.to_excel(writer, sheet_name="cumulative_return")
-            # self.monthly_return_df.to_excel(writer, sheet_name="monthly_return")
+            self.monthly_return_df.to_excel(writer, sheet_name="monthly_return")
             self.dividend_df.to_excel(writer, sheet_name="dividend", index=False)
             # self.price_distribution_df.to_excel(writer, sheet_name="price_distribution")
             # self.drawdown_percent_df.to_excel(writer, sheet_name="drawdown_percent")
