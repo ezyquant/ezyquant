@@ -431,6 +431,18 @@ class SETBacktestReport:
 
         return df[summary_trade_columns]
 
+    @cached_property
+    def cumulative_return_df(self) -> pd.DataFrame:
+        """
+        Returns
+        -------
+        pd.DataFrame
+          index is trade date, columns is "port_value", "port_value_with_dividend"
+        """
+        df = self._nav_df
+        df /= self.initial_capital
+        return df
+
     def to_excel(self, path: str):
         """Export to Excel.
 
