@@ -460,7 +460,7 @@ class SETBacktestReport:
             self.summary_trade_df.to_excel(
                 writer, sheet_name="summary_trade", index=False
             )
-            # self.cumulative_return_df.to_excel(writer, sheet_name="cumulative_return")
+            self.cumulative_return_df.to_excel(writer, sheet_name="cumulative_return")
             # self.monthly_return_df.to_excel(writer, sheet_name="monthly_return")
             self.dividend_df.to_excel(writer, sheet_name="dividend", index=False)
             # self.price_distribution_df.to_excel(writer, sheet_name="price_distribution")
