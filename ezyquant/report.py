@@ -2,6 +2,7 @@ from calendar import month_abbr
 from datetime import datetime
 from functools import cached_property
 
+import numpy as np
 import pandas as pd
 from pandas.testing import assert_index_equal
 
@@ -468,6 +469,26 @@ class SETBacktestReport:
 
         return out
 
+    @cached_property
+    def price_distribution_df(self) -> pd.DataFrame:
+        step = 0.05
+
+        pct_return = self.summary_trade_df["pct_return"]
+
+        min_r = (pct_return.min() // step) * step
+        max_r = (pct_return.max() // step + 2) * step
+
+        if np.isnan(min_r) and np.isnan(max_r):
+            min_r, max_r = 0, 0
+
+        price_dis = pct_return.groupby(
+            pd.cut(pct_return, np.arange(min_r, max_r, step))
+        ).count()
+
+        price_dis.index.name = None
+
+        return price_dis.to_frame("pct_return")
+
     def to_excel(self, path: str):
         """Export to Excel.
 
@@ -489,7 +510,7 @@ class SETBacktestReport:
             self.cumulative_return_df.to_excel(writer, sheet_name="cumulative_return")
             self.monthly_return_df.to_excel(writer, sheet_name="monthly_return")
             self.dividend_df.to_excel(writer, sheet_name="dividend", index=False)
-            # self.price_distribution_df.to_excel(writer, sheet_name="price_distribution")
+            self.price_distribution_df.to_excel(writer, sheet_name="price_distribution")
             # self.drawdown_percent_df.to_excel(writer, sheet_name="drawdown_percent")
 
     """
