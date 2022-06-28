@@ -518,6 +518,16 @@ class SETBacktestReport:
 
         return price_dis.to_frame("pct_return")
 
+    @cached_property
+    def drawdown_percent_df(self) -> pd.DataFrame:
+        """Drawdown Percent DataFrame.
+
+        Returns
+        -------
+        pd.DataFrame
+        """
+        return (self._nav_df / self._nav_df.cummax()) - 1
+
     def to_excel(self, path: str):
         """Export to Excel.
 
@@ -540,7 +550,7 @@ class SETBacktestReport:
             self.monthly_return_df.to_excel(writer, sheet_name="monthly_return")
             self.dividend_df.to_excel(writer, sheet_name="dividend", index=False)
             self.price_distribution_df.to_excel(writer, sheet_name="price_distribution")
-            # self.drawdown_percent_df.to_excel(writer, sheet_name="drawdown_percent")
+            self.drawdown_percent_df.to_excel(writer, sheet_name="drawdown_percent")
 
     """
     Stat
