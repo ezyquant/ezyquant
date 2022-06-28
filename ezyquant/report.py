@@ -472,6 +472,27 @@ class SETBacktestReport:
 
     @cached_property
     def price_distribution_df(self) -> pd.DataFrame:
+        """Price Distribution DataFrame.
+
+        Returns
+        -------
+        pd.DataFrame
+
+        Examples
+        --------
+                            pct_return
+        (-0.25, -0.2]                3
+        (-0.2, -0.15]                2
+        (-0.15, -0.1]               34
+        (-0.1, -0.05]              234
+        (-0.05, 0.0]               613
+        (0.0, 0.05]                137
+        (0.05, 0.1]                 62
+        (0.1, 0.15]                 45
+        (0.15, 0.2]                 37
+        (0.2, 0.25]                 17
+        (0.25, 0.3]                 16
+        """
         pct_return = self.summary_trade_df["pct_return"]
 
         # bins
