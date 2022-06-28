@@ -36,17 +36,6 @@ def round_down(value, base=100.0):
     return int(value / base) * base
 
 
-def round_up(value, base=100.0):
-    if value % base == 0:
-        return value
-    elif value > 0:
-        return round_down(value + base - 1, base)
-    elif value < 0:
-        return round_down(value - base + 1, base)
-    else:
-        return 0
-
-
 def is_rebalance_weekly(
     trade_date_index: pd.DatetimeIndex, rebalance_at: int
 ) -> pd.Series:
