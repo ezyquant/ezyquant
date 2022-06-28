@@ -520,6 +520,12 @@ class SETBacktestReport:
 
     @cached_property
     def drawdown_percent_df(self) -> pd.DataFrame:
+        """Drawdown Percent DataFrame.
+
+        Returns
+        -------
+        pd.DataFrame
+        """
         return (self._nav_df / self._nav_df.cummax()) - 1
 
     def to_excel(self, path: str):
