@@ -1,7 +1,9 @@
+import math
 from calendar import month_abbr
 from datetime import datetime
 from functools import cached_property
 
+import numpy as np
 import pandas as pd
 from pandas.testing import assert_index_equal
 
@@ -410,6 +412,7 @@ class SETBacktestReport:
         trade_df = self._summary_trade_entry_at(trade_df)
 
         df = trade_df[trade_df["side"] == fld.SIDE_SELL]
+        df = df.reset_index(drop=True)
 
         # sell price
         df = df.rename(columns={"price": "sell_price", "matched_at": "exit_at"})
@@ -467,6 +470,54 @@ class SETBacktestReport:
 
         return out
 
+    @cached_property
+    def price_distribution_df(self) -> pd.DataFrame:
+        """Price Distribution DataFrame.
+
+        Returns
+        -------
+        pd.DataFrame
+
+        Examples
+        --------
+                            pct_return
+        (-0.25, -0.2]                3
+        (-0.2, -0.15]                2
+        (-0.15, -0.1]               34
+        (-0.1, -0.05]              234
+        (-0.05, 0.0]               613
+        (0.0, 0.05]                137
+        (0.05, 0.1]                 62
+        (0.1, 0.15]                 45
+        (0.15, 0.2]                 37
+        (0.2, 0.25]                 17
+        (0.25, 0.3]                 16
+        """
+        pct_return = self.summary_trade_df["pct_return"]
+
+        # bins
+        step = 0.05
+
+        min_r = pct_return.min()
+        max_r = pct_return.max()
+
+        if np.isnan(min_r) and np.isnan(max_r):
+            min_r, max_r = 0, 0
+        else:
+            if min_r % step == 0:
+                min_r -= step
+            else:
+                min_r = math.ceil(min_r / step - 1) * step
+            max_r += step
+
+        bins = np.arange(min_r, max_r, step)
+
+        # histogram
+        price_dis = pct_return.groupby(pd.cut(pct_return, bins)).count()
+        price_dis.index.name = None
+
+        return price_dis.to_frame("pct_return")
+
     def to_excel(self, path: str):
         """Export to Excel.
 
@@ -488,7 +539,7 @@ class SETBacktestReport:
             self.cumulative_return_df.to_excel(writer, sheet_name="cumulative_return")
             self.monthly_return_df.to_excel(writer, sheet_name="monthly_return")
             self.dividend_df.to_excel(writer, sheet_name="dividend", index=False)
-            # self.price_distribution_df.to_excel(writer, sheet_name="price_distribution")
+            self.price_distribution_df.to_excel(writer, sheet_name="price_distribution")
             # self.drawdown_percent_df.to_excel(writer, sheet_name="drawdown_percent")
 
     """
