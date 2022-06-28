@@ -1,3 +1,4 @@
+from calendar import month_abbr
 from datetime import datetime
 from functools import cached_property
 
@@ -442,6 +443,30 @@ class SETBacktestReport:
         """
         return self._nav_df / self.initial_capital
 
+    @cached_property
+    def monthly_return_df(self) -> pd.DataFrame:
+        """Monthly Return DataFrame.
+
+        Returns
+        -------
+        pd.DataFrame
+        """
+        df = self._nav_df
+        init_cap = self.initial_capital
+
+        monthly_return = self._return_by_period(df, init_cap=init_cap, period="M")
+        yearly_return = self._return_by_period(df, init_cap=init_cap, period="Y")
+
+        out = monthly_return.merge(
+            yearly_return,
+            how="inner",
+            left_index=True,
+            right_index=True,
+            validate="1:1",
+        )
+
+        return out
+
     def to_excel(self, path: str):
         """Export to Excel.
 
@@ -461,7 +486,7 @@ class SETBacktestReport:
                 writer, sheet_name="summary_trade", index=False
             )
             self.cumulative_return_df.to_excel(writer, sheet_name="cumulative_return")
-            # self.monthly_return_df.to_excel(writer, sheet_name="monthly_return")
+            self.monthly_return_df.to_excel(writer, sheet_name="monthly_return")
             self.dividend_df.to_excel(writer, sheet_name="dividend", index=False)
             # self.price_distribution_df.to_excel(writer, sheet_name="price_distribution")
             # self.drawdown_percent_df.to_excel(writer, sheet_name="drawdown_percent")
@@ -703,17 +728,17 @@ class SETBacktestReport:
     @property
     def pct_commission(self) -> float:
         """Percent commission."""
-        return self._pct_commission * 100
+        return self._pct_commission
 
     @property
     def pct_buy_slip(self) -> float:
         """Percent buy slip."""
-        return self._pct_buy_slip * 100
+        return self._pct_buy_slip
 
     @property
     def pct_sell_slip(self) -> float:
         """Percent sell slip."""
-        return self._pct_sell_slip * 100
+        return self._pct_sell_slip
 
     @property
     def _n_year(self) -> float:
@@ -779,5 +804,49 @@ class SETBacktestReport:
 
         tmp = df.groupby(["symbol"]).fillna(method="pad")  # type: ignore
         df["entry_at"] = tmp["entry_at"]
+
+        return df
+
+    @staticmethod
+    def _return_by_period(
+        df: pd.DataFrame, init_cap: float, period: str
+    ) -> pd.DataFrame:
+        """Return by period.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            Nav dataframe.
+        init_cap : float
+            Initial capital.
+        period : str
+            "M" (monthly) or "Y" (yearly)
+
+        Returns
+        -------
+        pd.DataFrame
+            Return by period.
+        """
+        df = df.resample(period).last()  # type: ignore
+        df = df.sort_index()
+        df = (df / df.shift(fill_value=init_cap)) - 1
+
+        df = df.melt(var_name="name", value_name="value", ignore_index=False)
+
+        df["year"] = df.index.year  # type: ignore
+        df["month"] = df.index.month  # type: ignore
+
+        if period == "M":
+            df = pd.pivot_table(
+                df, index=["name", "year"], columns="month", values="value"
+            )
+            df = df.rename(
+                columns={i: month_abbr[i] for i in range(1, len(month_abbr))}
+            )
+            df = df.reindex(columns=month_abbr[1:])  # type: ignore
+        else:
+            df = pd.pivot_table(df, index=["name", "year"], values="value")
+            df = df.rename(columns={"value": "YTD"})
+            df.columns.name = "month"
 
         return df
