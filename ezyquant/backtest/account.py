@@ -108,7 +108,7 @@ class SETAccount:
             else:
                 return
 
-        volume = utils.round_100(volume)
+        volume = utils.round_down(volume, base=100.0)
 
         if volume == 0.0:
             return

@@ -10,6 +10,24 @@ from pandas.testing import assert_frame_equal, assert_series_equal
 from ezyquant import utils
 
 
+@pytest.mark.parametrize("base", [10, 10.0])
+@pytest.mark.parametrize(
+    ("value", "expect_result"),
+    [(-10, -10), (-9, 0), (-1, 0), (0, 0), (1, 0), (9, 0), (10, 10)],
+)
+def test_round_down(value, base, expect_result):
+    assert utils.round_down(value, base) == expect_result
+
+
+@pytest.mark.parametrize("base", [10, 10.0])
+@pytest.mark.parametrize(
+    ("value", "expect_result"),
+    [(-10, -10), (-9, -10), (-1, -10), (0, 0), (1, 10), (9, 10), (10, 10)],
+)
+def test_round_up(value, base, expect_result):
+    assert utils.round_up(value, base) == expect_result
+
+
 class TestIsRebalanceWeekly:
     @pytest.mark.parametrize(
         ("trade_date_index", "rebalance_at", "expected_rebalance_date_index"),
