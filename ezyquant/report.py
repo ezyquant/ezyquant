@@ -1,3 +1,4 @@
+import math
 from calendar import month_abbr
 from datetime import datetime
 from functools import cached_property
@@ -471,20 +472,27 @@ class SETBacktestReport:
 
     @cached_property
     def price_distribution_df(self) -> pd.DataFrame:
-        step = 0.05
-
         pct_return = self.summary_trade_df["pct_return"]
 
-        min_r = (pct_return.min() // step) * step
-        max_r = (pct_return.max() // step + 2) * step
+        # bins
+        step = 0.05
+
+        min_r = pct_return.min()
+        max_r = pct_return.max()
 
         if np.isnan(min_r) and np.isnan(max_r):
             min_r, max_r = 0, 0
+        else:
+            if min_r % step == 0:
+                min_r -= step
+            else:
+                min_r = math.ceil(min_r / step - 1) * step
+            max_r += step
 
-        price_dis = pct_return.groupby(
-            pd.cut(pct_return, np.arange(min_r, max_r, step))
-        ).count()
+        bins = np.arange(min_r, max_r, step)
 
+        # histogram
+        price_dis = pct_return.groupby(pd.cut(pct_return, bins)).count()
         price_dis.index.name = None
 
         return price_dis.to_frame("pct_return")
