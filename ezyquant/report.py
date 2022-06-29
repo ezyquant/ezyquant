@@ -480,18 +480,17 @@ class SETBacktestReport:
 
         Examples
         --------
-                            pct_return
-        (-0.25, -0.2]                3
-        (-0.2, -0.15]                2
-        (-0.15, -0.1]               34
-        (-0.1, -0.05]              234
-        (-0.05, 0.0]               613
-        (0.0, 0.05]                137
-        (0.05, 0.1]                 62
-        (0.1, 0.15]                 45
-        (0.15, 0.2]                 37
-        (0.2, 0.25]                 17
-        (0.25, 0.3]                 16
+                            frequency
+        pct_return
+        (-0.25, -0.2]             153
+        (-0.2, -0.15]             352
+        (-0.15, -0.1]             459
+        (-0.1, -0.05]             698
+        (-0.05, -0.0]            1268
+        (-0.0, 0.05]             1256
+        (0.05, 0.1]               571
+        (0.1, 0.15]               374
+        (0.15, 0.2]               181
         """
         pct_return = self.summary_trade_df["pct_return"]
 
@@ -514,9 +513,8 @@ class SETBacktestReport:
 
         # histogram
         price_dis = pct_return.groupby(pd.cut(pct_return, bins)).count()
-        price_dis.index.name = None
 
-        return price_dis.to_frame("pct_return")
+        return price_dis.to_frame("frequency")
 
     @cached_property
     def drawdown_percent_df(self) -> pd.DataFrame:
