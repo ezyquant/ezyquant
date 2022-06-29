@@ -11,8 +11,8 @@ from ezyquant.report import SETBacktestReport
         (
             [],
             pd.DataFrame(
-                index=pd.CategoricalIndex([]),
-                columns=["pct_return"],
+                index=pd.CategoricalIndex([], name="pct_return"),
+                columns=["frequency"],
                 dtype="int64",
             ),
         ),
@@ -20,8 +20,10 @@ from ezyquant.report import SETBacktestReport
             [-0.05],
             pd.DataFrame(
                 [1],
-                index=pd.CategoricalIndex([pd.Interval(-0.1, -0.05)]),
-                columns=["pct_return"],
+                index=pd.CategoricalIndex(
+                    [pd.Interval(-0.1, -0.05)], name="pct_return"
+                ),
+                columns=["frequency"],
                 dtype="int64",
             ),
         ),
@@ -29,8 +31,10 @@ from ezyquant.report import SETBacktestReport
             [-0.01],
             pd.DataFrame(
                 [1],
-                index=pd.CategoricalIndex([pd.Interval(-0.05, 0.00)]),
-                columns=["pct_return"],
+                index=pd.CategoricalIndex(
+                    [pd.Interval(-0.05, 0.00)], name="pct_return"
+                ),
+                columns=["frequency"],
                 dtype="int64",
             ),
         ),
@@ -38,8 +42,10 @@ from ezyquant.report import SETBacktestReport
             [0.0],
             pd.DataFrame(
                 [1],
-                index=pd.CategoricalIndex([pd.Interval(-0.05, 0.00)]),
-                columns=["pct_return"],
+                index=pd.CategoricalIndex(
+                    [pd.Interval(-0.05, 0.00)], name="pct_return"
+                ),
+                columns=["frequency"],
                 dtype="int64",
             ),
         ),
@@ -47,8 +53,8 @@ from ezyquant.report import SETBacktestReport
             [0.01],
             pd.DataFrame(
                 [1],
-                index=pd.CategoricalIndex([pd.Interval(0.0, 0.05)]),
-                columns=["pct_return"],
+                index=pd.CategoricalIndex([pd.Interval(0.0, 0.05)], name="pct_return"),
+                columns=["frequency"],
                 dtype="int64",
             ),
         ),
@@ -56,8 +62,8 @@ from ezyquant.report import SETBacktestReport
             [0.05],
             pd.DataFrame(
                 [1],
-                index=pd.CategoricalIndex([pd.Interval(0.0, 0.05)]),
-                columns=["pct_return"],
+                index=pd.CategoricalIndex([pd.Interval(0.0, 0.05)], name="pct_return"),
+                columns=["frequency"],
                 dtype="int64",
             ),
         ),
@@ -70,9 +76,10 @@ from ezyquant.report import SETBacktestReport
                         pd.Interval(-0.1, -0.05),
                         pd.Interval(-0.05, 0.0),
                         pd.Interval(0.0, 0.05),
-                    ]
+                    ],
+                    name="pct_return",
                 ),
-                columns=["pct_return"],
+                columns=["frequency"],
                 dtype="int64",
             ),
         ),
