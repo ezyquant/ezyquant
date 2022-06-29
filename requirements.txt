@@ -1,0 +1,13 @@
+pandas
+sqlalchemy
+ta
+XlsxWriter
+
+pytest
+pytest-kwparametrize
+isort
+black
+docformatter
+pdoc
+mkdocs
+mkdocs-material

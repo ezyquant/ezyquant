@@ -1,0 +1,153 @@
+from dataclasses import dataclass
+from typing import Any
+
+import pandas as pd
+
+nan = float("nan")
+
+
+@dataclass
+class Context:
+    """
+    Context class for backtest.
+    """
+
+    ts: pd.Timestamp
+    symbol: str = ""
+    signal: Any = nan
+    close_price: float = nan
+    volume: float = nan
+    cost_price: float = nan
+
+    cash: float = nan
+    total_cost_value: float = nan
+    total_market_value: float = nan
+    port_value: float = nan
+
+    def buy_pct_port(self, pct_port: float) -> float:
+        """Calculate buy volume from percentage of SETAccount. Using last close
+        price. Symbol must be selected.
+
+        Parameters
+        ----------
+        pct_port : float
+            percentage of SETAccount
+
+        Returns
+        -------
+        float
+            buy volume, always positive, not round 100
+        """
+        return self.buy_value(self.port_value * pct_port)
+
+    def buy_value(self, value: float) -> float:
+        """Calculate buy volume from value. Using last close price. Symbol must
+        be selected.
+
+        Parameters
+        ----------
+        value : float
+            value
+
+        Returns
+        -------
+        float
+            buy volume, always positive, not round 100
+        """
+        return value / self.close_price
+
+    def buy_pct_position(self, pct_position: float) -> float:
+        """Calculate buy volume from percentage of current position. Symbol
+        must be selected.
+
+        Parameters
+        ----------
+        pct_position : float
+            percentage of position
+
+        Returns
+        -------
+        float
+            buy volume, always positive, not round 100
+        """
+        return pct_position * self.volume
+
+    def sell_pct_port(self, pct_port: float) -> float:
+        """Calculate sell volume from percentage of SETAccount. Using last
+        close price. Symbol must be selected.
+
+        Parameters
+        ----------
+        pct_port : float
+            percentage of SETAccount
+
+        Returns
+        -------
+        float
+            sell volume, always negative, not round 100
+        """
+        return self.buy_pct_port(-pct_port)
+
+    def sell_value(self, value: float) -> float:
+        """Calculate sell volume from value. Using last close price. Symbol
+        must be selected.
+
+        Parameters
+        ----------
+        value : float
+            value
+
+        Returns
+        -------
+        float
+            sell volume, always negative, not round 100
+        """
+        return self.buy_value(-value)
+
+    def sell_pct_position(self, pct_position: float) -> float:
+        """Calculate sell volume from percentage of current position. Symbol
+        must be selected.
+
+        Parameters
+        ----------
+        pct_position : float
+            percentage of position
+
+        Returns
+        -------
+        float
+            sell volume, always negative, not round 100
+        """
+        return self.buy_pct_position(-pct_position)
+
+    def target_pct_port(self, pct_port: float) -> float:
+        """Calculate buy/sell volume to make position reach percentage of
+        SETAccount. Using last close price. Symbol must be selected.
+
+        Parameters
+        ----------
+        pct_port : float
+            percentage of SETAccount
+
+        Returns
+        -------
+        float
+            buy/sell volume, not round 100
+        """
+        return self.buy_pct_port(pct_port) - self.volume
+
+    def target_value(self, value: float) -> float:
+        """Calculate buy/sell volume to make position reach value. Symbol must
+        be selected.
+
+        Parameters
+        ----------
+        value : float
+            value
+
+        Returns
+        -------
+        float
+            buy/sell volume, not round 100
+        """
+        return self.buy_value(value) - self.volume
