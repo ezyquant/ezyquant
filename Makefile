@@ -27,7 +27,3 @@ venv:
 .PHONY: pdoc
 pdoc:
 	pdoc --docformat numpy ezyquant
-
-.PHONY: mkdocs
-mkdocs:
-	mkdocs serve
