@@ -514,9 +514,8 @@ class SETBacktestReport:
 
         # histogram
         price_dis = pct_return.groupby(pd.cut(pct_return, bins)).count()
-        price_dis.index.name = None
 
-        return price_dis.to_frame("pct_return")
+        return price_dis.to_frame("frequency")
 
     @cached_property
     def drawdown_percent_df(self) -> pd.DataFrame:
