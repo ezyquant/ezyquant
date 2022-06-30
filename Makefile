@@ -27,3 +27,8 @@ venv:
 .PHONY: pdoc
 pdoc:
 	pdoc --docformat numpy ezyquant
+
+.PHONY: sphinx
+sphinx:
+	sphinx-apidoc -f -o docs/source ezyquant
+	sphinx-build -b html docs/source/ docs/build/html
