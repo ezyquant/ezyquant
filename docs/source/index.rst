@@ -1,15 +1,10 @@
-.. ezyquant documentation master file, created by
-   sphinx-quickstart on Thu Jun 30 16:43:57 2022.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+Ezyquant
+========
 
-Welcome to ezyquant's documentation!
-====================================
+.. image:: _static/ezyquant.png
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
+   guide/index
    modules
 
 Indices and tables
