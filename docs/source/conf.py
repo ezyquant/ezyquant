@@ -67,7 +67,12 @@ html_theme_options = {
     # Set the repo location to get a badge with stats
     "repo_url": "https://github.com/ezyquant/ezyquant",
     "repo_name": project,
+    # globaltoc
+    "globaltoc_depth": 2,
+    "globaltoc_collapse": False,
 }
+
+html_sidebars = {"**": ["globaltoc.html"]}
 
 html_logo = "_static/ezyquant.png"
 html_favicon = "_static/ezyquant.png"
