@@ -1,15 +1,8 @@
 Ezyquant
 ========
 
-.. image:: _static/ezyquant.png
-
 .. toctree::
-   guide/index
-   modules
+   :maxdepth: 2
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   user_guide/index
+   reference/modules

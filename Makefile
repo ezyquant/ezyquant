@@ -30,5 +30,5 @@ pdoc:
 
 .PHONY: sphinx
 sphinx:
-	sphinx-apidoc -f -o docs/source ezyquant
+	sphinx-apidoc -f -o docs/source/reference ezyquant
 	sphinx-build -b html docs/source/ docs/build/html
