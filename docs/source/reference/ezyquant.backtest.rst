@@ -6,6 +6,9 @@ ezyquant.backtest package
    :undoc-members:
    :show-inheritance:
 
+Submodules
+----------
+
 .. toctree::
    :maxdepth: 4
 

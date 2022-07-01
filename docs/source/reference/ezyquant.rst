@@ -6,6 +6,17 @@ ezyquant package
    :undoc-members:
    :show-inheritance:
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   ezyquant.backtest
+
+Submodules
+----------
+
 .. toctree::
    :maxdepth: 4
 
@@ -18,4 +29,3 @@ ezyquant package
    ezyquant.report
    ezyquant.utils
    ezyquant.validators
-   ezyquant.backtest
