@@ -4,6 +4,6 @@ Ezyquant
 .. toctree::
    :maxdepth: 2
 
-   get_start
+   get_started
    user_guide/index
    reference
