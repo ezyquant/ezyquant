@@ -10,16 +10,18 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import os
+import sys
+from datetime import datetime
+
+sys.path.insert(0, os.path.abspath("../.."))
 
 
 # -- Project information -----------------------------------------------------
 
 project = "ezyquant"
-copyright = "2022, me"
-author = "me"
+author = "Fintech (Thailand) Co., Ltd"
+copyright = f"2022-{datetime.now().year}, {author}"
 
 
 # -- General configuration ---------------------------------------------------
@@ -47,8 +49,8 @@ exclude_patterns = []
 # a list of builtin themes.
 #
 html_title = "Ezyquant"
-html_theme = "pydata_sphinx_theme"
 
+html_theme = "pydata_sphinx_theme"
 html_theme_options = {"github_url": "https://github.com/ezyquant/ezyquant"}
 
 html_logo = "_static/ezyquant.png"
