@@ -9,6 +9,4 @@ isort
 black
 docformatter
 sphinx
-pydata-sphinx-theme
-pandoc
-numpydoc
+sphinx-material

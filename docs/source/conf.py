@@ -19,9 +19,10 @@ sys.path.insert(0, os.path.abspath("../.."))
 
 # -- Project information -----------------------------------------------------
 
-project = "ezyquant"
+project = "Ezyquant"
 author = "Fintech (Thailand) Co., Ltd"
 copyright = f"2022-{datetime.now().year}, {author}"
+release = "0.1.0"
 
 
 # -- General configuration ---------------------------------------------------
@@ -42,7 +43,6 @@ templates_path = ["_templates"]
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
 
-
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -50,8 +50,22 @@ exclude_patterns = []
 
 html_title = "Ezyquant"
 
-html_theme = "pydata_sphinx_theme"
-html_theme_options = {"github_url": "https://github.com/ezyquant/ezyquant"}
+html_theme = "sphinx_material"
+html_theme_options = {
+    # Set the name of the project to appear in the navigation.
+    "nav_title": project,
+    # Set you GA account ID to enable tracking
+    "google_analytics_account": "UA-XXXXX",
+    # Specify a base_url used to generate sitemap.xml. If not
+    # specified, then no sitemap will be built.
+    # "base_url": "https://project.github.io/project",
+    # Set the color and the accent color
+    "color_primary": "blue",
+    "color_accent": "light-blue",
+    # Set the repo location to get a badge with stats
+    "repo_url": "https://github.com/ezyquant/ezyquant",
+    "repo_name": project,
+}
 
 html_logo = "_static/ezyquant.png"
 html_favicon = "_static/ezyquant.png"
