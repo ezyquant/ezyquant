@@ -14,6 +14,8 @@ import os
 import sys
 from datetime import datetime
 
+import sphinx_material
+
 sys.path.insert(0, os.path.abspath("../.."))
 
 
@@ -49,35 +51,61 @@ exclude_patterns = []
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-
-html_title = "Ezyquant"
-
-html_theme = "sphinx_material"
-html_theme_options = {
-    # Set the name of the project to appear in the navigation.
-    # "nav_title": project,
-    # Set you GA account ID to enable tracking
-    # "google_analytics_account": "UA-XXXXX",
-    # Specify a base_url used to generate sitemap.xml. If not
-    # specified, then no sitemap will be built.
-    # "base_url": "https://project.github.io/project",
-    # Set the color and the accent color
-    "color_primary": "blue",
-    "color_accent": "light-blue",
-    # Set the repo location to get a badge with stats
-    "repo_url": "https://github.com/ezyquant/ezyquant",
-    "repo_name": project,
-    # globaltoc
-    "globaltoc_depth": 2,
-    "globaltoc_collapse": False,
-}
-
-html_sidebars = {"**": ["globaltoc.html"]}
-
-html_logo = "_static/ezyquant.png"
-html_favicon = "_static/ezyquant.png"
+#
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
+# so a file named 'default.css' will overwrite the builtin 'default.css'.
 html_static_path = ["_static"]
+
+# -- HTML theme settings ------------------------------------------------
+
+html_show_sourcelink = True
+html_sidebars = {
+    "**": ["logo-text.html", "globaltoc.html", "localtoc.html", "searchbox.html"]
+}
+
+extensions.append("sphinx_material")
+html_theme_path = sphinx_material.html_theme_path()
+html_context = sphinx_material.get_html_context()
+html_theme = "sphinx_material"
+
+# material theme options (see theme.conf for more information)
+html_theme_options = {
+    # "base_url": "http://bashtage.github.io/sphinx-material/",
+    "repo_url": "https://github.com/ezyquant/ezyquant",
+    "repo_name": project,
+    # "google_analytics_account": "UA-XXXXX",
+    "html_minify": False,
+    "html_prettify": True,
+    "css_minify": True,
+    "logo_icon": "&#xe869",
+    "repo_type": "github",
+    "globaltoc_depth": 2,
+    "globaltoc_collapse": False,
+    "color_primary": "blue",
+    "color_accent": "cyan",
+    "theme_color": "#2196f3",
+    # "master_doc": False,
+    "nav_links": [
+        # {"href": "index", "internal": True, "title": "Ezyquant"},
+        {"href": "get_started", "internal": True, "title": "Get Started"},
+        {"href": "user_guide", "internal": True, "title": "User Guide"},
+        {"href": "reference", "internal": True, "title": "API Reference"},
+    ],
+    "heroes": {
+        "index": "A responsive Material Design theme for Sphinx sites.",
+        "customization": "Configuration options to personalize your site.",
+    },
+    "table_classes": ["plain"],
+}
+
+language = "en"
+html_last_updated_fmt = ""
+
+todo_include_todos = True
+html_logo = "_static/ezyquant.png"
+html_favicon = "_static/ezyquant.png"
+
+html_use_index = True
+html_domain_indices = True

@@ -5,5 +5,5 @@ Ezyquant
    :maxdepth: 2
 
    get_started
-   user_guide/index
+   user_guide
    reference
