@@ -10,3 +10,5 @@ black
 docformatter
 sphinx
 pydata-sphinx-theme
+pandoc
+numpydoc
