@@ -570,6 +570,8 @@ class SETSignalCreator:
         )
 
         df_hold, df_release = df_hold.align(df_release)
+        assert isinstance(df_release, pd.DataFrame)
+        assert isinstance(df_hold, pd.DataFrame)
 
         df = df_release.fillna(df_hold)
         df.index.name = None
