@@ -38,6 +38,9 @@ extensions = [
 ]
 
 autoclass_content = "init"
+autodoc_default_options = {
+    "member-order": "bysource",
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -60,7 +63,7 @@ html_static_path = ["_static"]
 
 # -- HTML theme settings ------------------------------------------------
 
-html_show_sourcelink = True
+html_show_sourcelink = False
 html_sidebars = {
     "**": ["logo-text.html", "globaltoc.html", "localtoc.html", "searchbox.html"]
 }
