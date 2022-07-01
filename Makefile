@@ -31,4 +31,7 @@ sphinx:
 
 .PHONY: sphinx-apidoc
 sphinx-apidoc:
+	rm -r docs/source/reference
 	sphinx-apidoc -f -e -T -M -o docs/source/reference ezyquant
+	rm docs/source/reference/ezyquant.rst
+	rm docs/source/reference/ezyquant.backtest.rst

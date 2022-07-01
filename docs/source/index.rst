@@ -6,4 +6,4 @@ Ezyquant
 
    get_start
    user_guide/index
-   reference/index
+   reference

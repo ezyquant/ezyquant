@@ -55,9 +55,9 @@ html_title = "Ezyquant"
 html_theme = "sphinx_material"
 html_theme_options = {
     # Set the name of the project to appear in the navigation.
-    "nav_title": project,
+    # "nav_title": project,
     # Set you GA account ID to enable tracking
-    "google_analytics_account": "UA-XXXXX",
+    # "google_analytics_account": "UA-XXXXX",
     # Specify a base_url used to generate sitemap.xml. If not
     # specified, then no sitemap will be built.
     # "base_url": "https://project.github.io/project",
