@@ -24,7 +24,7 @@ position_in_columns = ["timestamp", "symbol", "volume", "cost_price", "close_pri
             ),
             pd.DataFrame(
                 [
-                    [pd.Timestamp("2000-01-03"), "AAA", 100.0, 0.1, 1.0, 100.0],
+                    [pd.Timestamp("2000-01-03"), "AAA", 100.0, 0.1, 1.0, 100.0, 9.0],
                 ],
                 columns=position_columns,
             ),
@@ -39,8 +39,8 @@ position_in_columns = ["timestamp", "symbol", "volume", "cost_price", "close_pri
             ),
             pd.DataFrame(
                 [
-                    [pd.Timestamp("2000-01-03"), "AAA", 100.0, 0.1, 1.0, 100.0],
-                    [pd.Timestamp("2000-01-04"), "AAA", 100.0, 0.1, 2.0, 200.0],
+                    [pd.Timestamp("2000-01-03"), "AAA", 100.0, 0.1, 1.0, 100.0, 9.0],
+                    [pd.Timestamp("2000-01-04"), "AAA", 100.0, 0.1, 2.0, 200.0, 19.0],
                 ],
                 columns=position_columns,
             ),

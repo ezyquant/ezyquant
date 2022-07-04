@@ -31,6 +31,7 @@ position_columns = [
     "cost_price",
     "close_price",
     "close_value",
+    "pct_profit",
 ]
 trade_columns = [
     "matched_at",
@@ -193,6 +194,7 @@ class SETBacktestReport:
             - cost_price
             - close_price
             - close_value
+            - pct_profit
         """
         df = self._position_df.copy()
 
@@ -202,6 +204,7 @@ class SETBacktestReport:
             return df
 
         df["close_value"] = df["close_price"] * df["volume"]
+        df["pct_profit"] = (df["close_price"] / df["cost_price"]) - 1.0
 
         # sort column
         df = df[position_columns]
@@ -849,7 +852,7 @@ class SETBacktestReport:
         df = df.rename(columns={"close_price": "price"})
         df["side"] = fld.SIDE_SELL
         df["commission"] = 0
-        df = df.drop(columns=["close_value"])
+        df = df.drop(columns=["close_value", "pct_profit"])
 
         df = df.rename(columns={"timestamp": "matched_at"})
 
