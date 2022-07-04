@@ -194,6 +194,7 @@ class SETBacktestReport:
             - cost_price
             - close_price
             - close_value
+            - pct_profit
         """
         df = self._position_df.copy()
 
