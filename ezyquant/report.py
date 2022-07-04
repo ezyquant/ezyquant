@@ -847,7 +847,7 @@ class SETBacktestReport:
         df = df.rename(columns={"close_price": "price"})
         df["side"] = fld.SIDE_SELL
         df["commission"] = 0
-        df = df.drop(columns=["close_value"])
+        df = df.drop(columns=["close_value", "pct_profit"])
 
         df = df.rename(columns={"timestamp": "matched_at"})
 
