@@ -608,11 +608,11 @@ class SETBacktestReport:
     def pct_exposure(self) -> pd.Series:
         """Percent of exposure."""
         df = self.summary_df.copy()
-        df["port_value"] = df["total_market_value"] / df["port_value"]
-        df["port_value_with_dividend"] = (
+        df["portfolio"] = df["total_market_value"] / df["port_value"]
+        df["portfolio_with_dividend"] = (
             df["total_market_value"] / df["port_value_with_dividend"]
         )
-        return df[["port_value", "port_value_with_dividend"]].mean()
+        return df[["portfolio", "portfolio_with_dividend"]].mean()
 
     @property
     @return_nan_on_failure
@@ -817,7 +817,12 @@ class SETBacktestReport:
     def _nav_df(self) -> pd.DataFrame:
         return self.summary_df.set_index("timestamp")[
             ["port_value", "port_value_with_dividend"]
-        ]
+        ].rename(
+            columns={
+                "port_value": "portfolio",
+                "port_value_with_dividend": "portfolio_with_dividend",
+            }
+        )
 
     def _summary_trade_cost_price(self, trade_df: pd.DataFrame) -> pd.DataFrame:
         """Add cost_price to trade_df."""
