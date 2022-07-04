@@ -31,6 +31,7 @@ position_columns = [
     "cost_price",
     "close_price",
     "close_value",
+    "pct_profit",
 ]
 trade_columns = [
     "matched_at",
@@ -202,6 +203,7 @@ class SETBacktestReport:
             return df
 
         df["close_value"] = df["close_price"] * df["volume"]
+        df["pct_profit"] = (df["close_price"] / df["cost_price"]) - 1.0
 
         # sort column
         df = df[position_columns]
