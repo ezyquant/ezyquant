@@ -89,7 +89,7 @@ def test_summary_trade_cost_price(
         ),
         (
             pd.DataFrame(
-                [[pd.Timestamp("2000-01-02"), "A", 100.0, 1.0, 1.1, 110.0]],
+                [[pd.Timestamp("2000-01-02"), "A", 100.0, 1.0, 1.1, 110.0, 0.1]],
                 columns=position_columns,
             ),
             pd.DataFrame(
@@ -106,7 +106,7 @@ def test_summary_trade_cost_price(
         ),
         (
             pd.DataFrame(
-                [[pd.Timestamp("2000-01-01"), "A", 100.0, 1.0, 1.1, 110.0]],
+                [[pd.Timestamp("2000-01-01"), "A", 100.0, 1.0, 1.1, 110.0, 0.1]],
                 columns=position_columns,
             ),
             pd.DataFrame(
