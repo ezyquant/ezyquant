@@ -103,8 +103,7 @@ html_theme_options = {
     "table_classes": ["plain"],
 }
 
-language = "en"
-html_last_updated_fmt = ""
+language = "th"
 
 todo_include_todos = True
 html_logo = "_static/ezyquant.png"
