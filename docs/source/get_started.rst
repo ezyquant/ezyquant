@@ -1,6 +1,8 @@
 เริ่มต้น
 ======
 
+.. image:: _static/ezyquant.png
+
 หากคุณเป็นเทรดเดอร์ที่มี Trading Algorithm สุดเจ๋ง
 มาเพิ่มขีดความสามารถการเทรดบนตลาด
 สร้าง ROBOT trade ของคุณเองด้วย Settrade Open API
