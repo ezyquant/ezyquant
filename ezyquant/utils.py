@@ -190,10 +190,11 @@ def cache_dataframe_wrapper(method: Callable):
     ----------
     method : Callable
         method parameter must be
-            field: str
-            symbol_list: Optional[List[str]] = None
-            start_date: Optional[str] = None
-            end_date: Optional[str] = None
+            - field: str
+            - symbol_list: Optional[List[str]] = None
+            - start_date: Optional[str] = None
+            - end_date: Optional[str] = None
+
         method must return dataframe with timestamp as index and symbol as column.
     """
 

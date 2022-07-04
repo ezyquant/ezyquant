@@ -1,6 +1,6 @@
 .PHONY: install
 install:
-	pip install -U -r requirements.txt
+	pip install -U -r requirements-dev.txt
 
 .PHONY: test
 test:
@@ -24,10 +24,10 @@ format:
 venv:
 	python -m venv venv
 
-.PHONY: pdoc
-pdoc:
-	pdoc --docformat numpy ezyquant
+.PHONY: sphinx
+sphinx:
+	sphinx-build -b html docs/source/ docs/build/html
 
-.PHONY: mkdocs
-mkdocs:
-	mkdocs serve
+.PHONY: sphinx-apidoc
+sphinx-apidoc:
+	sphinx-apidoc -e -T -M -o docs/source/reference ezyquant
