@@ -294,9 +294,7 @@ class SETBacktestReport:
         Returns
         -------
         pd.DataFrame
-            columns
-                - port_value
-                - port_value_with_dividend
+            columns - nav names
             indexes
                 - pct_net_profit
                 - cagr
@@ -442,7 +440,7 @@ class SETBacktestReport:
         Returns
         -------
         pd.DataFrame
-            index is trade date, columns is "port_value", "port_value_with_dividend"
+            index is trade date, columns is nav names
         """
         return self._nav_df / self.initial_capital
 
@@ -523,6 +521,7 @@ class SETBacktestReport:
         Returns
         -------
         pd.DataFrame
+            index is trade date, columns is nav names
         """
         return (self._nav_df / self._nav_df.cummax()) - 1
 
