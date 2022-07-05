@@ -1,9 +1,10 @@
 from setuptools import find_packages, setup
 
-VERSION = "0.1.0"
+NAME = "ezyquant"
+VERSION = "0.1.1"
 
 setup(
-    name="ezyquant",
+    name=NAME,
     version=VERSION,
     packages=find_packages(),
     python_requires=">=3.8.0",

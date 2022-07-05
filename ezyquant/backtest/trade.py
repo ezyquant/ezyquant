@@ -8,7 +8,7 @@ class SETTrade:
     """SETTrade
 
     Parameters
-    -------
+    ----------
     matched_at : datetime
         The time when the trade was executed.
     symbol : str

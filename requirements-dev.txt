@@ -8,6 +8,5 @@ pytest-kwparametrize
 isort
 black
 docformatter
-pdoc
-mkdocs
-mkdocs-material
+sphinx
+sphinx-material

@@ -31,6 +31,7 @@ position_columns = [
     "cost_price",
     "close_price",
     "close_value",
+    "pct_profit",
 ]
 trade_columns = [
     "matched_at",
@@ -193,6 +194,7 @@ class SETBacktestReport:
             - cost_price
             - close_price
             - close_value
+            - pct_profit
         """
         df = self._position_df.copy()
 
@@ -202,6 +204,7 @@ class SETBacktestReport:
             return df
 
         df["close_value"] = df["close_price"] * df["volume"]
+        df["pct_profit"] = (df["close_price"] / df["cost_price"]) - 1.0
 
         # sort column
         df = df[position_columns]
@@ -294,9 +297,7 @@ class SETBacktestReport:
         Returns
         -------
         pd.DataFrame
-            columns
-                - port_value
-                - port_value_with_dividend
+            columns - nav names
             indexes
                 - pct_net_profit
                 - cagr
@@ -442,7 +443,7 @@ class SETBacktestReport:
         Returns
         -------
         pd.DataFrame
-            index is trade date, columns is "port_value", "port_value_with_dividend"
+            index is trade date, columns is nav names
         """
         return self._nav_df / self.initial_capital
 
@@ -480,17 +481,17 @@ class SETBacktestReport:
 
         Examples
         --------
-                            frequency
-        pct_return
-        (-0.25, -0.2]             153
-        (-0.2, -0.15]             352
-        (-0.15, -0.1]             459
-        (-0.1, -0.05]             698
-        (-0.05, -0.0]            1268
-        (-0.0, 0.05]             1256
-        (0.05, 0.1]               571
-        (0.1, 0.15]               374
-        (0.15, 0.2]               181
+        >>>                     frequency
+        ... pct_return
+        ... (-0.25, -0.2]             153
+        ... (-0.2, -0.15]             352
+        ... (-0.15, -0.1]             459
+        ... (-0.1, -0.05]             698
+        ... (-0.05, -0.0]            1268
+        ... (-0.0, 0.05]             1256
+        ... (0.05, 0.1]               571
+        ... (0.1, 0.15]               374
+        ... (0.15, 0.2]               181
         """
         pct_return = self.summary_trade_df["pct_return"]
 
@@ -523,6 +524,7 @@ class SETBacktestReport:
         Returns
         -------
         pd.DataFrame
+            index is trade date, columns is nav names
         """
         return (self._nav_df / self._nav_df.cummax()) - 1
 
@@ -608,11 +610,11 @@ class SETBacktestReport:
     def pct_exposure(self) -> pd.Series:
         """Percent of exposure."""
         df = self.summary_df.copy()
-        df["port_value"] = df["total_market_value"] / df["port_value"]
-        df["port_value_with_dividend"] = (
+        df["portfolio"] = df["total_market_value"] / df["port_value"]
+        df["portfolio_with_dividend"] = (
             df["total_market_value"] / df["port_value_with_dividend"]
         )
-        return df[["port_value", "port_value_with_dividend"]].mean()
+        return df[["portfolio", "portfolio_with_dividend"]].mean()
 
     @property
     @return_nan_on_failure
@@ -817,7 +819,12 @@ class SETBacktestReport:
     def _nav_df(self) -> pd.DataFrame:
         return self.summary_df.set_index("timestamp")[
             ["port_value", "port_value_with_dividend"]
-        ]
+        ].rename(
+            columns={
+                "port_value": "portfolio",
+                "port_value_with_dividend": "portfolio_with_dividend",
+            }
+        )
 
     def _summary_trade_cost_price(self, trade_df: pd.DataFrame) -> pd.DataFrame:
         """Add cost_price to trade_df."""
@@ -845,7 +852,7 @@ class SETBacktestReport:
         df = df.rename(columns={"close_price": "price"})
         df["side"] = fld.SIDE_SELL
         df["commission"] = 0
-        df = df.drop(columns=["close_value"])
+        df = df.drop(columns=["close_value", "pct_profit"])
 
         df = df.rename(columns={"timestamp": "matched_at"})
 

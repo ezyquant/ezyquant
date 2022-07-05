@@ -34,12 +34,14 @@ def backtest(
         missing signal in trade date will be filled with nan.
     backtest_algorithm: Callable[[Context], float],
         function for calculate trade volume.
+
         Parameters:
             - context: Context
-                context for backtest
+                  context for backtest
+
         Return:
             - trade_volume: float
-                positive for buy, negative for sell, 0 or nan for no trade
+                  positive for buy, negative for sell, 0 or nan for no trade
     start_date : str
         start date in format YYYY-MM-DD
     end_date : str

@@ -40,7 +40,7 @@ def test_pct_maximum_drawdown(
     assert_series_equal(
         result,
         pd.Series(
-            {"port_value": expected_result, "port_value_with_dividend": expected_result}
+            {"portfolio": expected_result, "portfolio_with_dividend": expected_result}
         ),
     )
 
@@ -77,7 +77,7 @@ def test_maximum_drawdown(
     assert_series_equal(
         result,
         pd.Series(
-            {"port_value": expected_result, "port_value_with_dividend": expected_result}
+            {"portfolio": expected_result, "portfolio_with_dividend": expected_result}
         ),
     )
 
@@ -117,6 +117,6 @@ def test_pct_exposure(
     assert_series_equal(
         result,
         pd.Series(
-            {"port_value": expected_result, "port_value_with_dividend": expected_result}
+            {"portfolio": expected_result, "portfolio_with_dividend": expected_result}
         ),
     )
