@@ -1913,12 +1913,20 @@ class SETDataReader:
 
         parse_dates = [i for i in col_name_list if i.endswith("_date")]
 
-        return pd.read_sql_query(
+        df = pd.read_sql_query(
             stmt,
             self._engine,
             index_col=index_col,
             parse_dates=parse_dates,
         )
+
+        if VALUE in col_name_list:
+            try:
+                df = df.astype({VALUE: "float64"})
+            except ValueError:
+                pass
+
+        return df
 
     def _filter_stmt_by_date(
         self,
