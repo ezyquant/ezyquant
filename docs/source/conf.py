@@ -85,7 +85,7 @@ html_theme_options = {
     "logo_icon": "&#xe869",
     "repo_type": "github",
     "globaltoc_depth": 2,
-    "globaltoc_collapse": False,
+    "globaltoc_collapse": True,
     "color_primary": "blue",
     "color_accent": "cyan",
     "theme_color": "#2196f3",
