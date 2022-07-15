@@ -19,7 +19,7 @@ Step 0: Initialize Data
         start_date=start_date,
         end_date=end_date,
         index_list=[],
-        symbol_list= ['AOT','BBL','PTT']
+        symbol_list=["AOT", "BBL", "PTT"],
     )
 
 
@@ -34,8 +34,8 @@ Step 1: Create Signal Dataframe
 .. code-block::
 
     df_close = ssc.get_data("close", "daily")
-    ema20 = ssc.ta.ema(df_close,20)
-    ema100 = ssc.ta.ema(df_close,100)
+    ema20 = ssc.ta.ema(df_close, 20)
+    ema100 = ssc.ta.ema(df_close, 100)
     signal_df = ema20 > ema100
 
 
@@ -74,18 +74,23 @@ method ต่างๆจะ return จำนวนหุ้นที่ต้�
 .. code-block::
 
     def backtest_algorithm(c: Context):
-        if c.symbol == 'AOT':
-            print('Portfoilio on ', c.ts)
-            print('Port value = cash + total market value')
-            print(c.port_value, ' = ',c.cash,' + ', c.total_market_value)
-            print('Current Position')
-            print('Stock  Volume  Profit/loss')
+        if c.symbol == "AOT":
+            print("Portfoilio on ", c.ts)
+            print("Port value = cash + total market value")
+            print(c.port_value, " = ", c.cash, " + ", c.total_market_value)
+            print("Current Position")
+            print("Stock  Volume  Profit/loss")
 
         if c.volume > 0:
-            print(c.symbol,c.volume,round(100*(c.close_price/c.cost_price-1),2),'%' )
+            print(
+                c.symbol,
+                c.volume,
+                round(100 * (c.close_price / c.cost_price - 1), 2),
+                "%",
+            )
 
-        if c.symbol == 'PTT':
-            print('------------------------------------------')
+        if c.symbol == "PTT":
+            print("------------------------------------------")
 
         if c.signal == True:
             return c.target_pct_port(0.2)
@@ -115,16 +120,16 @@ Parameters
 .. code-block::
 
     result = ez.backtest(
-    signal_df = signal_df,
-    backtest_algorithm = backtest_algorithm,
-    start_date = start_date, #วันเริ่มต้นต้องตรงกับวันเริ่มที่อยู่ใน signal_df
-    end_date = end_date, #วันสิ้นสุดต้องตรงกับวันสิ้นสุดที่อยู่ใน signal_df
-    initial_cash = 1e6, #เงินลงทุนตั้งต้น
-    pct_commission = 0.25, #เปอร์เซ็นต์ค่าคอมมิชชั่น
-    pct_buy_slip = 0.0, #เปอร์เซ็นต์การซื้อที่คลาดเคลื่อน
-    pct_sell_slip = 0.0, #เปอร์เซ็นต์การขายที่คลาดเคลื่อน
-    price_match_mode= "open", #ราคาที่อยากให้เกิดการซื้อขายแบบจำลอง
-    signal_delay_bar = 1, #ตำแหน่งแท่งเทียนที่จะให้มีการซื้อขายหลังเกิดสัญญาณ
+        signal_df=signal_df,
+        backtest_algorithm=backtest_algorithm,
+        start_date=start_date,  # วันเริ่มต้นต้องตรงกับวันเริ่มที่อยู่ใน signal_df
+        end_date=end_date,  # วันสิ้นสุดต้องตรงกับวันสิ้นสุดที่อยู่ใน signal_df
+        initial_cash=1e6,  # เงินลงทุนตั้งต้น
+        pct_commission=0.25,  # เปอร์เซ็นต์ค่าคอมมิชชั่น
+        pct_buy_slip=0.0,  # เปอร์เซ็นต์การซื้อที่คลาดเคลื่อน
+        pct_sell_slip=0.0,  # เปอร์เซ็นต์การขายที่คลาดเคลื่อน
+        price_match_mode="open",  # ราคาที่อยากให้เกิดการซื้อขายแบบจำลอง
+        signal_delay_bar=1,  # ตำแหน่งแท่งเทียนที่จะให้มีการซื้อขายหลังเกิดสัญญาณ
     )
 
 Step 4: Export Result
@@ -134,6 +139,5 @@ Step 4: Export Result
 
 .. code-block::
 
-    result.to_excel(r'.../results.xlsx') #ใส่ path ที่ต้องการจะ save excel file.
-
+    result.to_excel(r".../results.xlsx")  # ใส่ path ที่ต้องการจะ save excel file.
 
