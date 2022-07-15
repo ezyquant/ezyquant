@@ -1,9 +1,9 @@
 Data Reader
-==========
+===========
 
 
 Initialize
---------------
+----------
 เริ่มต้นใช้งานได้โดยตั้งค่าผ่าน **SETSignalCreator**
 
 Parameters
@@ -25,7 +25,7 @@ Parameters
 
 
 GetData
---------------
+-------
 
 การดึงข้อมูลจะต้องดึงผ่านฟังก์ชั่น **get_data**
 
@@ -38,7 +38,7 @@ Parameters
     * *shift: int = 0*
 
 GetData with **field** and **timeframe**
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 การดึงข้อมูลเบื้องต้นจะต้องใส่ **field** และ **timeframe** โดยจะได้ข้อมูลออกมาเป็น dataframe รายหุ้นเรียงตามวัน
 
@@ -93,7 +93,7 @@ GetData with **shift**
    revenue_ytd_df = sc.get_data(field = 'eps',timeframe = 'yearly', shift = 1)
 
 GetData with **value_by**
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ถ้าต้องการดึงข้อมูลของ **industry** หรือ **sector** ของหุ้นที่เลือก ให้ใช้ **value_by**
 
@@ -113,7 +113,7 @@ GetData with **value_by**
 
 
 GetData with **method** and **period**
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 การดึงข้อมูลที่ต้องมีการประมวลผลเพิ่มเติมให้ใช้ **method** and **period**
 
@@ -130,7 +130,7 @@ GetData with **method** and **period**
    avg_3yrs_eps_df = sc.get_data(field = 'eps',timeframe = 'yearly', method = 'sum', period = 3)
 
 Is_Universe
---------------
+-----------
 
 ใช้เช็คว่าหุ้นอยู่ใน Universe ที่ต้องการหรือไม่
 
@@ -144,7 +144,7 @@ Parameters
    set100_df = ssc.is_universe("SET100")
 
 Is_Banned
---------------
+---------
 
 ใช้เช็คว่าหุ้นโดน banned หรือไม่
 
@@ -155,7 +155,7 @@ Is_Banned
    banned_df = ssc.is_banned()
 
 Rank
---------------
+----
 
 ใช้ rank หุ้นทุกตัวในแต่ละวัน
 

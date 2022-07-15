@@ -1,11 +1,11 @@
 Data Property
-====================
+=============
 
 SETSignalCreator
------------------
+----------------
 
 index_list
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~
 
 .. csv-table::
    :file: ../_static/index.csv
@@ -13,7 +13,7 @@ index_list
    :header-rows: 1
 
 is_universe
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~
 
 .. csv-table::
    :file: ../_static/is_universe.csv
@@ -21,10 +21,10 @@ is_universe
    :header-rows: 1
 
 GetData
---------------
+-------
 
 field
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~
 
 field ที่มามารถใช้ได้ตาม timeframe และ value_by แบบต่างๆ
 
@@ -56,7 +56,7 @@ field ที่มามารถใช้ได้ตาม timeframe และ
    :header-rows: 1
 
 timeframe
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~
 
 .. csv-table::
    :file: ../_static/timeframe.csv
@@ -64,7 +64,7 @@ timeframe
    :header-rows: 1
 
 method
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~
 
 .. csv-table::
    :file: ../_static/method.csv
@@ -72,10 +72,10 @@ method
    :header-rows: 1
 
 Backtest
---------------
+--------
 
 price_match_mode
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
 
 .. csv-table::
    :file: ../_static/price_match_mode.csv

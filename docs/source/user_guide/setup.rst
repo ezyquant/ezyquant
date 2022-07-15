@@ -1,5 +1,5 @@
 Setup
-============
+=====
 
 Import Library
 --------------
@@ -14,7 +14,7 @@ Import Library
 
 
 Connect Database
------------------
+----------------
 
 ขั้นตอนต่อไปเป็นการเชื่อมต่อ Database โดยให้ใส่ database_path ชี้ไปยังที่อยู่ของ file 'ezyquant.db'
 
