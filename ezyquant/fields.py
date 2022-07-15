@@ -126,24 +126,24 @@ D_EPS = "eps"
 D_BOOK_VALUE = "book_value"
 D_QUARTER_FIN = "quarter_fin"
 D_MONTH_DVD = "month_dvd"
-D_AS_OF = "as_of"
-D_DIVIDEND = "dividend"
+D_AS_OF = "as_of"  # not for web
+D_DIVIDEND = "dividend"  # not for web
 D_STATUS = "status"
 D_BENEFIT = "benefit"
 D_SHARE_LISTED = "share_listed"
 D_TURNOVER = "turnover"
-D_SHARE_INDEX = "share_index"
+D_SHARE_INDEX = "share_index"  # not for web
 D_NPG = "npg"
 D_TOTAL_VOLUME = "total_volume"
 D_TOTAL_VALUE = "total_value"
-D_BETA = "beta"
-D_ROI = "roi"
+D_BETA = "beta"  # not for ezyquant *removed from PSIMS
+D_ROI = "roi"  # not for ezyquant *removed from PSIMS
 D_ACC_DPS = "acc_dps"
 D_DVD_PAYMENT = "dvd_payment"
 D_DVD_PAYOUT = "dvd_payout"
-D_EARNING = "earning"
-D_IV = "iv"
-D_DELTA = "delta"
+D_EARNING = "earning"  # not for web
+D_IV = "iv"  # not for ezyquant *removed from PSIMS
+D_DELTA = "delta"  # not for ezyquant *removed from PSIMS
 D_NOTICE = "notice"
 D_NON_COMPLIANCE = "non_compliance"
 D_STABILIZATION = "stabilization"
@@ -154,10 +154,10 @@ D_PEG = "peg"
 
 
 Q_YEAR = Y_YEAR = "year"
-Q_PERIOD_TYPE = Y_PERIOD_TYPE = "period_type"
+Q_PERIOD_TYPE = Y_PERIOD_TYPE = "period_type"  # not for ezyquant
 Q_PERIOD = Y_PERIOD = "period"
 Q_QUARTER = Y_QUARTER = "quarter"
-Q_ACCUMULATE = Y_ACCUMULATE = "accumulate"
+Q_ACCUMULATE = Y_ACCUMULATE = "accumulate"  # not for ezyquant
 Q_AS_OF = Y_AS_OF = "as_of"
 Q_TOTAL_ASSET = Y_TOTAL_ASSET = "total_asset"
 Q_TOTAL_LIABILITY = Y_TOTAL_LIABILITY = "total_liability"
@@ -569,7 +569,7 @@ METHOD_QUANTILE = "quantile"
 METHOD_SEM = "sem"
 METHOD_RANK = "rank"
 
-""" 
+"""
 Backtest
 """
 
