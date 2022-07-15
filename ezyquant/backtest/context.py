@@ -26,7 +26,7 @@ class Context:
 
     def buy_pct_port(self, pct_port: float) -> float:
         """Calculate buy volume from percentage of SETAccount. Using last close
-        price. Symbol must be selected.
+        price.
 
         Parameters
         ----------
@@ -41,8 +41,7 @@ class Context:
         return self.buy_value(self.port_value * pct_port)
 
     def buy_value(self, value: float) -> float:
-        """Calculate buy volume from value. Using last close price. Symbol must
-        be selected.
+        """Calculate buy volume from value. Using last close price.
 
         Parameters
         ----------
@@ -57,8 +56,7 @@ class Context:
         return value / self.close_price
 
     def buy_pct_position(self, pct_position: float) -> float:
-        """Calculate buy volume from percentage of current position. Symbol
-        must be selected.
+        """Calculate buy volume from percentage of current position.
 
         Parameters
         ----------
@@ -74,7 +72,7 @@ class Context:
 
     def sell_pct_port(self, pct_port: float) -> float:
         """Calculate sell volume from percentage of SETAccount. Using last
-        close price. Symbol must be selected.
+        close price.
 
         Parameters
         ----------
@@ -89,8 +87,7 @@ class Context:
         return self.buy_pct_port(-pct_port)
 
     def sell_value(self, value: float) -> float:
-        """Calculate sell volume from value. Using last close price. Symbol
-        must be selected.
+        """Calculate sell volume from value. Using last close price.
 
         Parameters
         ----------
@@ -105,9 +102,7 @@ class Context:
         return self.buy_value(-value)
 
     def sell_pct_position(self, pct_position: float) -> float:
-        """Calculate sell volume from percentage of current position. Symbol
-        must be selected.
-
+        """Calculate sell volume from percentage of current position.
         Parameters
         ----------
         pct_position : float
@@ -122,7 +117,7 @@ class Context:
 
     def target_pct_port(self, pct_port: float) -> float:
         """Calculate buy/sell volume to make position reach percentage of
-        SETAccount. Using last close price. Symbol must be selected.
+        SETAccount. Using last close price.
 
         Parameters
         ----------
@@ -137,8 +132,7 @@ class Context:
         return self.buy_pct_port(pct_port) - self.volume
 
     def target_value(self, value: float) -> float:
-        """Calculate buy/sell volume to make position reach value. Symbol must
-        be selected.
+        """Calculate buy/sell volume to make position reach value.
 
         Parameters
         ----------

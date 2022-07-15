@@ -53,6 +53,7 @@ class SETDataReader:
         ----------
         table_name : str
             name of table:
+
             - DAILY_STOCK_TRADE
             - DAILY_STOCK_STAT
             - MKTSTAT_DAILY_INDEX
