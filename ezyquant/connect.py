@@ -7,7 +7,7 @@ def connect_sqlite(sqlite_path: str):
     Parameters
     ----------
     sqlite_path: str
-        SQLite database location path (e.g. C:/.../sqlite.db)
+        SQLite database location path (e.g. C:/.../ezyquant.db)
     """
     _SETDataReaderCached.cache_clear()
     SETDataReader._sqlite_path = sqlite_path
