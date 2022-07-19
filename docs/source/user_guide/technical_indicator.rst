@@ -87,6 +87,7 @@ Ichimoku (Ichimoku)
    conversion_line, base_line, spanA, spanB = sc.ta.ichimoku(
         df_high, df_low, 9, 26, 52
     )
+
 Parabolic Sar (PSAR)
 ~~~~~~~~~~~~~~~~~~~~
 
