@@ -84,7 +84,7 @@ html_theme_options = {
     "css_minify": True,
     "logo_icon": "&#xe869",
     "repo_type": "github",
-    "globaltoc_depth": 2,
+    "globaltoc_depth": 5,
     "globaltoc_collapse": True,
     "color_primary": "blue",
     "color_accent": "cyan",
@@ -92,7 +92,6 @@ html_theme_options = {
     # "master_doc": False,
     "nav_links": [
         # {"href": "index", "internal": True, "title": "Ezyquant"},
-        {"href": "get_started", "internal": True, "title": "Get Started"},
         {"href": "user_guide", "internal": True, "title": "User Guide"},
         {"href": "reference", "internal": True, "title": "API Reference"},
     ],
