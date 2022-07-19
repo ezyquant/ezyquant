@@ -23,16 +23,16 @@ class SETSignalCreator:
     ):
         """Initialize SETSignalCreator.
 
-        Symbol in universe is union of symbol_list and symbols in index_list.
+        Total universe is the union of symbol_list and symbols in the index_list.
 
         Parameters
         ----------
-        start_date : str
+        start_date: str = "2010-01-01"
             Start date of data.
-        end_date : str
+        end_date: Optional[str] = None
             End date of data.
-        index_list : List[str]
-            List of index name. by default ['SET100']
+        index_list: List[str] = ["SET100"]
+            List of index name.
                 - SET
                 - mai
                 - SETWB
@@ -42,8 +42,7 @@ class SETSignalCreator:
                 - sSET
                 - SET100
                 - SET50
-        symbol_list : List[str]
-            List of symbol name. by default []
+        symbol_list: List[str] = []
         """
         self._index_list: List[str] = [i.upper() for i in index_list]
         self._symbol_list: List[str] = [i.upper() for i in symbol_list]
@@ -61,26 +60,26 @@ class SETSignalCreator:
         period: int = 1,
         shift: int = 0,
     ) -> pd.DataFrame:
-        """Get DataFrame which columns are symbol in universe and index is
-        trade date from start_date to end_date.
+        """Return DataFrame which columns are symbols and index is the trading
+        date start from start_date to end_date.
 
-        Banned symbol will be replaced with nan.
+        Banned symbols will be replaced with nan.
 
         Parameters
         ----------
-        field : str
+        field: str
             Name of data field depends on timeframe and value_by.
-        timeframe : str
+        timeframe: str
             - daily
             - quarterly
             - yearly
             - ttm
             - ytd
-        value_by : str, default 'stock'
+        value_by: str = "stock"
             - stock
             - industry
             - sector
-        method : str, default 'constant'
+        method: str = "constant"
             Name of Dataframe rolling window functions. See <https://pandas.pydata.org/docs/reference/window.html#rolling-window-functions> for details.
             - constant
             - count
@@ -100,9 +99,9 @@ class SETSignalCreator:
             - quantile
             - sem
             - rank
-        period : int, default 1
+        period: int = 1
             Number of periods for rolling Dataframe. Period must be greater than 0.
-        shift : int, default 0
+        shift: int = 0
             Number of periods to shift Dataframe. Shift must be greater than or equal to 0.
 
         Returns
@@ -286,8 +285,8 @@ class SETSignalCreator:
 
         Parameters
         ----------
-        universe : str
-            Can be Market, Sector, Industry, or Index.
+        universe: str
+            Can be Sector, Industry, or Index.
 
         Returns
         -------
@@ -320,8 +319,8 @@ class SETSignalCreator:
             return self._is_universe_dynamic(universe)
 
     def is_banned(self) -> pd.DataFrame:
-        """Return Dataframe of boolean is banned by Delisted or Suspension
-        (SP).
+        """Return True when stock and date is in a Delisted or Suspension (SP)
+        table.
 
         Returns
         -------
@@ -356,11 +355,11 @@ class SETSignalCreator:
 
         Parameters
         ----------
-        factor_df : pd.DataFrame
+        factor_df: pd.DataFrame
             Dataframe of numerical data.
-        quantity : int, optional, default None
+        quantity: Optional[int] = None
             Number of ranks to compute. Default is None, which means all ranks.
-        ascending : bool, default True
+        ascending: bool = True
             Whether or not the elements should be ranked in ascending order.
 
         Returns

@@ -76,17 +76,17 @@ class SETAccount:
         price: float,
     ):
         """Buy/Sell with enough cash/position. skip if price is invalid (<=0,
-        NaN). Volume don't need to round 100.
+        NaN). Volume don't need round lot of 100.
 
         Parameters
         ----------
-        matched_at : datetime
+        matched_at: datetime
             matched datetime
-        symbol : str
+        symbol: str
             symbol
-        volume : float
-            volume, don't need round 100, positive for buy, negative for sell
-        price : float
+        volume: float
+            Volume positive for buy and negative for sell (Volume don't need round lot of 100).
+        price: float
             price
         """
         # return if 0, negative, nan

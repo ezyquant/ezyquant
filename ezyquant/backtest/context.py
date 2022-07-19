@@ -25,13 +25,12 @@ class Context:
     port_value: float = nan
 
     def buy_pct_port(self, pct_port: float) -> float:
-        """Calculate buy volume from percentage of SETAccount. Using last close
-        price.
+        """Calculate buy volume from the percentage of the portfolio.
 
         Parameters
         ----------
-        pct_port : float
-            percentage of SETAccount
+        pct_port: float
+            percentage of the portfolio
 
         Returns
         -------
@@ -41,11 +40,11 @@ class Context:
         return self.buy_value(self.port_value * pct_port)
 
     def buy_value(self, value: float) -> float:
-        """Calculate buy volume from value. Using last close price.
+        """Calculate buy volume from the given value.
 
         Parameters
         ----------
-        value : float
+        value: float
             value
 
         Returns
@@ -56,11 +55,11 @@ class Context:
         return value / self.close_price
 
     def buy_pct_position(self, pct_position: float) -> float:
-        """Calculate buy volume from percentage of current position.
+        """Calculate buy volume from the percentage of the current position.
 
         Parameters
         ----------
-        pct_position : float
+        pct_position: float
             percentage of position
 
         Returns
@@ -71,13 +70,11 @@ class Context:
         return pct_position * self.volume
 
     def sell_pct_port(self, pct_port: float) -> float:
-        """Calculate sell volume from percentage of SETAccount. Using last
-        close price.
-
+        """Calculate sell volume from the percentage of the portfolio.
         Parameters
         ----------
-        pct_port : float
-            percentage of SETAccount
+        pct_port: float
+            percentage of the portfolio
 
         Returns
         -------
@@ -87,11 +84,11 @@ class Context:
         return self.buy_pct_port(-pct_port)
 
     def sell_value(self, value: float) -> float:
-        """Calculate sell volume from value. Using last close price.
+        """Calculate sell volume from the given value.
 
         Parameters
         ----------
-        value : float
+        value: float
             value
 
         Returns
@@ -102,10 +99,11 @@ class Context:
         return self.buy_value(-value)
 
     def sell_pct_position(self, pct_position: float) -> float:
-        """Calculate sell volume from percentage of current position.
+        """Calculate sell volume from the percentage of the current position.
+
         Parameters
         ----------
-        pct_position : float
+        pct_position: float
             percentage of position
 
         Returns
@@ -116,13 +114,13 @@ class Context:
         return self.buy_pct_position(-pct_position)
 
     def target_pct_port(self, pct_port: float) -> float:
-        """Calculate buy/sell volume to make position reach percentage of
-        SETAccount. Using last close price.
+        """Calculate buy/sell volume to make the current position reach the target percentage of
+        the portfolio.
 
         Parameters
         ----------
-        pct_port : float
-            percentage of SETAccount
+        pct_port: float
+            percentage of the portfolio
 
         Returns
         -------
@@ -132,11 +130,11 @@ class Context:
         return self.buy_pct_port(pct_port) - self.volume
 
     def target_value(self, value: float) -> float:
-        """Calculate buy/sell volume to make position reach value.
+        """Calculate buy/sell volume to make the current position reach the target value.
 
         Parameters
         ----------
-        value : float
+        value: float
             value
 
         Returns

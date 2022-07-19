@@ -28,34 +28,34 @@ def _backtest(
 
     Parameters
     ----------
-    initial_cash : float
-        cash at the beginning of the backtest
-    signal_df : pd.DataFrame
-        dataframe of signal.
-        index is trade date, columns are symbol, values are signal.
-        missing signal in trade date will be filled with nan.
-    backtest_algorithm: Callable[[Context], float],
-        function for calculate trade volume.
+    initial_cash: float
+        Initial cash.
+    signal_df: pd.DataFrame
+        Dataframe of signal.
+        Index is the trading date, columns are symbol, values are signal.
+        Missing signal in the trading date will be filled with nan.
+    backtest_algorithm: Callable[[Context], float]
+        Function for calculate trade volume.
         Parameters:
             - context: Context
                 context for backtest
         Return:
             - trade_volume: float
                 positive for buy, negative for sell, 0 or nan for no trade
-    close_price_df : pd.DataFrame
-        dataframe of close price.
-        index is trade date, columns are symbol, values are weight.
-        first row will be used as initial close price.
-    price_match_df : pd.DataFrame
-        dataframe of match price.
-        index is trade date, columns are symbol, values are weight.
-        index and columns must be same as or more than close_price_df.
-    pct_buy_slip : float, default 0.0
-        percentage of buy slip, higher value means higher buy price ex. 0.01 means 1% increase
-    pct_sell_slip : float, default 0.0
-        percentage of sell slip, higher value means lower sell price ex. 0.01 means 1% decrease
-    pct_commission : float, default 0.0
-        percentage of commission fee ex. 0.01 means 1% fee
+    close_price_df: pd.DataFrame
+        Dataframe of close price.
+        Index is trade date, columns are symbol, values are weight.
+        First row will be used as initial close price.
+    price_match_df: pd.DataFrame
+        Dataframe of match price.
+        Index is trade date, columns are symbol, values are weight.
+        Index and columns must be same as or more than close_price_df.
+    pct_buy_slip: float
+        Percentage of buy slip, higher value means higher buy price (ex. 0.01 means 1% increase).
+    pct_sell_slip: float
+        Percentage of sell slip, higher value means lower sell price (ex. 0.01 means 1% decrease).
+    pct_commission: float
+        Percentage of commission fee (ex. 0.01 means 1% fee).
 
     Returns
     -------
