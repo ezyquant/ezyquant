@@ -50,18 +50,16 @@ Step 2: Create Backtest Algorithm
 
 การรับค่ามาใช้งานให้รับจาก Context ซึ่งมี attribute และ method ตามนี้
 
-attribute
-~~~~~~~~~
+**attribute**
 
 .. csv-table::
    :file: ../_static/backtest_context_attribute.csv
    :widths: 30, 70
    :header-rows: 1
 
-method
-~~~~~~
+**method**
 
-method ต่างๆจะ return จำนวนหุ้นที่ต้องการซื้อขายให้ สามารถส่งไปที่ return ได้เลย
+method ต่อไปนี้จะเป็นการคำนวนจำนวนหุ้นที่ต้องการซื้อขายให้แบบสำเร็จรูป สามารถคืนค่าที่คำนวนได้เลย
 
 .. csv-table::
    :file: ../_static/backtest_context_method.csv

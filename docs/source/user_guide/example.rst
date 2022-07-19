@@ -1,7 +1,8 @@
 Example
 =======
 
-**ตัวอย่าง** การทำ Backtest ทั้งหมด
+Example 1
+---------
 
 .. code-block::
 
@@ -70,5 +71,5 @@ Example
 
     # Save ผลลัพธ์เป็น Excel
     result.to_excel(
-        r"C:/Users/watthikorn.i/Desktop/fintech-git-project/EzyQuant/results.xlsx"
+        r".../results.xlsx"
     )
