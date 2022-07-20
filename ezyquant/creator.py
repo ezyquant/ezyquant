@@ -43,6 +43,7 @@ class SETSignalCreator:
                 - SET100
                 - SET50
         symbol_list: List[str] = []
+            List of symbol.
         """
         self._index_list: List[str] = [i.upper() for i in index_list]
         self._symbol_list: List[str] = [i.upper() for i in symbol_list]
@@ -319,8 +320,7 @@ class SETSignalCreator:
             return self._is_universe_dynamic(universe)
 
     def is_banned(self) -> pd.DataFrame:
-        """Return True when stock and date is in a Delisted or Suspension (SP)
-        table.
+        """Return True when stock was Delisted or Suspension (SP).
 
         Returns
         -------
