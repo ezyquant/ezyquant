@@ -28,5 +28,3 @@ Install Data
 
 โดยที่ Downlaod มาแล้วจะเป็น file "ezyquant.db"
 ให้นำ file นี้ไปวางไว้ใน folder ที่จะใช้งานได้เลย
-
-.. image:: _static/ezyquant_data.png
