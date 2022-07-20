@@ -298,7 +298,9 @@ class SETBacktestReport:
         -------
         pd.DataFrame
             columns
+
                 - nav names
+                
             indexes
 
                 - pct_net_profit
