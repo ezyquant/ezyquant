@@ -73,7 +73,7 @@ method ต่อไปนี้จะเป็นการคำนวนจำ�
 
     def backtest_algorithm(c: Context):
         if c.symbol == "AOT":
-            print("Portfoilio on ", c.ts)
+            print("Portfolio on ", c.ts)
             print("Port value = cash + total market value")
             print(c.port_value, " = ", c.cash, " + ", c.total_market_value)
             print("Current Position")
