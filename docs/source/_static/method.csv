@@ -1,0 +1,10 @@
+Index,Description
+constant,original data
+count,calculate x period count
+sum,calculate x period sum
+mean,calculate x period mean
+median,calculate x period median
+min,calculate x period minimum
+max,calculate x period maximum
+quantile,calculate x period quantile
+rank,calculate x period rank

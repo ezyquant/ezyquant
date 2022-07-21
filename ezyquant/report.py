@@ -89,23 +89,23 @@ class SETBacktestReport:
 
         Parameters
         ----------
-        initial_capital : float
+        initial_capital: float
             initial capital.
-        pct_commission : float
+        pct_commission: float
             percent commission.
-        pct_buy_slip : float
+        pct_buy_slip: float
             percent of buy price increase.
-        pct_sell_slip : float
+        pct_sell_slip: float
             percent of sell price decrease.
-        cash_series : pd.Series
+        cash_series: pd.Series
             series of cash.
-        position_df : pd.DataFrame
+        position_df: pd.DataFrame
             dataframe of position.
                 - timestamp
                 - symbol
                 - volume
                 - cost_price
-        trade_df : pd.DataFrame
+        trade_df: pd.DataFrame
             dataframe of trade.
                 - matched_at
                 - symbol
@@ -297,8 +297,12 @@ class SETBacktestReport:
         Returns
         -------
         pd.DataFrame
-            columns - nav names
+            columns
+
+                - nav names
+                
             indexes
+
                 - pct_net_profit
                 - cagr
                 - pct_maximum_drawdown
@@ -533,7 +537,7 @@ class SETBacktestReport:
 
         Parameters
         ----------
-        path : str
+        path: str
             Path to Excel file.
         """
         with pd.ExcelWriter(

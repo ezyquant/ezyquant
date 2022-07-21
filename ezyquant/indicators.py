@@ -23,11 +23,11 @@ class TA:
 
         Parameters
         ----------
-        close : pd.DataFrame
+        close: pd.DataFrame
             dataset 'Close' dataframe.
-        window : int
+        window: int
             n period.
-        fillna : bool, default False
+        fillna: bool = False
             if True, fill nan values.
 
         Returns
@@ -47,11 +47,11 @@ class TA:
 
         Parameters
         ----------
-        close : pd.DataFrame
+        close: pd.DataFrame
             dataset 'Close' dataframe.
-        window : int, default 14
+        window: int = 14
             n period.
-        fillna : bool, default False
+        fillna: bool = False
             if True, fill nan values.
 
         Returns
@@ -75,15 +75,15 @@ class TA:
 
         Parameters
         ----------
-        close : pd.DataFrame
+        close: pd.DataFrame
             dataset 'Close' dataframe.
-        window_slow : int, default 26
+        window_slow: int = 26
             n period short-term.
-        window_fast : int, default 12
+        window_fast: int = 12
             n period long-term.
-        window_sign : int, default 9
+        window_sign: int = 9
             n period to signal.
-        fillna : bool, default False
+        fillna: bool = False
             if True, fill nan values.
 
         Returns
@@ -122,15 +122,15 @@ class TA:
 
         Parameters
         ----------
-        high : pd.DataFrame
+        high: pd.DataFrame
             dataset 'High' dataframe.
-        low : pd.DataFrame
+        low: pd.DataFrame
             dataset 'Low' dataframe.
-        close : pd.DataFrame
+        close: pd.DataFrame
             dataset 'Close' dataframe.
-        window : int, default 14
+        window: int = 14
             n period.
-        fillna : bool, default False
+        fillna: bool = False
             if True, fill nan values.
 
         Returns
@@ -170,17 +170,17 @@ class TA:
 
         Parameters
         ----------
-        high : pd.DataFrame
+        high: pd.DataFrame
             dataset 'High' dataframe.
-        low : pd.DataFrame
+        low: pd.DataFrame
             dataset 'Low' dataframe.
-        close : pd.DataFrame
+        close: pd.DataFrame
             dataset 'Close' dataframe.
-        window : int, default 20
+        window: int = 20
             n period.
-        constant : float, default 0.015
+        constant: float = 0.015
             constant.
-        fillna : bool, default False
+        fillna: bool = False
             if True, fill nan values.
 
         Returns
@@ -217,19 +217,19 @@ class TA:
 
         Parameters
         ----------
-        high : pd.DataFrame
+        high: pd.DataFrame
             dataset 'High' dataframe.
-        low : pd.DataFrame
+        low: pd.DataFrame
             dataset 'Low' dataframe.
-        window1 : int, default 9
+        window1: int = 9
             n period for Tenkan-sen.
-        window2 : int, default 26
+        window2: int = 26
             n period for Kijun-sen.
-        window3 : int, default 52
+        window3: int = 52
             n period for Senkou Span A.
-        visual : bool, default False
+        visual: bool = False
             if True, plot graph.
-        fillna : bool, default False
+        fillna: bool = False
             if True, fill nan values.
 
         Returns
@@ -273,17 +273,17 @@ class TA:
 
         Parameters
         ----------
-        high : pd.DataFrame
+        high: pd.DataFrame
             dataset 'High' dataframe.
-        low : pd.DataFrame
+        low: pd.DataFrame
             dataset 'Low' dataframe.
-        close : pd.DataFrame
+        close: pd.DataFrame
             dataset 'Close' dataframe.
-        step : float, default 0.02
+        step: float = 0.02
             the Acceleration Factor used to compute the SAR.
-        max_step : float, default 0.2
+        max_step: float = 0.20
             the maximum value allowed for the Acceleration Factor.
-        fillna : bool, default False
+        fillna: bool = False
             if True, fill nan values.
 
         Returns
@@ -325,11 +325,11 @@ class TA:
 
         Parameters
         ----------
-        close : pd.DataFrame
+        close: pd.DataFrame
             dataset 'Close' dataframe.
-        window : int, default 14
+        window: int = 14
             n period.
-        fillna : bool, default False
+        fillna: bool = False
             if True, fill nan values.
 
         Returns
@@ -362,17 +362,17 @@ class TA:
 
         Parameters
         ----------
-        high : pd.DataFrame
+        high: pd.DataFrame
             dataset 'High' dataframe.
-        low : pd.DataFrame
+        low: pd.DataFrame
             dataset 'Low' dataframe.
-        close : pd.DataFrame
+        close: pd.DataFrame
             dataset 'Close' dataframe.
-        window : int, default 14
+        window: int = 14
             n period.
-        smooth_window : int, default 3
+        smooth_window: int = 3
             sma period over stoch_k.
-        fillna : bool, default False
+        fillna: bool = False
             if True, fill nan values.
 
         Returns
@@ -408,11 +408,11 @@ class TA:
 
         Parameters
         ----------
-        close : pd.DataFrame
+        close: pd.DataFrame
             dataset 'Close' dataframe.
-        window : int, default 12
+        window: int = 12
             n period.
-        fillna : bool, default False
+        fillna: bool = False
             if True, fill nan values.
 
         Returns
@@ -446,15 +446,15 @@ class TA:
 
         Parameters
         ----------
-        high : pd.DataFrame
+        high: pd.DataFrame
             dataset 'High' dataframe.
-        low : pd.DataFrame
+        low: pd.DataFrame
             dataset 'Low' dataframe.
-        close : pd.DataFrame
+        close: pd.DataFrame
             dataset 'Close' dataframe.
-        window : int, default 14
+        window: int = 14
             n period.
-        fillna : bool, default False
+        fillna: bool = False
             if True, fill nan values.
 
         Returns
@@ -492,13 +492,13 @@ class TA:
 
         Parameters
         ----------
-        close : pd.DataFrame
+        close: pd.DataFrame
             dataset 'Close' dataframe.
-        window : int, default 20
+        window: int = 20
             n period.
-        window_dev : int, default 2
+        window_dev: int = 2
             n factor standard deviation.
-        fillna : bool, default False
+        fillna: bool = False
             if True, fill nan values.
 
         Returns
@@ -545,17 +545,17 @@ class TA:
 
         Parameters
         ----------
-        high : pd.DataFrame
+        high: pd.DataFrame
             dataset 'High' dataframe.
-        low : pd.DataFrame
+        low: pd.DataFrame
             dataset 'Low' dataframe.
-        close : pd.DataFrame
+        close: pd.DataFrame
             dataset 'Close' dataframe.
-        window : int, default 20
+        window: int = 20
             n period.
-        offset : int, default 0
+        offset: int = 0
             n period offset.
-        fillna : bool, default False
+        fillna: bool = False
             if True, fill nan values.
 
         Returns
@@ -610,21 +610,21 @@ class TA:
 
         Parameters
         ----------
-        high : pd.DataFrame
+        high: pd.DataFrame
             dataset 'High' dataframe.
-        low : pd.DataFrame
+        low: pd.DataFrame
             dataset 'Low' dataframe.
-        close : pd.DataFrame
+        close: pd.DataFrame
             dataset 'Close' dataframe.
-        window : int, default 20
+        window: int = 20
             n period.
-        window_atr : int, default 10
+        window_atr: int = 10
             n atr period. Only valid if original_version param is False.
-        multiplier : int, default 2
+        multiplier: int = 2
             The multiplier has the most effect on the channel width.
-        original_version : bool, default False
+        original_version: bool = False
             if True, use the original version.
-        fillna : bool, default False
+        fillna: bool = False
             if True, fill nan values.
 
         Returns

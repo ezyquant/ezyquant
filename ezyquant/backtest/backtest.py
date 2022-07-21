@@ -28,10 +28,10 @@ def backtest(
 
     Parameters
     ----------
-    signal_df : pd.DataFrame
-        dataframe of signal.
-        index is trade date, columns are symbol, values are signal.
-        missing signal in trade date will be filled with nan.
+    signal_df: pd.DataFrame
+        Dataframe of signal.
+        Index is trade date, columns are symbol, values are signal.
+        Missing signal in trade date will be filled with nan.
     backtest_algorithm: Callable[[Context], float],
         function for calculate trade volume.
 
@@ -42,20 +42,20 @@ def backtest(
         Return:
             - trade_volume: float
                   positive for buy, negative for sell, 0 or nan for no trade
-    start_date : str
-        start date in format YYYY-MM-DD
-    end_date : str
-        end date in format YYYY-MM-DD
-    initial_cash : float
-        cash at the beginning of the backtest
-    pct_buy_slip : float, default 0.0
-        percentage of buy slip, higher value means higher buy price ex. 1.0 means 1% increase
-    pct_sell_slip : float, default 0.0
-        percentage of sell slip, higher value means lower sell price ex. 1.0 means 1% decrease
-    pct_commission : float, default 0.0
-        percentage of commission fee ex. 1.0 means 1% fee
-    price_match_mode : str, by default "open"
-        price match mode.
+    start_date: str
+        Start date in format YYYY-MM-DD.
+    end_date: str
+        End date in format YYYY-MM-DD.
+    initial_cash: float
+        Initial cash.
+    pct_buy_slip: float = 0.0
+        Percentage of buy slip, higher value means higher buy price (ex. 1.0 means 1% increase).
+    pct_sell_slip: float = 0.0
+        Percentage of sell slip, higher value means lower sell price (ex. 1.0 means 1% decrease).
+    pct_commission: float = 0.0
+        Percentage of commission fee (ex. 1.0 means 1% fee).
+    price_match_mode: str = "open"
+        Price match mode
             - open
             - high
             - low
@@ -63,8 +63,8 @@ def backtest(
             - median - (high + low)/2
             - typical - (high + low + close)/3
             - weighted - (high + low + close + close)/4
-    signal_delay_bar : int, by default 1
-        delay bar for shift signal.
+    signal_delay_bar: int = 1
+        Delay bar for shifting signal.
 
     Returns
     -------
