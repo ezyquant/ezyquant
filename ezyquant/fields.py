@@ -569,7 +569,7 @@ METHOD_QUANTILE = "quantile"
 METHOD_SEM = "sem"
 METHOD_RANK = "rank"
 
-""" 
+"""
 Backtest
 """
 

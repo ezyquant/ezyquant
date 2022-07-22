@@ -1,0 +1,9 @@
+Index,Description
+buy_pct_port(),input percent of portfolio to buy
+buy_value(),input amount to buy
+buy_pct_position(),input percent of position to buy
+sell_pct_port(),input percent of portfolio to sell
+sell_value(),input amount to sell
+sell_pct_position(),input percent of position to buy
+target_pct_port(),input percent target of the selected stock
+target_value(),input target value of the selected stock

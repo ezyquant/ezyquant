@@ -44,15 +44,15 @@ def is_rebalance_weekly(
 
     Parameters
     ----------
-    trade_date_index : pd.DatetimeIndex
+    trade_date_index: pd.DatetimeIndex
         Trade date index.
-    rebalance_at : int
-        Day of week to rebalance. 1 is Monday, 5 is Friday.
+    rebalance_at: int
+        Day of week to rebalance (e.g. 1 is Monday or 5 is Friday).
 
     Returns
     -------
     pd.Series
-        Series of bool, True if the date is a rebalance date.
+        Series of bool. True if the date is a rebalance date.
     """
     if not trade_date_index.is_monotonic or not trade_date_index.is_unique:
         raise InputError("trade_date_index must be monotonic and unique")
@@ -74,10 +74,10 @@ def is_rebalance_monthly(
 
     Parameters
     ----------
-    trade_date_index : pd.DatetimeIndex
+    trade_date_index: pd.DatetimeIndex
         Trade date index.
-    rebalance_at : int
-        Day of month to rebalance. Can be 1-31.
+    rebalance_at: int
+        Day of month to rebalance (available from 1-31).
 
     Returns
     -------
@@ -188,7 +188,7 @@ def cache_dataframe_wrapper(method: Callable):
 
     Parameters
     ----------
-    method : Callable
+    method: Callable
         method parameter must be
             - field: str
             - symbol_list: Optional[List[str]] = None

@@ -7,7 +7,7 @@ from ezyquant import utils as ezutils
 from ezyquant.backtest import Context
 from ezyquant.reader import SETBusinessDay
 
-ez.connect_sqlite("psims.db")
+ez.connect_sqlite("ezyquant.db")
 
 start_date = "2010-01-01"
 start_load_date = ezutils.date_to_str(pd.Timestamp(start_date) - SETBusinessDay(1))

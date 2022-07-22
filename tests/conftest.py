@@ -6,7 +6,7 @@ from ezyquant import SETDataReader, SETSignalCreator
 
 @pytest.fixture(scope="session")
 def sqlite_path() -> str:
-    return "psims.db"
+    return "ezyquant.db"
 
 
 @pytest.fixture(autouse=True)

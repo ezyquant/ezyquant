@@ -22,9 +22,9 @@ sys.path.insert(0, os.path.abspath("../.."))
 # -- Project information -----------------------------------------------------
 
 project = "Ezyquant"
-author = "Fintech (Thailand) Co., Ltd"
+author = "Thailand Capital Market Development Fund (CMDF)"
 copyright = f"2022-{datetime.now().year}, {author}"
-release = "0.1.1"
+release = "0.1.3"
 
 
 # -- General configuration ---------------------------------------------------
@@ -75,17 +75,17 @@ html_theme = "sphinx_material"
 
 # material theme options (see theme.conf for more information)
 html_theme_options = {
-    # "base_url": "http://bashtage.github.io/sphinx-material/",
+    "base_url": "https://doc.ezyquant.com/",
     "repo_url": "https://github.com/ezyquant/ezyquant",
     "repo_name": project,
     # "google_analytics_account": "UA-XXXXX",
     "html_minify": False,
     "html_prettify": True,
     "css_minify": True,
-    "logo_icon": "&#xe869",
+    # "logo_icon": "&#xe869",
     "repo_type": "github",
-    "globaltoc_depth": 2,
-    "globaltoc_collapse": False,
+    "globaltoc_depth": -1,
+    "globaltoc_collapse": True,
     "color_primary": "blue",
     "color_accent": "cyan",
     "theme_color": "#2196f3",
@@ -93,21 +93,17 @@ html_theme_options = {
     "nav_links": [
         # {"href": "index", "internal": True, "title": "Ezyquant"},
         {"href": "get_started", "internal": True, "title": "Get Started"},
-        {"href": "user_guide", "internal": True, "title": "User Guide"},
-        {"href": "reference", "internal": True, "title": "API Reference"},
+        {"href": "user_guide/setup", "internal": True, "title": "User Guide"},
+        {"href": "reference/ezyquant", "internal": True, "title": "API Reference"},
     ],
-    "heroes": {
-        "index": "A responsive Material Design theme for Sphinx sites.",
-        "customization": "Configuration options to personalize your site.",
-    },
     "table_classes": ["plain"],
 }
 
-language = "th"
+language = "en"
 
 todo_include_todos = True
-html_logo = "_static/ezyquant.png"
-html_favicon = "_static/ezyquant.png"
+# html_logo = "_static/ezyquant.png"
+# html_favicon = "_static/ezyquant.png"
 
 html_use_index = True
 html_domain_indices = True

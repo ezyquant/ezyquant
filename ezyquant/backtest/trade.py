@@ -9,16 +9,16 @@ class SETTrade:
 
     Parameters
     ----------
-    matched_at : datetime
+    matched_at: datetime
         The time when the trade was executed.
-    symbol : str
-        The symbol of the trade
-    volume : float
-        The volume of the trade, must be multiple of 100, positive is buy and negative is sell
-    price : float
-        The price of the trade
-    pct_commission : float
-        The percentage of commission, must be between 0 and 1
+    symbol: str
+        The symbol of the trade.
+    volume: float
+        The volume of the trade positive is buy and negative is sell (must be multiple of 100).
+    price: float
+        The price of the trade.
+    pct_commission: float
+        The percentage of commission (must be between 0 and 1).
     """
 
     matched_at: datetime
