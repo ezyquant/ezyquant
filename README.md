@@ -1,6 +1,6 @@
 # Ezyquant
 
-powerful backtest python library for Thai stocks
+Powerful backtest python library for Thai stocks
 
 ## Features
 
