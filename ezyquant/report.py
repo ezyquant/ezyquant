@@ -300,7 +300,7 @@ class SETBacktestReport:
             columns
 
                 - nav names
-                
+
             indexes
 
                 - pct_net_profit
