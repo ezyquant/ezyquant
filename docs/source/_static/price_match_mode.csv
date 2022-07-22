@@ -1,0 +1,8 @@
+Price,Description
+open,open price
+high,high price
+low,low price
+close,close price
+median,(high + low)/2
+typical,(high + low + close)/3
+weighted,(high + low + close + close)/4

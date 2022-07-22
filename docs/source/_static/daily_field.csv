@@ -1,0 +1,42 @@
+Field,Description,Return Type
+prior,last close,float
+open,open price,float
+high,high price,float
+low,low price,float
+close,close price,float
+average,average price,float
+last_bid,last bid,float
+last_offer, last offer,float
+trans,number of transaction,float
+volume,volume,float
+value,value,float
+pe,price-to-earning ratio,float
+pb,price-to-book ratio,float
+par,par value,float
+dps,dividend per share,float
+dvd_yield,dividend yield,float
+mkt_cap,market capitalization,float
+eps,earning per share,float
+book_value,book value,float
+quarter_fin,financial quarter,float
+month_dvd,period of dividend payment in month,float
+as_of,date as of eps calculation,str date format [yyyy-mm-dd hh:mm:ss]
+dividend,date of lastest dividend paid,str date format [yyyy-mm-dd hh:mm:ss]
+status,sign of status,str
+benefit,sign of benefit,str
+share_listed,number of listed share,float
+turnover,turnover,float
+npg,flag for non performing group,float
+total_volume,total volume,float
+total_value,total value,float
+acc_dps,accumulate dividend per share,float
+dvd_payment,dividend amount,float
+dvd_payout,payout ratio,float
+earning,date of earning,str date format [yyyy-mm-dd hh:mm:ss]
+notice,flag for notice,float
+non_compliance,flag for non complience,float
+stabilization,flag for stabilization,float
+call_market,flag for call complience,float
+caution,flag for caution,float
+12m_dvd_yield,12 months dividend yield,float
+peg,price/earning-to-growth,float

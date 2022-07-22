@@ -51,19 +51,19 @@ class SETDataReader:
 
         Parameters
         ----------
-        table_name : str
+        table_name: str
             name of table:
+
             - DAILY_STOCK_TRADE
             - DAILY_STOCK_STAT
             - MKTSTAT_DAILY_INDEX
             - MKTSTAT_DAILY_MARKET
             - DAILY_SECTOR_INFO
 
-
         Returns
         -------
         str
-            string with format YYYY-MM-DD
+            string with format YYYY-MM-DD.
         """
         t = self._table(table_name)
         stmt = select([func.max(func.DATE(t.c.D_TRADE))])
@@ -72,7 +72,7 @@ class SETDataReader:
         return res
 
     def last_update(self) -> str:
-        """Last database update, checking from last D_TRADE in following
+        """Last database update, checking from last D_TRADE in the following
         tables:
 
         - DAILY_STOCK_TRADE
@@ -84,7 +84,7 @@ class SETDataReader:
         Returns
         -------
         str
-            string with format YYYY-MM-DD
+            string with format YYYY-MM-DD.
         """
         d1 = self.last_table_update("DAILY_STOCK_TRADE")
         d2 = self.last_table_update("DAILY_STOCK_STAT")
@@ -101,15 +101,15 @@ class SETDataReader:
 
         Parameters
         ----------
-        start_date : Optional[str]
-            start of D_TRADE, by default None
-        end_date : Optional[str]
-            end of D_TRADE, by default None
+        start_date: Optional[str] = None
+            start of D_TRADE.
+        end_date: Optional[str] = None
+            end of D_TRADE.
 
         Returns
         -------
         List[str]
-            list of string with format YYYY-MM-DD
+            list of string with format YYYY-MM-DD.
         """
         calendar_t = self._table("CALENDAR")
 
@@ -133,13 +133,13 @@ class SETDataReader:
 
         Parameters
         ----------
-        check_date : str
-            string with format YYYY-MM-DD
+        check_date: str
+            string with format YYYY-MM-DD.
 
         Returns
         -------
         bool
-            is trading date
+            True if the trading date is exist.
         """
         calendar_t = self._table("CALENDAR")
 
@@ -158,7 +158,7 @@ class SETDataReader:
         Returns
         -------
         bool
-            is today trading date
+            True if today is the trading date.
         """
         return self.is_trading_date(utils.date_to_str(date.today()))
 
@@ -175,16 +175,16 @@ class SETDataReader:
 
         Parameters
         ----------
-        symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, must be unique, by default None
-        market : Optional[str]
-            I_MARKET e.g. 'SET', 'mai', by default None
-        industry : Optional[str]
-            SECTOR.N_INDUSTRY, by default None
-        sector : Optional[str]
-            SECTOR.N_SECTOR, by default None
-        sec_type : Optional[str]
-            Security type, by default None
+        symbol_list: Optional[List[str]] = None
+            N_SECURITY in symbol_list (must be unique).
+        market: Optional[str] = None
+            I_MARKET e.g. 'SET', 'mai'
+        industry: Optional[str] = None
+            SECTOR.N_INDUSTRY
+        sector: Optional[str] = None
+            SECTOR.N_SECTOR
+        sec_type: Optional[str] = None
+            Security type
                 - S: Common
                 - F: Common Foreign
                 - P: Preferred
@@ -203,8 +203,8 @@ class SETDataReader:
                 - R: Transferable Subscription Right
                 - G: Government Bond
                 - J: Convertible Preferred
-        native : Optional[str]
-            I_NATIVE, by default None
+        native: Optional[str] = None
+            I_NATIVE
                 - L: Local
                 - F: Foreign
                 - U: Thai Trust Fund
@@ -288,8 +288,8 @@ class SETDataReader:
 
         Parameters
         ----------
-        symbol_list : Optional[List[str]]
-            SECURITY.N_SECURITY in symbol_list, must be unique, by default None
+        symbol_list: Optional[List[str]] = None
+            SECURITY.N_SECURITY in symbol_list (must be unique).
 
         Returns
         -------
@@ -363,12 +363,12 @@ class SETDataReader:
 
         Parameters
         ----------
-        symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, must be unique, by default None
-        start_date : Optional[str]
-            start of effect_date (D_EFFECT), by default None
-        end_date : Optional[str]
-            end of effect_date (D_EFFECT), by default None
+        symbol_list: Optional[List[str]] = None
+            N_SECURITY in symbol_list (must be unique).
+        start_date: Optional[str] = None
+            start of effect_date (D_EFFECT).
+        end_date: Optional[str] = None
+            end of effect_date (D_EFFECT).
 
         Returns
         -------
@@ -448,18 +448,18 @@ class SETDataReader:
 
         Parameters
         ----------
-        symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, must be unique, by default None
-        start_date : Optional[str]
-            start of ex_date (D_SIGN), by default None
-        end_date : Optional[str]
-            end of ex_date (D_SIGN), by default None
-        ca_type_list : Optional[List[str]]
-            Coperatie action type (N_CA_TYPE), by default None
+        symbol_list: Optional[List[str]] = None
+            N_SECURITY in symbol_list (must be unique).
+        start_date: Optional[str] = None
+            start of ex_date (D_SIGN).
+        end_date: Optional[str] = None
+            end of ex_date (D_SIGN).
+        ca_type_list: Optional[List[str]] = None
+            Coperatie action type (N_CA_TYPE).
                 - CD - cash dividend
                 - SD - stock dividend
-        adjusted_list : List[str]
-            Adjust data by ca_type, empty list for no adjust, by default ["", "CR", "PC", "RC", "SD", "XR"]
+        adjusted_list: List[str] = ["", "CR", "PC", "RC", "SD", "XR"]
+            Adjust data by ca_type (empty list for no adjustment).
 
         Returns
         -------
@@ -556,12 +556,12 @@ class SETDataReader:
 
         Parameters
         ----------
-        symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, must be unique, by default None
-        start_date : Optional[str]
-            start of delisted_date (D_DELISTED), by default None
-        end_date : Optional[str]
-            end of delisted_date (D_DELISTED), by default None
+        symbol_list: Optional[List[str]] = None
+            N_SECURITY in symbol_list (must be unique).
+        start_date: Optional[str] = None
+            start of delisted_date (D_DELISTED).
+        end_date: Optional[str] = None
+            end of delisted_date (D_DELISTED).
 
         Returns
         -------
@@ -621,14 +621,14 @@ class SETDataReader:
 
         Parameters
         ----------
-        symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, must be unique, by default None
-        start_date : Optional[str]
-            start of hold_date (D_HOLD), by default None
-        end_date : Optional[str]
-            end of hold_date (D_HOLD), by default None
-        sign_list : Optional[List[str]]
-            N_SIGN in sign_list, by default None
+        symbol_list: Optional[List[str]] = None
+            N_SECURITY in symbol_list (must be unique).
+        start_date: Optional[str] = None
+            start of hold_date (D_HOLD).
+        end_date: Optional[str] = None
+            end of hold_date (D_HOLD).
+        sign_list: Optional[List[str]] = None,
+            N_SIGN in sign_list.
                 - C - Caution Flag
                 - CM - Call Market
                 - DS - Designated
@@ -699,7 +699,7 @@ class SETDataReader:
 
         Parameters
         ----------
-        index_list : Optional[List[str]]
+        index_list: Optional[List[str]] = None
             index (SECTOR.N_SECTOR)
                 - SETWB
                 - SETTHSI
@@ -708,10 +708,10 @@ class SETDataReader:
                 - sSET
                 - SET100
                 - SET50
-        start_date : Optional[str]
-            start of as_of_date (D_AS_OF), by default None
-        end_date : Optional[str]
-            end of as_of_date (D_AS_OF), by default None
+        start_date: Optional[str] = None
+            start of as_of_date (D_AS_OF).
+        end_date: Optional[str] = None
+            end of as_of_date (D_AS_OF).
 
         Returns
         -------
@@ -848,14 +848,14 @@ class SETDataReader:
 
         Parameters
         ----------
-        symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, must be unique, by default None
-        start_date : Optional[str]
-            start of effect_date (D_EFFECT), by default None
-        end_date : Optional[str]
-            end of effect_date (D_EFFECT), by default None
-        ca_type_list : Optional[List[str]]
-            Coperatie action type (N_CA_TYPE), by default None
+        symbol_list: Optional[List[str]] = None
+            N_SECURITY in symbol_list (must be unique).
+        start_date: Optional[str] = None
+            start of effect_date (D_EFFECT).
+        end_date: Optional[str] = None
+            end of effect_date (D_EFFECT).
+        ca_type_list: Optional[List[str]] = None
+            Coperatie action type (N_CA_TYPE).
                 - '  '
                 - 'CR' - Capital Reduction
                 - 'PC' - Par Change
@@ -929,7 +929,7 @@ class SETDataReader:
 
         Parameters
         ----------
-        field : str
+        field: str
             - prior
             - open
             - high
@@ -976,14 +976,14 @@ class SETDataReader:
             - caution
             - 12m_dvd_yield
             - peg
-        symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, must be unique, by default None
-        start_date : Optional[str]
+        symbol_list: Optional[List[str]] = None
+            N_SECURITY in symbol_list (must be unique).
+        start_date: Optional[str] = None
             start of trade_date (D_TRADE), by default None
-        end_date : Optional[str]
+        end_date: Optional[str] = None
             end of trade_date (D_TRADE), by default None
-        adjusted_list : List[str]
-            Adjust data by ca_type, empty list for no adjust, by default ["", "CR", "PC", "RC", "SD", "XR"]
+        adjusted_list: List[str] = ["", "CR", "PC", "RC", "SD", "XR"]
+            Adjust data by ca_type (empty list for no adjustment).
 
         Returns
         -------
@@ -1107,11 +1107,11 @@ class SETDataReader:
 
         FINANCIAL_STAT_STD using data from column M_ACCOUNT. FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and I_PERIOD in ('Q1','Q2','Q3','Q4').
 
-        Index date is trade date (DAILY_STOCK_STAT.D_TRADE). Data is showing at first trade date which join on D_AS_OF.
+        Index date is the trading date (DAILY_STOCK_STAT.D_TRADE). Data is showing at first trade date which join on D_AS_OF.
 
         Parameters
         ----------
-        field : str
+        field: str
             - year
             - period_type
             - period
@@ -1211,12 +1211,12 @@ class SETDataReader:
             - total_expense
             - total_revenue
             - eps
-        symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, must be unique, by default None
-        start_date : Optional[str]
-            start of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
-        end_date : Optional[str]
-            end of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
+        symbol_list: Optional[List[str]] = None
+            N_SECURITY in symbol_list, must be unique.
+        start_date: Optional[str] = None
+            start of trade date (DAILY_STOCK_STAT.D_TRADE).
+        end_date: Optional[str] = None
+            end of trade date (DAILY_STOCK_STAT.D_TRADE).
 
         Returns
         -------
@@ -1263,7 +1263,7 @@ class SETDataReader:
 
         Parameters
         ----------
-        field : str
+        field: str
             - year
             - period_type
             - period
@@ -1363,12 +1363,12 @@ class SETDataReader:
             - total_expense
             - total_revenue
             - eps
-        symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, must be unique, by default None
-        start_date : Optional[str]
-            start of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
-        end_date : Optional[str]
-            end of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
+        symbol_list: Optional[List[str]] = None
+            N_SECURITY in symbol_list, must be unique.
+        start_date: Optional[str] = None
+            start of trade date (DAILY_STOCK_STAT.D_TRADE).
+        end_date: Optional[str] = None
+            end of trade date (DAILY_STOCK_STAT.D_TRADE).
 
         Returns
         -------
@@ -1452,11 +1452,11 @@ class SETDataReader:
             - total_revenue
             - eps
         symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, must be unique, by default None
+            N_SECURITY in symbol_list, must be unique.
         start_date : Optional[str]
-            start of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
+            start of trade date (DAILY_STOCK_STAT.D_TRADE).
         end_date : Optional[str]
-            end of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
+            end of trade date (DAILY_STOCK_STAT.D_TRADE).
 
         Returns
         -------
@@ -1505,7 +1505,7 @@ class SETDataReader:
 
         Parameters
         ----------
-        field : str
+        field: str
             - year
             - period_type
             - period
@@ -1605,12 +1605,12 @@ class SETDataReader:
             - total_expense
             - total_revenue
             - eps
-        symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, must be unique, by default None
-        start_date : Optional[str]
-            start of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
-        end_date : Optional[str]
-            end of trade date (DAILY_STOCK_STAT.D_TRADE), by default None
+        symbol_list: Optional[List[str]] = None
+            N_SECURITY in symbol_list, must be unique.
+        start_date: Optional[str] = None
+            start of trade date (DAILY_STOCK_STAT.D_TRADE).
+        end_date: Optional[str] = None
+            end of trade date (DAILY_STOCK_STAT.D_TRADE).
 
         Returns
         -------
@@ -1652,7 +1652,7 @@ class SETDataReader:
 
         Parameters
         ----------
-        field : str
+        field: str
             - high
             - low
             - close
@@ -1672,12 +1672,12 @@ class SETDataReader:
             - move_out_company
             - listed_company
             - listed_stock
-        index_list : Optional[List[str]]
-            N_SECTOR in index_list, by default None. More index can be found in ezyquant.fields
-        start_date : Optional[str]
-            start of trade_date (D_TRADE), by default None
-        end_date : Optional[str]
-            end of trade_date (D_TRADE), by default None
+        index_list: Optional[List[str]] = None
+            N_SECTOR in index_list. More index can be found in ezyquant.fields.
+        start_date: Optional[str] = None
+            start of trade_date (D_TRADE).
+        end_date: Optional[str] = None
+            end of trade_date (D_TRADE).
 
         Returns
         -------
@@ -1764,7 +1764,7 @@ class SETDataReader:
 
         Parameters
         ----------
-        field : str
+        field: str
             - prior
             - open
             - high
@@ -1782,14 +1782,14 @@ class SETDataReader:
             - beta
             - turnover_volume
             - 12m_dvd_yield
-        market : str
-            I_MARKET e.g. 'SET', 'mai', by default 'SET'
-        sector_list : Optional[List[str]]
-            N_SECTOR in sector_list, by default None. More sector can be found in ezyquant.fields
-        start_date : Optional[str]
-            start of trade_date (D_TRADE), by default None
-        end_date : Optional[str]
-            end of trade_date (D_TRADE), by default None
+        market: str = fld.MARKET_SET
+            I_MARKET (e.g. 'SET', 'mai').
+        sector_list: Optional[List[str]] = None
+            N_SECTOR in sector_list. More sector can be found in ezyquant.fields.
+        start_date: Optional[str] = None
+            start of trade_date (D_TRADE).
+        end_date: Optional[str] = None
+            end of trade_date (D_TRADE).
 
         Returns
         -------
@@ -1836,7 +1836,7 @@ class SETDataReader:
 
         Parameters
         ----------
-        field : str
+        field: str
             - prior
             - open
             - high
@@ -1854,14 +1854,14 @@ class SETDataReader:
             - beta
             - turnover_volume
             - 12m_dvd_yield
-        market : str
-            I_MARKET e.g. 'SET', 'mai', by default 'SET'
-        industry_list : Optional[List[str]]
-            N_SECTOR in industry_list, by default None. More industry can be found in ezyquant.fields
-        start_date : Optional[str]
-            start of trade_date (D_TRADE), by default None
-        end_date : Optional[str]
-            end of trade_date (D_TRADE), by default None
+        market: str = fld.MARKET_SET
+            I_MARKET (e.g. 'SET', 'mai').
+        industry_list: Optional[List[str]] = None
+            N_SECTOR in industry_list. More industry can be found in ezyquant.fields.
+        start_date: Optional[str] = None
+            start of trade_date (D_TRADE).
+        end_date: Optional[str] = None
+            end of trade_date (D_TRADE).
 
         Returns
         -------
@@ -2024,14 +2024,14 @@ class SETDataReader:
 
         Parameters
         ----------
-        df : pd.DataFrame
-            index must be trade_date and columns must be symbol
-        is_multiply : bool, optional
-            is multiply by adjust factor (adjust factor usually less than 1), by default True
-        start_adjust_date : Optional[str], optional
-            start of get adjust factor effect date, by default None
-        adjusted_list : Optional[List[str]], optional
-            n_ca_type list, by default None
+        df: pd.DataFrame
+            index must be trade_date and columns must be symbol.
+        is_multiply: bool = True
+            is multiply by adjust factor (adjust factor usually less than 1).
+        start_adjust_date: Optional[str] = None
+            start of get adjust factor effect date.
+        adjusted_list: Optional[List[str]] = None
+            n_ca_type list.
 
         Returns
         -------

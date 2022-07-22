@@ -29,7 +29,7 @@ import ezyquant as ez
 from ezyquant import SETDataReader, backtest
 from ezyquant.backtest import Context
 
-ez.connect_sqlite("psims.db")
+ez.connect_sqlite("ezyquant.db")
 
 start_date = "2020-01-01"
 end_date = "2020-12-31"

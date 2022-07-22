@@ -1,0 +1,18 @@
+field,Description
+prior,sector or industry index last
+open,sector or industry index open
+high,sector or industry index high
+low,sector or industry index low
+close,sector or industry index close
+trans,sector or industry transaction
+volume,sector or industry volume
+value,sector or industry value
+mkt_pe,sector or industry pe
+mkt_pbv,sector or industry pbv
+mkt_yield,sector or industry dividend yield
+mkt_cap,sector or industry market cap
+turnover,sector or industry turnover
+share_listed_avg,sector or industry average share listed
+beta,sector or industry beta
+turnover_volume,sector or industry volume turnover
+12m_dvd_yield,sector or industry 12 months dividend yield
