@@ -75,7 +75,7 @@ html_theme = "sphinx_material"
 
 # material theme options (see theme.conf for more information)
 html_theme_options = {
-    # "base_url": "http://bashtage.github.io/sphinx-material/",
+    "base_url": "https://doc.ezyquant.com/",
     "repo_url": "https://github.com/ezyquant/ezyquant",
     "repo_name": project,
     # "google_analytics_account": "UA-XXXXX",
@@ -96,10 +96,6 @@ html_theme_options = {
         {"href": "user_guide/setup", "internal": True, "title": "User Guide"},
         {"href": "reference/ezyquant", "internal": True, "title": "API Reference"},
     ],
-    # "heroes": {
-    #     "index": "A responsive Material Design theme for Sphinx sites.",
-    #     "customization": "Configuration options to personalize your site.",
-    # },
     "table_classes": ["plain"],
 }
 
