@@ -23,7 +23,7 @@ setup(
         "License :: OSI Approved :: MIT License",
     ],
     project_urls={
-        "Documentation": "https://www.ezyquant.com/",
+        "Documentation": "https://doc.ezyquant.com/",
         "Bug Reports": "https://github.com/ezyquant/ezyquant/issues",
         "Source": "https://github.com/bukosabino/ta",
     },
