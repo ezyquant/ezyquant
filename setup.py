@@ -16,7 +16,6 @@ setup(
     maintainer_email="itadmin@cmdf.or.th",
     install_requires=["pandas>=1.4", "sqlalchemy>=1.4", "ta>=0.10", "XlsxWriter>=3.0"],
     license="The MIT License (MIT)",
-    license_files=["LICENSE.txt"],
     classifiers=[
         "Intended Audience :: Financial and Insurance Industry",
         "Intended Audience :: Science/Research",
