@@ -3,13 +3,13 @@ from typing import List, Optional
 
 import pandas as pd
 import pytest
-import utils
 from pandas._testing import assert_frame_equal, assert_index_equal, assert_series_equal
 
 import ezyquant.fields as fld
 from ezyquant import SETDataReader
 from ezyquant import validators as vld
 from ezyquant.errors import InputError
+from tests import utils
 
 
 def test_last_table_update(sdr: SETDataReader):

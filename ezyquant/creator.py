@@ -275,6 +275,8 @@ class SETSignalCreator:
                 f"{timeframe} is invalid timeframe. Please read document to check valid timeframe."
             )
 
+        df = df.reindex(columns=symbol_list)
+
         df.index.freq = None  # type: ignore
 
         df = df.mask(self.is_banned(), np.nan)
@@ -556,8 +558,8 @@ class SETSignalCreator:
         )
 
         # hold_date and release_date can be with time
-        df["hold_date"] = df["hold_date"].dt.normalize()
-        df["release_date"] = df["release_date"].dt.normalize()
+        df["hold_date"] = df["hold_date"].dt.normalize()  # type: ignore
+        df["release_date"] = df["release_date"].dt.normalize()  # type: ignore
 
         df["true"] = 1
         df["false"] = 0

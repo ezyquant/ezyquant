@@ -5,13 +5,13 @@ from unittest.mock import Mock, call
 import pandas as pd
 import pandas.api.types as ptypes
 import pytest
-import utils
 from pandas.testing import assert_frame_equal, assert_index_equal, assert_series_equal
 from pandas.tseries.offsets import BusinessDay
 
 from ezyquant import validators as vld
 from ezyquant.backtesting import Context
 from ezyquant.backtesting._backtesting import _backtest
+from tests import utils
 
 nan = float("nan")
 
