@@ -3,14 +3,6 @@ API Reference
 
 .. autosummary::
       :toctree: api
+      :recursive:
 
-      ezyquant.backtest
-      ezyquant.connect
-      ezyquant.errors
-      ezyquant.fields
-      ezyquant.indicators
-      ezyquant.reader
-      ezyquant.report
-      ezyquant.utils
-      ezyquant.validators
-
+      ezyquant
