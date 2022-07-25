@@ -9,8 +9,8 @@ Import Library
 .. code-block::
 
    import ezyquant as ez
-   from ezyquant.backtest.account import SETAccount
-   from ezyquant.backtest import Context
+   from ezyquant.backtesting.account import SETAccount
+   from ezyquant.backtesting import Context
 
 
 Connect Database
