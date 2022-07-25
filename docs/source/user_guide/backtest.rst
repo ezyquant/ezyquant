@@ -10,7 +10,7 @@ Step 0: Initialize Data
 
     import numpy as np
     import ezyquant as ez
-    from ezyquant.backtest import Context
+    from ezyquant.backtesting import Context
 
     start_date = "2020-01-01"
     end_date = "2022-05-05"
