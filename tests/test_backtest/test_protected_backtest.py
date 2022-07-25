@@ -10,8 +10,8 @@ from pandas.testing import assert_frame_equal, assert_index_equal, assert_series
 from pandas.tseries.offsets import BusinessDay
 
 from ezyquant import validators as vld
-from ezyquant.backtest import Context
-from ezyquant.backtest._backtest import _backtest
+from ezyquant.backtesting import Context
+from ezyquant.backtesting._backtesting import _backtest
 
 nan = float("nan")
 

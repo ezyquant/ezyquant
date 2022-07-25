@@ -3,7 +3,7 @@ import pandas as pd
 import ezyquant as ez
 from ezyquant import SETSignalCreator, backtest
 from ezyquant import utils as ezutils
-from ezyquant.backtest import Context
+from ezyquant.backtesting import Context
 from ezyquant.reader import SETBusinessDay
 
 ez.connect_sqlite("ezyquant.db")
