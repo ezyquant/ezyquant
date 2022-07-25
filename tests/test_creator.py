@@ -4,7 +4,7 @@ from unittest.mock import ANY, Mock
 import pandas as pd
 import pytest
 from numpy import inf, nan
-from pandas.testing import assert_frame_equal, assert_series_equal
+from pandas.testing import assert_frame_equal, assert_index_equal, assert_series_equal
 
 import ezyquant.fields as fld
 from ezyquant import SETSignalCreator
@@ -374,6 +374,55 @@ class TestGetData:
         self._check(result)
 
         assert result.empty
+
+    @pytest.mark.parametrize(
+        ("field", "timeframe", "value_by"),
+        [
+            (fld.D_CLOSE, fld.TIMEFRAME_DAILY, fld.VALUE_BY_STOCK),
+            (fld.D_PE, fld.TIMEFRAME_DAILY, fld.VALUE_BY_STOCK),
+            (fld.Q_EBITDA, fld.TIMEFRAME_QUARTERLY, fld.VALUE_BY_STOCK),
+        ],
+    )
+    @pytest.mark.parametrize("shift", [0, 1, 999])
+    @pytest.mark.parametrize(
+        ("method", "period"),
+        [
+            (fld.METHOD_CONSTANT, 1),
+            (fld.METHOD_MEAN, 1),
+            (fld.METHOD_MEAN, 2),
+            (fld.METHOD_MEAN, 999),
+        ],
+    )
+    def test_reindex_column(
+        self,
+        ssc: SETSignalCreator,
+        field: str,
+        timeframe: str,
+        value_by: str,
+        method: str,
+        period: int,
+        shift: int,
+    ):
+        # Mock
+        ssc._start_date = "2010-01-01"
+        ssc._end_date = "2010-01-31"
+        ssc._symbol_list = ["OR"]
+
+        # Test
+        result = ssc.get_data(
+            field=field,
+            timeframe=timeframe,
+            value_by=value_by,
+            method=method,
+            period=period,
+            shift=shift,
+        )
+
+        # Check
+        self._check(result)
+
+        assert_index_equal(result.columns, pd.Index(["OR"]))
+        assert result.isnull().values.all()
 
 
 IDX_2022_04_01_TO_2022_04_29 = pd.DatetimeIndex(
