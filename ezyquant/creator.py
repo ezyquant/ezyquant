@@ -275,6 +275,8 @@ class SETSignalCreator:
                 f"{timeframe} is invalid timeframe. Please read document to check valid timeframe."
             )
 
+        df = df.reindex(columns=symbol_list)
+
         df.index.freq = None  # type: ignore
 
         df = df.mask(self.is_banned(), np.nan)
