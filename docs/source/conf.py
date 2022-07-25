@@ -33,9 +33,12 @@ release = "0.1.3"
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    "sphinx.ext.autosummary",
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
 ]
+
+autosummary_generate = True
 
 autoclass_content = "init"
 autodoc_default_options = {

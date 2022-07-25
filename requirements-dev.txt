@@ -8,5 +8,5 @@ pytest-kwparametrize
 isort
 black
 docformatter
-sphinx
+sphinx==5.0.2 # wait for fix napoleon
 sphinx-material

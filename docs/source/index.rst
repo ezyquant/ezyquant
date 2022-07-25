@@ -4,7 +4,7 @@ Ezyquant
 .. toctree::
    :maxdepth: 2
    :caption: Get Started
-   
+
    get_started.rst
 
 .. toctree::
@@ -22,4 +22,4 @@ Ezyquant
    :maxdepth: 4
    :caption: API Reference
 
-   reference/ezyquant
+   reference
