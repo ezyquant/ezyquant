@@ -5,7 +5,7 @@ VERSION = "0.1.3"
 
 setup(
     name=NAME,
-    packages=find_packages(include=["ezyquant"]),
+    packages=find_packages(include=["ezyquant", "ezyquant.*"]),
     version=VERSION,
     description="Powerful backtest python library for Thai stocks",
     long_description="Powerful backtest python library for Thai stocks",
