@@ -558,8 +558,8 @@ class SETSignalCreator:
         )
 
         # hold_date and release_date can be with time
-        df["hold_date"] = df["hold_date"].dt.normalize()
-        df["release_date"] = df["release_date"].dt.normalize()
+        df["hold_date"] = df["hold_date"].dt.normalize()  # type: ignore
+        df["release_date"] = df["release_date"].dt.normalize()  # type: ignore
 
         df["true"] = 1
         df["false"] = 0
