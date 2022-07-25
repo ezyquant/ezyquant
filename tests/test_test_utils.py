@@ -1,6 +1,7 @@
 import pandas as pd
 import pytest
-import utils
+
+from tests import utils
 
 
 @pytest.mark.parametrize(
