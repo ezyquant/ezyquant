@@ -1,10 +1,8 @@
 from typing import List
 from unittest.mock import ANY, Mock
 
-import constant as const
 import pandas as pd
 import pytest
-import utils
 from numpy import inf, nan
 from pandas.testing import assert_frame_equal, assert_series_equal
 
@@ -12,6 +10,8 @@ import ezyquant.fields as fld
 from ezyquant import SETSignalCreator
 from ezyquant import validators as vld
 from ezyquant.errors import InputError
+from tests import constant as const
+from tests import utils
 
 IDX_2020_01_02_TO_2020_01_15 = pd.DatetimeIndex(
     [
