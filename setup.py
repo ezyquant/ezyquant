@@ -11,7 +11,7 @@ setup(
     long_description="Powerful backtest python library for Thai stocks",
     author="Fintech (Thailand) Company Limited",
     author_email="admin@fintech.co.th",
-    url="https://github.com/ezyquant/ezyquant",
+    url="https://doc.ezyquant.com/",
     maintainer="Fintech (Thailand) Company Limited",
     maintainer_email="admin@fintech.co.th",
     install_requires=["pandas>=1.4", "sqlalchemy>=1.4", "ta>=0.10", "XlsxWriter>=3.0"],
@@ -25,6 +25,6 @@ setup(
     project_urls={
         "Documentation": "https://doc.ezyquant.com/",
         "Bug Reports": "https://github.com/ezyquant/ezyquant/issues",
-        "Source": "https://github.com/bukosabino/ta",
+        "Source": "https://github.com/ezyquant/ezyquant",
     },
 )
