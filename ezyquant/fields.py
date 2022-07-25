@@ -1,7 +1,3 @@
-"""
-SETDataReader
-"""
-
 MARKET_SET = INDEX_SET = "SET"
 MARKET_MAI = INDEX_MAI = "mai"
 
