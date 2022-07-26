@@ -1,7 +1,7 @@
-ezyquant.backtest.position module
+ezyquant.backtesting.trade module
 =================================
 
-.. automodule:: ezyquant.backtest.position
+.. automodule:: ezyquant.backtesting.trade
    :members:
    :undoc-members:
    :show-inheritance:

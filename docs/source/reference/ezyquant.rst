@@ -12,7 +12,7 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   ezyquant.backtest
+   ezyquant.backtesting
 
 Submodules
 ----------
