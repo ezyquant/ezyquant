@@ -27,7 +27,3 @@ venv:
 .PHONY: sphinx
 sphinx:
 	sphinx-build -b html docs/source/ docs/build/html
-
-.PHONY: sphinx-apidoc
-sphinx-apidoc:
-	sphinx-apidoc -e -T -M -o docs/source/reference ezyquant
