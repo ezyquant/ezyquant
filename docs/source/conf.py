@@ -95,9 +95,9 @@ html_theme_options = {
     # "master_doc": False,
     "nav_links": [
         # {"href": "index", "internal": True, "title": "Ezyquant"},
-        {"href": "get_started", "internal": True, "title": "Get Started"},
+        {"href": "get_started/installation", "internal": True, "title": "Get Started"},
         {"href": "user_guide/setup", "internal": True, "title": "User Guide"},
-        {"href": "reference/ezyquant", "internal": True, "title": "API Reference"},
+        {"href": "api_reference/ezyquant", "internal": True, "title": "API Reference"},
     ],
     "table_classes": ["plain"],
 }
