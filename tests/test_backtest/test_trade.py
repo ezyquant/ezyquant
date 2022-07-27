@@ -2,7 +2,7 @@ from datetime import datetime
 
 import pytest
 
-from ezyquant.backtest import SETTrade
+from ezyquant.backtesting import SETTrade
 
 
 class TestSETTrade:

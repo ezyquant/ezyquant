@@ -436,7 +436,7 @@ class SETBacktestReport:
         df["pct_return"] = df["return"] / df["cost_price"] / df["volume"]
 
         # hold days
-        df["hold_days"] = (df["exit_at"] - df["entry_at"]).dt.days
+        df["hold_days"] = (df["exit_at"] - df["entry_at"]).dt.days  # type: ignore
 
         return df[summary_trade_columns]
 

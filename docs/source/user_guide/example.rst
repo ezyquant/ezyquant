@@ -8,7 +8,7 @@ Example 1
 
     import numpy as np
     import ezyquant as ez
-    from ezyquant.backtest import Context
+    from ezyquant.backtesting import Context
 
     # ต่อ database
     database_path = "..."

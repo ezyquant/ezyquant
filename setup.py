@@ -1,11 +1,11 @@
 from setuptools import find_packages, setup
 
 NAME = "ezyquant"
-VERSION = "0.1.3"
+VERSION = "0.1.4"
 
 setup(
     name=NAME,
-    packages=find_packages(include=["ezyquant"]),
+    packages=find_packages(include=["ezyquant", "ezyquant.*"]),
     version=VERSION,
     description="Powerful backtest python library for Thai stocks",
     long_description="Powerful backtest python library for Thai stocks",

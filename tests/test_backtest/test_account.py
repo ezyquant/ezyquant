@@ -5,7 +5,7 @@ from typing import Dict
 import pandas as pd
 import pytest
 
-from ezyquant.backtest import SETAccount, SETPosition, SETTrade
+from ezyquant.backtesting import SETAccount, SETPosition, SETTrade
 
 nan = float("nan")
 

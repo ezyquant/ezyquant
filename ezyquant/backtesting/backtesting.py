@@ -8,7 +8,7 @@ from ..creator import SETSignalCreator
 from ..errors import InputError
 from ..reader import SETBusinessDay
 from ..report import SETBacktestReport
-from ._backtest import _backtest
+from ._backtesting import _backtest
 from .context import Context
 
 
