@@ -20,7 +20,7 @@ Ezyquant
    user_guide/example.rst
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
    :caption: API Reference
 
    api_reference/ezyquant

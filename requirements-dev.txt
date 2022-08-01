@@ -9,4 +9,5 @@ isort
 black
 docformatter
 sphinx==5.0.2 # wait for fix napoleon
-sphinx-material
+sphinx-book-theme
+sphinx-thebe
