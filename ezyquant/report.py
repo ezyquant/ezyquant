@@ -1,7 +1,6 @@
 import math
 from calendar import month_abbr
 from datetime import datetime
-from functools import cached_property
 
 import numpy as np
 import pandas as pd
@@ -10,6 +9,7 @@ from pandas.testing import assert_index_equal
 from . import fields as fld
 from . import utils
 from .reader import _SETDataReaderCached
+from .utils import cached_property
 
 nan = float("nan")
 
