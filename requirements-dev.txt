@@ -2,7 +2,6 @@ pandas
 sqlalchemy
 ta
 XlsxWriter
-dataclasses
 
 pytest
 pytest-kwparametrize
