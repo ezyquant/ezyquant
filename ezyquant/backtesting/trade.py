@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
-from functools import cached_property
+
+from ..utils import cached_property
 
 
 @dataclass(frozen=True)
