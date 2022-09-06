@@ -257,3 +257,6 @@ def cache_dataframe_wrapper(method: Callable):
         return df.copy()
 
     return wrapped
+
+
+cached_property = lambda x: property(lru_cache(maxsize=1)(x))

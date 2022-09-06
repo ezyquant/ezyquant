@@ -397,14 +397,14 @@ class SETSignalCreator:
     Protected methods
     """
 
-    @lru_cache
+    @lru_cache(maxsize=128)
     def _get_trading_dates(self) -> List[str]:
         end = self._end_date
         if self._end_date == None:
             end = self._sdr.last_table_update("DAILY_STOCK_TRADE")
         return self._sdr.get_trading_dates(start_date=self._start_date, end_date=end)
 
-    @lru_cache
+    @lru_cache(maxsize=128)
     def _get_symbol_in_universe(self) -> List[str]:
         out = set()
         if self._symbol_list:
@@ -468,7 +468,7 @@ class SETSignalCreator:
 
         return series
 
-    @lru_cache
+    @lru_cache(maxsize=128)
     def _get_start_as_of_security_index(self) -> Dict[str, str]:
         out = self._sdr._get_last_as_of_date_in_security_index(
             current_date=self._start_date
