@@ -1,7 +1,7 @@
 from setuptools import find_packages, setup
 
 NAME = "ezyquant"
-VERSION = "0.1.4"
+VERSION = "0.1.5"
 
 setup(
     name=NAME,
