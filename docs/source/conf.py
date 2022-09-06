@@ -24,7 +24,7 @@ sys.path.insert(0, os.path.abspath("../.."))
 project = "Ezyquant"
 author = "Thailand Capital Market Development Fund (CMDF)"
 copyright = f"2022-{datetime.now().year}, {author}"
-release = "0.1.4"
+release = "0.1.5"
 
 
 # -- General configuration ---------------------------------------------------
