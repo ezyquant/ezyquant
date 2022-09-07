@@ -382,6 +382,7 @@ class SETBacktestReport:
 
         # sort columns
         df = df[self._nav_df.columns]
+        assert isinstance(df, pd.DataFrame)
 
         return df
 
