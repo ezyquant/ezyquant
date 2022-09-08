@@ -132,9 +132,13 @@ def _date_range(
     return out
 
 
-def count_true_consecutive(s: pd.Series) -> int:
+def count_true_consecutive(s: pd.Series) -> pd.Series:
+    return s * (s.groupby((s != s.shift()).cumsum()).cumcount() + 1)
+
+
+def count_max_true_consecutive(s: pd.Series) -> int:
     """Count the number of consecutive True values in a series."""
-    out = (s * (s.groupby((s != s.shift()).cumsum()).cumcount() + 1)).max()
+    out = count_true_consecutive(s).max()
     if pd.isna(out):
         return 0
     else:

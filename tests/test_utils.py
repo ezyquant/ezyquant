@@ -315,8 +315,8 @@ class TestIsRebalanceMonthly:
         (pd.Series([True, True, True]), 3),
     ],
 )
-def test_count_true_consecutive(series: pd.Series, expect_result):
-    result = utils.count_true_consecutive(series)
+def test_count_max_true_consecutive(series: pd.Series, expect_result):
+    result = utils.count_max_true_consecutive(series)
     assert result == expect_result
 
 
