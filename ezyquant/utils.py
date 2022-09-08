@@ -138,11 +138,9 @@ def count_true_consecutive(s: pd.Series) -> pd.Series:
 
 def count_max_true_consecutive(s: pd.Series) -> int:
     """Count the number of consecutive True values in a series."""
-    out = count_true_consecutive(s).max()
-    if pd.isna(out):
+    if s.empty:
         return 0
-    else:
-        return out
+    return count_true_consecutive(s).max()
 
 
 """
