@@ -368,7 +368,11 @@ class SETSignalCreator:
 
     @staticmethod
     def rank(
-        factor_df: pd.DataFrame, quantity: Optional[int] = None, ascending: bool = True
+        factor_df: pd.DataFrame,
+        quantity: Optional[int] = None,
+        method: str = "first",
+        ascending: bool = True,
+        pct: bool = False,
     ):
         """Compute numerical data ranks (1 through quantity) along axis.
 
@@ -378,8 +382,17 @@ class SETSignalCreator:
             Dataframe of numerical data.
         quantity: Optional[int] = None
             Number of ranks to compute. Default is None, which means all ranks.
+        method: str = "first"
+            How to rank the group of records that have the same value (i.e. ties):
+                - average: average rank of the group
+                - min: lowest rank in the group
+                - max: highest rank in the group
+                - first: ranks assigned in order they appear in the array
+                - dense: like 'min', but rank always increases by 1 between groups.
         ascending: bool = True
             Whether or not the elements should be ranked in ascending order.
+        pct: bool = False
+            Whether or not to display the returned rankings in percentile form.
 
         Returns
         -------
@@ -401,7 +414,7 @@ class SETSignalCreator:
         1  1.0  NaN  2.0
         2  1.0  1.0  1.0
         """
-        df = factor_df.rank(ascending=ascending, axis=1, method="min")
+        df = factor_df.rank(ascending=ascending, axis=1, method=method, pct=pct)
         if quantity != None:
             if quantity < 1:
                 raise InputError(
