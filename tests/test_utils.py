@@ -298,6 +298,31 @@ class TestIsRebalanceMonthly:
 @pytest.mark.parametrize(
     ("series", "expect_result"),
     [
+        (pd.Series([]), pd.Series([])),
+        (pd.Series([False]), pd.Series([0])),
+        (pd.Series([True]), pd.Series([1])),
+        (pd.Series([False, False]), pd.Series([0, 0])),
+        (pd.Series([False, True]), pd.Series([0, 1])),
+        (pd.Series([True, False]), pd.Series([1, 0])),
+        (pd.Series([True, True]), pd.Series([1, 2])),
+        (pd.Series([False, False, False]), pd.Series([0, 0, 0])),
+        (pd.Series([False, False, True]), pd.Series([0, 0, 1])),
+        (pd.Series([False, True, False]), pd.Series([0, 1, 0])),
+        (pd.Series([False, True, True]), pd.Series([0, 1, 2])),
+        (pd.Series([True, False, False]), pd.Series([1, 0, 0])),
+        (pd.Series([True, False, True]), pd.Series([1, 0, 1])),
+        (pd.Series([True, True, False]), pd.Series([1, 2, 0])),
+        (pd.Series([True, True, True]), pd.Series([1, 2, 3])),
+    ],
+)
+def test_count_true_consecutive(series: pd.Series, expect_result: pd.Series):
+    result = utils.count_true_consecutive(series)
+    assert_series_equal(result, expect_result)
+
+
+@pytest.mark.parametrize(
+    ("series", "expect_result"),
+    [
         (pd.Series([]), 0),
         (pd.Series([False]), 0),
         (pd.Series([True]), 1),
@@ -315,8 +340,8 @@ class TestIsRebalanceMonthly:
         (pd.Series([True, True, True]), 3),
     ],
 )
-def test_count_true_consecutive(series: pd.Series, expect_result):
-    result = utils.count_true_consecutive(series)
+def test_count_max_true_consecutive(series: pd.Series, expect_result):
+    result = utils.count_max_true_consecutive(series)
     assert result == expect_result
 
 
