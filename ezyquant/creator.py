@@ -58,6 +58,8 @@ class SETSignalCreator:
         timeframe: str,
         value_by: str = "stock",
         method: str = "constant",
+        method_args: Optional[tuple] = None,
+        method_kwargs: Optional[dict] = None,
         period: int = 1,
         shift: int = 0,
     ) -> pd.DataFrame:
@@ -100,6 +102,10 @@ class SETSignalCreator:
             - quantile
             - sem
             - rank
+        method_args: Optional[tuple] = None
+            Arguments for method.
+        method_kwargs: Optional[dict] = None
+            Keyword arguments for method.
         period: int = 1
             Number of periods for rolling Dataframe. Period must be greater than 0.
         shift: int = 0
@@ -238,7 +244,13 @@ class SETSignalCreator:
             df = df.shift(shift)
 
             if method != fld.METHOD_CONSTANT:
-                df = self._rolling(df, method=method, period=period)
+                df = self._rolling(
+                    df,
+                    method=method,
+                    period=period,
+                    args=method_args,
+                    kwargs=method_kwargs,
+                )
 
         elif timeframe in (
             fld.TIMEFRAME_QUARTERLY,
@@ -258,7 +270,12 @@ class SETSignalCreator:
 
                 df = df.apply(
                     lambda x: self._rolling_skip_na_keep_inf(
-                        x, method=method, period=period, shift=shift
+                        x,
+                        method=method,
+                        period=period,
+                        shift=shift,
+                        args=method_args,
+                        kwargs=method_kwargs,
                     ),
                     axis=0,
                 )
@@ -444,10 +461,22 @@ class SETSignalCreator:
         s = self._get_symbol_in_universe()
         return df.reindex(columns=s, fill_value=fill_value)  # type: ignore
 
-    def _rolling(self, data, method: str, period: int):
+    def _rolling(
+        self,
+        data,
+        method: str,
+        period: int,
+        args: Optional[tuple] = None,
+        kwargs: Optional[dict] = None,
+    ):
+        if args == None:
+            args = tuple()
+        if kwargs == None:
+            kwargs = dict()
+
         roll = data.rolling(period)
         try:
-            data = getattr(roll, method)()
+            data = getattr(roll, method)(*args, **kwargs)
         except AttributeError:
             raise InputError(
                 f"{method} is invalid method. Please read document to check valid method."
@@ -455,13 +484,21 @@ class SETSignalCreator:
         return data
 
     def _rolling_skip_na_keep_inf(
-        self, series: pd.Series, method: str, period: int, shift: int
+        self,
+        series: pd.Series,
+        method: str,
+        period: int,
+        shift: int,
+        args: Optional[tuple] = None,
+        kwargs: Optional[dict] = None,
     ) -> pd.Series:
         series = series.dropna().shift(shift)
 
         if method != fld.METHOD_CONSTANT:
             is_inf = np.isinf(series)
-            series = self._rolling(series, method=method, period=period)
+            series = self._rolling(
+                series, method=method, period=period, args=args, kwargs=kwargs
+            )
             series = series.mask(is_inf, np.inf)
 
         series = series.fillna(method="ffill")

@@ -103,7 +103,7 @@ def is_rebalance_monthly(
     idx = td_s.searchsorted(v, side="left")
     idx = idx[idx != td_s.size]
 
-    return td_s.isin(td_s[idx])
+    return td_s.isin(td_s[idx])  # type: ignore
 
 
 def _date_range(
