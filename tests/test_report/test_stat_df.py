@@ -111,7 +111,6 @@ def test_pct_exposure(
 
     # Test
     result = sbr.pct_exposure
-    print(result)
 
     # Check
     assert_series_equal(

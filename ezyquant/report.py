@@ -382,6 +382,7 @@ class SETBacktestReport:
 
         # sort columns
         df = df[self._nav_df.columns]
+        assert isinstance(df, pd.DataFrame)
 
         return df
 
@@ -729,7 +730,7 @@ class SETBacktestReport:
     def max_win_consecutive(self) -> int:
         """Maximum win consecutive."""
         s = self._is_win_trade
-        return utils.count_true_consecutive(s)
+        return utils.count_max_true_consecutive(s)
 
     @property
     @return_nan_on_failure
@@ -774,7 +775,7 @@ class SETBacktestReport:
     def max_lose_consecutive(self) -> int:
         """Maximum lose consecutive."""
         s = ~self._is_win_trade
-        return utils.count_true_consecutive(s)
+        return utils.count_max_true_consecutive(s)
 
     @cached_property
     def start_date(self) -> datetime:
