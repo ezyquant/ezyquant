@@ -532,9 +532,7 @@ DAILY_SECTOR_INFO_MAP = {
     D_SECTOR_12M_DVD_YIELD: "P_12M_DVD_YIELD",
 }
 
-"""
-SETSignalCreator
-"""
+# SETSignalCreator
 
 TIMEFRAME_DAILY = "daily"
 TIMEFRAME_QUARTERLY = "quarterly"
@@ -565,9 +563,7 @@ METHOD_QUANTILE = "quantile"
 METHOD_SEM = "sem"
 METHOD_RANK = "rank"
 
-"""
-Backtest
-"""
+# Backtest
 
 REBALANCE_FREQ_NO = "no"
 REBALANCE_FREQ_DAILY = "daily"

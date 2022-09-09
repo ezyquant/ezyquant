@@ -13,7 +13,6 @@ ezyquant
    ezyquant.connect
    ezyquant.creator
    ezyquant.errors
-   ezyquant.fields
    ezyquant.indicators
    ezyquant.reader
    ezyquant.report
