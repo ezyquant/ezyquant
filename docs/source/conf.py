@@ -29,7 +29,6 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
-    # "sphinx_thebe",
 ]
 
 autosummary_generate = True
@@ -37,6 +36,7 @@ autosummary_generate = True
 autoclass_content = "init"
 autodoc_default_options = {
     "member-order": "bysource",
+    "undoc-members": True,
 }
 
 # Add any paths that contain templates here, relative to this directory.
