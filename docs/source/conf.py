@@ -12,12 +12,14 @@
 
 from datetime import datetime
 
+import ezyquant as ez
+
 # -- Project information -----------------------------------------------------
 
 project = "Ezyquant"
 author = "Thailand Capital Market Development Fund (CMDF)"
 copyright = f"2022-{datetime.now().year}, {author}"
-release = "0.1.6"
+release = ez.__version__
 
 
 # -- General configuration ---------------------------------------------------
