@@ -58,6 +58,8 @@ class SETSignalCreator:
         timeframe: str,
         value_by: str = "stock",
         method: str = "constant",
+        method_args: Optional[tuple] = None,
+        method_kwargs: Optional[dict] = None,
         period: int = 1,
         shift: int = 0,
     ) -> pd.DataFrame:
@@ -100,6 +102,10 @@ class SETSignalCreator:
             - quantile
             - sem
             - rank
+        method_args: Optional[tuple] = None
+            Arguments for method.
+        method_kwargs: Optional[dict] = None
+            Keyword arguments for method.
         period: int = 1
             Number of periods for rolling Dataframe. Period must be greater than 0.
         shift: int = 0
@@ -238,7 +244,13 @@ class SETSignalCreator:
             df = df.shift(shift)
 
             if method != fld.METHOD_CONSTANT:
-                df = self._rolling(df, method=method, period=period)
+                df = self._rolling(
+                    df,
+                    method=method,
+                    period=period,
+                    args=method_args,
+                    kwargs=method_kwargs,
+                )
 
         elif timeframe in (
             fld.TIMEFRAME_QUARTERLY,
@@ -258,7 +270,12 @@ class SETSignalCreator:
 
                 df = df.apply(
                     lambda x: self._rolling_skip_na_keep_inf(
-                        x, method=method, period=period, shift=shift
+                        x,
+                        method=method,
+                        period=period,
+                        shift=shift,
+                        args=method_args,
+                        kwargs=method_kwargs,
                     ),
                     axis=0,
                 )
@@ -351,7 +368,11 @@ class SETSignalCreator:
 
     @staticmethod
     def rank(
-        factor_df: pd.DataFrame, quantity: Optional[int] = None, ascending: bool = True
+        factor_df: pd.DataFrame,
+        quantity: Optional[int] = None,
+        method: str = "first",
+        ascending: bool = True,
+        pct: bool = False,
     ):
         """Compute numerical data ranks (1 through quantity) along axis.
 
@@ -361,8 +382,17 @@ class SETSignalCreator:
             Dataframe of numerical data.
         quantity: Optional[int] = None
             Number of ranks to compute. Default is None, which means all ranks.
+        method: str = "first"
+            How to rank the group of records that have the same value (i.e. ties):
+                - average: average rank of the group
+                - min: lowest rank in the group
+                - max: highest rank in the group
+                - first: ranks assigned in order they appear in the array
+                - dense: like 'min', but rank always increases by 1 between groups.
         ascending: bool = True
             Whether or not the elements should be ranked in ascending order.
+        pct: bool = False
+            Whether or not to display the returned rankings in percentile form.
 
         Returns
         -------
@@ -384,7 +414,7 @@ class SETSignalCreator:
         1  1.0  NaN  2.0
         2  1.0  1.0  1.0
         """
-        df = factor_df.rank(ascending=ascending, axis=1, method="min")
+        df = factor_df.rank(ascending=ascending, axis=1, method=method, pct=pct)
         if quantity != None:
             if quantity < 1:
                 raise InputError(
@@ -397,14 +427,14 @@ class SETSignalCreator:
     Protected methods
     """
 
-    @lru_cache
+    @lru_cache(maxsize=128)
     def _get_trading_dates(self) -> List[str]:
         end = self._end_date
         if self._end_date == None:
             end = self._sdr.last_table_update("DAILY_STOCK_TRADE")
         return self._sdr.get_trading_dates(start_date=self._start_date, end_date=end)
 
-    @lru_cache
+    @lru_cache(maxsize=128)
     def _get_symbol_in_universe(self) -> List[str]:
         out = set()
         if self._symbol_list:
@@ -444,10 +474,22 @@ class SETSignalCreator:
         s = self._get_symbol_in_universe()
         return df.reindex(columns=s, fill_value=fill_value)  # type: ignore
 
-    def _rolling(self, data, method: str, period: int):
+    def _rolling(
+        self,
+        data,
+        method: str,
+        period: int,
+        args: Optional[tuple] = None,
+        kwargs: Optional[dict] = None,
+    ):
+        if args == None:
+            args = tuple()
+        if kwargs == None:
+            kwargs = dict()
+
         roll = data.rolling(period)
         try:
-            data = getattr(roll, method)()
+            data = getattr(roll, method)(*args, **kwargs)
         except AttributeError:
             raise InputError(
                 f"{method} is invalid method. Please read document to check valid method."
@@ -455,20 +497,28 @@ class SETSignalCreator:
         return data
 
     def _rolling_skip_na_keep_inf(
-        self, series: pd.Series, method: str, period: int, shift: int
+        self,
+        series: pd.Series,
+        method: str,
+        period: int,
+        shift: int,
+        args: Optional[tuple] = None,
+        kwargs: Optional[dict] = None,
     ) -> pd.Series:
         series = series.dropna().shift(shift)
 
         if method != fld.METHOD_CONSTANT:
             is_inf = np.isinf(series)
-            series = self._rolling(series, method=method, period=period)
+            series = self._rolling(
+                series, method=method, period=period, args=args, kwargs=kwargs
+            )
             series = series.mask(is_inf, np.inf)
 
         series = series.fillna(method="ffill")
 
         return series
 
-    @lru_cache
+    @lru_cache(maxsize=128)
     def _get_start_as_of_security_index(self) -> Dict[str, str]:
         out = self._sdr._get_last_as_of_date_in_security_index(
             current_date=self._start_date

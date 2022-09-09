@@ -1,7 +1,7 @@
 from setuptools import find_packages, setup
 
 NAME = "ezyquant"
-VERSION = "0.1.4"
+VERSION = "0.1.6"
 
 setup(
     name=NAME,
@@ -14,7 +14,8 @@ setup(
     url="https://doc.ezyquant.com/",
     maintainer="Fintech (Thailand) Company Limited",
     maintainer_email="admin@fintech.co.th",
-    install_requires=["pandas>=1.4", "sqlalchemy>=1.4", "ta>=0.10", "XlsxWriter>=3.0"],
+    python_requires=">=3.7",
+    install_requires=["pandas>=1.3", "sqlalchemy>=1.4", "ta>=0.10", "XlsxWriter>=3.0"],
     license="The MIT License (MIT)",
     classifiers=[
         "Intended Audience :: Financial and Insurance Industry",

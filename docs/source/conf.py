@@ -17,7 +17,7 @@ from datetime import datetime
 project = "Ezyquant"
 author = "Thailand Capital Market Development Fund (CMDF)"
 copyright = f"2022-{datetime.now().year}, {author}"
-release = "0.1.3"
+release = "0.1.6"
 
 
 # -- General configuration ---------------------------------------------------

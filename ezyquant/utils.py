@@ -103,7 +103,7 @@ def is_rebalance_monthly(
     idx = td_s.searchsorted(v, side="left")
     idx = idx[idx != td_s.size]
 
-    return td_s.isin(td_s[idx])
+    return td_s.isin(td_s[idx])  # type: ignore
 
 
 def _date_range(
@@ -132,13 +132,15 @@ def _date_range(
     return out
 
 
-def count_true_consecutive(s: pd.Series) -> int:
+def count_true_consecutive(s: pd.Series) -> pd.Series:
+    return s * (s.groupby((s != s.shift()).cumsum()).cumcount() + 1)
+
+
+def count_max_true_consecutive(s: pd.Series) -> int:
     """Count the number of consecutive True values in a series."""
-    out = (s * (s.groupby((s != s.shift()).cumsum()).cumcount() + 1)).max()
-    if pd.isna(out):
+    if s.empty:
         return 0
-    else:
-        return out
+    return count_true_consecutive(s).max()
 
 
 """
@@ -257,3 +259,6 @@ def cache_dataframe_wrapper(method: Callable):
         return df.copy()
 
     return wrapped
+
+
+cached_property = lambda x: property(lru_cache(maxsize=1)(x))
