@@ -9,6 +9,6 @@ isort
 black
 docformatter
 autoflake
-sphinx==5.0.2 # wait for fix napoleon
+sphinx
 sphinx-book-theme
 sphinx-thebe

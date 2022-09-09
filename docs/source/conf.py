@@ -53,22 +53,17 @@ exclude_patterns = []
 # a list of builtin themes.
 #
 html_theme = "sphinx_book_theme"
-# html_logo = "_static/ezyquant.svg"
+html_logo = "_static/logo.svg"
 html_title = project
 html_copy_source = True
 html_sourcelink_suffix = ""
-# html_favicon = "_static/ezyquant.svg"
+html_favicon = "_static/logo.svg"
 html_last_updated_fmt = ""
 
 html_sidebars = {
     "**": [
         "sidebar-logo.html",
         "search-field.html",
-        # "postcard.html",
-        # "recentposts.html",
-        # "tagcloud.html",
-        # "categories.html",
-        # "archives.html",
         "sbt-sidebar-nav.html",
     ]
 }
@@ -76,25 +71,12 @@ html_sidebars = {
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
-# html_css_files = ["custom.css"]
-# jupyter_execute_notebooks = "cache"
 
 html_theme_options = {
     "path_to_docs": "docs",
     "repository_url": "https://github.com/ezyquant/ezyquant",
-    # "launch_buttons": {
-    #     "binderhub_url": "https://mybinder.org",
-    #     "colab_url": "https://colab.research.google.com/",
-    #     "deepnote_url": "https://deepnote.com/",
-    #     "notebook_interface": "jupyterlab",
-    #     "thebe": True,
-    # },
     "use_issues_button": True,
     "use_repository_button": True,
     "use_download_button": True,
     "use_sidenotes": True,
 }
-
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
-#
