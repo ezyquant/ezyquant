@@ -11,4 +11,3 @@ docformatter
 autoflake
 sphinx
 sphinx-book-theme
-sphinx-thebe
