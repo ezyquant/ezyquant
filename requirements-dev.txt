@@ -8,6 +8,7 @@ pytest-kwparametrize
 isort
 black
 docformatter
+autoflake
 sphinx==5.0.2 # wait for fix napoleon
 sphinx-book-theme
 sphinx-thebe
