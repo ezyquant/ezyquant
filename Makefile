@@ -28,3 +28,7 @@ venv:
 .PHONY: sphinx
 sphinx:
 	sphinx-build -a -b html docs/source/ docs/build/html
+
+.PHONY: s3
+s3:
+	aws s3 cp docs\build\html s3://eazyquant-nonprod/ --recursive
