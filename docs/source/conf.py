@@ -58,9 +58,7 @@ html_theme = "sphinx_book_theme"
 html_logo = "_static/logo.svg"
 html_title = project
 html_copy_source = True
-html_sourcelink_suffix = ""
 html_favicon = "_static/logo.svg"
-html_last_updated_fmt = ""
 
 html_sidebars = {
     "**": [
