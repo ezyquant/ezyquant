@@ -95,7 +95,7 @@ Parabolic Sar (PSAR)
 
 .. code-block::
 
-   psar = sc.ta.psar(df_high, df_low, df_close)
+   psar, psar_down, psar_down_indicator, psar_up, psar_up_indicator = sc.ta.psar(df_high, df_low, df_close)
 
 Relative Strength Index (RSI)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
