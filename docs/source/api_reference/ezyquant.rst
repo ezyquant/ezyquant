@@ -1,25 +1,15 @@
-ezyquant package
-================
+ezyquant
+========
 
 .. automodule:: ezyquant
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
-Subpackages
------------
+.. rubric:: Modules
 
-.. toctree::
-   :maxdepth: 4
+.. autosummary::
+   :toctree: ../api
+   :recursive:
 
    ezyquant.backtesting
-
-Submodules
-----------
-
-.. toctree::
-   :maxdepth: 4
-
    ezyquant.connect
    ezyquant.creator
    ezyquant.errors
@@ -29,3 +19,4 @@ Submodules
    ezyquant.report
    ezyquant.utils
    ezyquant.validators
+
