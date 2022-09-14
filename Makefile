@@ -8,6 +8,7 @@ test:
 
 .PHONY: format
 format:
+	autoflake -i --remove-all-unused-imports --ignore-init-module-imports --expand-star-imports --exclude venv -r .
 	isort .
 	black .
 
@@ -26,8 +27,8 @@ venv:
 
 .PHONY: sphinx
 sphinx:
-	sphinx-build -b html docs/source/ docs/build/html
+	sphinx-build -a -b html docs/source/ docs/build/html
 
-.PHONY: sphinx-apidoc
-sphinx-apidoc:
-	sphinx-apidoc -e -T -M -o docs/source/reference ezyquant
+.PHONY: s3
+s3:
+	aws s3 cp docs\build\html s3://eazyquant-nonprod/ --recursive

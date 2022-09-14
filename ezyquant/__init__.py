@@ -1,3 +1,4 @@
+from ._version import __version__
 from .backtesting import backtest
 from .connect import connect_sqlite
 from .creator import SETSignalCreator

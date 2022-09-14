@@ -10,21 +10,16 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
-import os
-import sys
 from datetime import datetime
 
-import sphinx_material
-
-sys.path.insert(0, os.path.abspath("../.."))
-
+import ezyquant as ez
 
 # -- Project information -----------------------------------------------------
 
 project = "Ezyquant"
 author = "Thailand Capital Market Development Fund (CMDF)"
 copyright = f"2022-{datetime.now().year}, {author}"
-release = "0.1.6"
+release = ez.__version__
 
 
 # -- General configuration ---------------------------------------------------
@@ -33,13 +28,17 @@ release = "0.1.6"
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    "sphinx.ext.autosummary",
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
 ]
 
+autosummary_generate = True
+
 autoclass_content = "init"
 autodoc_default_options = {
     "member-order": "bysource",
+    "undoc-members": True,
 }
 
 # Add any paths that contain templates here, relative to this directory.
@@ -55,55 +54,30 @@ exclude_patterns = []
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
+html_theme = "sphinx_book_theme"
+html_logo = "_static/logo.svg"
+html_title = project
+html_copy_source = True
+html_favicon = "_static/logo.svg"
 
+html_sidebars = {
+    "**": [
+        "sidebar-logo.html",
+        "search-field.html",
+        "sbt-sidebar-nav.html",
+    ]
+}
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
-# so a file named 'default.css' will overwrite the builtin 'default.css'.
+# so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 
-# -- HTML theme settings ------------------------------------------------
-
-html_show_sourcelink = False
-html_sidebars = {
-    "**": ["logo-text.html", "globaltoc.html", "localtoc.html", "searchbox.html"]
-}
-
-extensions.append("sphinx_material")
-html_theme_path = sphinx_material.html_theme_path()
-html_context = sphinx_material.get_html_context()
-html_theme = "sphinx_material"
-
-# material theme options (see theme.conf for more information)
 html_theme_options = {
-    "base_url": "https://doc.ezyquant.com/",
-    "repo_url": "https://github.com/ezyquant/ezyquant",
-    "repo_name": project,
-    # "google_analytics_account": "UA-XXXXX",
-    "html_minify": False,
-    "html_prettify": True,
-    "css_minify": True,
-    # "logo_icon": "&#xe869",
-    "repo_type": "github",
-    "globaltoc_depth": -1,
-    "globaltoc_collapse": True,
-    "color_primary": "blue",
-    "color_accent": "cyan",
-    "theme_color": "#2196f3",
-    # "master_doc": False,
-    "nav_links": [
-        # {"href": "index", "internal": True, "title": "Ezyquant"},
-        {"href": "get_started", "internal": True, "title": "Get Started"},
-        {"href": "user_guide/setup", "internal": True, "title": "User Guide"},
-        {"href": "reference/ezyquant", "internal": True, "title": "API Reference"},
-    ],
-    "table_classes": ["plain"],
+    "path_to_docs": "docs",
+    "repository_url": "https://github.com/ezyquant/ezyquant",
+    "use_issues_button": True,
+    "use_repository_button": True,
+    "use_download_button": True,
+    "use_sidenotes": True,
+    "use_fullscreen_button": False,
 }
-
-language = "en"
-
-todo_include_todos = True
-# html_logo = "_static/ezyquant.png"
-# html_favicon = "_static/ezyquant.png"
-
-html_use_index = True
-html_domain_indices = True
