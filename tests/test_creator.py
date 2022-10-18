@@ -500,7 +500,8 @@ class TestIsUniverse:
         self._check(result)
 
     @pytest.mark.parametrize("universe", [fld.INDEX_SSET])
-    def test_dynamic(self, ssc: SETSignalCreator, universe: str):
+    def test_dynamic_universe_not_launch(self, ssc: SETSignalCreator, universe: str):
+        """sSET launch 2017-01-01"""
         # Mock
         ssc._index_list = [fld.MARKET_SET, fld.MARKET_MAI.upper()]
         ssc._start_date = "2010-01-01"
