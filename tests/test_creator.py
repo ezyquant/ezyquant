@@ -476,6 +476,44 @@ class TestIsUniverse:
         assert utils.is_df_unique_cols(result)
 
     @pytest.mark.parametrize(
+        "universe",
+        [
+            fld.INDEX_SETWB,
+            fld.INDEX_SETTHSI,
+            fld.INDEX_SETCLMV,
+            fld.INDEX_SETHD,
+            fld.INDEX_SSET,
+            fld.INDEX_SET100,
+            fld.INDEX_SET50,
+        ],
+    )
+    def test_dynamic(self, ssc: SETSignalCreator, universe: str):
+        # Mock
+        ssc._index_list = [fld.MARKET_SET, fld.MARKET_MAI.upper()]
+        ssc._start_date = "2022-04-01"
+        ssc._end_date = "2022-05-01"
+
+        # Test
+        result = ssc.is_universe(universe)
+
+        # Check
+        self._check(result)
+
+    @pytest.mark.parametrize("universe", [fld.INDEX_SSET])
+    def test_dynamic(self, ssc: SETSignalCreator, universe: str):
+        # Mock
+        ssc._index_list = [fld.MARKET_SET, fld.MARKET_MAI.upper()]
+        ssc._start_date = "2010-01-01"
+        ssc._end_date = "2010-02-01"
+
+        # Test
+        result = ssc.is_universe(universe)
+
+        # Check
+        self._check(result)
+        assert (result == False).all().all()
+
+    @pytest.mark.parametrize(
         ("index_list", "symbol_list"),
         [
             ([], ["SCB", "SCBB"]),
