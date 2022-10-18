@@ -296,6 +296,8 @@ class TestGetData:
         expected: pd.DataFrame,
     ):
         # Mock
+        symbols = ["A", "B", "C"]
+        ssc._get_symbol_in_universe = Mock(return_value=symbols)
         ssc._reindex_trade_date = lambda df, **kwargs: df
         ssc._sdr._get_fundamental_data = Mock(return_value=data)
         ssc.is_banned = Mock(
@@ -319,7 +321,7 @@ class TestGetData:
         # Check
         ssc._sdr._get_fundamental_data.assert_called_once_with(
             field=fld.Q_TOTAL_ASSET,
-            symbol_list=ANY,
+            symbol_list=symbols,
             start_date=ANY,
             end_date=ANY,
             timeframe=fld.TIMEFRAME_QUARTERLY,
@@ -774,7 +776,7 @@ class TestRank:
         ],
     )
     def test_no_quantity_ascending(self, factor_df: pd.DataFrame, expect: pd.DataFrame):
-        result = SETSignalCreator.rank(factor_df)
+        result = SETSignalCreator.rank(factor_df, method="min")
 
         assert_frame_equal(result, expect)
 
@@ -802,6 +804,6 @@ class TestRank:
         ],
     )
     def test_quantity(self, factor_df: pd.DataFrame, expect: pd.DataFrame):
-        result = SETSignalCreator.rank(factor_df, quantity=2)
+        result = SETSignalCreator.rank(factor_df, quantity=2, method="min")
 
         assert_frame_equal(result, expect)

@@ -1,3 +1,5 @@
+from unittest.mock import PropertyMock, patch
+
 import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
@@ -88,11 +90,15 @@ from ezyquant.report import SETBacktestReport
 def test_price_distribution_df(
     sbr: SETBacktestReport, pct_return_list: list, expect_result: pd.DataFrame
 ):
-    # Mock
-    sbr.__dict__["summary_trade_df"] = pd.DataFrame({"pct_return": pct_return_list})
+    summary_trade_df = pd.DataFrame({"pct_return": pct_return_list})
 
     # Test
-    result = sbr.price_distribution_df
+    with patch(
+        "ezyquant.report.SETBacktestReport.summary_trade_df", new_callable=PropertyMock
+    ) as mock_summary_trade_df:
+        mock_summary_trade_df.return_value = summary_trade_df
+
+        result = sbr.price_distribution_df
 
     # Check
     assert_frame_equal(result, expect_result, check_categorical=False)
