@@ -530,7 +530,7 @@ class SETSignalCreator:
 
         return self._sdr.get_symbols_by_index(
             index_list=[index],
-            start_date=start_as_of_dict[index],
+            start_date=start_as_of_dict.get(index),
             end_date=self._end_date,
         )
 
