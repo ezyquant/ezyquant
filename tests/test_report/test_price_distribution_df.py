@@ -95,4 +95,4 @@ def test_price_distribution_df(
     result = sbr.price_distribution_df
 
     # Check
-    assert_frame_equal(result, expect_result, check_categorical=False)  # type: ignore
+    assert_frame_equal(result, expect_result, check_categorical=False)

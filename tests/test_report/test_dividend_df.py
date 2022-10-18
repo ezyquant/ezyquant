@@ -34,7 +34,7 @@ class TestDividendDf:
 
         # Check
         _check_dividend_df(result)
-        assert_frame_equal(result, expect_result, check_dtype=False)  # type: ignore
+        assert_frame_equal(result, expect_result, check_dtype=False)
 
     @pytest.mark.parametrize(
         "dividend_df",

@@ -63,7 +63,7 @@ def test_position_df(position_df: pd.DataFrame, expect_result: pd.DataFrame):
 
     # Check
     _check_position_df(result)
-    assert_frame_equal(result, expect_result, check_dtype=False)  # type: ignore
+    assert_frame_equal(result, expect_result, check_dtype=False)
 
 
 def _check_position_df(df):
