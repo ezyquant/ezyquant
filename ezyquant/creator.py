@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import Dict, List, Optional
+from typing import Dict, List, Literal, Optional
 
 import numpy as np
 import pandas as pd
@@ -370,7 +370,7 @@ class SETSignalCreator:
     def rank(
         factor_df: pd.DataFrame,
         quantity: Optional[int] = None,
-        method: str = "first",
+        method: Literal["average", "min", "max", "first", "dense"] = "first",
         ascending: bool = True,
         pct: bool = False,
     ):
@@ -472,7 +472,7 @@ class SETSignalCreator:
         self, df: pd.DataFrame, fill_value=None
     ) -> pd.DataFrame:
         s = self._get_symbol_in_universe()
-        return df.reindex(columns=s, fill_value=fill_value)  # type: ignore
+        return df.reindex(columns=s, fill_value=fill_value)
 
     def _rolling(
         self,
@@ -553,7 +553,7 @@ class SETSignalCreator:
         df = pd.DataFrame(is_uni_dict, index=pd.DatetimeIndex(tds))
 
         # Reindex columns
-        df = df.reindex(columns=sorted(df.columns))  # type: ignore
+        df = df.reindex(columns=sorted(df.columns))
 
         return df
 
@@ -608,8 +608,8 @@ class SETSignalCreator:
         )
 
         # hold_date and release_date can be with time
-        df["hold_date"] = df["hold_date"].dt.normalize()  # type: ignore
-        df["release_date"] = df["release_date"].dt.normalize()  # type: ignore
+        df["hold_date"] = df["hold_date"].dt.normalize()
+        df["release_date"] = df["release_date"].dt.normalize()
 
         df["true"] = 1
         df["false"] = 0
@@ -642,7 +642,10 @@ class SETSignalCreator:
 
     @staticmethod
     def _reindex_date(
-        df: pd.DataFrame, index, method: Optional[str] = None, fill_value=None
+        df: pd.DataFrame,
+        index,
+        method: Optional[Literal["backfill", "bfill", "ffill", "pad"]] = None,
+        fill_value=None,
     ) -> pd.DataFrame:
         """Reindex and fillna with method and fill_value."""
         index = pd.DatetimeIndex(index)
@@ -650,11 +653,11 @@ class SETSignalCreator:
         start = pd.Series([df.index.min(), index.min()]).min()
         end = pd.Series([df.index.max(), index.max()]).max()
         dr = pd.date_range(start=start, end=end)
-        df = df.reindex(dr)  # type: ignore
+        df = df.reindex(dr)
 
         if method != None:
-            df = df.fillna(method=method)  # type: ignore
+            df = df.fillna(method=method)
         if fill_value != None:
             df = df.fillna(fill_value)
 
-        return df.reindex(index=index)  # type: ignore
+        return df.reindex(index=index)

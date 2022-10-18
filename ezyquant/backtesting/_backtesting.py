@@ -93,13 +93,13 @@ def _backtest(
         position_dict={},  # TODO: [EZ-79] initial position dict
         trade_list=[],  # TODO: initial trade
     )
-    acct.set_position_close_price(close_price_df.iloc[0].to_dict())
+    acct.set_position_close_price(close_price_df.iloc[0].to_dict())  # type: ignore
 
     # remove first close row
-    close_price_df = close_price_df.iloc[1:]  # type: ignore
+    close_price_df = close_price_df.iloc[1:]
 
     # reindex signal
-    signal_df = signal_df.reindex(close_price_df.index)  # type: ignore
+    signal_df = signal_df.reindex(close_price_df.index)
 
     # Check after remove first close row
     _check_df_input(signal_df, close_price_df, price_match_df)

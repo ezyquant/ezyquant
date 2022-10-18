@@ -300,7 +300,7 @@ class TestGetData:
         ssc._sdr._get_fundamental_data = Mock(return_value=data)
         ssc.is_banned = Mock(
             return_value=pd.DataFrame(
-                False,  # type: ignore
+                False,
                 columns=data.columns,
                 index=data.index,
             )

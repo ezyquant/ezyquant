@@ -65,7 +65,7 @@ def test_trade_df(trade_df: pd.DataFrame, expect_result: pd.DataFrame):
 
     # Check
     _check_trade_df(result)
-    assert_frame_equal(result, expect_result, check_dtype=False)  # type: ignore
+    assert_frame_equal(result, expect_result, check_dtype=False)
 
 
 def _check_trade_df(df):

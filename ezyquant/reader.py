@@ -1091,7 +1091,7 @@ class SETDataReader:
             )
 
         if symbol_list != None:
-            df = df.reindex(columns=[i for i in symbol_list if i in df.columns])  # type: ignore
+            df = df.reindex(columns=[i for i in symbol_list if i in df.columns])
 
         return df
 
@@ -2055,7 +2055,7 @@ class SETDataReader:
         )
 
         # reindex adjust_factor_df to df
-        adjust_factor_df = adjust_factor_df.reindex(df.index)  # type: ignore
+        adjust_factor_df = adjust_factor_df.reindex(df.index)
 
         # multiply or divide
         if is_multiply:
@@ -2134,8 +2134,8 @@ class SETDataReader:
                 end=max_date,
                 normalize=True,
                 name="effect_date",
-            ),  # type: ignore
-            columns=symbol_list,  # type: ignore
+            ),
+            columns=symbol_list,
         )
 
         # shift back 1 day
@@ -2444,7 +2444,7 @@ class SETDataReader:
         )
 
     def _SETBusinessDay(self, n: int = 1) -> CustomBusinessDay:
-        return CustomBusinessDay(n, holidays=self._get_holidays())  # type: ignore
+        return CustomBusinessDay(n, holidays=self._get_holidays())
 
     """
     Static methods
