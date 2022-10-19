@@ -1,3 +1,5 @@
+from unittest.mock import PropertyMock, patch
+
 import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
@@ -56,15 +58,18 @@ def test_summary_trade_cost_price(
     trade_df: pd.DataFrame,
     expect_result: pd.DataFrame,
 ):
+    # Mock
     position_df["timestamp"] = pd.to_datetime(position_df["timestamp"])
     trade_df["matched_at"] = pd.to_datetime(trade_df["matched_at"])
     expect_result["matched_at"] = pd.to_datetime(expect_result["matched_at"])
 
-    # Mock
-    sbr.__dict__["position_df"] = position_df
-
     # Test
-    result = sbr._summary_trade_cost_price(trade_df=trade_df)
+    with patch(
+        "ezyquant.report.SETBacktestReport.position_df", new_callable=PropertyMock
+    ) as mock_position_df:
+        mock_position_df.return_value = position_df
+
+        result = sbr._summary_trade_cost_price(trade_df=trade_df)
 
     # Check
     assert_frame_equal(result, expect_result)
@@ -141,11 +146,18 @@ def test_summary_trade_sell_all_position(
     position_df["timestamp"] = pd.to_datetime(position_df["timestamp"])
     expect_result["matched_at"] = pd.to_datetime(expect_result["matched_at"])
 
-    sbr.__dict__["end_date"] = pd.Timestamp("2000-01-01")
-    sbr.__dict__["position_df"] = position_df
+    end_date = pd.Timestamp("2000-01-01")
 
     # Test
-    result = sbr._summary_trade_sell_all_position()
+    with patch(
+        "ezyquant.report.SETBacktestReport.end_date", new_callable=PropertyMock
+    ) as mock_end_date, patch(
+        "ezyquant.report.SETBacktestReport.position_df", new_callable=PropertyMock
+    ) as mock_position_df:
+        mock_end_date.return_value = end_date
+        mock_position_df.return_value = position_df
+
+        result = sbr._summary_trade_sell_all_position()
 
     # Check
     utils.assert_frame_equal_sort_index(result, expect_result, check_dtype=False)

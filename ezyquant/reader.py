@@ -652,9 +652,9 @@ class SETDataReader:
         >>> from ezyquant import SETDataReader
         >>> sdr = SETDataReader()
         >>> sdr.get_sign_posting(symbol_list=["THAI"], start_date="2020-11-12", end_date="2021-02-25")
-          symbol  hold_date sign
-        0   THAI 2020-11-12   SP
-        1   THAI 2021-02-25   SP
+          symbol  hold_date release_date sign
+        0   THAI 2020-11-12   2020-11-13   SP
+        1   THAI 2021-02-25          NaT   SP
         """
         security_t = self._table("SECURITY")
         sign_posting_t = self._table("SIGN_POSTING")

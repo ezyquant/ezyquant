@@ -143,6 +143,14 @@ def count_max_true_consecutive(s: pd.Series) -> int:
     return count_true_consecutive(s).max()
 
 
+def union_datetime_index(indexes: List[pd.DatetimeIndex]) -> pd.DatetimeIndex:
+    out = pd.DatetimeIndex([])
+    for i in indexes:
+        out = out.union(i)
+    assert isinstance(out, pd.DatetimeIndex)
+    return out
+
+
 """
 Cache
 """

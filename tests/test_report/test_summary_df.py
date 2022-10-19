@@ -1,4 +1,4 @@
-from unittest.mock import Mock
+from unittest.mock import Mock, PropertyMock, patch
 
 import pandas as pd
 import pandas.api.types as ptypes
@@ -156,13 +156,21 @@ class TestSummaryDf:
             position_df=pd.DataFrame(),
             trade_df=pd.DataFrame(),
         )
-        sbr.__dict__["position_df"] = position_df
-        sbr.__dict__["trade_df"] = trade_df
-        sbr.__dict__["dividend_df"] = dividend_df
         sbr._sdr.get_trading_dates = Mock(return_value=utils.make_bdate_range())
 
         # Test
-        result = sbr.summary_df
+        with patch(
+            "ezyquant.report.SETBacktestReport.position_df", new_callable=PropertyMock
+        ) as mock_position_df, patch(
+            "ezyquant.report.SETBacktestReport.trade_df", new_callable=PropertyMock
+        ) as mock_trade_df, patch(
+            "ezyquant.report.SETBacktestReport.dividend_df", new_callable=PropertyMock
+        ) as mock_dividend_df:
+            mock_position_df.return_value = position_df
+            mock_trade_df.return_value = trade_df
+            mock_dividend_df.return_value = dividend_df
+
+            result = sbr.summary_df
 
         # Check
         _check_summary_df(result)
