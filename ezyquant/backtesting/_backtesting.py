@@ -100,6 +100,7 @@ def _backtest(
 
     # reindex signal
     signal_df = signal_df.reindex(close_price_df.index)
+    signal_df = signal_df.sort_index(axis=1)
 
     # Check after remove first close row
     _check_df_input(signal_df, close_price_df, price_match_df)
