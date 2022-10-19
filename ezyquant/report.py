@@ -919,7 +919,7 @@ class SETBacktestReport:
             df = df.reindex(columns=month_abbr[1:])  # type: ignore
         else:
             df = pd.pivot_table(df, index=["name", "year"], values="value")
-            df = df.rename(columns={"value": "YTD"})
+            df = df.rename(columns={"value": "Yr%"})
             df.columns.name = "month"
 
         return df

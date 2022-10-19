@@ -194,6 +194,6 @@ def test_return_by_period_y(
             [("port_value", 2000 + i) for i in range(len(expect_result_data))],
             names=["name", "year"],
         ),
-        columns=pd.Index(["YTD"], name="month"),
+        columns=pd.Index(["Yr%"], name="month"),
     )
     assert_frame_equal(result, expect_result)
