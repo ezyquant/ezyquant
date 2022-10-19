@@ -613,6 +613,7 @@ class SETSignalCreator:
                 start=x["hold_date"], end=x["release_date"], closed="left"
             ),  # type: ignore
             axis=1,
+            result_type="reduce",
         )
         date_range_group = df.groupby("symbol")["date_range"].apply(
             lambda x: utils.union_datetime_index(x)

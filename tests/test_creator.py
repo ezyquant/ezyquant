@@ -751,6 +751,49 @@ class TestIsBanned:
         assert (result[symbol] == expect).all()
 
 
+class TestIsBannedSp:
+    @pytest.mark.parametrize(
+        ("data", "expected"),
+        [
+            ([], {"ABICO": [False, False, False, False, False, False, False]}),
+            (
+                [
+                    ["ABICO", "2015-01-01", "2015-02-09", "SP"],
+                    ["ABICO", "2015-01-10", "2015-01-20", "SP"],
+                ],
+                {"ABICO": [True, True, True, True, True, False, False]},
+            ),
+        ],
+    )
+    def test_mock(self, ssc: SETSignalCreator, data, expected):
+        sign_posting_df = pd.DataFrame(
+            data,
+            columns=["symbol", "hold_date", "release_date", "sign"],
+        )
+        sign_posting_df["hold_date"] = pd.to_datetime(sign_posting_df["hold_date"])
+        sign_posting_df["release_date"] = pd.to_datetime(
+            sign_posting_df["release_date"]
+        )
+
+        ssc._symbol_list = ["ABICO"]
+        ssc._start_date = "2015-02-01"
+        ssc._end_date = "2015-02-10"
+        ssc._sdr.get_sign_posting = Mock(return_value=sign_posting_df)
+
+        # Test
+        result = ssc._is_banned_sp()
+
+        # Check
+        assert_frame_equal(
+            result,
+            pd.DataFrame(
+                expected,
+                index=pd.bdate_range(start="2015-02-01", end="2015-02-10"),
+            ),
+            check_freq=False,
+        )
+
+
 class TestRank:
     @pytest.mark.parametrize(
         ("factor_df", "expect"),
