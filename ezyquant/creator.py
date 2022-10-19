@@ -607,7 +607,10 @@ class SETSignalCreator:
             sign_list=["SP"],
         )
 
-        # closed="left" because at hold date not tradable but release date are tradable
+        tds = self._get_trading_dates()
+        df = df.fillna({"release_date": pd.Timestamp(tds[-1]) + pd.Timedelta(days=1)})
+
+        # closed="left" because at hold date is not tradable but release date is tradable
         df["date_range"] = df.apply(
             lambda x: pd.bdate_range(
                 start=x["hold_date"], end=x["release_date"], closed="left"
