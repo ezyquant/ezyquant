@@ -89,8 +89,8 @@ def backtest(
     # Signal df
     signal_df = signal_df.shift(signal_delay_bar)
     signal_df = signal_df[
-        (signal_df.index >= pd.Timestamp(start_date))  # type: ignore
-        & (signal_df.index <= pd.Timestamp(end_date))  # type: ignore
+        (signal_df.index >= pd.Timestamp(start_date))
+        & (signal_df.index <= pd.Timestamp(end_date))
     ]
 
     # Percentage

@@ -52,4 +52,4 @@ result = backtest(
 )
 
 print(result.stat_df)
-result.to_excel("result.xlsx")
+result.to_excel("model_ema_report.xlsx")

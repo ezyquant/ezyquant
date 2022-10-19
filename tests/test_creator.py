@@ -296,11 +296,13 @@ class TestGetData:
         expected: pd.DataFrame,
     ):
         # Mock
+        symbols = ["A", "B", "C"]
+        ssc._get_symbol_in_universe = Mock(return_value=symbols)
         ssc._reindex_trade_date = lambda df, **kwargs: df
         ssc._sdr._get_fundamental_data = Mock(return_value=data)
         ssc.is_banned = Mock(
             return_value=pd.DataFrame(
-                False,  # type: ignore
+                False,
                 columns=data.columns,
                 index=data.index,
             )
@@ -319,7 +321,7 @@ class TestGetData:
         # Check
         ssc._sdr._get_fundamental_data.assert_called_once_with(
             field=fld.Q_TOTAL_ASSET,
-            symbol_list=ANY,
+            symbol_list=symbols,
             start_date=ANY,
             end_date=ANY,
             timeframe=fld.TIMEFRAME_QUARTERLY,
@@ -474,6 +476,45 @@ class TestIsUniverse:
         # Check
         self._check(result)
         assert utils.is_df_unique_cols(result)
+
+    @pytest.mark.parametrize(
+        "universe",
+        [
+            fld.INDEX_SETWB,
+            fld.INDEX_SETTHSI,
+            fld.INDEX_SETCLMV,
+            fld.INDEX_SETHD,
+            fld.INDEX_SSET,
+            fld.INDEX_SET100,
+            fld.INDEX_SET50,
+        ],
+    )
+    def test_dynamic(self, ssc: SETSignalCreator, universe: str):
+        # Mock
+        ssc._index_list = [fld.MARKET_SET, fld.MARKET_MAI.upper()]
+        ssc._start_date = "2022-04-01"
+        ssc._end_date = "2022-05-01"
+
+        # Test
+        result = ssc.is_universe(universe)
+
+        # Check
+        self._check(result)
+
+    @pytest.mark.parametrize("universe", [fld.INDEX_SSET])
+    def test_dynamic_universe_not_launch(self, ssc: SETSignalCreator, universe: str):
+        """sSET launch 2017-01-01"""
+        # Mock
+        ssc._index_list = [fld.MARKET_SET, fld.MARKET_MAI.upper()]
+        ssc._start_date = "2010-01-01"
+        ssc._end_date = "2010-02-01"
+
+        # Test
+        result = ssc.is_universe(universe)
+
+        # Check
+        self._check(result)
+        assert (result == False).all().all()
 
     @pytest.mark.parametrize(
         ("index_list", "symbol_list"),
@@ -710,6 +751,49 @@ class TestIsBanned:
         assert (result[symbol] == expect).all()
 
 
+class TestIsBannedSp:
+    @pytest.mark.parametrize(
+        ("data", "expected"),
+        [
+            ([], {"ABICO": [False, False, False, False, False, False, False]}),
+            (
+                [
+                    ["ABICO", "2015-01-01", "2015-02-09", "SP"],
+                    ["ABICO", "2015-01-10", "2015-01-20", "SP"],
+                ],
+                {"ABICO": [True, True, True, True, True, False, False]},
+            ),
+        ],
+    )
+    def test_mock(self, ssc: SETSignalCreator, data, expected):
+        sign_posting_df = pd.DataFrame(
+            data,
+            columns=["symbol", "hold_date", "release_date", "sign"],
+        )
+        sign_posting_df["hold_date"] = pd.to_datetime(sign_posting_df["hold_date"])
+        sign_posting_df["release_date"] = pd.to_datetime(
+            sign_posting_df["release_date"]
+        )
+
+        ssc._symbol_list = ["ABICO"]
+        ssc._start_date = "2015-02-01"
+        ssc._end_date = "2015-02-10"
+        ssc._sdr.get_sign_posting = Mock(return_value=sign_posting_df)
+
+        # Test
+        result = ssc._is_banned_sp()
+
+        # Check
+        assert_frame_equal(
+            result,
+            pd.DataFrame(
+                expected,
+                index=pd.bdate_range(start="2015-02-01", end="2015-02-10"),
+            ),
+            check_freq=False,
+        )
+
+
 class TestRank:
     @pytest.mark.parametrize(
         ("factor_df", "expect"),
@@ -735,7 +819,7 @@ class TestRank:
         ],
     )
     def test_no_quantity_ascending(self, factor_df: pd.DataFrame, expect: pd.DataFrame):
-        result = SETSignalCreator.rank(factor_df)
+        result = SETSignalCreator.rank(factor_df, method="min")
 
         assert_frame_equal(result, expect)
 
@@ -763,6 +847,6 @@ class TestRank:
         ],
     )
     def test_quantity(self, factor_df: pd.DataFrame, expect: pd.DataFrame):
-        result = SETSignalCreator.rank(factor_df, quantity=2)
+        result = SETSignalCreator.rank(factor_df, quantity=2, method="min")
 
         assert_frame_equal(result, expect)

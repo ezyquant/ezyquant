@@ -163,7 +163,7 @@ class SETBacktestReport:
 
         # pay_date can be non trade date.
         dividend_df = self.dividend_df.copy()
-        dividend_df["pay_date"] += self._sdr._SETBusinessDay(0)  # type: ignore
+        dividend_df["pay_date"] += self._sdr._SETBusinessDay(0)
         df["dividend"] = (
             dividend_df.set_index("pay_date")["amount"].groupby(level=0).sum()
         )
@@ -437,7 +437,7 @@ class SETBacktestReport:
         df["pct_return"] = df["return"] / df["cost_price"] / df["volume"]
 
         # hold days
-        df["hold_days"] = (df["exit_at"] - df["entry_at"]).dt.days  # type: ignore
+        df["hold_days"] = (df["exit_at"] - df["entry_at"]).dt.days
 
         return df[summary_trade_columns]
 
@@ -542,7 +542,9 @@ class SETBacktestReport:
             Path to Excel file.
         """
         with pd.ExcelWriter(
-            path, engine="xlsxwriter", datetime_format="YYYY-MM-DD"
+            path,
+            engine="xlsxwriter",  # type: ignore
+            datetime_format="YYYY-MM-DD",
         ) as writer:
             self.summary_df.to_excel(writer, sheet_name="summary", index=False)
             self.position_df.to_excel(writer, sheet_name="position", index=False)
@@ -837,7 +839,7 @@ class SETBacktestReport:
         pos_df = pos_df.rename(columns={"timestamp": "matched_at"})
 
         # get cost price from tomorrow position
-        pos_df["matched_at"] += self._sdr._SETBusinessDay(1)  # type: ignore
+        pos_df["matched_at"] += self._sdr._SETBusinessDay(1)
 
         # set index for merge
         df = trade_df.merge(
@@ -898,7 +900,7 @@ class SETBacktestReport:
         pd.DataFrame
             Return by period.
         """
-        df = df.resample(period).last()  # type: ignore
+        df = df.resample(period).last()
         df = df.sort_index()
         df = (df / df.shift(fill_value=init_cap)) - 1
 
@@ -917,7 +919,7 @@ class SETBacktestReport:
             df = df.reindex(columns=month_abbr[1:])  # type: ignore
         else:
             df = pd.pivot_table(df, index=["name", "year"], values="value")
-            df = df.rename(columns={"value": "YTD"})
+            df = df.rename(columns={"value": "Yr%"})
             df.columns.name = "month"
 
         return df

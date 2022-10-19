@@ -21,7 +21,7 @@ def assert_frame_equal_sort_index(
 ):
     df1 = sort_index_column(df1)
     df2 = sort_index_column(df2)
-    assert_frame_equal(df1, df2, check_dtype=check_dtype)  # type: ignore
+    assert_frame_equal(df1, df2, check_dtype=check_dtype)
 
 
 def is_df_unique(df) -> bool:
@@ -35,7 +35,7 @@ def is_df_unique_cols(df) -> bool:
     return ((a[0] == a).all(0)).all()
 
 
-""" 
+"""
 Backtest
 """
 

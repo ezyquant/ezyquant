@@ -1,4 +1,5 @@
 from typing import List
+from unittest.mock import PropertyMock, patch
 
 import pandas as pd
 import pytest
@@ -31,10 +32,14 @@ def test_pct_maximum_drawdown(
             "port_value_with_dividend": nav_list,
         }
     )
-    sbr.__dict__["summary_df"] = summary_df
 
     # Test
-    result = sbr.pct_maximum_drawdown
+    with patch(
+        "ezyquant.report.SETBacktestReport.summary_df", new_callable=PropertyMock
+    ) as mock_summary_df:
+        mock_summary_df.return_value = summary_df
+
+        result = sbr.pct_maximum_drawdown
 
     # Check
     assert_series_equal(
@@ -68,10 +73,14 @@ def test_maximum_drawdown(
             "port_value_with_dividend": nav_list,
         }
     )
-    sbr.__dict__["summary_df"] = summary_df
 
     # Test
-    result = sbr.maximum_drawdown
+    with patch(
+        "ezyquant.report.SETBacktestReport.summary_df", new_callable=PropertyMock
+    ) as mock_summary_df:
+        mock_summary_df.return_value = summary_df
+
+        result = sbr.maximum_drawdown
 
     # Check
     assert_series_equal(
@@ -107,10 +116,14 @@ def test_pct_exposure(
             "total_market_value": mkt_value_list,
         }
     )
-    sbr.__dict__["summary_df"] = summary_df
 
     # Test
-    result = sbr.pct_exposure
+    with patch(
+        "ezyquant.report.SETBacktestReport.summary_df", new_callable=PropertyMock
+    ) as mock_summary_df:
+        mock_summary_df.return_value = summary_df
+
+        result = sbr.pct_exposure
 
     # Check
     assert_series_equal(

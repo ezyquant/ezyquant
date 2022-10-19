@@ -652,9 +652,9 @@ class SETDataReader:
         >>> from ezyquant import SETDataReader
         >>> sdr = SETDataReader()
         >>> sdr.get_sign_posting(symbol_list=["THAI"], start_date="2020-11-12", end_date="2021-02-25")
-          symbol  hold_date sign
-        0   THAI 2020-11-12   SP
-        1   THAI 2021-02-25   SP
+          symbol  hold_date release_date sign
+        0   THAI 2020-11-12   2020-11-13   SP
+        1   THAI 2021-02-25          NaT   SP
         """
         security_t = self._table("SECURITY")
         sign_posting_t = self._table("SIGN_POSTING")
@@ -1091,7 +1091,7 @@ class SETDataReader:
             )
 
         if symbol_list != None:
-            df = df.reindex(columns=[i for i in symbol_list if i in df.columns])  # type: ignore
+            df = df.reindex(columns=[i for i in symbol_list if i in df.columns])
 
         return df
 
@@ -2055,7 +2055,7 @@ class SETDataReader:
         )
 
         # reindex adjust_factor_df to df
-        adjust_factor_df = adjust_factor_df.reindex(df.index)  # type: ignore
+        adjust_factor_df = adjust_factor_df.reindex(df.index)
 
         # multiply or divide
         if is_multiply:
@@ -2134,8 +2134,8 @@ class SETDataReader:
                 end=max_date,
                 normalize=True,
                 name="effect_date",
-            ),  # type: ignore
-            columns=symbol_list,  # type: ignore
+            ),
+            columns=symbol_list,
         )
 
         # shift back 1 day
@@ -2444,7 +2444,7 @@ class SETDataReader:
         )
 
     def _SETBusinessDay(self, n: int = 1) -> CustomBusinessDay:
-        return CustomBusinessDay(n, holidays=self._get_holidays())  # type: ignore
+        return CustomBusinessDay(n, holidays=self._get_holidays())
 
     """
     Static methods
