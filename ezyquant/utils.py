@@ -220,7 +220,6 @@ def cache_dataframe_wrapper(method: Callable):
             symbol_list = [i.upper() for i in symbol_list]
 
         call_key = tuple(sorted(kwargs.items()))
-        print(call_key)
 
         if call_key not in call_dict:
             c_symbol_list = symbol_list
