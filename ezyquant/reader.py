@@ -2461,9 +2461,11 @@ def _SETDataReaderCached() -> SETDataReader:
     out: SETDataReader = utils.wrap_cache_class(SETDataReader)()  # type: ignore
 
     out.get_data_symbol_daily = utils.cache_dataframe_wrapper(out.get_data_symbol_daily)  # type: ignore
-    out._get_fundamental_data = utils.cache_dataframe_wrapper(out._get_fundamental_data)  # type: ignore
+    out._get_fundamental_data = utils.cache_dataframe_wrapper(
+        utils.cache_wrapper(out._get_fundamental_data)
+    )  # type: ignore
     out._get_daily_sector_info = utils.cache_dataframe_wrapper(
-        out._get_daily_sector_info
+        utils.cache_wrapper(out._get_daily_sector_info)
     )  # type: ignore
 
     return out
