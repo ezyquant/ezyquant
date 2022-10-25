@@ -2,7 +2,7 @@ import calendar
 import copy
 from datetime import date, datetime, timedelta
 from functools import lru_cache
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import pandas as pd
 
@@ -199,8 +199,7 @@ def cache_dataframe_wrapper(method: Callable):
     Parameters
     ----------
     method: Callable
-        method parameter must be
-            - field: str
+        method received keyword argument contain at least
             - symbol_list: Optional[List[str]] = None
             - start_date: Optional[str] = None
             - end_date: Optional[str] = None
@@ -208,25 +207,28 @@ def cache_dataframe_wrapper(method: Callable):
         method must return dataframe with timestamp as index and symbol as column.
     """
 
-    call_dict: Dict[str, Dict[str, Any]] = {}
+    call_dict: Dict[Tuple[tuple], Dict[str, Any]] = {}
 
     def wrapped(
-        field: str,
+        *,
         symbol_list: Optional[List[str]] = None,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
+        **kwargs,
     ):
         if symbol_list != None:
             symbol_list = [i.upper() for i in symbol_list]
 
-        if field not in call_dict:
+        call_key = tuple(sorted(kwargs.items()))
+
+        if call_key not in call_dict:
             c_symbol_list = symbol_list
             c_start_date = start_date
             c_end_date = end_date
         else:
-            c_symbol_list = call_dict[field]["symbol_list"]
-            c_start_date = call_dict[field]["start_date"]
-            c_end_date = call_dict[field]["end_date"]
+            c_symbol_list = call_dict[call_key]["symbol_list"]
+            c_start_date = call_dict[call_key]["start_date"]
+            c_end_date = call_dict[call_key]["end_date"]
 
             if c_symbol_list == None or symbol_list == None:
                 c_symbol_list = None
@@ -246,12 +248,12 @@ def cache_dataframe_wrapper(method: Callable):
                 c_end_date = end_date
 
         df = method(
-            field=field,
             symbol_list=c_symbol_list,
             start_date=c_start_date,
             end_date=c_end_date,
+            **kwargs,
         )
-        call_dict[field] = {
+        call_dict[call_key] = {
             "symbol_list": c_symbol_list,
             "start_date": c_start_date,
             "end_date": c_end_date,
