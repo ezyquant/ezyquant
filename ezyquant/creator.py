@@ -370,7 +370,7 @@ class SETSignalCreator:
     @staticmethod
     def rank(
         factor_df: pd.DataFrame,
-        quantity: Optional[int] = None,
+        quantity: Optional[float] = None,
         method: Literal["average", "min", "max", "first", "dense"] = "first",
         ascending: bool = True,
         pct: bool = False,
@@ -381,8 +381,8 @@ class SETSignalCreator:
         ----------
         factor_df: pd.DataFrame
             Dataframe of numerical data.
-        quantity: Optional[int] = None
-            Number of ranks to compute. Default is None, which means all ranks.
+        quantity: Optional[float] = None
+            Number/Percentile of symbols to filter, filter out symbol will replace with nan. Default is None, which means rank all symbol.
         method: str = "first"
             How to rank the group of records that have the same value (i.e. ties):
                 - average: average rank of the group
@@ -417,9 +417,13 @@ class SETSignalCreator:
         """
         df = factor_df.rank(ascending=ascending, axis=1, method=method, pct=pct)
         if quantity != None:
-            if quantity < 1:
+            if quantity <= 0:
                 raise InputError(
                     f"quantity must be greater than 0. but {quantity} is given."
+                )
+            if pct and quantity >= 1:
+                raise InputError(
+                    f"quantity must be less than 1 if pct is True. but {quantity} is given."
                 )
             df = df.mask(df > quantity, np.nan)
         return df

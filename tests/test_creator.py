@@ -850,3 +850,31 @@ class TestRank:
         result = SETSignalCreator.rank(factor_df, quantity=2, method="min")
 
         assert_frame_equal(result, expect)
+
+    @pytest.mark.parametrize(
+        ("factor_df", "expect"),
+        [
+            (pd.DataFrame(), pd.DataFrame()),
+            (pd.DataFrame([[11.0, 12.0, 13.0]]), pd.DataFrame([[1 / 3, nan, nan]])),
+            (
+                pd.DataFrame(
+                    [
+                        [11.0, 12.0, 13.0],
+                        [21.0, nan, 23.0],
+                        [31.0, 31.0, 31.0],
+                    ]
+                ),
+                pd.DataFrame(
+                    [
+                        [1 / 3, nan, nan],
+                        [1 / 2, nan, nan],
+                        [1 / 3, nan, nan],
+                    ]
+                ),
+            ),
+        ],
+    )
+    def test_pct(self, factor_df: pd.DataFrame, expect: pd.DataFrame):
+        result = SETSignalCreator.rank(factor_df, pct=True, quantity=0.5)
+
+        assert_frame_equal(result, expect)
