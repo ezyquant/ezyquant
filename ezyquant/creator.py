@@ -423,7 +423,7 @@ class SETSignalCreator:
                 )
             if pct and quantity >= 1:
                 raise InputError(
-                    f"quantity must be less than or equal to 1. but {quantity} is given."
+                    f"quantity must be less than 1 if pct is True. but {quantity} is given."
                 )
             df = df.mask(df > quantity, np.nan)
         return df
