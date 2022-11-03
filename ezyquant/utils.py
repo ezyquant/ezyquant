@@ -156,12 +156,12 @@ Cache
 """
 
 
-def cache_wrapper(method):
+def cache_wrapper(method, maxsize: int = 128):
     """Cache the result of a method using lru_cache.
 
     Prase list arguments to sorted tuple and return copy of result.
     """
-    method = lru_cache(maxsize=128)(method)
+    method = lru_cache(maxsize=maxsize)(method)
 
     def _arg_handler(arg):
         if isinstance(arg, list):
