@@ -2462,7 +2462,7 @@ def _SETDataReaderCached() -> SETDataReader:
 
     out.get_data_symbol_daily = utils.cache_dataframe_wrapper(out.get_data_symbol_daily)  # type: ignore
     out._get_fundamental_data = utils.cache_dataframe_wrapper(
-        utils.cache_wrapper(out._get_fundamental_data)
+        utils.cache_wrapper(out._get_fundamental_data, maxsize=1024)
     )  # type: ignore
     out._get_daily_sector_info = utils.cache_dataframe_wrapper(
         utils.cache_wrapper(out._get_daily_sector_info)
