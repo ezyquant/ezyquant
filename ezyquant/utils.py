@@ -1,7 +1,7 @@
 import calendar
 import copy
 from datetime import date, datetime, timedelta
-from functools import lru_cache
+from functools import lru_cache, wraps
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import pandas as pd
@@ -156,10 +156,12 @@ Cache
 """
 
 
-def cache_wrapper(method=None, maxsize: int = 128, is_copy: bool = True):
-    """Cache the result of a method using lru_cache.
+def cache_wrapper(
+    func: Optional[Callable] = None, maxsize: int = 128, is_copy: bool = True
+):
+    """Cache the result of a function using lru_cache.
 
-    Prase list arguments to sorted tuple and return copy of result.
+    Prase list arguments to sorted tuple and can return copy of result.
     """
 
     def _arg_handler(arg):
@@ -168,24 +170,25 @@ def cache_wrapper(method=None, maxsize: int = 128, is_copy: bool = True):
         else:
             return arg
 
-    def _decorate(method):
-        method = lru_cache(maxsize=maxsize)(method)
+    def _outer_wrapper(fn: Callable):
+        fn = lru_cache(maxsize=maxsize)(fn)
 
-        def wrapped(*args, **kwargs):
+        @wraps(fn)
+        def _inner_wrapper(*args, **kwargs):
             new_args = tuple(_arg_handler(i) for i in args)
             new_kwargs = {k: _arg_handler(v) for k, v in kwargs.items()}
-            out = method(*new_args, **new_kwargs)
+            out = fn(*new_args, **new_kwargs)
             if is_copy:
                 return copy.deepcopy(out)
             else:
                 return out
 
-        return wrapped
+        return _inner_wrapper
 
-    if method:
-        return _decorate(method)
+    if func:
+        return _outer_wrapper(func)
 
-    return _decorate
+    return _outer_wrapper
 
 
 class CacheMetaClass(type):
