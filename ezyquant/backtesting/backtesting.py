@@ -8,6 +8,7 @@ from ..creator import SETSignalCreator
 from ..errors import InputError
 from ..reader import SETBusinessDay
 from ..report import SETBacktestReport
+from ..utils import cache_wrapper
 from ._backtesting import _backtest
 from .context import Context
 
@@ -128,15 +129,13 @@ def _get_price(
     symbol_list: List[str],
     mode: str,
 ) -> pd.DataFrame:
-    ssc = SETSignalCreator(
-        start_date=start_date,
-        end_date=end_date,
-        index_list=[],
-        symbol_list=symbol_list,
-    )
-
-    def _get_data(field: str) -> pd.DataFrame:
-        return ssc.get_data(field=field, timeframe=fld.TIMEFRAME_DAILY)
+    def _data(field: str):
+        return _get_data(
+            field=field,
+            start_date=start_date,
+            end_date=end_date,
+            symbol_list=symbol_list,
+        )
 
     if mode in (
         fld.PRICE_MATCH_MODE_OPEN,
@@ -144,22 +143,51 @@ def _get_price(
         fld.PRICE_MATCH_MODE_LOW,
         fld.PRICE_MATCH_MODE_CLOSE,
     ):
-        out = _get_data(mode)
+        out = _data(mode)
     elif mode == fld.PRICE_MATCH_MODE_MEDIAN:
-        h = _get_data(fld.PRICE_MATCH_MODE_HIGH)
-        l = _get_data(fld.PRICE_MATCH_MODE_LOW)
+        h = _data(fld.PRICE_MATCH_MODE_HIGH)
+        l = _data(fld.PRICE_MATCH_MODE_LOW)
         out = (h + l) / 2
     elif mode == fld.PRICE_MATCH_MODE_TYPICAL:
-        h = _get_data(fld.PRICE_MATCH_MODE_HIGH)
-        l = _get_data(fld.PRICE_MATCH_MODE_LOW)
-        c = _get_data(fld.PRICE_MATCH_MODE_CLOSE)
+        h = _data(fld.PRICE_MATCH_MODE_HIGH)
+        l = _data(fld.PRICE_MATCH_MODE_LOW)
+        c = _data(fld.PRICE_MATCH_MODE_CLOSE)
         out = (h + l + c) / 3
     elif mode == fld.PRICE_MATCH_MODE_WEIGHTED:
-        h = _get_data(fld.PRICE_MATCH_MODE_HIGH)
-        l = _get_data(fld.PRICE_MATCH_MODE_LOW)
-        c = _get_data(fld.PRICE_MATCH_MODE_CLOSE)
+        h = _data(fld.PRICE_MATCH_MODE_HIGH)
+        l = _data(fld.PRICE_MATCH_MODE_LOW)
+        c = _data(fld.PRICE_MATCH_MODE_CLOSE)
         out = (h + l + c + c) / 4
     else:
         raise InputError(f"Invalid price_match_mode: {mode}")
 
     return out
+
+
+def _get_data(
+    field: str,
+    start_date: str,
+    end_date: str,
+    symbol_list: List[str],
+) -> pd.DataFrame:
+    ssc = _get_SETSignalCreator(
+        start_date=start_date,
+        end_date=end_date,
+        symbol_list=symbol_list,
+    )
+
+    return ssc.get_data(field=field, timeframe=fld.TIMEFRAME_DAILY)
+
+
+@cache_wrapper(maxsize=8, is_copy=False)
+def _get_SETSignalCreator(
+    start_date: str,
+    end_date: str,
+    symbol_list: List[str],
+) -> SETSignalCreator:
+    return SETSignalCreator(
+        start_date=start_date,
+        end_date=end_date,
+        index_list=[],
+        symbol_list=symbol_list,
+    )

@@ -295,6 +295,8 @@ class SETSignalCreator:
         except InputError:
             return self._is_universe_dynamic(universe)
 
+    # TODO: remove cache after improve SETSignalCreator._is_banned_sp
+    @lru_cache(maxsize=1)
     def is_banned(self) -> pd.DataFrame:
         """Return True when stock was Delisted or Suspension (SP).
 
