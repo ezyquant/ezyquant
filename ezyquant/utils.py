@@ -156,12 +156,11 @@ Cache
 """
 
 
-def cache_wrapper(method, maxsize: int = 128):
+def cache_wrapper(method=None, maxsize: int = 128, is_copy: bool = True):
     """Cache the result of a method using lru_cache.
 
     Prase list arguments to sorted tuple and return copy of result.
     """
-    method = lru_cache(maxsize=maxsize)(method)
 
     def _arg_handler(arg):
         if isinstance(arg, list):
@@ -169,13 +168,24 @@ def cache_wrapper(method, maxsize: int = 128):
         else:
             return arg
 
-    def wrapped(*args, **kwargs):
-        new_args = tuple(_arg_handler(i) for i in args)
-        new_kwargs = {k: _arg_handler(v) for k, v in kwargs.items()}
-        out = method(*new_args, **new_kwargs)
-        return copy.deepcopy(out)
+    def _decorate(method):
+        method = lru_cache(maxsize=maxsize)(method)
 
-    return wrapped
+        def wrapped(*args, **kwargs):
+            new_args = tuple(_arg_handler(i) for i in args)
+            new_kwargs = {k: _arg_handler(v) for k, v in kwargs.items()}
+            out = method(*new_args, **new_kwargs)
+            if is_copy:
+                return copy.deepcopy(out)
+            else:
+                return out
+
+        return wrapped
+
+    if method:
+        return _decorate(method)
+
+    return _decorate
 
 
 class CacheMetaClass(type):
