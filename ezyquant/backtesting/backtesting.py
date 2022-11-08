@@ -1,4 +1,4 @@
-from typing import Callable, List
+from typing import Callable, List, Tuple
 
 import pandas as pd
 
@@ -10,6 +10,7 @@ from ..reader import SETBusinessDay
 from ..report import SETBacktestReport
 from ._backtesting import _backtest
 from .context import Context
+from ..utils import cache_wrapper
 
 
 def backtest(
@@ -128,10 +129,9 @@ def _get_price(
     symbol_list: List[str],
     mode: str,
 ) -> pd.DataFrame:
-    ssc = SETSignalCreator(
+    ssc = _get_SETSignalCreator(
         start_date=start_date,
         end_date=end_date,
-        index_list=[],
         symbol_list=symbol_list,
     )
 
@@ -163,3 +163,17 @@ def _get_price(
         raise InputError(f"Invalid price_match_mode: {mode}")
 
     return out
+
+
+@cache_wrapper
+def _get_SETSignalCreator(
+    start_date: str,
+    end_date: str,
+    symbol_list: List[str],
+) -> SETSignalCreator:
+    return SETSignalCreator(
+        start_date=start_date,
+        end_date=end_date,
+        index_list=[],
+        symbol_list=symbol_list,
+    )
