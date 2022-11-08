@@ -2467,6 +2467,9 @@ def _SETDataReaderCached() -> SETDataReader:
     out._get_daily_sector_info = utils.cache_dataframe_wrapper(
         utils.cache_wrapper(out._get_daily_sector_info)
     )  # type: ignore
+    out._get_daily_sector_info = utils.cache_dataframe_wrapper(
+        utils.cache_wrapper(out._get_daily_sector_info_by_security)
+    )  # type: ignore
 
     return out
 
