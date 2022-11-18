@@ -1,14 +1,13 @@
-import os.path
 import warnings
 from datetime import date
 from functools import lru_cache
 from typing import Dict, List, Optional
 
 import pandas as pd
-import sqlalchemy as sa
 from pandas.errors import PerformanceWarning
 from pandas.tseries.offsets import CustomBusinessDay
 from sqlalchemy import Column, MetaData, Table, and_, case, func, select
+from sqlalchemy.engine import Engine
 from sqlalchemy.exc import DatabaseError
 from sqlalchemy.sql import Select
 from sqlalchemy.sql.selectable import Select
@@ -27,20 +26,17 @@ VALUE = "value"
 
 class SETDataReader:
 
-    _sqlite_path: Optional[str] = None
+    _engine: Optional[Engine] = None
 
     def __init__(self):
         """SETDataReader read PSIMS data."""
-        if self._sqlite_path == None:
+        if self._engine == None:
             raise InputError(
-                "You need to connect sqlite using ezyquant.connect_sqlite(sqlite_path)."
+                "You need to connect sqlite using ezyquant.connect_sqlite."
             )
 
-        self._engine = sa.create_engine(f"sqlite:///{self._sqlite_path}")
         self._metadata = MetaData(self._engine)
 
-        if not os.path.isfile(self._sqlite_path):
-            raise InputError(f"{self._sqlite_path} is not found")
         try:
             self._table("SECURITY")
         except DatabaseError as e:
@@ -1904,6 +1900,7 @@ class SETDataReader:
         return Table(name, self._metadata, autoload=True)
 
     def _execute(self, stmt: Select):
+        assert self._engine is not None
         return self._engine.execute(stmt)
 
     def _read_sql_query(
@@ -1913,6 +1910,7 @@ class SETDataReader:
 
         parse_dates = [i for i in col_name_list if i.endswith("_date")]
 
+        assert self._engine is not None
         df = pd.read_sql_query(
             stmt,
             self._engine,
