@@ -14,6 +14,7 @@ def connect_sqlite(sqlite_path: str):
     ez.connect_sqlite(sqlite_path)
 
 
+# TODO: Test connect_postgres
 # @pytest.fixture(autouse=True, scope="session")
 # def connect_postgres():
 #     ez.connect_postgres(
