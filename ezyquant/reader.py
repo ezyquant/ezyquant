@@ -1986,15 +1986,10 @@ class SETDataReader:
                 [
                     daily_stock_stat_t.c.I_SECURITY,
                     daily_stock_stat_t.c.D_AS_OF,
-                    func.min(self.func_date(daily_stock_stat_t.c.D_TRADE)).label(
-                        "D_TRADE"
-                    ),
+                    func.min(daily_stock_stat_t.c.D_TRADE).label("D_TRADE"),
                 ]
             )
-            .group_by(
-                daily_stock_stat_t.c.I_SECURITY,
-                self.func_date(daily_stock_stat_t.c.D_AS_OF),
-            )
+            .group_by(daily_stock_stat_t.c.I_SECURITY, daily_stock_stat_t.c.D_AS_OF)
             .subquery()
         )
 
