@@ -120,7 +120,7 @@ class SETDataReader:
         calendar_t = self._table("CALENDAR")
 
         stmt = select([self.func_date(calendar_t.c.D_TRADE)]).order_by(
-            calendar_t.c.D_TRADE
+            self.func_date(calendar_t.c.D_TRADE)
         )
 
         stmt = self._filter_stmt_by_date(
@@ -150,7 +150,7 @@ class SETDataReader:
         calendar_t = self._table("CALENDAR")
 
         stmt = select([func.count(calendar_t.c.D_TRADE)]).where(
-            calendar_t.c.D_TRADE == check_date
+            self.func_date(calendar_t.c.D_TRADE) == check_date
         )
 
         res = self._execute(stmt).scalar()
@@ -425,7 +425,7 @@ class SETDataReader:
                 func.trim(change_name_t.c.N_SECURITY_OLD)
                 != func.trim(change_name_t.c.N_SECURITY_NEW)
             )
-            .order_by(change_name_t.c.D_EFFECT)
+            .order_by(self.func_date(change_name_t.c.D_EFFECT))
         )
         stmt = self._filter_stmt_by_symbol_and_date(
             stmt=stmt,
@@ -530,7 +530,7 @@ class SETDataReader:
             .where(func.trim(rights_benefit_t.c.N_CA_TYPE).in_(["CD", "SD"]))
             .where(func.trim(rights_benefit_t.c.F_CANCEL) != "C")
             .where(rights_benefit_t.c.Z_RIGHTS > 0)
-            .order_by(rights_benefit_t.c.D_SIGN)
+            .order_by(self.func_date(rights_benefit_t.c.D_SIGN))
         )
 
         stmt = self._filter_stmt_by_symbol_and_date(
@@ -602,7 +602,7 @@ class SETDataReader:
             )
             .select_from(j)
             .where(security_detail_t.c.D_DELISTED != None)
-            .order_by(security_detail_t.c.D_DELISTED)
+            .order_by(self.func_date(security_detail_t.c.D_DELISTED))
         )
         stmt = self._filter_stmt_by_symbol_and_date(
             stmt=stmt,
@@ -678,7 +678,7 @@ class SETDataReader:
                 ]
             )
             .select_from(j)
-            .order_by(sign_posting_t.c.D_HOLD)
+            .order_by(self.func_date(sign_posting_t.c.D_HOLD))
         )
         stmt = self._filter_stmt_by_symbol_and_date(
             stmt=stmt,
@@ -825,7 +825,7 @@ class SETDataReader:
                 )
             )
             .order_by(
-                security_index_t.c.D_AS_OF,
+                self.func_date(security_index_t.c.D_AS_OF),
                 sector_t.c.N_SECTOR,
                 security_index_t.c.S_SEQ,
             )
@@ -903,7 +903,7 @@ class SETDataReader:
                 ]
             )
             .select_from(j)
-            .order_by(adjust_factor_t.c.D_EFFECT)
+            .order_by(self.func_date(adjust_factor_t.c.D_EFFECT))
         )
         stmt = self._filter_stmt_by_symbol_and_date(
             stmt=stmt,
@@ -1047,7 +1047,7 @@ class SETDataReader:
                 ]
             )
             .select_from(j)
-            .order_by(daily_stock_t.c.D_TRADE)
+            .order_by(self.func_date(daily_stock_t.c.D_TRADE))
         )
         if "I_TRADING_METHOD" in daily_stock_t.c:
             stmt = stmt.where(
@@ -1735,7 +1735,7 @@ class SETDataReader:
                 ]
             )
             .select_from(j)
-            .order_by(mktstat_daily_t.c.D_TRADE)
+            .order_by(self.func_date(mktstat_daily_t.c.D_TRADE))
         )
 
         vld.check_start_end_date(
@@ -1946,9 +1946,9 @@ class SETDataReader:
         vld.check_start_end_date(start_date, end_date)
 
         if start_date != None:
-            stmt = stmt.where(column >= start_date)
+            stmt = stmt.where(self.func_date(column) >= start_date)
         if end_date != None:
-            stmt = stmt.where(column <= end_date)
+            stmt = stmt.where(self.func_date(column) <= end_date)
 
         return stmt
 
@@ -1993,7 +1993,7 @@ class SETDataReader:
             )
             .group_by(
                 daily_stock_stat_t.c.I_SECURITY,
-                daily_stock_stat_t.c.D_AS_OF,
+                self.func_date(daily_stock_stat_t.c.D_AS_OF),
             )
             .subquery()
         )
@@ -2007,7 +2007,8 @@ class SETDataReader:
             d_trade_subquery,
             and_(
                 table.c.I_SECURITY == d_trade_subquery.c.I_SECURITY,
-                table.c.D_AS_OF == d_trade_subquery.c.D_AS_OF,
+                self.func_date(table.c.D_AS_OF)
+                == self.func_date(d_trade_subquery.c.D_AS_OF),
             ),
         )
 
@@ -2318,7 +2319,7 @@ class SETDataReader:
             .where(sector_t.c.F_DATA == f_data)
             .where(sector_t.c.I_MARKET == fld.MARKET_MAP_UPPER[market])
             .where(sector_t.c.D_CANCEL == None)
-            .order_by(daily_sector_info_t.c.D_TRADE)
+            .order_by(self.func_date(daily_sector_info_t.c.D_TRADE))
         )
 
         vld.check_start_end_date(
@@ -2387,7 +2388,7 @@ class SETDataReader:
             .select_from(j)
             .where(sector_t.c.F_DATA == f_data)
             .where(sector_t.c.D_CANCEL == None)
-            .order_by(daily_sector_info_t.c.D_TRADE)
+            .order_by(self.func_date(daily_sector_info_t.c.D_TRADE))
         )
 
         vld.check_start_end_date(
