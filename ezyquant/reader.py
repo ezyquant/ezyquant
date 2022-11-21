@@ -2345,6 +2345,7 @@ class SETDataReader:
         end_date: Optional[str],
         f_data: str,
     ) -> pd.DataFrame:
+        # TODO: Duplicate code with _get_daily_sector_info
         field = field.lower()
         f_data = f_data.upper()
 
