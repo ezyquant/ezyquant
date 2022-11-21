@@ -43,15 +43,6 @@ class SETDataReader:
         except DatabaseError as e:
             raise InputError(e)
 
-    def func_date(self, column: Column):
-        assert self._engine is not None
-        if self._engine.name == "sqlite":
-            return func.DATE(column)
-        elif self._engine.name == "postgresql":
-            return func.to_char(column, "YYYY-MM-DD")
-        else:
-            raise InputError("Only support sqlite and postgresql database.")
-
     def last_table_update(self, table_name: str) -> str:
         """Last D_TRADE in table.
 
@@ -72,7 +63,7 @@ class SETDataReader:
             string with format YYYY-MM-DD.
         """
         t = self._table(table_name)
-        stmt = select([func.max(self.func_date(t.c.D_TRADE))])
+        stmt = select([func.max(self._func_date(t.c.D_TRADE))])
         res = self._execute(stmt).scalar()
         assert isinstance(res, str)
         return res
@@ -119,7 +110,7 @@ class SETDataReader:
         """
         calendar_t = self._table("CALENDAR")
 
-        stmt = select([self.func_date(calendar_t.c.D_TRADE)]).order_by(
+        stmt = select([self._func_date(calendar_t.c.D_TRADE)]).order_by(
             calendar_t.c.D_TRADE
         )
 
@@ -150,7 +141,7 @@ class SETDataReader:
         calendar_t = self._table("CALENDAR")
 
         stmt = select([func.count(calendar_t.c.D_TRADE)]).where(
-            self.func_date(calendar_t.c.D_TRADE) == check_date
+            self._func_date(calendar_t.c.D_TRADE) == check_date
         )
 
         res = self._execute(stmt).scalar()
@@ -1906,6 +1897,15 @@ class SETDataReader:
     Protected methods
     """
 
+    def _func_date(self, column: Column):
+        assert self._engine is not None
+        if self._engine.name == "sqlite":
+            return func.DATE(column)
+        elif self._engine.name == "postgresql":
+            return func.to_char(column, "YYYY-MM-DD")
+        else:
+            raise InputError("Only support sqlite and postgresql database.")
+
     def _table(self, name: str) -> Table:
         return Table(name, self._metadata, autoload=True)
 
@@ -1946,9 +1946,9 @@ class SETDataReader:
         vld.check_start_end_date(start_date, end_date)
 
         if start_date != None:
-            stmt = stmt.where(self.func_date(column) >= start_date)
+            stmt = stmt.where(self._func_date(column) >= start_date)
         if end_date != None:
-            stmt = stmt.where(self.func_date(column) <= end_date)
+            stmt = stmt.where(self._func_date(column) <= end_date)
 
         return stmt
 
@@ -2002,8 +2002,8 @@ class SETDataReader:
             d_trade_subquery,
             and_(
                 table.c.I_SECURITY == d_trade_subquery.c.I_SECURITY,
-                self.func_date(table.c.D_AS_OF)
-                == self.func_date(d_trade_subquery.c.D_AS_OF),
+                self._func_date(table.c.D_AS_OF)
+                == self._func_date(d_trade_subquery.c.D_AS_OF),
             ),
         )
 
@@ -2417,7 +2417,7 @@ class SETDataReader:
             select(
                 [
                     func.trim(sector_t.c.N_SECTOR),
-                    func.max(self.func_date(security_index_t.c.D_AS_OF)),
+                    func.max(self._func_date(security_index_t.c.D_AS_OF)),
                 ]
             )
             .select_from(j)
