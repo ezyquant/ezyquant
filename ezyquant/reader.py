@@ -44,8 +44,13 @@ class SETDataReader:
             raise InputError(e)
 
     def func_date(self, column: Column):
-        # return func.DATE(column)
-        return func.to_char(column, "YYYY-MM-DD")
+        assert self._engine is not None
+        if self._engine.name == "sqlite":
+            return func.DATE(column)
+        elif self._engine.name == "postgresql":
+            return func.to_char(column, "YYYY-MM-DD")
+        else:
+            raise InputError("Only support sqlite and postgresql database.")
 
     def last_table_update(self, table_name: str) -> str:
         """Last D_TRADE in table.
