@@ -21,7 +21,7 @@ import ezyquant as ez
 # -- Project information -----------------------------------------------------
 
 project = "Ezyquant"
-author = "Thailand Capital Market Development Fund (CMDF)"
+author = "Fintech (Thailnd) Company Limited"
 copyright = f"2022-{datetime.now().year}, {author}"
 release = ez.__version__
 
