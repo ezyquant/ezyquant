@@ -169,6 +169,7 @@ Parameters
     * *factor_df: pd.DataFrame*
     * *quantity: Optional[int] = None*
     * *ascending: bool = True*
+    * *pct: bool = False* (ถ้าเป็น True จะเป็น Quartile โดย quantity จะรับค่าระหว่าง 0.0 - 1.0 )
 
 **ตัวอย่าง** การจัดลำดับหุ้นจากน้อยไปมากของราคาปิด และคัดให้เหลือเพียง 10 ตัว
 

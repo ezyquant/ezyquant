@@ -18,6 +18,7 @@ Ezyquant
    user_guide/backtest.rst
    user_guide/parameter_property.rst
    user_guide/example.rst
+   user_guide/colab_example.rst
 
 .. toctree::
    :maxdepth: 2
