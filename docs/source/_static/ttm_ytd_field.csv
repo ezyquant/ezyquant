@@ -1,0 +1,22 @@
+Field,Description,Return Type
+ap_turnover,account payable turnover,float
+ar_turnover,account receivable turnover,float
+asset_turnover,asset turnover,float
+cash_cycle,cash cycle,float
+current_ratio,current ratio,float
+de,debt to equity,float
+dscr,debt-service coverage ratio,float
+ebit,earning before interest and tax,float
+ebitda,"earnings before interest, tax, depreciation, and amortization",float
+eps,earning per share,float
+fix_asset_turnover,fix asset turnover,float
+gross_profit_margin,gross profit margin,float
+ibde,interest-bearing debt to earnings,float
+interest_coverage,interest coverage,float
+inventory_turnover,inventory turnover,float
+net_profit,net profit,float
+net_profit_margin,net profit margin,float
+quick_ratio,quick ratio,float
+roa,return on asset,float
+roe,return on equity,float
+total_revenue,total revenue,float

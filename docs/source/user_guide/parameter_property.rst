@@ -28,27 +28,31 @@ field
 
 field ที่มามารถใช้ได้ตาม timeframe และ value_by แบบต่างๆ
 
-* timeframe = daily
-
-  value_by = stock
+* get_data(*field*, timeframe = **"daily"**)
 
 .. csv-table::
    :file: ../_static/daily_field.csv
    :widths: 30, 70, 60
    :header-rows: 1
 
-* timeframe = quarterly, yearly, ttm, ytd
-
-  value_by = stock
+* get_data(*field*, timeframe = **"quarterly"**)
+* get_data(*field*, timeframe = **"yearly"**)
 
 .. csv-table::
-   :file: ../_static/non_daily_field.csv
+   :file: ../_static/fy_qy_field.csv
    :widths: 30, 70, 30
    :header-rows: 1
 
-* timeframe = daily
+* get_data(*field*, timeframe = **"ttm"**)
+* get_data(*field*, timeframe = **"ytd"**)
 
-  value_by = sector, industry
+.. csv-table::
+   :file: ../_static/ttm_ytd_field.csv
+   :widths: 30, 70, 30
+   :header-rows: 1
+
+* get_data(*field*, timeframe = **"daily"**, value_by = **"sector"**)
+* get_data(*field*, timeframe = **"daily"**, value_by = **"industry"**)
 
 .. csv-table::
    :file: ../_static/sector_industry_field.csv

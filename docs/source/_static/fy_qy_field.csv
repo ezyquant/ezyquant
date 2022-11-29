@@ -1,0 +1,82 @@
+Field,Description,Return Type
+year,year,float
+period,quarter use for timeframe = 'quarterly',str
+quarter,quarter use for timeframe = 'quarterly',float
+as_of,date as of eps calculation,str date format [yyyy-mm-dd hh:mm:ss]
+total_asset,total asset,float
+total_liability,total liability,float
+shld_equity,share holder equity,float
+total_revenue,total revenue,float
+total_expense,total expense,float
+net_profit,net profit,float
+eps,earning per share,float
+de,debt to equity,float
+net_profit_margin,net profit margin,float
+gross_profit_margin,gross profit margin,float
+roa,return on asset,float
+roe,return on equity,float
+asset_turnover,asset turnover,float
+ebit,earning before interest and tax,float
+fix_asset_turnover,fix asset turnover,float
+current_ratio,current ratio,float
+quick_ratio,quick ratio,float
+interest_coverage,interest coverage,float
+ar_turnover,account receivable turnover,float
+inventory_turnover,inventory turnover,float
+ap_turnover,account payable turnover,float
+cash_cycle,cash cycle,float
+ebitda,"earnings before interest, tax, depreciation, and amortization",float
+net_operating,net operating cash flow,float
+net_investing,net investing cash flow,float
+net_financing,net financing cash flow,float
+net_cashflow,net cash flow,float
+dscr,debt-service coverage ratio,float
+ibde,interest-bearing debt to earnings,float
+account_payable,account payable,float
+account_receivable,account receivable,float
+accrued_int_receive,accrued interest receive,float
+allowance,allowance,float
+cap_paidin,paid-in capital,float
+cap_paidup,paid-up capital,float
+cash,cash,float
+common_share,common share,float
+current_asset,current asset,float
+current_liability,current liability,float
+deposit,deposit,float
+earning_asset,earning asset,float
+int_bearing_debt,interest bearing debt,float
+inventory,inventory,float
+invest_asset,invest asset,float
+investment,investment,float
+invest_security,invest security,float
+loan,loan,float
+loan_from_relatedparty,loan from related party,float
+loan_revenue,loan revenue,float
+loan_to_relatedparty,loan to related party,float
+minority_interest,minority interest,float
+ppe,"property, plant, and equipment",float
+preferred_share,preferred share,float
+retain_earning,retain earning,float
+short_invest,short invest,float
+total_equity,total equity,float
+change_ppe,change ppe,float
+dividend,dividend,float
+dp,drawing power,float
+net_cash_flow,net cash flow,float
+bad_debt,bad debt,float
+broker_fee,broker fee,float
+cos,cost of sale,float
+ebt,earnings before interest and tax,float
+int_dvd_income,interest and dividend income,float
+interest_expense,interest expense,float
+interest_income,interest income,float
+invest_sec_rev,invest revenue,float
+loan_deposit_revenue,loan deposit revenue,float
+net_premium,net premium,float
+net_profit_incl_minority,net profit,float
+net_profit_ordinary,net profit include minority,float
+operating_expense,ordinary net profit,float
+operating_revenue,operating expense,float
+pl_other_activities,operating revenue,float
+sale,sale,float
+selling_admin,selling admin,float
