@@ -1,14 +1,13 @@
-import os.path
 import warnings
 from datetime import date
 from functools import lru_cache
 from typing import Dict, List, Optional
 
 import pandas as pd
-import sqlalchemy as sa
 from pandas.errors import PerformanceWarning
 from pandas.tseries.offsets import CustomBusinessDay
 from sqlalchemy import Column, MetaData, Table, and_, case, func, select
+from sqlalchemy.engine import Engine
 from sqlalchemy.exc import DatabaseError
 from sqlalchemy.sql import Select
 from sqlalchemy.sql.selectable import Select
@@ -27,20 +26,18 @@ VALUE = "value"
 
 class SETDataReader:
 
-    _sqlite_path: Optional[str] = None
+    _engine: Optional[Engine] = None
 
     def __init__(self):
         """SETDataReader read PSIMS data."""
-        if self._sqlite_path == None:
+        if self._engine == None:
             raise InputError(
-                "You need to connect sqlite using ezyquant.connect_sqlite(sqlite_path)."
+                "You need to connect sqlite using ezyquant.connect_sqlite."
             )
 
-        self._engine = sa.create_engine(f"sqlite:///{self._sqlite_path}")
         self._metadata = MetaData(self._engine)
 
-        if not os.path.isfile(self._sqlite_path):
-            raise InputError(f"{self._sqlite_path} is not found")
+        # ping database
         try:
             self._table("SECURITY")
         except DatabaseError as e:
@@ -66,7 +63,7 @@ class SETDataReader:
             string with format YYYY-MM-DD.
         """
         t = self._table(table_name)
-        stmt = select([func.max(func.DATE(t.c.D_TRADE))])
+        stmt = select([func.max(self._func_date(t.c.D_TRADE))])
         res = self._execute(stmt).scalar()
         assert isinstance(res, str)
         return res
@@ -113,8 +110,8 @@ class SETDataReader:
         """
         calendar_t = self._table("CALENDAR")
 
-        stmt = select([func.DATE(calendar_t.c.D_TRADE)]).order_by(
-            func.DATE(calendar_t.c.D_TRADE)
+        stmt = select([self._func_date(calendar_t.c.D_TRADE)]).order_by(
+            calendar_t.c.D_TRADE
         )
 
         stmt = self._filter_stmt_by_date(
@@ -144,7 +141,7 @@ class SETDataReader:
         calendar_t = self._table("CALENDAR")
 
         stmt = select([func.count(calendar_t.c.D_TRADE)]).where(
-            func.DATE(calendar_t.c.D_TRADE) == check_date
+            self._func_date(calendar_t.c.D_TRADE) == check_date
         )
 
         res = self._execute(stmt).scalar()
@@ -419,7 +416,7 @@ class SETDataReader:
                 func.trim(change_name_t.c.N_SECURITY_OLD)
                 != func.trim(change_name_t.c.N_SECURITY_NEW)
             )
-            .order_by(func.DATE(change_name_t.c.D_EFFECT))
+            .order_by(change_name_t.c.D_EFFECT)
         )
         stmt = self._filter_stmt_by_symbol_and_date(
             stmt=stmt,
@@ -524,7 +521,7 @@ class SETDataReader:
             .where(func.trim(rights_benefit_t.c.N_CA_TYPE).in_(["CD", "SD"]))
             .where(func.trim(rights_benefit_t.c.F_CANCEL) != "C")
             .where(rights_benefit_t.c.Z_RIGHTS > 0)
-            .order_by(func.DATE(rights_benefit_t.c.D_SIGN))
+            .order_by(rights_benefit_t.c.D_SIGN)
         )
 
         stmt = self._filter_stmt_by_symbol_and_date(
@@ -596,7 +593,7 @@ class SETDataReader:
             )
             .select_from(j)
             .where(security_detail_t.c.D_DELISTED != None)
-            .order_by(func.DATE(security_detail_t.c.D_DELISTED))
+            .order_by(security_detail_t.c.D_DELISTED)
         )
         stmt = self._filter_stmt_by_symbol_and_date(
             stmt=stmt,
@@ -672,7 +669,7 @@ class SETDataReader:
                 ]
             )
             .select_from(j)
-            .order_by(func.DATE(sign_posting_t.c.D_HOLD))
+            .order_by(sign_posting_t.c.D_HOLD)
         )
         stmt = self._filter_stmt_by_symbol_and_date(
             stmt=stmt,
@@ -819,7 +816,7 @@ class SETDataReader:
                 )
             )
             .order_by(
-                func.DATE(security_index_t.c.D_AS_OF),
+                security_index_t.c.D_AS_OF,
                 sector_t.c.N_SECTOR,
                 security_index_t.c.S_SEQ,
             )
@@ -897,7 +894,7 @@ class SETDataReader:
                 ]
             )
             .select_from(j)
-            .order_by(func.DATE(adjust_factor_t.c.D_EFFECT))
+            .order_by(adjust_factor_t.c.D_EFFECT)
         )
         stmt = self._filter_stmt_by_symbol_and_date(
             stmt=stmt,
@@ -1041,7 +1038,7 @@ class SETDataReader:
                 ]
             )
             .select_from(j)
-            .order_by(func.DATE(daily_stock_t.c.D_TRADE))
+            .order_by(daily_stock_t.c.D_TRADE)
         )
         if "I_TRADING_METHOD" in daily_stock_t.c:
             stmt = stmt.where(
@@ -1729,7 +1726,7 @@ class SETDataReader:
                 ]
             )
             .select_from(j)
-            .order_by(func.DATE(mktstat_daily_t.c.D_TRADE))
+            .order_by(mktstat_daily_t.c.D_TRADE)
         )
 
         vld.check_start_end_date(
@@ -1900,10 +1897,20 @@ class SETDataReader:
     Protected methods
     """
 
+    def _func_date(self, column: Column):
+        assert self._engine is not None
+        if self._engine.name == "sqlite":
+            return func.DATE(column)
+        elif self._engine.name == "postgresql":
+            return func.to_char(column, "YYYY-MM-DD")
+        else:
+            raise InputError("Only support sqlite and postgresql database.")
+
     def _table(self, name: str) -> Table:
         return Table(name, self._metadata, autoload=True)
 
     def _execute(self, stmt: Select):
+        assert self._engine is not None
         return self._engine.execute(stmt)
 
     def _read_sql_query(
@@ -1913,6 +1920,7 @@ class SETDataReader:
 
         parse_dates = [i for i in col_name_list if i.endswith("_date")]
 
+        assert self._engine is not None
         df = pd.read_sql_query(
             stmt,
             self._engine,
@@ -1938,9 +1946,9 @@ class SETDataReader:
         vld.check_start_end_date(start_date, end_date)
 
         if start_date != None:
-            stmt = stmt.where(func.DATE(column) >= func.DATE(start_date))
+            stmt = stmt.where(self._func_date(column) >= start_date)
         if end_date != None:
-            stmt = stmt.where(func.DATE(column) <= func.DATE(end_date))
+            stmt = stmt.where(self._func_date(column) <= end_date)
 
         return stmt
 
@@ -1978,12 +1986,10 @@ class SETDataReader:
                 [
                     daily_stock_stat_t.c.I_SECURITY,
                     daily_stock_stat_t.c.D_AS_OF,
-                    func.min(func.DATE(daily_stock_stat_t.c.D_TRADE)).label("D_TRADE"),
+                    func.min(daily_stock_stat_t.c.D_TRADE).label("D_TRADE"),
                 ]
             )
-            .group_by(
-                daily_stock_stat_t.c.I_SECURITY, func.DATE(daily_stock_stat_t.c.D_AS_OF)
-            )
+            .group_by(daily_stock_stat_t.c.I_SECURITY, daily_stock_stat_t.c.D_AS_OF)
             .subquery()
         )
 
@@ -1996,7 +2002,8 @@ class SETDataReader:
             d_trade_subquery,
             and_(
                 table.c.I_SECURITY == d_trade_subquery.c.I_SECURITY,
-                func.DATE(table.c.D_AS_OF) == func.DATE(d_trade_subquery.c.D_AS_OF),
+                self._func_date(table.c.D_AS_OF)
+                == self._func_date(d_trade_subquery.c.D_AS_OF),
             ),
         )
 
@@ -2307,7 +2314,7 @@ class SETDataReader:
             .where(sector_t.c.F_DATA == f_data)
             .where(sector_t.c.I_MARKET == fld.MARKET_MAP_UPPER[market])
             .where(sector_t.c.D_CANCEL == None)
-            .order_by(func.DATE(daily_sector_info_t.c.D_TRADE))
+            .order_by(daily_sector_info_t.c.D_TRADE)
         )
 
         vld.check_start_end_date(
@@ -2338,6 +2345,7 @@ class SETDataReader:
         end_date: Optional[str],
         f_data: str,
     ) -> pd.DataFrame:
+        # TODO: Duplicate code with _get_daily_sector_info
         field = field.lower()
         f_data = f_data.upper()
 
@@ -2376,7 +2384,7 @@ class SETDataReader:
             .select_from(j)
             .where(sector_t.c.F_DATA == f_data)
             .where(sector_t.c.D_CANCEL == None)
-            .order_by(func.DATE(daily_sector_info_t.c.D_TRADE))
+            .order_by(daily_sector_info_t.c.D_TRADE)
         )
 
         vld.check_start_end_date(
@@ -2409,7 +2417,7 @@ class SETDataReader:
             select(
                 [
                     func.trim(sector_t.c.N_SECTOR),
-                    func.max(func.DATE(security_index_t.c.D_AS_OF)),
+                    func.max(self._func_date(security_index_t.c.D_AS_OF)),
                 ]
             )
             .select_from(j)
@@ -2462,10 +2470,13 @@ def _SETDataReaderCached() -> SETDataReader:
 
     out.get_data_symbol_daily = utils.cache_dataframe_wrapper(out.get_data_symbol_daily)  # type: ignore
     out._get_fundamental_data = utils.cache_dataframe_wrapper(
-        utils.cache_wrapper(out._get_fundamental_data)
+        utils.cache_wrapper(out._get_fundamental_data, maxsize=1024)
     )  # type: ignore
     out._get_daily_sector_info = utils.cache_dataframe_wrapper(
         utils.cache_wrapper(out._get_daily_sector_info)
+    )  # type: ignore
+    out._get_daily_sector_info_by_security = utils.cache_dataframe_wrapper(
+        utils.cache_wrapper(out._get_daily_sector_info_by_security)
     )  # type: ignore
 
     return out

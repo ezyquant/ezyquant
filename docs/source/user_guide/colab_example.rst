@@ -1,8 +1,23 @@
-Example
-=======
+Colab Example
+=============
 
-Example 1
----------
+สามารถเข้าไปดูตัวอย่างการใช้งานบน Colab ได้ที่ link ข้างล่างนี้
+
+https://colab.research.google.com/drive/1OQkNa85wNG12Zjofte8YUUxxEGHAyhcL?usp=sharing
+
+ถ้าใช้ python บน Colab ต้องเอา file database ไปวางไว้ที่ Google drive ก่อนและเชื่อม Google drive ตามนี้
+
+.. code-block::
+
+    from google.colab import drive
+    drive.mount('/content/drive')
+
+
+การใช้งานบน Colab ต้อง install ezyquant ใหม่ทุกครั้ง ที่เปิดขึ้นมาใช้งาน
+
+.. code-block::
+
+    !pip install ezyquant
 
 .. code-block::
 
@@ -14,7 +29,7 @@ Example 1
     from ezyquant.backtesting import Context
 
     # ต่อ database
-    database_path = "..."
+    database_path = "/content/drive/MyDrive/"
     ez.connect_sqlite(database_path + "ezyquant.db")
 
     # ดึงข้อมูล
@@ -108,4 +123,4 @@ Example 1
     )
 
     # Save ผลลัพธ์เป็น Excel
-    result.to_excel(r".../results.xlsx")
+    result.to_excel("/content/drive/MyDrive/.../results.xlsx")

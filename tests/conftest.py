@@ -9,9 +9,21 @@ def sqlite_path() -> str:
     return "ezyquant.db"
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True, scope="session")
 def connect_sqlite(sqlite_path: str):
     ez.connect_sqlite(sqlite_path)
+
+
+# TODO: Test connect_postgres
+# @pytest.fixture(autouse=True, scope="session")
+# def connect_postgres():
+#     ez.connect_postgres(
+#         host="localhost",
+#         username="postgres",
+#         password="1234",
+#         port="5432",
+#         database="psims",
+#     )
 
 
 @pytest.fixture
