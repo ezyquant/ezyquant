@@ -1,6 +1,7 @@
 import os.path
 
 import sqlalchemy as sa
+from sqlalchemy.ext.asyncio import create_async_engine
 
 from .errors import InputError
 from .reader import SETDataReader, _SETDataReaderCached
@@ -17,7 +18,7 @@ def connect_sqlite(sqlite_path: str):
     if not os.path.isfile(sqlite_path):
         raise InputError(f"{sqlite_path} is not found")
 
-    url = f"sqlite+aiosqlite:///{sqlite_path}"
+    url = f"sqlite+pysqlite:///{sqlite_path}"
     return _set_engine(url)
 
 
@@ -42,7 +43,7 @@ def connect_postgres(host: str, username: str, password: str, port: str, databas
 
 
 def _set_engine(url: str):
-    engine = sa.create_engine(url)
+    engine = create_async_engine(url)
 
     _SETDataReaderCached.cache_clear()
     SETDataReader._engine = engine
