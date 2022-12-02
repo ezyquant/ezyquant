@@ -2204,6 +2204,8 @@ class SETDataReader:
         else:
             raise ValueError(f"{timeframe} is not a valid timeframe")
 
+        value_column *= 1000  # Database stores in thousands bath
+
         stmt = (
             select(
                 [
