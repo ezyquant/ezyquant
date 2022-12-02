@@ -9,12 +9,12 @@ def sqlite_path() -> str:
     return "ezyquant.db"
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def connect_sqlite(sqlite_path: str):
     ez.connect_sqlite(sqlite_path)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def connect_postgres():
     ez.connect_postgres(
         host="localhost",
