@@ -24,7 +24,7 @@ setup(
     url="https://doc.ezyquant.com/",
     maintainer="Fintech (Thailand) Company Limited",
     maintainer_email="admin@fintech.co.th",
-    python_requires=">=3.7",
+    python_requires=">=3.8.10",
     install_requires=[
         "pandas>=1.3",
         "sqlalchemy>=1.4",
