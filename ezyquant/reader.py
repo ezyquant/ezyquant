@@ -168,7 +168,7 @@ class SETDataReader:
         sec_type: Optional[str] = None,
         native: Optional[str] = None,
     ) -> pd.DataFrame:
-        """Data from table SECURITY.
+        """Data from table SECURITY. Filter out securities without ISIN.
 
         Parameters
         ----------
