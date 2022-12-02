@@ -254,6 +254,8 @@ class SETDataReader:
             .order_by(security_t.c.I_SECURITY)
         )
 
+        stmt = stmt.where(func.trim(security_t.c.I_ISIN) != "")
+
         stmt = self._filter_str_in_list(
             stmt=stmt, column=security_t.c.N_SECURITY, values=symbol_list
         )
