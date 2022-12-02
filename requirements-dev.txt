@@ -14,3 +14,4 @@ docformatter>=1,<2
 autoflake>=1,<2
 sphinx>=4,<5
 sphinx-book-theme>=0,<1
+pytest-xdist[psutil]>=3,<4
