@@ -1398,94 +1398,6 @@ class SETDataReader:
             timeframe=fld.TIMEFRAME_YEARLY,
         )
 
-    def get_data_symbol_ttm(
-        self,
-        field: str,
-        symbol_list: Optional[List[str]] = None,
-        start_date: Optional[str] = None,
-        end_date: Optional[str] = None,
-    ) -> pd.DataFrame:
-        """Trailing 12 months (TTM) is a term used to describe the past 12
-        consecutive months of a company's performance data.
-
-        TTM can be calculate only Income Statement and Cashflow, but not Financial Ratio and Balance Sheet.
-
-        Data from table FINANCIAL_SCREEN.
-
-        FINANCIAL_STAT_STD filter by using data from column M_ACC_ACCOUNT_12M.
-
-        Index date is trade date (DAILY_STOCK_STAT.D_TRADE). Data is showing at first trade date which join on D_AS_OF.
-
-        Parameters
-        ----------
-        field : str
-            - change_ppe
-            - dividend
-            - dp
-            - net_cash_flow
-            - net_financing
-            - net_investing
-            - net_operating
-            - bad_debt
-            - broker_fee
-            - cos
-            - ebit
-            - ebitda
-            - ebt
-            - int_dvd_income
-            - interest_expense
-            - interest_income
-            - invest_sec_rev
-            - loan_deposit_revenue
-            - net_premium
-            - net_profit
-            - net_profit_incl_minority
-            - net_profit_ordinary
-            - operating_expense
-            - operating_revenue
-            - pl_other_activities
-            - sale
-            - selling_admin
-            - selling_admin_exc_renumuration
-            - total_expense
-            - total_revenue
-            - eps
-        symbol_list : Optional[List[str]]
-            N_SECURITY in symbol_list, must be unique.
-        start_date : Optional[str]
-            start of trade date (DAILY_STOCK_STAT.D_TRADE).
-        end_date : Optional[str]
-            end of trade date (DAILY_STOCK_STAT.D_TRADE).
-
-        Returns
-        -------
-        pd.DataFrame
-            - symbol(N_SECURITY): str as column
-            - trade date(DAILY_STOCK_STAT.D_TRADE): date as index
-
-        Examples
-        --------
-        >>> from ezyquant import SETDataReader
-        >>> from ezyquant import fields as fld
-        >>> sdr = SETDataReader()
-        >>> sdr.get_data_symbol_ttm(
-        ...     field=fld.Q_TOTAL_REVENUE,
-        ...     symbol_list=["COM7", "MALEE"],
-        ...     start_date="2022-02-01",
-        ...     end_date=None,
-        ... )
-                           COM7       MALEE
-        2022-03-01          NaN  3488690.79
-        2022-03-04  51154660.73         NaN
-        """
-        return self._get_fundamental_data(
-            symbol_list=symbol_list,
-            field=field,
-            start_date=start_date,
-            end_date=end_date,
-            timeframe=fld.TIMEFRAME_TTM,
-        )
-
     def get_data_symbol_ytd(
         self,
         field: str,
@@ -2199,10 +2111,9 @@ class SETDataReader:
                 value_column = financial_stat_std_t.c["M_ACC_ACCOUNT_12M"]
         elif timeframe == fld.TIMEFRAME_YTD:
             value_column = financial_stat_std_t.c["M_ACC_ACCOUNT"]
+        # unused
         elif timeframe == "average":
             value_column = financial_stat_std_t.c["M_ACCOUNT_AVG"]
-        elif timeframe == fld.TIMEFRAME_TTM:
-            value_column = financial_stat_std_t.c["M_ACC_ACCOUNT_12M"]
         else:
             raise ValueError(f"{timeframe} is not a valid timeframe")
 
