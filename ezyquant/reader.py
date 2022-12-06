@@ -2072,12 +2072,9 @@ class SETDataReader:
             if field in fld.FINANCIAL_STAT_STD_MAP["B"]:
                 value_column = financial_stat_std_t.c["M_ACCOUNT"]
             else:
-                value_column = financial_stat_std_t.c["M_ACC_ACCOUNT_12M"]
+                value_column = financial_stat_std_t.c["M_ACC_ACCOUNT"]
         elif timeframe == fld.TIMEFRAME_YTD:
             value_column = financial_stat_std_t.c["M_ACC_ACCOUNT"]
-        # unused
-        elif timeframe == "average":
-            value_column = financial_stat_std_t.c["M_ACCOUNT_AVG"]
         else:
             raise ValueError(f"{timeframe} is not a valid timeframe")
 
