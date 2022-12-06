@@ -1111,105 +1111,93 @@ class SETDataReader:
         Parameters
         ----------
         field: str
-            - year
-            - period_type
-            - period
-            - quarter
-            - accumulate
-            - as_of
-            - total_asset
-            - total_liability
-            - shld_equity
-            - total_revenue
-            - total_expense
-            - net_profit
-            - eps
-            - de
-            - net_profit_margin
-            - gross_profit_margin
-            - roa
-            - roe
-            - asset_turnover
-            - ebit
-            - fix_asset_turnover
-            - current_ratio
-            - quick_ratio
-            - interest_coverage
-            - ar_turnover
-            - inventory_turnover
-            - ap_turnover
-            - cash_cycle
-            - ebitda
-            - net_operating
-            - net_investing
-            - net_financing
-            - net_cashflow
-            - dscr
-            - ibde
             - account_payable
             - account_receivable
             - accrued_int_receive
+            - accumulate
             - allowance
+            - ap_turnover
+            - ar_turnover
+            - as_of
+            - asset_turnover
+            - bad_debt
+            - broker_fee
             - cap_paidin
             - cap_paidup
             - cash
+            - cash_cycle
+            - change_ppe
             - common_share
+            - cos
             - current_asset
             - current_liability
+            - current_ratio
+            - de
             - deposit
+            - dividend
+            - dp
+            - dscr
             - earning_asset
+            - ebit
+            - ebitda
+            - ebt
+            - eps
+            - fix_asset_turnover
+            - gross_profit_margin
+            - ibde
             - int_bearing_debt
+            - int_dvd_income
+            - interest_coverage
+            - interest_expense
+            - interest_income
             - inventory
+            - inventory_turnover
             - invest_asset
-            - investment
+            - invest_sec_rev
             - invest_security
+            - investment
             - loan
+            - loan_deposit_revenue
             - loan_from_relatedparty
             - loan_revenue
             - loan_to_relatedparty
             - longterm_liability_currentportion
             - longterm_liability_net_currentportion
             - minority_interest
+            - net_cash_flow
+            - net_cashflow
+            - net_financing
+            - net_investing
+            - net_operating
+            - net_premium
+            - net_profit
+            - net_profit_incl_minority
+            - net_profit_margin
+            - net_profit_ordinary
+            - operating_expense
+            - operating_revenue
+            - period
+            - period_type
+            - pl_other_activities
             - ppe
             - preferred_share
+            - quarter
+            - quick_ratio
             - retain_earning
             - retain_earning_unappropriate
+            - roa
+            - roe
+            - sale
+            - selling_admin
+            - selling_admin_exc_renumuration
             - shld_equity
             - short_invest
             - total_asset
             - total_equity
-            - total_liability
-            - change_ppe
-            - dividend
-            - dp
-            - net_cash_flow
-            - net_financing
-            - net_investing
-            - net_operating
-            - bad_debt
-            - broker_fee
-            - cos
-            - ebit
-            - ebitda
-            - ebt
-            - int_dvd_income
-            - interest_expense
-            - interest_income
-            - invest_sec_rev
-            - loan_deposit_revenue
-            - net_premium
-            - net_profit
-            - net_profit_incl_minority
-            - net_profit_ordinary
-            - operating_expense
-            - operating_revenue
-            - pl_other_activities
-            - sale
-            - selling_admin
-            - selling_admin_exc_renumuration
             - total_expense
+            - total_liability
             - total_revenue
-            - eps
+            - year
         symbol_list: Optional[List[str]] = None
             N_SECURITY in symbol_list, must be unique.
         start_date: Optional[str] = None
@@ -1263,105 +1251,93 @@ class SETDataReader:
         Parameters
         ----------
         field: str
-            - year
-            - period_type
-            - period
-            - quarter
-            - accumulate
-            - as_of
-            - total_asset
-            - total_liability
-            - shld_equity
-            - total_revenue
-            - total_expense
-            - net_profit
-            - eps
-            - de
-            - net_profit_margin
-            - gross_profit_margin
-            - roa
-            - roe
-            - asset_turnover
-            - ebit
-            - fix_asset_turnover
-            - current_ratio
-            - quick_ratio
-            - interest_coverage
-            - ar_turnover
-            - inventory_turnover
-            - ap_turnover
-            - cash_cycle
-            - ebitda
-            - net_operating
-            - net_investing
-            - net_financing
-            - net_cashflow
-            - dscr
-            - ibde
             - account_payable
             - account_receivable
             - accrued_int_receive
+            - accumulate
             - allowance
+            - ap_turnover
+            - ar_turnover
+            - as_of
+            - asset_turnover
+            - bad_debt
+            - broker_fee
             - cap_paidin
             - cap_paidup
             - cash
+            - cash_cycle
+            - change_ppe
             - common_share
+            - cos
             - current_asset
             - current_liability
+            - current_ratio
+            - de
             - deposit
+            - dividend
+            - dp
+            - dscr
             - earning_asset
+            - ebit
+            - ebitda
+            - ebt
+            - eps
+            - fix_asset_turnover
+            - gross_profit_margin
+            - ibde
             - int_bearing_debt
+            - int_dvd_income
+            - interest_coverage
+            - interest_expense
+            - interest_income
             - inventory
+            - inventory_turnover
             - invest_asset
-            - investment
+            - invest_sec_rev
             - invest_security
+            - investment
             - loan
+            - loan_deposit_revenue
             - loan_from_relatedparty
             - loan_revenue
             - loan_to_relatedparty
             - longterm_liability_currentportion
             - longterm_liability_net_currentportion
             - minority_interest
+            - net_cash_flow
+            - net_cashflow
+            - net_financing
+            - net_investing
+            - net_operating
+            - net_premium
+            - net_profit
+            - net_profit_incl_minority
+            - net_profit_margin
+            - net_profit_ordinary
+            - operating_expense
+            - operating_revenue
+            - period
+            - period_type
+            - pl_other_activities
             - ppe
             - preferred_share
+            - quarter
+            - quick_ratio
             - retain_earning
             - retain_earning_unappropriate
+            - roa
+            - roe
+            - sale
+            - selling_admin
+            - selling_admin_exc_renumuration
             - shld_equity
             - short_invest
             - total_asset
             - total_equity
-            - total_liability
-            - change_ppe
-            - dividend
-            - dp
-            - net_cash_flow
-            - net_financing
-            - net_investing
-            - net_operating
-            - bad_debt
-            - broker_fee
-            - cos
-            - ebit
-            - ebitda
-            - ebt
-            - int_dvd_income
-            - interest_expense
-            - interest_income
-            - invest_sec_rev
-            - loan_deposit_revenue
-            - net_premium
-            - net_profit
-            - net_profit_incl_minority
-            - net_profit_ordinary
-            - operating_expense
-            - operating_revenue
-            - pl_other_activities
-            - sale
-            - selling_admin
-            - selling_admin_exc_renumuration
             - total_expense
+            - total_liability
             - total_revenue
-            - eps
+            - year
         symbol_list: Optional[List[str]] = None
             N_SECURITY in symbol_list, must be unique.
         start_date: Optional[str] = None
@@ -1417,105 +1393,93 @@ class SETDataReader:
         Parameters
         ----------
         field: str
-            - year
-            - period_type
-            - period
-            - quarter
-            - accumulate
-            - as_of
-            - total_asset
-            - total_liability
-            - shld_equity
-            - total_revenue
-            - total_expense
-            - net_profit
-            - eps
-            - de
-            - net_profit_margin
-            - gross_profit_margin
-            - roa
-            - roe
-            - asset_turnover
-            - ebit
-            - fix_asset_turnover
-            - current_ratio
-            - quick_ratio
-            - interest_coverage
-            - ar_turnover
-            - inventory_turnover
-            - ap_turnover
-            - cash_cycle
-            - ebitda
-            - net_operating
-            - net_investing
-            - net_financing
-            - net_cashflow
-            - dscr
-            - ibde
             - account_payable
             - account_receivable
             - accrued_int_receive
+            - accumulate
             - allowance
+            - ap_turnover
+            - ar_turnover
+            - as_of
+            - asset_turnover
+            - bad_debt
+            - broker_fee
             - cap_paidin
             - cap_paidup
             - cash
+            - cash_cycle
+            - change_ppe
             - common_share
+            - cos
             - current_asset
             - current_liability
+            - current_ratio
+            - de
             - deposit
+            - dividend
+            - dp
+            - dscr
             - earning_asset
+            - ebit
+            - ebitda
+            - ebt
+            - eps
+            - fix_asset_turnover
+            - gross_profit_margin
+            - ibde
             - int_bearing_debt
+            - int_dvd_income
+            - interest_coverage
+            - interest_expense
+            - interest_income
             - inventory
+            - inventory_turnover
             - invest_asset
-            - investment
+            - invest_sec_rev
             - invest_security
+            - investment
             - loan
+            - loan_deposit_revenue
             - loan_from_relatedparty
             - loan_revenue
             - loan_to_relatedparty
             - longterm_liability_currentportion
             - longterm_liability_net_currentportion
             - minority_interest
+            - net_cash_flow
+            - net_cashflow
+            - net_financing
+            - net_investing
+            - net_operating
+            - net_premium
+            - net_profit
+            - net_profit_incl_minority
+            - net_profit_margin
+            - net_profit_ordinary
+            - operating_expense
+            - operating_revenue
+            - period
+            - period_type
+            - pl_other_activities
             - ppe
             - preferred_share
+            - quarter
+            - quick_ratio
             - retain_earning
             - retain_earning_unappropriate
+            - roa
+            - roe
+            - sale
+            - selling_admin
+            - selling_admin_exc_renumuration
             - shld_equity
             - short_invest
             - total_asset
             - total_equity
-            - total_liability
-            - change_ppe
-            - dividend
-            - dp
-            - net_cash_flow
-            - net_financing
-            - net_investing
-            - net_operating
-            - bad_debt
-            - broker_fee
-            - cos
-            - ebit
-            - ebitda
-            - ebt
-            - int_dvd_income
-            - interest_expense
-            - interest_income
-            - invest_sec_rev
-            - loan_deposit_revenue
-            - net_premium
-            - net_profit
-            - net_profit_incl_minority
-            - net_profit_ordinary
-            - operating_expense
-            - operating_revenue
-            - pl_other_activities
-            - sale
-            - selling_admin
-            - selling_admin_exc_renumuration
             - total_expense
+            - total_liability
             - total_revenue
-            - eps
+            - year
         symbol_list: Optional[List[str]] = None
             N_SECURITY in symbol_list, must be unique.
         start_date: Optional[str] = None
