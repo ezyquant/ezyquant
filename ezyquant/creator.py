@@ -257,13 +257,14 @@ class SETSignalCreator:
 
         return df
 
-    def is_universe(self, universe: str) -> pd.DataFrame:
+    # TODO: rename universe to universes
+    def is_universe(self, universe: List[str]) -> pd.DataFrame:
         """Return Dataframe of boolean is universe.
 
         Parameters
         ----------
-        universe: str
-            Can be Sector, Industry, or Index.
+        universe: List[str]
+            Can be list of Sector, Industry, Index or symbols.
 
         Returns
         -------
@@ -280,7 +281,7 @@ class SETSignalCreator:
         ...     index_list=[],
         ...     symbol_list=["COM7", "MALEE"],
         ... )
-        >>> ssc.is_universe("SET100")
+        >>> ssc.is_universe(["SET100"])
                     COM7  MALEE
         2022-01-04  True  False
         2022-01-05  True  False
@@ -288,12 +289,17 @@ class SETSignalCreator:
         2022-01-07  True  False
         2022-01-10  True  False
         """
-        universe = universe.upper()
+        universe = [i.upper() for i in universe]
 
-        try:
-            return self._is_universe_static(universe)
-        except InputError:
-            return self._is_universe_dynamic(universe)
+        out = self._make_nan_df().fillna(False)
+
+        for i in universe:
+            try:
+                out = out | self._is_universe_static(i)
+            except InputError:
+                out = out | self._is_universe_dynamic(i)
+
+        return out
 
     # TODO: remove cache after improve SETSignalCreator._is_banned_sp
     @lru_cache(maxsize=1)
@@ -390,6 +396,22 @@ class SETSignalCreator:
     Protected methods
     """
 
+    @lru_cache(maxsize=1)
+    def _make_nan_df(self) -> pd.DataFrame:
+        """Make empty dataframe with trading dates as index and symbols as
+        columns.
+
+        Returns
+        -------
+        pd.DataFrame
+            Dataframe with nan as values.
+        """
+        return pd.DataFrame(
+            np.nan,
+            index=self._get_trading_dates(),
+            columns=self._get_symbol_in_universe(),
+        )
+
     @lru_cache(maxsize=128)
     def _get_trading_dates(self) -> List[str]:
         end = self._end_date
@@ -397,7 +419,7 @@ class SETSignalCreator:
             end = self._sdr.last_table_update("DAILY_STOCK_TRADE")
         return self._sdr.get_trading_dates(start_date=self._start_date, end_date=end)
 
-    @lru_cache(maxsize=128)
+    @lru_cache(maxsize=1)
     def _get_symbol_in_universe(self) -> List[str]:
         out = set()
         if self._symbol_list:
@@ -574,12 +596,14 @@ class SETSignalCreator:
             index_type = "industry"
         elif universe in fld.SECTOR_LIST:
             index_type = "sector"
+        elif universe in self._get_symbol_in_universe():
+            index_type = "symbol"
         else:
             raise InputError(
                 f"{universe} is invalid universe. Please read document to check valid universe."
             )
 
-        df = self._get_symbol_info().set_index("symbol")
+        df = self._get_symbol_info().set_index("symbol", drop=False)
         tds = self._get_trading_dates()
 
         is_uni_dict = (df[index_type].str.upper() == universe).to_dict()
