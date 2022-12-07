@@ -471,7 +471,7 @@ class TestIsUniverse:
         ssc._end_date = "2022-05-01"
 
         # Test
-        result = ssc.is_universe(universe)
+        result = ssc.is_universe([universe])
 
         # Check
         self._check(result)
@@ -496,7 +496,7 @@ class TestIsUniverse:
         ssc._end_date = "2022-05-01"
 
         # Test
-        result = ssc.is_universe(universe)
+        result = ssc.is_universe([universe])
 
         # Check
         self._check(result)
@@ -510,7 +510,7 @@ class TestIsUniverse:
         ssc._end_date = "2010-02-01"
 
         # Test
-        result = ssc.is_universe(universe)
+        result = ssc.is_universe([universe])
 
         # Check
         self._check(result)
@@ -625,7 +625,7 @@ class TestIsUniverse:
         ssc._end_date = "2022-05-01"
 
         # Test
-        result = ssc.is_universe(universe)
+        result = ssc.is_universe([universe])
 
         # Check
         self._check(result)
@@ -634,7 +634,7 @@ class TestIsUniverse:
     @pytest.mark.parametrize("universe", ["", "invalid"])
     def test_invalid_universe(self, ssc: SETSignalCreator, universe: str):
         with pytest.raises(InputError):
-            ssc.is_universe(universe)
+            ssc.is_universe([universe])
 
     @staticmethod
     def _check(result):
