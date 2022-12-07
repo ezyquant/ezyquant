@@ -413,6 +413,7 @@ class TestIsUniverse:
             fld.SECTOR_BANK,
             fld.SECTOR_INSUR,
             fld.SECTOR_AGRI,
+            "AOT",
         ],
     )
     def test_static(self, ssc: SETSignalCreator, universe: str):
@@ -462,6 +463,30 @@ class TestIsUniverse:
 
         # Test
         result = ssc.is_universe([universe])
+
+        # Check
+        self._check(result)
+        assert (result == False).all().all()
+
+    def test_multi_universe(self, ssc: SETSignalCreator):
+        # Mock
+        ssc._index_list = [fld.MARKET_SET, fld.MARKET_MAI.upper()]
+
+        # Test
+        result = ssc.is_universe(["AOT", "BBL"])
+
+        # Check
+        self._check(result)
+        assert result["AOT"].all()
+        assert result["BBL"].all()
+        assert (result["CPF"] == False).all()
+
+    def test_no_universe(self, ssc: SETSignalCreator):
+        # Mock
+        ssc._index_list = [fld.MARKET_SET, fld.MARKET_MAI.upper()]
+
+        # Test
+        result = ssc.is_universe([])
 
         # Check
         self._check(result)

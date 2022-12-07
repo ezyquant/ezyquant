@@ -409,7 +409,7 @@ class SETSignalCreator:
             columns=self._get_symbol_in_universe(),
         )
 
-    @lru_cache(maxsize=128)
+    @lru_cache(maxsize=1)
     def _get_trading_dates(self) -> List[str]:
         end = self._end_date
         if self._end_date == None:
@@ -601,7 +601,9 @@ class SETSignalCreator:
             )
 
         symbol_list = self._get_symbol_in_universe()
-        df = self._get_symbol_info(symbol_list=symbol_list).set_index("symbol", drop=False)
+        df = self._get_symbol_info(symbol_list=symbol_list).set_index(
+            "symbol", drop=False
+        )
         tds = self._get_trading_dates()
 
         is_uni_dict = (df[index_type].str.upper() == universe).to_dict()
