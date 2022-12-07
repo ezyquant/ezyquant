@@ -20,7 +20,7 @@ ssc = SETSignalCreator(
     index_list=["SET100"],
 )
 pe_df = ssc.get_data("pe", "daily")
-pe_df *= ssc.is_universe("SET100")
+pe_df *= ssc.is_universe(["SET100"])
 pe_df = pe_df.replace(0, np.nan)
 
 signal_df = (pe_df.rank(axis=1, method="max") <= 10) / 10.00001

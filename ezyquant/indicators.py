@@ -101,7 +101,7 @@ class TA:
                 window_fast=window_fast,
                 window_sign=window_sign,
                 fillna=fillna,
-            )
+            )  # type: ignore
         )
 
         macd = _apply_t(ind, MACD.macd)
@@ -148,7 +148,7 @@ class TA:
                 close=x,
                 window=window,
                 fillna=fillna,
-            )
+            )  # type: ignore
         )
 
         adx = _apply_t(ind, ADXIndicator.adx)
@@ -196,7 +196,7 @@ class TA:
                 window=window,
                 constant=constant,
                 fillna=fillna,
-            )
+            )  # type: ignore
         )
 
         cci = _apply_t(ind, CCIIndicator.cci)
@@ -250,7 +250,7 @@ class TA:
                 window3=window3,
                 visual=visual,
                 fillna=fillna,
-            )
+            )  # type: ignore
         )
 
         conversion_line = _apply_t(ind, IchimokuIndicator.ichimoku_conversion_line)
@@ -304,7 +304,7 @@ class TA:
                 step=step,
                 max_step=max_step,
                 fillna=fillna,
-            )
+            )  # type: ignore
         )
 
         psar = _apply_t(ind, PSARIndicator.psar)
@@ -342,7 +342,7 @@ class TA:
                 close=x,
                 window=window,
                 fillna=fillna,
-            )
+            )  # type: ignore
         )
 
         rsi = _apply_t(ind, RSIIndicator.rsi)
@@ -390,7 +390,7 @@ class TA:
                 window=window,
                 smooth_window=smooth_window,
                 fillna=fillna,
-            )
+            )  # type: ignore
         )
 
         stoch = _apply_t(ind, StochasticOscillator.stoch)
@@ -425,7 +425,7 @@ class TA:
                 close=x,
                 window=window,
                 fillna=fillna,
-            )
+            )  # type: ignore
         )
 
         roc = _apply_t(ind, ROCIndicator.roc)
@@ -469,7 +469,7 @@ class TA:
                 close=x,
                 window=window,
                 fillna=fillna,
-            )
+            )  # type: ignore
         )
 
         average_true_range = _apply_t(ind, AverageTrueRange.average_true_range)
@@ -519,7 +519,7 @@ class TA:
                 window=window,
                 window_dev=window_dev,
                 fillna=fillna,
-            )
+            )  # type: ignore
         )
 
         hband = _apply_t(ind, BollingerBands.bollinger_hband)
@@ -576,7 +576,7 @@ class TA:
                 window=window,
                 offset=offset,
                 fillna=fillna,
-            )
+            )  # type: ignore
         )
 
         hband = _apply_t(ind, DonchianChannel.donchian_channel_hband)
@@ -649,7 +649,7 @@ class TA:
                 fillna=fillna,
                 original_version=original_version,
                 multiplier=multiplier,
-            )
+            )  # type: ignore
         )
 
         hband = _apply_t(ind, KeltnerChannel.keltner_channel_hband)
