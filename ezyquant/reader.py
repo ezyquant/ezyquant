@@ -170,7 +170,8 @@ class SETDataReader:
         start_has_price_date: Optional[str] = None,
         end_has_price_date: Optional[str] = None,
     ) -> pd.DataFrame:
-        """Data from table SECURITY. Symbol must exist in table DAILY_STOCK_TRADE.
+        """Data from table SECURITY. Symbol must exist in table
+        DAILY_STOCK_TRADE.
 
         Parameters
         ----------
