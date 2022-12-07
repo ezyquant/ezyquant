@@ -53,10 +53,13 @@ loan,loan,float
 loan_from_relatedparty,loan from related party,float
 loan_revenue,loan revenue,float
 loan_to_relatedparty,loan to related party,float
+longterm_liability_currentportion,longterm liability current portion,float
+longterm_liability_net_currentportion,longterm liability net current portion,float
 minority_interest,minority interest,float
 ppe,"property, plant, and equipment",float
 preferred_share,preferred share,float
 retain_earning,retain earning,float
+retain_earning_unappropriate,retain earning unappropriate,float
 short_invest,short invest,float
 total_equity,total equity,float
 change_ppe,change ppe,float
@@ -80,3 +83,4 @@ operating_revenue,operating expense,float
 pl_other_activities,operating revenue,float
 sale,sale,float
 selling_admin,selling admin,float
+selling_admin_exc_renumuration,selling admin exclude remuneration,float
