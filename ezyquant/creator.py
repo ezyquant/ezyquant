@@ -257,13 +257,12 @@ class SETSignalCreator:
 
         return df
 
-    # TODO: rename universe to universes
-    def is_universe(self, universe: List[str]) -> pd.DataFrame:
+    def is_universe(self, universes: List[str]) -> pd.DataFrame:
         """Return Dataframe of boolean is universe.
 
         Parameters
         ----------
-        universe: List[str]
+        universes: List[str]
             Can be list of Sector, Industry, Index or symbols.
 
         Returns
@@ -289,11 +288,11 @@ class SETSignalCreator:
         2022-01-07  True  False
         2022-01-10  True  False
         """
-        universe = [i.upper() for i in universe]
+        universes = [i.upper() for i in universes]
 
         out = self._make_nan_df().fillna(False)
 
-        for i in universe:
+        for i in universes:
             try:
                 out = out | self._is_universe_static(i)
             except InputError:
