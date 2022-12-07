@@ -658,6 +658,7 @@ class SETSignalCreator:
         df.index.name = None
         df.columns.name = None
 
+        # Reindex
         df = self._reindex_trade_date(df, method="ffill", fill_value=0)
         df = self._reindex_columns_symbol(df, fill_value=0)
 
