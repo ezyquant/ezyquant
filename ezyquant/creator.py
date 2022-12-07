@@ -646,10 +646,10 @@ class SETSignalCreator:
         df["-1"] = -1
 
         # pivot_table also drop duplicated index
-        df_hold: pd.DataFrame = df.pivot(
+        df_hold: pd.DataFrame = df.pivot_table(
             index="hold_date", columns="symbol", values="1"
         )
-        df_release: pd.DataFrame = df.pivot(
+        df_release: pd.DataFrame = df.pivot_table(
             index="release_date", columns="symbol", values="-1"
         )
 
