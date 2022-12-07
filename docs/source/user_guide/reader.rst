@@ -60,13 +60,6 @@ GetData with field and timeframe
 
    revenue_fy_df = ssc.get_data("total_revenue", "yearly")
 
-**ตัวอย่าง** การดึงรายได้รวม 12 เดือนล่าสุด
-
-.. code-block::
-
-   revenue_ttm_df = ssc.get_data("total_revenue", "ttm")
-
-
 **ตัวอย่าง** การดึงรายได้รวมถึงรอบบัญชีปีปัจจุบัน
 
 .. code-block::

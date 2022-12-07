@@ -1,4 +1,4 @@
-from functools import lru_cache
+from functools import lru_cache, wraps
 from typing import Dict, List, Optional
 
 import numpy as np
@@ -9,7 +9,7 @@ from . import fields as fld
 from . import utils
 from .errors import InputError
 from .indicators import TA
-from .reader import _SETDataReaderCached
+from .reader import SETDataReader, _SETDataReaderCached
 
 
 class SETSignalCreator:
@@ -77,7 +77,6 @@ class SETSignalCreator:
             - daily
             - quarterly
             - yearly
-            - ttm
             - ytd
         value_by: str = "stock"
             - stock
@@ -226,7 +225,6 @@ class SETSignalCreator:
         elif timeframe in (
             fld.TIMEFRAME_QUARTERLY,
             fld.TIMEFRAME_YEARLY,
-            fld.TIMEFRAME_TTM,
             fld.TIMEFRAME_YTD,
         ):
             if value_by == fld.VALUE_BY_STOCK:
@@ -420,33 +418,33 @@ class SETSignalCreator:
 
     @lru_cache(maxsize=1)
     def _get_symbol_in_universe(self) -> List[str]:
-        out = set()
-        if self._symbol_list:
-            df = self._sdr.get_symbol_info(
-                symbol_list=self._symbol_list, sec_type="S", native="L"
-            )
-            out.update(df["symbol"])
-        if fld.MARKET_SET in self._index_list:
-            df = self._sdr.get_symbol_info(
-                market=fld.MARKET_SET, sec_type="S", native="L"
-            )
-            out.update(df["symbol"])
-        if fld.MARKET_MAI.upper() in self._index_list:
-            df = self._sdr.get_symbol_info(
-                market=fld.MARKET_MAI, sec_type="S", native="L"
-            )
-            out.update(df["symbol"])
-
+        symbols = set()
         index_list = [i for i in self._index_list if i not in (fld.MARKET_MAP_UPPER)]
         for i in index_list:
             df = self._get_symbols_by_index(i)
-            out.update(df["symbol"])
+            symbols.update(df["symbol"])
 
-        return sorted(list(out))
+        if fld.MARKET_SET in self._index_list:
+            df = self._get_symbol_info(market=fld.MARKET_SET)
+            symbols.update(df["symbol"])
+        if fld.MARKET_MAI.upper() in self._index_list:
+            df = self._get_symbol_info(market=fld.MARKET_MAI)
+            symbols.update(df["symbol"])
 
-    def _get_symbol_info(self) -> pd.DataFrame:
-        s = self._get_symbol_in_universe()
-        return self._sdr.get_symbol_info(symbol_list=s, sec_type="S", native="L")
+        df = self._get_symbol_info(symbol_list=list(symbols | set(self._symbol_list)))
+
+        return sorted(df["symbol"].to_list())
+
+    @wraps(SETDataReader.get_symbol_info)
+    def _get_symbol_info(self, *args, **kwargs) -> pd.DataFrame:
+        return self._sdr.get_symbol_info(
+            *args,
+            **kwargs,
+            sec_type="S",
+            native="L",
+            start_has_price_date=self._start_date,
+            end_has_price_date=self._end_date,
+        )
 
     def _reindex_trade_date(self, df: pd.DataFrame, **kwargs) -> pd.DataFrame:
         td = self._get_trading_dates()
@@ -502,7 +500,7 @@ class SETSignalCreator:
 
         return series
 
-    @lru_cache(maxsize=128)
+    @lru_cache(maxsize=1)
     def _get_start_as_of_security_index(self) -> Dict[str, str]:
         out = self._sdr._get_last_as_of_date_in_security_index(
             current_date=self._start_date
@@ -602,7 +600,8 @@ class SETSignalCreator:
                 f"{universe} is invalid universe. Please read document to check valid universe."
             )
 
-        df = self._get_symbol_info().set_index("symbol", drop=False)
+        symbol_list = self._get_symbol_in_universe()
+        df = self._get_symbol_info(symbol_list=symbol_list).set_index("symbol", drop=False)
         tds = self._get_trading_dates()
 
         is_uni_dict = (df[index_type].str.upper() == universe).to_dict()

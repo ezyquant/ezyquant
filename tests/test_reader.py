@@ -1333,12 +1333,21 @@ class TestGetDataSymbolQuarterly:
             ),
             (fld.Q_GROSS_PROFIT_MARGIN, [-float("nan")] * 4),
             # Balance Sheet
-            (fld.Q_CASH, [233127550.0, 231865550.0, 185736074.0, 168533280.0]),
+            (
+                fld.Q_CASH,
+                [233127550000.0, 231865550000.0, 185736074000.0, 168533280000.0],
+            ),
             # Income Statement
-            (fld.Q_TOTAL_REVENUE, [22019850.0, 21069316.0, 19970220.0, 19727090.0]),
-            (fld.Q_COS, [5073409.0, 4767026.0, 4651329.0, 4499566.0]),
+            (
+                fld.Q_TOTAL_REVENUE,
+                [22019850000.0, 21069316000.0, 19970220000.0, 19727090000.0],
+            ),
+            (fld.Q_COS, [5073409000.0, 4767026000.0, 4651329000.0, 4499566000.0]),
             # Cashflow Statement
-            (fld.Q_NET_CASH_FLOW, [3042325.0, -3732755.0, -2142246.0, -1378998.0]),
+            (
+                fld.Q_NET_CASH_FLOW,
+                [3042325000.0, -3732755000.0, -2142246000.0, -1378998000.0],
+            ),
         ],
     )
     def test_field_with_expected(
@@ -1423,12 +1432,12 @@ class TestGetDataSymbolYearly:
             (fld.Q_ROA, [1.6829434061191892]),
             (fld.Q_GROSS_PROFIT_MARGIN, [-float("nan")]),
             # Balance Sheet
-            (fld.Q_CASH, [233127550.0]),
+            (fld.Q_CASH, [233127550000.0]),
             # Income Statement
-            (fld.Q_TOTAL_REVENUE, [89885610.0]),
-            (fld.Q_COS, [23861086.0]),
+            (fld.Q_TOTAL_REVENUE, [89885610000.0]),
+            (fld.Q_COS, [23861086000.0]),
             # Cashflow Statement
-            (fld.Q_NET_CASH_FLOW, [-1889251.0]),
+            (fld.Q_NET_CASH_FLOW, [-1889251000.0]),
         ],
     )
     def test_field_with_expected(
@@ -1474,82 +1483,6 @@ class TestGetDataSymbolYearly:
         assert result.empty
 
 
-class TestGetDataSymbolTtm:
-    _check = staticmethod(vld.check_df_symbol_daily)
-
-    @pytest.mark.parametrize(
-        "field",
-        [
-            fld.Q_TOTAL_ASSET,  # Balance Sheet
-            fld.Q_EBITDA,  # Income Statement
-            fld.Q_NET_FINANCING,  # Cashflow Statement
-        ],
-    )
-    def test_field(self, sdr: SETDataReader, field: str):
-        symbol_list = ["TTB"]
-        start_date = "2021-03-01"
-        end_date = "2021-11-12"
-
-        # Test
-        result = sdr.get_data_symbol_ttm(
-            field=field,
-            symbol_list=symbol_list,
-            start_date=start_date,
-            end_date=end_date,
-        )
-
-        # Check
-        self._check(result)
-
-        assert not result.empty
-
-    @pytest.mark.parametrize(
-        ["field", "expected_list"],
-        [
-            # Income Statement
-            (fld.Q_TOTAL_REVENUE, [89885610.0, 86495188.0, 84669125.0, 82786475.0]),
-            (fld.Q_COS, [23861086.0, 21442714.0, 19895590.0, 18991330.0]),
-            # Cashflow Statement
-            (fld.Q_NET_CASH_FLOW, [-1889251.0, -2540135.0, -1985902.0, -4211674.0]),
-        ],
-    )
-    def test_field_with_expected(
-        self, sdr: SETDataReader, field: str, expected_list: List[float]
-    ):
-        symbol = "TTB"
-        start_date = "2021-03-01"
-        end_date = "2021-11-12"
-
-        # Test
-        result = sdr.get_data_symbol_ttm(
-            field=field,
-            symbol_list=[symbol],
-            start_date=start_date,
-            end_date=end_date,
-        )
-
-        # Check
-        self._check(result)
-
-        expected = pd.DataFrame(
-            {symbol: expected_list},
-            index=pd.DatetimeIndex(
-                ["2021-03-01", "2021-05-13", "2021-08-27", "2021-11-12"]
-            ),
-        )
-
-        assert_frame_equal(result, expected)
-
-    @pytest.mark.parametrize("field", [fld.Q_TOTAL_REVENUE, fld.Q_NET_CASH_FLOW])
-    def test_empty(self, sdr: SETDataReader, field: str):
-        # Test
-        result = sdr.get_data_symbol_ttm(field=field, symbol_list=[])
-
-        # Check
-        self._check(result)
-        assert result.empty
-
-
 class TestGetDataSymbolYtd:
     _check = staticmethod(vld.check_df_symbol_daily)
 
@@ -1584,10 +1517,16 @@ class TestGetDataSymbolYtd:
         ["field", "expected_list"],
         [
             # Income Statement
-            (fld.Q_TOTAL_REVENUE, [89885610.0, 21069316.0, 41039535.0, 60766625.0]),
-            (fld.Q_COS, [23861086.0, 4767026.0, 9418355.0, 13917921.0]),
+            (
+                fld.Q_TOTAL_REVENUE,
+                [89885610000.0, 21069316000.0, 41039535000.0, 60766625000.0],
+            ),
+            (fld.Q_COS, [23861086000.0, 4767026000.0, 9418355000.0, 13917921000.0]),
             # Cashflow Statement
-            (fld.Q_NET_CASH_FLOW, [-1889251.0, -3732755.0, -5875001.0, -7253999.0]),
+            (
+                fld.Q_NET_CASH_FLOW,
+                [-1889251000.0, -3732755000.0, -5875001000.0, -7253999000.0],
+            ),
         ],
     )
     def test_field_with_expected(
