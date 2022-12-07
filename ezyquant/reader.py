@@ -1104,7 +1104,8 @@ class SETDataReader:
         """Data from tables FINANCIAL_STAT_STD and FINANCIAL_SCREEN.If field is
         in both table, the data from FINANCIAL_STAT_STD will be used.
 
-        FINANCIAL_STAT_STD using data from column M_ACCOUNT. FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and I_PERIOD in ('Q1','Q2','Q3','Q4').
+        FINANCIAL_STAT_STD using data from column M_ACCOUNT multiply 1000.
+        FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and I_PERIOD in ('Q1','Q2','Q3','Q4').
 
         Index date is the trading date (DAILY_STOCK_STAT.D_TRADE). Data is showing at first trade date which join on D_AS_OF.
 
@@ -1244,7 +1245,8 @@ class SETDataReader:
         """Data from table FINANCIAL_STAT_STD and FINANCIAL_SCREEN. If field is
         in both table, the data from FINANCIAL_STAT_STD will be used.
 
-        FINANCIAL_STAT_STD filter by "I_QUARTER"='9' and using data from column M_ACCOUNT. FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and I_PERIOD='YE'.
+        FINANCIAL_STAT_STD filter by "I_QUARTER"='9' and using data from column M_ACCOUNT multiply 1000.
+        FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and I_PERIOD='YE'.
 
         Index date is trade date (DAILY_STOCK_STAT.D_TRADE). Data is showing at first trade date which join on D_AS_OF.
 
@@ -1386,7 +1388,8 @@ class SETDataReader:
 
         Data from table FINANCIAL_STAT_STD and FINANCIAL_SCREEN. If field is in both table, the data from FINANCIAL_STAT_STD will be used.
 
-        FINANCIAL_STAT_STD using data from column M_ACC_ACCOUNT. FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and I_PERIOD in ('Q1','6M','9M','YE').
+        FINANCIAL_STAT_STD using data from column M_ACC_ACCOUNT multiply 1000.
+        FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and I_PERIOD in ('Q1','6M','9M','YE').
 
         Index date is trade date (DAILY_STOCK_STAT.D_TRADE). Data is showing at first DAILY_STOCK_STAT.D_TRADE which join on D_AS_OF.
 
@@ -2077,6 +2080,8 @@ class SETDataReader:
             value_column = financial_stat_std_t.c["M_ACC_ACCOUNT"]
         else:
             raise ValueError(f"{timeframe} is not a valid timeframe")
+
+        value_column *= 1000  # Database stores in thousands bath
 
         stmt = (
             select(
