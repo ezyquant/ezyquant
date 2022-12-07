@@ -407,7 +407,7 @@ class SETSignalCreator:
         """
         return pd.DataFrame(
             np.nan,
-            index=self._get_trading_dates(),
+            index=pd.DatetimeIndex(self._get_trading_dates()),
             columns=self._get_symbol_in_universe(),
         )
 
