@@ -261,7 +261,7 @@ class SETSignalCreator:
         Parameters
         ----------
         universes: List[str]
-            Can be list of Sector, Industry, Index or symbols.
+            Can be list of Sector, Industry, Index or symbol.
 
         Returns
         -------
