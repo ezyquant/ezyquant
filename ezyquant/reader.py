@@ -168,7 +168,7 @@ class SETDataReader:
         sec_type: Optional[str] = None,
         native: Optional[str] = None,
     ) -> pd.DataFrame:
-        """Data from table SECURITY. Filter out securities without ISIN.
+        """Data from table SECURITY.
 
         Parameters
         ----------
@@ -253,8 +253,6 @@ class SETDataReader:
             .select_from(j)
             .order_by(security_t.c.I_SECURITY)
         )
-
-        stmt = stmt.where(func.trim(security_t.c.I_ISIN) != "")
 
         stmt = self._filter_str_in_list(
             stmt=stmt, column=security_t.c.N_SECURITY, values=symbol_list
