@@ -4,7 +4,7 @@ from unittest.mock import ANY, Mock
 import pandas as pd
 import pytest
 from numpy import inf, nan
-from pandas.testing import assert_frame_equal, assert_index_equal, assert_series_equal
+from pandas.testing import assert_frame_equal, assert_series_equal
 
 import ezyquant.fields as fld
 from ezyquant import SETSignalCreator
@@ -130,7 +130,7 @@ class TestGetData:
             "KKP",
             "KTB",
             "LHFG",
-            "SCB",
+            "SCBB",
             "TCAP",
             "TISCO",
             "TTB",
@@ -376,55 +376,6 @@ class TestGetData:
         self._check(result)
 
         assert result.empty
-
-    @pytest.mark.parametrize(
-        ("field", "timeframe", "value_by"),
-        [
-            (fld.D_CLOSE, fld.TIMEFRAME_DAILY, fld.VALUE_BY_STOCK),
-            (fld.D_PE, fld.TIMEFRAME_DAILY, fld.VALUE_BY_STOCK),
-            (fld.Q_EBITDA, fld.TIMEFRAME_QUARTERLY, fld.VALUE_BY_STOCK),
-        ],
-    )
-    @pytest.mark.parametrize("shift", [0, 1, 999])
-    @pytest.mark.parametrize(
-        ("method", "period"),
-        [
-            (fld.METHOD_CONSTANT, 1),
-            (fld.METHOD_MEAN, 1),
-            (fld.METHOD_MEAN, 2),
-            (fld.METHOD_MEAN, 999),
-        ],
-    )
-    def test_reindex_column(
-        self,
-        ssc: SETSignalCreator,
-        field: str,
-        timeframe: str,
-        value_by: str,
-        method: str,
-        period: int,
-        shift: int,
-    ):
-        # Mock
-        ssc._start_date = "2010-01-01"
-        ssc._end_date = "2010-01-31"
-        ssc._symbol_list = ["OR"]
-
-        # Test
-        result = ssc.get_data(
-            field=field,
-            timeframe=timeframe,
-            value_by=value_by,
-            method=method,
-            period=period,
-            shift=shift,
-        )
-
-        # Check
-        self._check(result)
-
-        assert_index_equal(result.columns, pd.Index(["OR"]))
-        assert result.isnull().values.all()
 
 
 IDX_2022_04_01_TO_2022_04_29 = pd.DatetimeIndex(
@@ -719,8 +670,6 @@ class TestIsBanned:
             ("THAI", "2022-01-01", "2022-02-01", True),
             ("SCBB", "2022-01-01", "2022-02-01", False),
             ("SCBB", "2022-04-26", "2022-04-26", False),
-            ("SCBB", "2022-04-27", "2022-04-27", True),
-            ("SCBB", "2022-05-01", "2022-06-01", True),
             ("EARTH", "2017-01-01", "2017-02-01", False),
             ("EARTH", "2017-06-14", "2017-06-14", False),
             ("EARTH", "2017-06-15", "2017-06-15", True),
@@ -749,6 +698,27 @@ class TestIsBanned:
         self._check(result)
 
         assert (result[symbol] == expect).all()
+
+    def test_scbb_delist(self, ssc: SETSignalCreator):
+        """SCBB delist on 2022-04-27 (2022-04-26 can trade)."""
+        # Mock
+        ssc._symbol_list = ["SCBB"]
+        ssc._start_date = "2022-04-26"
+        ssc._end_date = "2022-04-27"
+
+        # Test
+        result = ssc.is_banned()
+
+        # Check
+        self._check(result)
+
+        assert_frame_equal(
+            result,
+            pd.DataFrame(
+                {"SCBB": [False, True]},
+                index=pd.DatetimeIndex(["2022-04-26", "2022-04-27"]),
+            ),
+        )
 
 
 class TestIsBannedSp:
