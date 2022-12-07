@@ -167,8 +167,10 @@ class SETDataReader:
         sector: Optional[str] = None,
         sec_type: Optional[str] = None,
         native: Optional[str] = None,
+        start_has_price_date: Optional[str] = None,
+        end_has_price_date: Optional[str] = None,
     ) -> pd.DataFrame:
-        """Data from table SECURITY.
+        """Data from table SECURITY. Symbol must exist in table DAILY_STOCK_TRADE.
 
         Parameters
         ----------
@@ -206,6 +208,10 @@ class SETDataReader:
                 - F: Foreign
                 - U: Thai Trust Fund
                 - R: NVDR
+        start_has_price_date: Optional[str] = None
+            start of D_TRADE in DAILY_STOCK_TRADE.
+        end_has_price_date: Optional[str] = None
+            end of D_TRADE in DAILY_STOCK_TRADE.
 
         Returns
         -------
@@ -236,6 +242,7 @@ class SETDataReader:
         """
         security_t = self._table("SECURITY")
         sector_t = self._table("SECTOR")
+        daily_stock_t = self._table("DAILY_STOCK_TRADE")
 
         j = self._join_sector_table(security_t, isouter=True)
         stmt = (
@@ -272,6 +279,15 @@ class SETDataReader:
         if native != None:
             native = native.upper()
             stmt = stmt.where(security_t.c.I_NATIVE == native)
+
+        subq = select([daily_stock_t.c.I_SECURITY]).distinct()
+        subq = self._filter_stmt_by_date(
+            stmt=subq,
+            column=daily_stock_t.c.D_TRADE,
+            start_date=start_has_price_date,
+            end_date=end_has_price_date,
+        )
+        stmt = stmt.where(security_t.c.I_SECURITY.in_(subq))
 
         df = self._read_sql_query(stmt)
 
