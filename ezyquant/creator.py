@@ -638,30 +638,30 @@ class SETSignalCreator:
             sign_list=["SP"],
         )
 
-        tds = self._get_trading_dates()
-        df = df.fillna({"release_date": pd.Timestamp(tds[-1]) + pd.Timedelta(days=1)})
+        # hold_date and release_date can be with time
+        df["hold_date"] = df["hold_date"].dt.normalize()
+        df["release_date"] = df["release_date"].dt.normalize()
 
-        # closed="left" because at hold date is not tradable but release date is tradable
-        df["date_range"] = df.apply(
-            lambda x: pd.bdate_range(
-                start=x["hold_date"], end=x["release_date"], closed="left"
-            ),  # type: ignore
-            axis=1,
-            result_type="reduce",
+        df["1"] = 1
+        df["-1"] = -1
+
+        # pivot_table also drop duplicated index
+        df_hold: pd.DataFrame = df.pivot(
+            index="hold_date", columns="symbol", values="1"
         )
-        date_range_group = df.groupby("symbol")["date_range"].apply(
-            lambda x: utils.union_datetime_index(x)
+        df_release: pd.DataFrame = df.pivot(
+            index="release_date", columns="symbol", values="-1"
         )
 
-        out = pd.DataFrame(
-            [pd.Series(True, index=v, name=k) for k, v in date_range_group.items()]
-        ).T
+        df = df_hold.add(df_release, fill_value=0).cumsum()
 
-        # Reindex
-        out = self._reindex_trade_date(out, fill_value=False)
-        out = self._reindex_columns_symbol(out, fill_value=False)
+        df.index.name = None
+        df.columns.name = None
 
-        return out
+        df = self._reindex_trade_date(df, method="ffill", fill_value=0)
+        df = self._reindex_columns_symbol(df, fill_value=0)
+
+        return df > 0
 
     """
     Static methods
