@@ -20,11 +20,16 @@ ssc = SETSignalCreator(
     index_list=["SET100"],
 )
 pe_df = ssc.get_data("pe", "daily")
-pe_df *= ssc.is_universe(["SET100"])
+
+# filter signal by universe and banned
+pe_df *= ssc.is_universe(["SET100"]) * ssc.is_banned()
+
 pe_df = pe_df.replace(0, np.nan)
 
+# rank top 10% of pe
 signal_df = (pe_df.rank(axis=1, method="max") <= 10) / 10.00001
 
+# drop nan columns (no signal) for faster backtest
 signal_df = signal_df.dropna(axis=1, how="all")
 
 
@@ -42,7 +47,6 @@ result = backtest(
     end_date=end_date,
     initial_cash=initial_cash,
     pct_commission=0.25,
-    signal_delay_bar=1,
 )
 
 print(result.stat_df)
