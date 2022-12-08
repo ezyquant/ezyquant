@@ -38,9 +38,10 @@ Step 1: Create Signal Dataframe
     ema100 = ssc.ta.ema(df_close, 100)
     signal_df = ema20 > ema100
 
-
 Step 2: Create Backtest Algorithm
 ---------------------------------
+
+.. currentmodule:: ezyquant.backtesting.context
 
 ขั้นตอนต่อไปเป็นการเขียน Backtest Algorithm โดยจะต้อง return จำนวนหุ้นที่ต้องการซื้อขาย
 
@@ -48,9 +49,7 @@ Step 2: Create Backtest Algorithm
 
 อย่างเช่น return 400 แปลว่าซื้อเพิ่ม 400 หุ้น หรือ return -500 แปลว่าขายออก 500 หุ้น
 
-การรับค่ามาใช้งานให้รับจาก Context ซึ่งมี attribute และ method ตามนี้
-
-.. currentmodule:: ezyquant.backtesting.context
+การรับค่ามาใช้งานให้รับจาก :py:class:`Context` ซึ่งมี attribute และ method ตามนี้
 
 **Attribute**
 
@@ -109,7 +108,9 @@ Step 2: Create Backtest Algorithm
 Step 3: Run Backtesting
 -----------------------
 
-หลังจากที่ได้ signal และ backtest algorithm แล้วให้นำมาใส่ฟังก์ชั่น **backtest**
+.. currentmodule:: ezyquant.backtesting.backtesting
+
+หลังจากที่ได้ signal และ backtest algorithm แล้วให้นำมาใส่ฟังก์ชั่น :py:func:`backtest`
 
 Parameters
     * *signal_df: pd.DataFrame*

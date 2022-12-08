@@ -1,10 +1,11 @@
 Data Reader
 ===========
 
+.. currentmodule:: ezyquant.creator
 
 Initialize
 ----------
-เริ่มต้นใช้งานได้โดยตั้งค่าผ่าน **SETSignalCreator**
+เริ่มต้นใช้งานได้โดยตั้งค่าผ่าน :py:class:`SETSignalCreator`
 
 Parameters
    * *start_date : str format [yyyy-mm-dd]*
@@ -26,8 +27,7 @@ Parameters
 
 GetData
 -------
-
-การดึงข้อมูลจะต้องดึงผ่านฟังก์ชั่น **get_data**
+การดึงข้อมูลจะต้องดึงผ่านฟังก์ชั่น :py:meth:`SETSignalCreator.get_data`
 
 Parameters
     * *field: str*
