@@ -38,9 +38,10 @@ Step 1: Create Signal Dataframe
     ema100 = ssc.ta.ema(df_close, 100)
     signal_df = ema20 > ema100
 
-
 Step 2: Create Backtest Algorithm
 ---------------------------------
+
+.. currentmodule:: ezyquant.backtesting.context
 
 ขั้นตอนต่อไปเป็นการเขียน Backtest Algorithm โดยจะต้อง return จำนวนหุ้นที่ต้องการซื้อขาย
 
@@ -48,24 +49,33 @@ Step 2: Create Backtest Algorithm
 
 อย่างเช่น return 400 แปลว่าซื้อเพิ่ม 400 หุ้น หรือ return -500 แปลว่าขายออก 500 หุ้น
 
-การรับค่ามาใช้งานให้รับจาก Context ซึ่งมี attribute และ method ตามนี้
+การรับค่ามาใช้งานให้รับจาก :py:class:`Context` ซึ่งมี attribute และ method ตามนี้
 
-**attribute**
+**Attribute**
 
-.. csv-table::
-   :file: ../_static/backtest_context_attribute.csv
-   :widths: 30, 70
-   :header-rows: 1
+.. autosummary::
+    Context.cash
+    Context.close_price
+    Context.cost_price
+    Context.port_value
+    Context.signal
+    Context.symbol
+    Context.total_cost_value
+    Context.total_market_value
+    Context.volume
+    Context.ts
 
-**method**
+**Method**
 
-method ต่อไปนี้จะเป็นการคำนวนจำนวนหุ้นที่ต้องการซื้อขายให้แบบสำเร็จรูป สามารถคืนค่าที่คำนวนได้เลย
-
-.. csv-table::
-   :file: ../_static/backtest_context_method.csv
-   :widths: 30, 70
-   :header-rows: 1
-
+.. autosummary::
+    Context.buy_pct_port
+    Context.buy_pct_position
+    Context.buy_value
+    Context.sell_pct_port
+    Context.sell_pct_position
+    Context.sell_value
+    Context.target_pct_port
+    Context.target_value
 
 **ตัวอย่าง** การสร้าง backtest_algorithm ที่เมื่อใด signal เป็น True ให้ถือ 20% ของพอร์ต และเป็น False ให้ขายทิ้งทั้งหมด
 
@@ -98,7 +108,9 @@ method ต่อไปนี้จะเป็นการคำนวนจำ�
 Step 3: Run Backtesting
 -----------------------
 
-หลังจากที่ได้ signal และ backtest algorithm แล้วให้นำมาใส่ฟังก์ชั่น **backtest**
+.. currentmodule:: ezyquant.backtesting.backtesting
+
+หลังจากที่ได้ signal และ backtest algorithm แล้วให้นำมาใส่ฟังก์ชั่น :py:func:`backtest`
 
 Parameters
     * *signal_df: pd.DataFrame*
