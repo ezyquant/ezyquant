@@ -67,6 +67,8 @@ class SETSignalCreator:
         """Return DataFrame which columns are symbols and index is the trading
         date start from start_date to end_date.
 
+        OHLCV fillna with prior value.
+
         Parameters
         ----------
         field: str
