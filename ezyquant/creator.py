@@ -11,6 +11,8 @@ from .errors import InputError
 from .indicators import TA
 from .reader import _SETDataReaderCached
 
+MethodType = Optional[Literal["backfill", "bfill", "ffill", "pad"]]
+
 
 class SETSignalCreator:
     ta = TA
@@ -424,9 +426,34 @@ class SETSignalCreator:
         s = self._get_symbol_in_universe()
         return self._sdr.get_symbol_info(symbol_list=s, sec_type="S", native="L")
 
-    def _reindex_trade_date(self, df: pd.DataFrame, **kwargs) -> pd.DataFrame:
+    def _reindex(
+        self, df: pd.DataFrame, method: MethodType = None, fill_value=None
+    ) -> pd.DataFrame:
+        """Reindex dataframe to trading date and symbol.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            dataframe to reindex
+        method : MethodType
+            Method to use for filling holes in reindexed DataFrame
+        fill_value : Any
+            Value to use for missing values. Defaults to NaN, but can be any "compatible" value.
+
+        Returns
+        -------
+        pd.DataFrame
+            Dataframe with trading date and symbol as index and columns.
+        """
+        df = self._reindex_trade_date(df, method=method, fill_value=fill_value)
+        df = self._reindex_columns_symbol(df, fill_value=fill_value)
+        return df
+
+    def _reindex_trade_date(
+        self, df: pd.DataFrame, method: MethodType = None, fill_value=None
+    ) -> pd.DataFrame:
         td = self._get_trading_dates()
-        return self._reindex_date(df=df, index=td, **kwargs)
+        return self._reindex_date(df=df, index=td, method=method, fill_value=fill_value)
 
     def _reindex_columns_symbol(
         self, df: pd.DataFrame, fill_value=None
@@ -604,8 +631,7 @@ class SETSignalCreator:
         df = df.notna()
 
         # Reindex
-        df = self._reindex_trade_date(df, method="ffill", fill_value=False)
-        df = self._reindex_columns_symbol(df, fill_value=False)
+        df = self._reindex(df, method="ffill", fill_value=False)
 
         return df
 
@@ -623,27 +649,30 @@ class SETSignalCreator:
         )
 
         # Reindex
-        df = self._reindex_trade_date(df, method="ffill", fill_value=False)
-        df = self._reindex_columns_symbol(df, fill_value=False)
+        df = self._reindex(df, method="ffill", fill_value=False)
 
         return df
 
     def _is_banned_sp(self) -> pd.DataFrame:
+        # get symbol in universe
         symbol_list = self._get_symbol_in_universe()
 
+        # get sign posting data
         df = self._sdr.get_sign_posting(
             symbol_list=symbol_list,
             end_date=self._end_date,
             sign_list=["SP"],
         )
 
-        # hold_date and release_date can be with time
+        # normalize hold_date and release_date
         df["hold_date"] = df["hold_date"].dt.normalize()
         df["release_date"] = df["release_date"].dt.normalize()
 
+        # create dataframe with 1 and -1
         df["1"] = 1
         df["-1"] = -1
 
+        # create dataframe with hold_date and release_date
         # pivot_table also drop duplicated index
         df_hold: pd.DataFrame = df.pivot_table(
             index="hold_date", columns="symbol", values="1"
@@ -652,15 +681,17 @@ class SETSignalCreator:
             index="release_date", columns="symbol", values="-1"
         )
 
+        # create dataframe with cumsum
         df = df_hold.add(df_release, fill_value=0).cumsum()
 
+        # set index and column name
         df.index.name = None
         df.columns.name = None
 
-        # Reindex
-        df = self._reindex_trade_date(df, method="ffill", fill_value=0)
-        df = self._reindex_columns_symbol(df, fill_value=0)
+        # reindex trade date and reindex columns symbol
+        df = self._reindex(df, method="ffill", fill_value=0)
 
+        # return dataframe with cumulative sum > 0
         return df > 0
 
     """
@@ -671,7 +702,7 @@ class SETSignalCreator:
     def _reindex_date(
         df: pd.DataFrame,
         index,
-        method: Optional[Literal["backfill", "bfill", "ffill", "pad"]] = None,
+        method: MethodType = None,
         fill_value=None,
     ) -> pd.DataFrame:
         """Reindex and fillna with method and fill_value."""
