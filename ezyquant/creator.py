@@ -45,6 +45,16 @@ class SETSignalCreator:
                 - SET50
         symbol_list: List[str] = []
             List of symbol.
+
+        Examples
+        --------
+        >>> from ezyquant import SETSignalCreator
+        >>> ssc = SETSignalCreator(
+        ...     start_date="2022-01-01",
+        ...     end_date="2022-01-10",
+        ...     index_list=["SET100"],
+        ...     symbol_list=["NETBAY"],
+        ... )
         """
         self._index_list: List[str] = [i.upper() for i in index_list]
         self._symbol_list: List[str] = [i.upper() for i in symbol_list]

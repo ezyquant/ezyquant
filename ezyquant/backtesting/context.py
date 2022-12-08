@@ -13,16 +13,26 @@ class Context:
     """
 
     ts: pd.Timestamp
+    """Current timestamp"""
     symbol: str = ""
+    """Selected symbol"""
     signal: Any = nan
+    """Signal"""
     close_price: float = nan
+    """Close price"""
     volume: float = nan
+    """Current Volume"""
     cost_price: float = nan
+    """Cost price"""
 
     cash: float = nan
+    """Available cash"""
     total_cost_value: float = nan
+    """Sum of all stock market value in portfolio"""
     total_market_value: float = nan
+    """Sum of all stock cost value in portfolio"""
     port_value: float = nan
+    """Total portfolio value"""
 
     def buy_pct_port(self, pct_port: float) -> float:
         """Calculate buy volume from the percentage of the portfolio.

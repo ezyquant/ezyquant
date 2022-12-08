@@ -50,22 +50,33 @@ Step 2: Create Backtest Algorithm
 
 การรับค่ามาใช้งานให้รับจาก Context ซึ่งมี attribute และ method ตามนี้
 
-**attribute**
+.. currentmodule:: ezyquant.backtesting.context
 
-.. csv-table::
-   :file: ../_static/backtest_context_attribute.csv
-   :widths: 30, 70
-   :header-rows: 1
+**Attribute**
 
-**method**
+.. autosummary::
+    Context.cash
+    Context.close_price
+    Context.cost_price
+    Context.port_value
+    Context.signal
+    Context.symbol
+    Context.total_cost_value
+    Context.total_market_value
+    Context.volume
+    Context.ts
 
-method ต่อไปนี้จะเป็นการคำนวนจำนวนหุ้นที่ต้องการซื้อขายให้แบบสำเร็จรูป สามารถคืนค่าที่คำนวนได้เลย
+**Method**
 
-.. csv-table::
-   :file: ../_static/backtest_context_method.csv
-   :widths: 30, 70
-   :header-rows: 1
-
+.. autosummary::
+    Context.buy_pct_port
+    Context.buy_pct_position
+    Context.buy_value
+    Context.sell_pct_port
+    Context.sell_pct_position
+    Context.sell_value
+    Context.target_pct_port
+    Context.target_value
 
 **ตัวอย่าง** การสร้าง backtest_algorithm ที่เมื่อใด signal เป็น True ให้ถือ 20% ของพอร์ต และเป็น False ให้ขายทิ้งทั้งหมด
 
