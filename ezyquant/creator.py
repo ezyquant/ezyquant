@@ -654,7 +654,7 @@ class SETSignalCreator:
         return df
 
     def _is_banned_sp(self) -> pd.DataFrame:
-        # get symbol in universe
+        # get symbol list
         symbol_list = self._get_symbol_in_universe()
 
         # get sign posting data
@@ -664,15 +664,14 @@ class SETSignalCreator:
             sign_list=["SP"],
         )
 
-        # normalize hold_date and release_date
+        # normalize date time to midnight
         df["hold_date"] = df["hold_date"].dt.normalize()
         df["release_date"] = df["release_date"].dt.normalize()
 
-        # create dataframe with 1 and -1
+        # prepare for pivot table
         df["1"] = 1
         df["-1"] = -1
 
-        # create dataframe with hold_date and release_date
         # pivot_table also drop duplicated index
         df_hold: pd.DataFrame = df.pivot_table(
             index="hold_date", columns="symbol", values="1"
@@ -681,17 +680,16 @@ class SETSignalCreator:
             index="release_date", columns="symbol", values="-1"
         )
 
-        # create dataframe with cumsum
+        # merge hold and release dataframe and cumsum
         df = df_hold.add(df_release, fill_value=0).cumsum()
 
-        # set index and column name
-        df.index.name = None
+        # remove multi-index column
         df.columns.name = None
 
-        # reindex trade date and reindex columns symbol
+        # reindex dataframe
         df = self._reindex(df, method="ffill", fill_value=0)
 
-        # return dataframe with cumulative sum > 0
+        # return boolean dataframe
         return df > 0
 
     """
