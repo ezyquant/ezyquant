@@ -17,7 +17,11 @@ from . import utils
 from . import validators as vld
 from .errors import InputError
 
-warnings.filterwarnings("ignore", category=PerformanceWarning)
+warnings.filterwarnings(
+    "ignore",
+    message="Non-vectorized DateOffset being applied to Series or DatetimeIndex.",
+    category=PerformanceWarning,
+)
 
 TRADE_DATE = "trade_date"
 NAME = "name"
@@ -2332,21 +2336,14 @@ class SETDataReader:
     """
 
     @lru_cache(maxsize=128)
-    def _get_holidays(self) -> List[pd.Timestamp]:
+    def _get_holidays(self) -> List[str]:
         tds = self.get_trading_dates()
-        return (
-            pd.concat(
-                [
-                    pd.bdate_range(tds[0], tds[-1]).to_series(),
-                    pd.DatetimeIndex(tds).to_series(),
-                ]
-            )
-            .drop_duplicates(keep=False)
-            .tolist()
-        )
+        bds = pd.bdate_range(tds[0], tds[-1]).strftime("%Y-%m-%d")
+        return list(set(bds) - set(tds))
 
     def _SETBusinessDay(self, n: int = 1) -> CustomBusinessDay:
-        return CustomBusinessDay(n, holidays=self._get_holidays())
+        holidays = self._get_holidays()
+        return CustomBusinessDay(n, normalize=True, holidays=holidays)
 
     """
     Static methods

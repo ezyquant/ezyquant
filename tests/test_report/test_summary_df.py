@@ -156,7 +156,7 @@ class TestSummaryDf:
             position_df=pd.DataFrame(),
             trade_df=pd.DataFrame(),
         )
-        sbr._sdr.get_trading_dates = Mock(return_value=utils.make_bdate_range())
+        sbr._sdr.get_trading_dates = Mock(return_value=utils.make_trading_dates())
 
         # Test
         with patch(
@@ -203,6 +203,6 @@ def _check_summary_df(df):
     assert (df["cumulative_dividend"] >= 0).all()
     assert (df["commission"] >= 0).all()
 
-    assert df["cumulative_dividend"].is_monotonic
+    assert df["cumulative_dividend"].is_monotonic_increasing
 
     assert not df.empty

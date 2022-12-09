@@ -26,7 +26,7 @@ class TestDividendDf:
         # Mock
         sbr = _make_empty_backtest_report()
         sbr._sdr.get_dividend = Mock(return_value=dividend_df)
-        sbr._sdr.get_trading_dates = Mock(return_value=utils.make_bdate_range())
+        sbr._sdr.get_trading_dates = Mock(return_value=utils.make_trading_dates())
 
         # Test
         with patch(
