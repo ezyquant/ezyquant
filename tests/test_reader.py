@@ -1483,6 +1483,88 @@ class TestGetDataSymbolYearly:
         assert result.empty
 
 
+class TestGetDataSymbolTtm:
+    _check = staticmethod(vld.check_df_symbol_daily)
+
+    @pytest.mark.parametrize(
+        "field",
+        [
+            # fld.Q_TOTAL_ASSET,  # Balance Sheet
+            fld.Q_EBITDA,  # Income Statement
+            fld.Q_NET_FINANCING,  # Cashflow Statement
+        ],
+    )
+    def test_field(self, sdr: SETDataReader, field: str):
+        symbol_list = ["TTB"]
+        start_date = "2021-03-01"
+        end_date = "2021-11-12"
+
+        # Test
+        result = sdr.get_data_symbol_ttm(
+            field=field,
+            symbol_list=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+        # Check
+        self._check(result)
+
+        assert not result.empty
+
+    @pytest.mark.parametrize(
+        ["field", "expected_list"],
+        [
+            # Income Statement
+            (
+                fld.Q_TOTAL_REVENUE,
+                [89885610000.0, 86495188000.0, 84669125000.0, 82786475000.0],
+            ),
+            (fld.Q_COS, [23861086000.0, 21442714000.0, 19895590000.0, 18991330000.0]),
+            # Cashflow Statement
+            (
+                fld.Q_NET_CASH_FLOW,
+                [-1889251000.0, -2540135000.0, -1985902000.0, -4211674000.0],
+            ),
+        ],
+    )
+    def test_field_with_expected(
+        self, sdr: SETDataReader, field: str, expected_list: List[float]
+    ):
+        symbol = "TTB"
+        start_date = "2021-03-01"
+        end_date = "2021-11-12"
+
+        # Test
+        result = sdr.get_data_symbol_ttm(
+            field=field,
+            symbol_list=[symbol],
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+        # Check
+        self._check(result)
+
+        expected = pd.DataFrame(
+            {symbol: expected_list},
+            index=pd.DatetimeIndex(
+                ["2021-03-01", "2021-05-13", "2021-08-27", "2021-11-12"]
+            ),
+        )
+
+        assert_frame_equal(result, expected)
+
+    @pytest.mark.parametrize("field", [fld.Q_TOTAL_REVENUE, fld.Q_NET_CASH_FLOW])
+    def test_empty(self, sdr: SETDataReader, field: str):
+        # Test
+        result = sdr.get_data_symbol_ttm(field=field, symbol_list=[])
+
+        # Check
+        self._check(result)
+        assert result.empty
+
+
 class TestGetDataSymbolYtd:
     _check = staticmethod(vld.check_df_symbol_daily)
 
