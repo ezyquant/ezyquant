@@ -87,6 +87,7 @@ class SETSignalCreator:
             - daily
             - quarterly
             - yearly
+            - ttm
             - ytd
         value_by: str = "stock"
             - stock
@@ -235,6 +236,7 @@ class SETSignalCreator:
         elif timeframe in (
             fld.TIMEFRAME_QUARTERLY,
             fld.TIMEFRAME_YEARLY,
+            fld.TIMEFRAME_TTM,
             fld.TIMEFRAME_YTD,
         ):
             if value_by == fld.VALUE_BY_STOCK:
