@@ -79,7 +79,7 @@ class SETSignalCreator:
         """Return DataFrame which columns are symbols and index is the trading
         date start from start_date to end_date.
 
-        Banned symbols will be replaced with nan.
+        OHLCV fillna with prior value.
 
         Parameters
         ----------
@@ -262,8 +262,6 @@ class SETSignalCreator:
         df = df.reindex(columns=symbol_list)
 
         df.index.freq = None  # type: ignore
-
-        df = df.mask(self.is_banned(), np.nan)
 
         return df
 

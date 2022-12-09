@@ -9,7 +9,9 @@ from ezyquant.reader import SETBusinessDay
 ez.connect_sqlite("ezyquant.db")
 
 start_date = "2010-01-01"
-start_load_date = ezutils.date_to_str(pd.Timestamp(start_date) - SETBusinessDay(20))
+start_load_date = ezutils.date_to_str(
+    pd.Timestamp(start_date) - SETBusinessDay(20)
+)  # load more data for signal calculation
 end_date = "2019-12-31"
 
 #%% create signal
@@ -29,8 +31,11 @@ first_cross_up_df = cross_up_df & ~cross_up_df.shift(1, fill_value=True)
 first_cross_down_df = ~cross_up_df & cross_up_df.shift(1, fill_value=False)
 
 signal_df = (first_cross_up_df * 0.1) + (first_cross_down_df * -0.1)
-signal_df *= ssc.is_universe("SET100")
 
+# filter signal by universe and banned
+signal_df *= ssc.is_universe(["SET100"]) * ssc.is_banned()
+
+# drop nan columns (no signal) for faster backtest
 signal_df = signal_df.dropna(axis=1, how="all")
 
 
@@ -48,7 +53,6 @@ result = backtest(
     end_date=end_date,
     initial_cash=initial_cash,
     pct_commission=0.25,
-    signal_delay_bar=1,
 )
 
 print(result.stat_df)
