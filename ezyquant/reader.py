@@ -17,7 +17,11 @@ from . import utils
 from . import validators as vld
 from .errors import InputError
 
-warnings.filterwarnings("ignore", category=PerformanceWarning)
+warnings.filterwarnings(
+    "ignore",
+    message="Non-vectorized DateOffset being applied to Series or DatetimeIndex.",
+    category=PerformanceWarning,
+)
 
 TRADE_DATE = "trade_date"
 NAME = "name"
