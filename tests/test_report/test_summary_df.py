@@ -203,6 +203,6 @@ def _check_summary_df(df):
     assert (df["cumulative_dividend"] >= 0).all()
     assert (df["commission"] >= 0).all()
 
-    assert df["cumulative_dividend"].is_monotonic
+    assert df["cumulative_dividend"].is_monotonic_increasing
 
     assert not df.empty

@@ -58,7 +58,7 @@ def check_df_symbol_daily(df):
 def check_df_index_daily(df):
     index = df.index
     assert isinstance(index, pd.DatetimeIndex)
-    assert index.is_monotonic  # type: ignore
+    assert index.is_monotonic_increasing
     assert index.is_unique
     assert_index_equal(index, index.normalize())
 
