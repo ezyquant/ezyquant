@@ -298,7 +298,7 @@ class TestIsRebalanceMonthly:
 @pytest.mark.parametrize(
     ("series", "expect_result"),
     [
-        (pd.Series([], dtype=bool), pd.Series([], dtype=int)),
+        (pd.Series([], dtype=bool), pd.Series([], dtype="int64")),
         (pd.Series([False]), pd.Series([0])),
         (pd.Series([True]), pd.Series([1])),
         (pd.Series([False, False]), pd.Series([0, 0])),
