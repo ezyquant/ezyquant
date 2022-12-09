@@ -52,6 +52,10 @@ def make_bdate_range(n: int = N_ROW) -> pd.DatetimeIndex:
     return pd.bdate_range(start="2000-01-01", periods=n)
 
 
+def make_trading_dates(n: int = N_ROW) -> List[str]:
+    return make_bdate_range(n).strftime("%Y-%m-%d").to_list()
+
+
 def make_data_df(data, n_row: int = N_ROW, n_col: int = N_COL) -> pd.DataFrame:
     return pd.DataFrame(
         data, columns=make_str_list(n_col), index=make_bdate_range(n_row)
