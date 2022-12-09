@@ -298,7 +298,7 @@ class TestIsRebalanceMonthly:
 @pytest.mark.parametrize(
     ("series", "expect_result"),
     [
-        (pd.Series([]), pd.Series([])),
+        (pd.Series([], dtype=bool), pd.Series([], dtype=int)),
         (pd.Series([False]), pd.Series([0])),
         (pd.Series([True]), pd.Series([1])),
         (pd.Series([False, False]), pd.Series([0, 0])),
@@ -323,7 +323,7 @@ def test_count_true_consecutive(series: pd.Series, expect_result: pd.Series):
 @pytest.mark.parametrize(
     ("series", "expect_result"),
     [
-        (pd.Series([]), 0),
+        (pd.Series([], dtype=bool), 0),
         (pd.Series([False]), 0),
         (pd.Series([True]), 1),
         (pd.Series([False, False]), 0),
