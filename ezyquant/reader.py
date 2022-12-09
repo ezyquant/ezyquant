@@ -1412,7 +1412,37 @@ class SETDataReader:
         Parameters
         ----------
         field : str
-            - TODO
+            - bad_debt
+            - broker_fee
+            - change_ppe
+            - cos
+            - dividend
+            - dp
+            - ebit
+            - ebitda
+            - ebt
+            - eps
+            - int_dvd_income
+            - interest_expense
+            - interest_income
+            - invest_sec_rev
+            - loan_deposit_revenue
+            - net_cash_flow
+            - net_financing
+            - net_investing
+            - net_operating
+            - net_premium
+            - net_profit
+            - net_profit_incl_minority
+            - net_profit_ordinary
+            - operating_expense
+            - operating_revenue
+            - pl_other_activities
+            - sale
+            - selling_admin
+            - selling_admin_exc_renumuration
+            - total_expense
+            - total_revenue
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, must be unique.
         start_date : Optional[str]
@@ -2161,6 +2191,7 @@ class SETDataReader:
         else:
             raise ValueError(f"{timeframe} is not a valid timeframe")
 
+        # TODO: except r_eps
         value_column *= 1000  # Database stores in thousands bath
 
         stmt = (
