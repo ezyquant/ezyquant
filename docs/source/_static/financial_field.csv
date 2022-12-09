@@ -16,7 +16,7 @@ gross_profit_margin,gross profit margin,float
 roa,return on asset,float
 roe,return on equity,float
 asset_turnover,asset turnover,float
-ebit,earning before tax,float
+ebit,earning before interest and tax,float
 fix_asset_turnover,fix asset turnover,float
 current_ratio,current ratio,float
 quick_ratio,quick ratio,float
@@ -69,7 +69,7 @@ net_cash_flow,net cash flow,float
 bad_debt,bad debt,float
 broker_fee,broker fee,float
 cos,cost of sale,float
-ebt,earnings before interest and tax,float
+ebt,earnings before tax,float
 int_dvd_income,interest and dividend income,float
 interest_expense,interest expense,float
 interest_income,interest income,float
