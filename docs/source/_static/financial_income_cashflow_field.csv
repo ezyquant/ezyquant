@@ -7,7 +7,7 @@ dividend,dividend,float
 dp,drawing power,float
 ebit,earning before interest and tax,float
 ebitda,"earnings before interest, tax, depreciation, and amortization",float
-ebt,earnings before interest and tax,float
+ebt,earnings before tax,float
 eps,earning per share,float
 int_dvd_income,interest and dividend income,float
 interest_expense,interest expense,float
@@ -20,11 +20,11 @@ net_investing,net investing cash flow,float
 net_operating,net operating cash flow,float
 net_premium,net premium,float
 net_profit,net profit,float
-net_profit_incl_minority,net profit,float
-net_profit_ordinary,net profit include minority,float
-operating_expense,ordinary net profit,float
-operating_revenue,operating expense,float
-pl_other_activities,operating revenue,float
+net_profit_incl_minority,net profit include minority,float
+net_profit_ordinary,ordinary net profit,float
+operating_expense,operating expense,float
+operating_revenue,operating revenue,float
+pl_other_activities,profit (loss) from other activities,float
 sale,sale,float
 selling_admin,selling admin,float
 selling_admin_exc_renumuration,selling admin exclude remuneration,float
