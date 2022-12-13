@@ -1734,7 +1734,7 @@ class TestGetDataIndexDaily:
         assert isinstance(result, pd.DataFrame)
 
         assert isinstance(result.index, pd.DatetimeIndex)
-        assert result.index.is_monotonic  # type: ignore
+        assert result.index.is_monotonic_increasing
         assert result.index.is_unique
         assert (result.index == result.index.normalize()).all()
 
@@ -1809,7 +1809,7 @@ class TestGetDataSectorDaily:
         assert isinstance(result, pd.DataFrame)
 
         assert isinstance(result.index, pd.DatetimeIndex)
-        assert result.index.is_monotonic  # type: ignore
+        assert result.index.is_monotonic_increasing
         assert result.index.is_unique
         assert (result.index == result.index.normalize()).all()
 
@@ -1884,7 +1884,7 @@ class TestGetDataIndustryDaily:
         assert isinstance(result, pd.DataFrame)
 
         assert isinstance(result.index, pd.DatetimeIndex)
-        assert result.index.is_monotonic  # type: ignore
+        assert result.index.is_monotonic_increasing
         assert result.index.is_unique
         assert (result.index == result.index.normalize()).all()
 

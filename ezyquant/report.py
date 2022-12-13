@@ -275,7 +275,11 @@ class SETBacktestReport:
 
         cash_dvd_df["pay_date"] = cash_dvd_df["pay_date"].fillna(cash_dvd_df["ex_date"])
 
-        cash_dvd_df["before_ex_date"] = cash_dvd_df["ex_date"] - self._sdr._SETBusinessDay(1)  # type: ignore
+        cash_dvd_df["before_ex_date"] = cash_dvd_df[
+            "ex_date"
+        ] - self._sdr._SETBusinessDay(
+            1
+        )  # type: ignore
 
         position_df = position_df.rename(columns={"timestamp": "before_ex_date"})
 
@@ -518,7 +522,7 @@ class SETBacktestReport:
         bins = np.arange(min_r, max_r, step)
 
         # histogram
-        price_dis = pct_return.groupby(pd.cut(pct_return, bins)).count()
+        price_dis = pct_return.groupby(pd.cut(pct_return, bins)).count()  # type: ignore
 
         return price_dis.to_frame("frequency")
 
@@ -906,8 +910,9 @@ class SETBacktestReport:
 
         df = df.melt(var_name="name", value_name="value", ignore_index=False)
 
-        df["year"] = df.index.year  # type: ignore
-        df["month"] = df.index.month  # type: ignore
+        assert isinstance(df.index, pd.DatetimeIndex)
+        df["year"] = df.index.year
+        df["month"] = df.index.month
 
         if period == "M":
             df = pd.pivot_table(

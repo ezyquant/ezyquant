@@ -11,6 +11,8 @@ from .errors import InputError
 from .indicators import TA
 from .reader import SETDataReader, _SETDataReaderCached
 
+MethodType = Optional[Literal["backfill", "bfill", "ffill", "pad"]]
+
 
 class SETSignalCreator:
     ta = TA
@@ -77,7 +79,7 @@ class SETSignalCreator:
         """Return DataFrame which columns are symbols and index is the trading
         date start from start_date to end_date.
 
-        Banned symbols will be replaced with nan.
+        OHLCV fillna with prior value.
 
         Parameters
         ----------
@@ -263,8 +265,6 @@ class SETSignalCreator:
 
         df.index.freq = None  # type: ignore
 
-        df = df.mask(self.is_banned(), np.nan)
-
         return df
 
     def is_universe(self, universes: List[str]) -> pd.DataFrame:
@@ -310,7 +310,6 @@ class SETSignalCreator:
 
         return out
 
-    # TODO: remove cache after improve SETSignalCreator._is_banned_sp
     @lru_cache(maxsize=1)
     def is_banned(self) -> pd.DataFrame:
         """Return True when stock was Delisted or Suspension (SP).
@@ -458,9 +457,34 @@ class SETSignalCreator:
             end_has_price_date=self._end_date,
         )
 
-    def _reindex_trade_date(self, df: pd.DataFrame, **kwargs) -> pd.DataFrame:
+    def _reindex(
+        self, df: pd.DataFrame, method: MethodType = None, fill_value=None
+    ) -> pd.DataFrame:
+        """Reindex dataframe to trading date and symbol.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            dataframe to reindex
+        method : MethodType
+            Method to use for filling holes in reindexed DataFrame
+        fill_value : Any
+            Value to use for missing values. Defaults to NaN, but can be any "compatible" value.
+
+        Returns
+        -------
+        pd.DataFrame
+            Dataframe with trading date and symbol as index and columns.
+        """
+        df = self._reindex_trade_date(df, method=method, fill_value=fill_value)
+        df = self._reindex_columns_symbol(df, fill_value=fill_value)
+        return df
+
+    def _reindex_trade_date(
+        self, df: pd.DataFrame, method: MethodType = None, fill_value=None
+    ) -> pd.DataFrame:
         td = self._get_trading_dates()
-        return self._reindex_date(df=df, index=td, **kwargs)
+        return self._reindex_date(df=df, index=td, method=method, fill_value=fill_value)
 
     def _reindex_columns_symbol(
         self, df: pd.DataFrame, fill_value=None
@@ -643,8 +667,7 @@ class SETSignalCreator:
         df = df.notna()
 
         # Reindex
-        df = self._reindex_trade_date(df, method="ffill", fill_value=False)
-        df = self._reindex_columns_symbol(df, fill_value=False)
+        df = self._reindex(df, method="ffill", fill_value=False)
 
         return df
 
@@ -662,44 +685,48 @@ class SETSignalCreator:
         )
 
         # Reindex
-        df = self._reindex_trade_date(df, method="ffill", fill_value=False)
-        df = self._reindex_columns_symbol(df, fill_value=False)
+        df = self._reindex(df, method="ffill", fill_value=False)
 
         return df
 
     def _is_banned_sp(self) -> pd.DataFrame:
+        # get symbol list
         symbol_list = self._get_symbol_in_universe()
 
+        # get sign posting data
         df = self._sdr.get_sign_posting(
             symbol_list=symbol_list,
             end_date=self._end_date,
             sign_list=["SP"],
         )
 
-        tds = self._get_trading_dates()
-        df = df.fillna({"release_date": pd.Timestamp(tds[-1]) + pd.Timedelta(days=1)})
+        # normalize date time to midnight
+        df["hold_date"] = df["hold_date"].dt.normalize()
+        df["release_date"] = df["release_date"].dt.normalize()
 
-        # closed="left" because at hold date is not tradable but release date is tradable
-        df["date_range"] = df.apply(
-            lambda x: pd.bdate_range(
-                start=x["hold_date"], end=x["release_date"], closed="left"
-            ),  # type: ignore
-            axis=1,
-            result_type="reduce",
+        # prepare for pivot table
+        df["1"] = 1
+        df["-1"] = -1
+
+        # pivot_table also drop duplicated index
+        df_hold: pd.DataFrame = df.pivot_table(
+            index="hold_date", columns="symbol", values="1"
         )
-        date_range_group = df.groupby("symbol")["date_range"].apply(
-            lambda x: utils.union_datetime_index(x)
+        df_release: pd.DataFrame = df.pivot_table(
+            index="release_date", columns="symbol", values="-1"
         )
 
-        out = pd.DataFrame(
-            [pd.Series(True, index=v, name=k) for k, v in date_range_group.items()]
-        ).T
+        # merge hold and release dataframe and cumsum
+        df = df_hold.add(df_release, fill_value=0).cumsum()
 
-        # Reindex
-        out = self._reindex_trade_date(out, fill_value=False)
-        out = self._reindex_columns_symbol(out, fill_value=False)
+        # remove multi-index column
+        df.columns.name = None
 
-        return out
+        # reindex dataframe
+        df = self._reindex(df, method="ffill", fill_value=0)
+
+        # return boolean dataframe
+        return df > 0
 
     """
     Static methods
@@ -709,7 +736,7 @@ class SETSignalCreator:
     def _reindex_date(
         df: pd.DataFrame,
         index,
-        method: Optional[Literal["backfill", "bfill", "ffill", "pad"]] = None,
+        method: MethodType = None,
         fill_value=None,
     ) -> pd.DataFrame:
         """Reindex and fillna with method and fill_value."""

@@ -198,7 +198,7 @@ class TestGetData:
 
         # Check
         expect = pd.DataFrame(
-            {"THAI": nan},
+            {"THAI": 3.32},
             index=pd.DatetimeIndex(
                 [
                     "2021-05-18",
