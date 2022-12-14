@@ -25,7 +25,7 @@ def backtest(
     price_match_mode: str = "open",
     signal_delay_bar: int = 1,
 ) -> SETBacktestReport:
-    """Backtest function.
+    """Backtest function. No trade will be made if price is nan.
 
     Parameters
     ----------
