@@ -310,7 +310,7 @@ class SETSignalCreator:
 
     @lru_cache(maxsize=1)
     def is_banned(self) -> pd.DataFrame:
-        """Return True when stock was Delisted or Suspension (SP).
+        """Return True when stock has no close, last bid, last offer.
 
         Returns
         -------
@@ -335,7 +335,19 @@ class SETSignalCreator:
         2022-01-07  False  False  True
         2022-01-10  False  False  True
         """
-        return self._is_banned_delisted() | self._is_banned_sp()
+        symbol_list = self._get_symbol_in_universe()
+
+        close_df = self._get_data_symbol_daily(
+            field=fld.D_CLOSE, symbol_list=symbol_list, is_fill_prior=False
+        )
+        last_bid_df = self._get_data_symbol_daily(
+            field=fld.D_LAST_BID, symbol_list=symbol_list, is_fill_prior=False
+        )
+        last_offer_df = self._get_data_symbol_daily(
+            field=fld.D_LAST_OFFER, symbol_list=symbol_list, is_fill_prior=False
+        )
+
+        return (close_df == 0) | (last_bid_df == 0) | (last_offer_df == 0)
 
     @staticmethod
     def rank(
@@ -550,7 +562,9 @@ class SETSignalCreator:
             end_date=self._end_date,
         )
 
-    def _get_data_symbol_daily(self, symbol_list: List[str], field: str):
+    def _get_data_symbol_daily(
+        self, symbol_list: List[str], field: str, is_fill_prior: bool = True
+    ) -> pd.DataFrame:
         df = self._sdr.get_data_symbol_daily(
             field=field,
             symbol_list=symbol_list,
@@ -559,7 +573,7 @@ class SETSignalCreator:
         )
 
         # Forward fill 0 and NaN with prior
-        if field in {
+        if is_fill_prior and field in {
             fld.D_OPEN,
             fld.D_HIGH,
             fld.D_LOW,
