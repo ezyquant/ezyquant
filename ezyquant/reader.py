@@ -1009,6 +1009,10 @@ class SETDataReader:
             - symbol(N_SECURITY): str as column
             - trade_date(D_TRADE): date as index
 
+        Warning
+        -------
+        - OHLCV is 0 if no trade.
+
         Examples
         --------
         >>> from ezyquant import SETDataReader
