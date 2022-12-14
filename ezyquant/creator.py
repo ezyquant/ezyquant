@@ -575,11 +575,10 @@ class SETSignalCreator:
                 end_date=self._end_date,
             )
             prior_df = self._reindex_trade_date(prior_df)
-            prior_df = prior_df.replace(0, np.nan)
-            prior_df = prior_df.fillna(method="ffill")
+            prior_df = prior_df.replace(0.0, np.nan)
 
             df = self._reindex_trade_date(df)
-            df = df.replace(0, np.nan)
+            df = df.replace(0.0, np.nan)
             df = df.fillna(prior_df)
         return df
 

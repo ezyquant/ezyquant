@@ -10,6 +10,8 @@ from ..report import SETBacktestReport
 from ._backtesting import _backtest
 from .context import Context
 
+nan = float("nan")
+
 
 def backtest(
     signal_df: pd.DataFrame,
@@ -134,7 +136,7 @@ def _get_price(
             symbol_list=symbol_list,
             start_date=start_date,
             end_date=end_date,
-        )
+        ).replace(0.0, nan)
 
     if mode in (
         fld.PRICE_MATCH_MODE_OPEN,
