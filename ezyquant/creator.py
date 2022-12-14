@@ -347,7 +347,11 @@ class SETSignalCreator:
             field=fld.D_LAST_OFFER, symbol_list=symbol_list, is_fill_prior=False
         )
 
-        return (close_df == 0) | (last_bid_df == 0) | (last_offer_df == 0)
+        out = close_df + last_bid_df + last_offer_df
+        out = out.fillna(0) == 0
+        out = self._reindex(out)
+
+        return out
 
     @staticmethod
     def rank(
