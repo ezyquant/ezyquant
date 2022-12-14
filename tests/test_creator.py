@@ -881,7 +881,7 @@ class TestScreenUniverse:
         ssc._index_list = []
         ssc._symbol_list = ["AOT"]
         df = pd.DataFrame(
-            [[1], [2], [3]],
+            [[1.0], [2.0], [3.0]],
             columns=["AOT"],
             index=pd.bdate_range(start="2022-01-04", periods=3),
         )
@@ -891,3 +891,25 @@ class TestScreenUniverse:
 
         # Check
         assert_frame_equal(result, df)
+
+    def test_sp(self, ssc: SETSignalCreator):
+        """THAI no trade after 2021-05-18, close at 2021-05-17 is 3.32"""
+        # Mock
+        ssc._index_list = []
+        ssc._symbol_list = ["THAI"]
+        df = pd.DataFrame(
+            [[1.0], [2.0], [3.0]],
+            columns=["THAI"],
+            index=pd.bdate_range(start="2021-05-17", periods=3),
+        )
+
+        # Test
+        result = ssc.screen_universe(df)
+
+        # Check
+        expect = pd.DataFrame(
+            [[1.0], [nan], [nan]],
+            columns=["THAI"],
+            index=pd.bdate_range(start="2021-05-17", periods=3),
+        )
+        assert_frame_equal(expect, result)
