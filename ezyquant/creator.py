@@ -683,63 +683,6 @@ class SETSignalCreator:
 
         return df
 
-    def _is_banned_delisted(self) -> pd.DataFrame:
-        symbol_list = self._get_symbol_in_universe()
-
-        df = self._sdr.get_delisted(
-            symbol_list=symbol_list,
-            end_date=self._end_date,
-        )
-
-        df["true"] = True
-        df = utils.pivot_remove_index_name(
-            df=df, index="delisted_date", columns="symbol", values="true"
-        )
-
-        # Reindex
-        df = self._reindex(df, method="ffill", fill_value=False)
-
-        return df
-
-    def _is_banned_sp(self) -> pd.DataFrame:
-        # get symbol list
-        symbol_list = self._get_symbol_in_universe()
-
-        # get sign posting data
-        df = self._sdr.get_sign_posting(
-            symbol_list=symbol_list,
-            end_date=self._end_date,
-            sign_list=["SP"],
-        )
-
-        # normalize date time to midnight
-        df["hold_date"] = df["hold_date"].dt.normalize()
-        df["release_date"] = df["release_date"].dt.normalize()
-
-        # prepare for pivot table
-        df["1"] = 1
-        df["-1"] = -1
-
-        # pivot_table also drop duplicated index
-        df_hold: pd.DataFrame = df.pivot_table(
-            index="hold_date", columns="symbol", values="1"
-        )
-        df_release: pd.DataFrame = df.pivot_table(
-            index="release_date", columns="symbol", values="-1"
-        )
-
-        # merge hold and release dataframe and cumsum
-        df = df_hold.add(df_release, fill_value=0).cumsum()
-
-        # remove multi-index column
-        df.columns.name = None
-
-        # reindex dataframe
-        df = self._reindex(df, method="ffill", fill_value=0)
-
-        # return boolean dataframe
-        return df > 0
-
     """
     Static methods
     """
