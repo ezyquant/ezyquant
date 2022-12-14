@@ -873,3 +873,21 @@ class TestRank:
         result = SETSignalCreator.rank(factor_df, pct=True, quantity=0.5)
 
         assert_frame_equal(result, expect)
+
+
+class TestScreenUniverse:
+    def test_no_banned(self, ssc: SETSignalCreator):
+        # Mock
+        ssc._index_list = []
+        ssc._symbol_list = ["AOT"]
+        df = pd.DataFrame(
+            [[1], [2], [3]],
+            columns=["AOT"],
+            index=pd.bdate_range(start="2022-01-04", periods=3),
+        )
+
+        # Test
+        result = ssc.screen_universe(df)
+
+        # Check
+        assert_frame_equal(result, df)
