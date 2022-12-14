@@ -44,6 +44,13 @@ field ที่มามารถใช้ได้ตาม timeframe และ
    :widths: 30, 70, 30
    :header-rows: 1
 
+* get_data(*field*, timeframe = **"ttm"**)
+
+.. csv-table::
+   :file: ../_static/financial_income_cashflow_field.csv
+   :widths: 30, 70, 30
+   :header-rows: 1
+
 * get_data(*field*, timeframe = **"daily"**, value_by = **"sector"**)
 * get_data(*field*, timeframe = **"daily"**, value_by = **"industry"**)
 
