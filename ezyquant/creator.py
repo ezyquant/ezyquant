@@ -340,6 +340,7 @@ class SETSignalCreator:
         """
         symbol_list = self._get_symbol_in_universe()
 
+        # TODO: perf - query only no trade date, symbol
         close_df = self._get_data_symbol_daily(
             field=fld.D_CLOSE, symbol_list=symbol_list, is_fill_prior=False
         )
