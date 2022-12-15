@@ -1511,93 +1511,37 @@ class SETDataReader:
         Parameters
         ----------
         field: str
-            - account_payable
-            - account_receivable
-            - accrued_int_receive
-            - accumulate
-            - allowance
-            - ap_turnover
-            - ar_turnover
-            - as_of
-            - asset_turnover
             - bad_debt
             - broker_fee
-            - cap_paidin
-            - cap_paidup
-            - cash
-            - cash_cycle
             - change_ppe
-            - common_share
             - cos
-            - current_asset
-            - current_liability
-            - current_ratio
-            - de
-            - deposit
             - dividend
             - dp
-            - dscr
-            - earning_asset
             - ebit
             - ebitda
             - ebt
             - eps
-            - fix_asset_turnover
-            - gross_profit_margin
-            - ibde
-            - int_bearing_debt
             - int_dvd_income
-            - interest_coverage
             - interest_expense
             - interest_income
-            - inventory
-            - inventory_turnover
-            - invest_asset
             - invest_sec_rev
-            - invest_security
-            - investment
-            - loan
             - loan_deposit_revenue
-            - loan_from_relatedparty
-            - loan_revenue
-            - loan_to_relatedparty
-            - longterm_liability_currentportion
-            - longterm_liability_net_currentportion
-            - minority_interest
             - net_cash_flow
-            - net_cashflow
             - net_financing
             - net_investing
             - net_operating
             - net_premium
             - net_profit
             - net_profit_incl_minority
-            - net_profit_margin
             - net_profit_ordinary
             - operating_expense
             - operating_revenue
-            - period
-            - period_type
             - pl_other_activities
-            - ppe
-            - preferred_share
-            - quarter
-            - quick_ratio
-            - retain_earning
-            - retain_earning_unappropriate
-            - roa
-            - roe
             - sale
             - selling_admin
             - selling_admin_exc_renumuration
-            - shld_equity
-            - short_invest
-            - total_asset
-            - total_equity
             - total_expense
-            - total_liability
             - total_revenue
-            - year
         symbol_list: Optional[List[str]] = None
             N_SECURITY in symbol_list, must be unique.
         start_date: Optional[str] = None
@@ -2153,7 +2097,6 @@ class SETDataReader:
         TIMEFRAME_MAP = {
             fld.TIMEFRAME_QUARTERLY: ("Q1", "Q2", "Q3", "Q4"),
             fld.TIMEFRAME_YEARLY: ("YE",),
-            fld.TIMEFRAME_YTD: ("Q1", "6M", "9M", "YE"),
         }
 
         financial_screen_t = self._table("FINANCIAL_SCREEN")
@@ -2184,27 +2127,29 @@ class SETDataReader:
         security_t = self._table("SECURITY")
         d_trade_subquery = self._d_trade_subquery()
 
+        field_type = ""
+        for i in fld.FINANCIAL_STAT_STD_MAP:
+            if field in fld.FINANCIAL_STAT_STD_MAP[i]:
+                field_type = i
+                break
+
         if timeframe == fld.TIMEFRAME_QUARTERLY:
             value_column = financial_stat_std_t.c["M_ACCOUNT"]
+        elif timeframe == fld.TIMEFRAME_YEARLY and field_type == "B":
+            value_column = financial_stat_std_t.c["M_ACCOUNT"]
         elif timeframe == fld.TIMEFRAME_YEARLY:
-            if field in fld.FINANCIAL_STAT_STD_MAP["B"]:
-                value_column = financial_stat_std_t.c["M_ACCOUNT"]
-            else:
-                value_column = financial_stat_std_t.c["M_ACC_ACCOUNT"]
-        elif timeframe == fld.TIMEFRAME_YTD:
+            value_column = financial_stat_std_t.c["M_ACC_ACCOUNT_12M"]
+        elif timeframe == fld.TIMEFRAME_YTD and field_type != "B":
             value_column = financial_stat_std_t.c["M_ACC_ACCOUNT"]
-        elif timeframe == fld.TIMEFRAME_TTM:
-            if (
-                field not in fld.FINANCIAL_STAT_STD_MAP["I"]
-                and field not in fld.FINANCIAL_STAT_STD_MAP["C"]
-            ):
-                raise ValueError(f"{field} is not a valid field for {timeframe}")
+        elif timeframe == fld.TIMEFRAME_TTM and field_type != "B":
             value_column = financial_stat_std_t.c["M_ACC_ACCOUNT_12M"]
         else:
-            raise ValueError(f"{timeframe} is not a valid timeframe")
+            raise ValueError(f"Invalid timeframe {timeframe}")
 
-        # TODO: except r_eps
-        value_column *= 1000  # Database stores in thousands bath
+        db_field = fld.FINANCIAL_STAT_STD_MAP[field_type][field]
+
+        if db_field.startswith("m_"):
+            value_column *= 1000  # Database stores in thousands bath
 
         stmt = (
             select(
@@ -2215,10 +2160,7 @@ class SETDataReader:
                 ]
             )
             .select_from(self._join_security_and_d_trade_subquery(financial_stat_std_t))
-            .where(
-                func.trim(financial_stat_std_t.c.N_ACCOUNT)
-                == fld.FINANCIAL_STAT_STD_MAP_COMPACT[field]
-            )
+            .where(func.trim(financial_stat_std_t.c.N_ACCOUNT) == db_field)
         )
 
         if timeframe == fld.TIMEFRAME_YEARLY:
@@ -2246,7 +2188,6 @@ class SETDataReader:
         elif field in fld.FINANCIAL_SCREEN_MAP and timeframe in (
             fld.TIMEFRAME_QUARTERLY,
             fld.TIMEFRAME_YEARLY,
-            fld.TIMEFRAME_YTD,
         ):
             stmt = self._get_financial_screen_stmt(field=field, timeframe=timeframe)
         else:

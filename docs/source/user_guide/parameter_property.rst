@@ -37,13 +37,13 @@ field ที่มามารถใช้ได้ตาม timeframe และ
 
 * get_data(*field*, timeframe = **"quarterly"**)
 * get_data(*field*, timeframe = **"yearly"**)
-* get_data(*field*, timeframe = **"ytd"**)
 
 .. csv-table::
    :file: ../_static/financial_field.csv
    :widths: 30, 70, 30
    :header-rows: 1
 
+* get_data(*field*, timeframe = **"ytd"**)
 * get_data(*field*, timeframe = **"ttm"**)
 
 .. csv-table::

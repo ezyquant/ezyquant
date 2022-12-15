@@ -1571,8 +1571,8 @@ class TestGetDataSymbolYtd:
     @pytest.mark.parametrize(
         "field",
         [
-            fld.Q_ROE,  # Financial Ratio
-            fld.Q_TOTAL_ASSET,  # Balance Sheet
+            # fld.Q_ROE,  # Financial Ratio
+            # fld.Q_TOTAL_ASSET,  # Balance Sheet
             fld.Q_EBITDA,  # Income Statement
             fld.Q_NET_FINANCING,  # Cashflow Statement
         ],
