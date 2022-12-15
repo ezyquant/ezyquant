@@ -599,6 +599,8 @@ class SETDataReader:
         2  CB20220A    2020-02-20
         3  CB20220B    2020-02-20
         """
+        warnings.warn("This function is deprecated.", DeprecationWarning)
+
         security_t = self._table("SECURITY")
         security_detail_t = self._table("SECURITY_DETAIL")
 
@@ -674,6 +676,8 @@ class SETDataReader:
         0   THAI 2020-11-12   2020-11-13   SP
         1   THAI 2021-02-25          NaT   SP
         """
+        warnings.warn("This function is deprecated.", DeprecationWarning)
+
         security_t = self._table("SECURITY")
         sign_posting_t = self._table("SIGN_POSTING")
 
