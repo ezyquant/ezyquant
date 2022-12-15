@@ -351,8 +351,8 @@ class SETSignalCreator:
         )
 
         out = close_df + last_bid_df + last_offer_df
-        out = out.fillna(0) == 0
-        out = self._reindex(out)
+        out = ~out.fillna(0).astype(bool)
+        out = self._reindex(out, fill_value=True)
 
         return out
 
