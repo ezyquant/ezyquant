@@ -4,6 +4,7 @@ import pandas as pd
 
 from .. import fields as fld
 from .. import utils
+from ..creator import SETSignalCreator
 from ..errors import InputError
 from ..reader import SETBusinessDay, _SETDataReaderCached
 from ..report import SETBacktestReport
@@ -129,8 +130,9 @@ def _get_price(
     symbol_list: List[str],
     mode: str,
 ) -> pd.DataFrame:
+    sdr = _SETDataReaderCached()
+
     def _data(field: str):
-        sdr = _SETDataReaderCached()
         return sdr.get_data_symbol_daily(
             field=field,
             symbol_list=symbol_list,
@@ -161,5 +163,9 @@ def _get_price(
         out = (h + l + c + c) / 4
     else:
         raise InputError(f"Invalid price_match_mode: {mode}")
+
+    td = sdr.get_trading_dates(start_date=start_date, end_date=end_date)
+    out = SETSignalCreator._reindex_date(df=out, index=td)
+    out = out.reindex(symbol_list, axis=1)
 
     return out
