@@ -4,13 +4,13 @@ import pandas as pd
 
 from .. import fields as fld
 from .. import utils
-from ..creator import SETSignalCreator
 from ..errors import InputError
-from ..reader import SETBusinessDay
+from ..reader import SETBusinessDay, _SETDataReaderCached
 from ..report import SETBacktestReport
-from ..utils import cache_wrapper
 from ._backtesting import _backtest
 from .context import Context
+
+nan = float("nan")
 
 
 def backtest(
@@ -25,7 +25,7 @@ def backtest(
     price_match_mode: str = "open",
     signal_delay_bar: int = 1,
 ) -> SETBacktestReport:
-    """Backtest function.
+    """Backtest function. No trade will be made if price is nan.
 
     Parameters
     ----------
@@ -88,7 +88,7 @@ def backtest(
     )
 
     # Signal df
-    signal_df = signal_df.shift(signal_delay_bar)
+    signal_df = signal_df.reindex(close_price_df.index).shift(signal_delay_bar)
     signal_df = signal_df[
         (signal_df.index >= pd.Timestamp(start_date))
         & (signal_df.index <= pd.Timestamp(end_date))
@@ -130,12 +130,13 @@ def _get_price(
     mode: str,
 ) -> pd.DataFrame:
     def _data(field: str):
-        return _get_data(
+        sdr = _SETDataReaderCached()
+        return sdr.get_data_symbol_daily(
             field=field,
+            symbol_list=symbol_list,
             start_date=start_date,
             end_date=end_date,
-            symbol_list=symbol_list,
-        )
+        ).replace(0.0, nan)
 
     if mode in (
         fld.PRICE_MATCH_MODE_OPEN,
@@ -162,32 +163,3 @@ def _get_price(
         raise InputError(f"Invalid price_match_mode: {mode}")
 
     return out
-
-
-def _get_data(
-    field: str,
-    start_date: str,
-    end_date: str,
-    symbol_list: List[str],
-) -> pd.DataFrame:
-    ssc = _get_SETSignalCreator(
-        start_date=start_date,
-        end_date=end_date,
-        symbol_list=symbol_list,
-    )
-
-    return ssc.get_data(field=field, timeframe=fld.TIMEFRAME_DAILY)
-
-
-@cache_wrapper(maxsize=8, is_copy=False)
-def _get_SETSignalCreator(
-    start_date: str,
-    end_date: str,
-    symbol_list: List[str],
-) -> SETSignalCreator:
-    return SETSignalCreator(
-        start_date=start_date,
-        end_date=end_date,
-        index_list=[],
-        symbol_list=symbol_list,
-    )

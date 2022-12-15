@@ -91,6 +91,7 @@ class SETSignalCreator:
             - daily
             - quarterly
             - yearly
+            - ttm
             - ytd
         value_by: str = "stock"
             - stock
@@ -239,6 +240,7 @@ class SETSignalCreator:
         elif timeframe in (
             fld.TIMEFRAME_QUARTERLY,
             fld.TIMEFRAME_YEARLY,
+            fld.TIMEFRAME_TTM,
             fld.TIMEFRAME_YTD,
         ):
             if value_by == fld.VALUE_BY_STOCK:
@@ -312,7 +314,7 @@ class SETSignalCreator:
 
     @lru_cache(maxsize=1)
     def is_banned(self) -> pd.DataFrame:
-        """Return True when stock was Delisted or Suspension (SP).
+        """Return True when stock has no close, last bid, last offer.
 
         Returns
         -------
@@ -337,7 +339,24 @@ class SETSignalCreator:
         2022-01-07  False  False  True
         2022-01-10  False  False  True
         """
-        return self._is_banned_delisted() | self._is_banned_sp()
+        symbol_list = self._get_symbol_in_universe()
+
+        # TODO: perf - query only no trade date, symbol
+        close_df = self._get_data_symbol_daily(
+            field=fld.D_CLOSE, symbol_list=symbol_list, is_fill_prior=False
+        )
+        last_bid_df = self._get_data_symbol_daily(
+            field=fld.D_LAST_BID, symbol_list=symbol_list, is_fill_prior=False
+        )
+        last_offer_df = self._get_data_symbol_daily(
+            field=fld.D_LAST_OFFER, symbol_list=symbol_list, is_fill_prior=False
+        )
+
+        out = close_df + last_bid_df + last_offer_df
+        out = ~out.fillna(0).astype(bool)
+        out = self._reindex(out, fill_value=True)
+
+        return out
 
     def screen_universe(self, df: pd.DataFrame, mask_value=nan) -> pd.DataFrame:
         """Mask Non universe or Banned symbol with given value."""
@@ -466,7 +485,7 @@ class SETSignalCreator:
         )
 
     def _reindex(
-        self, df: pd.DataFrame, method: MethodType = None, fill_value=None
+        self, df: pd.DataFrame, method: MethodType = None, fill_value=nan
     ) -> pd.DataFrame:
         """Reindex dataframe to trading date and symbol.
 
@@ -489,14 +508,12 @@ class SETSignalCreator:
         return df
 
     def _reindex_trade_date(
-        self, df: pd.DataFrame, method: MethodType = None, fill_value=None
+        self, df: pd.DataFrame, method: MethodType = None, fill_value=nan
     ) -> pd.DataFrame:
         td = self._get_trading_dates()
         return self._reindex_date(df=df, index=td, method=method, fill_value=fill_value)
 
-    def _reindex_columns_symbol(
-        self, df: pd.DataFrame, fill_value=None
-    ) -> pd.DataFrame:
+    def _reindex_columns_symbol(self, df: pd.DataFrame, fill_value=nan) -> pd.DataFrame:
         s = self._get_symbol_in_universe()
         return df.reindex(columns=s, fill_value=fill_value)
 
@@ -560,7 +577,9 @@ class SETSignalCreator:
             end_date=self._end_date,
         )
 
-    def _get_data_symbol_daily(self, symbol_list: List[str], field: str):
+    def _get_data_symbol_daily(
+        self, symbol_list: List[str], field: str, is_fill_prior: bool = True
+    ) -> pd.DataFrame:
         df = self._sdr.get_data_symbol_daily(
             field=field,
             symbol_list=symbol_list,
@@ -569,7 +588,7 @@ class SETSignalCreator:
         )
 
         # Forward fill 0 and NaN with prior
-        if field in {
+        if is_fill_prior and field in {
             fld.D_OPEN,
             fld.D_HIGH,
             fld.D_LOW,
@@ -585,11 +604,10 @@ class SETSignalCreator:
                 end_date=self._end_date,
             )
             prior_df = self._reindex_trade_date(prior_df)
-            prior_df = prior_df.replace(0, np.nan)
-            prior_df = prior_df.fillna(method="ffill")
+            prior_df = prior_df.replace(0.0, np.nan)
 
             df = self._reindex_trade_date(df)
-            df = df.replace(0, np.nan)
+            df = df.replace(0.0, np.nan)
             df = df.fillna(prior_df)
         return df
 
@@ -679,63 +697,6 @@ class SETSignalCreator:
 
         return df
 
-    def _is_banned_delisted(self) -> pd.DataFrame:
-        symbol_list = self._get_symbol_in_universe()
-
-        df = self._sdr.get_delisted(
-            symbol_list=symbol_list,
-            end_date=self._end_date,
-        )
-
-        df["true"] = True
-        df = utils.pivot_remove_index_name(
-            df=df, index="delisted_date", columns="symbol", values="true"
-        )
-
-        # Reindex
-        df = self._reindex(df, method="ffill", fill_value=False)
-
-        return df
-
-    def _is_banned_sp(self) -> pd.DataFrame:
-        # get symbol list
-        symbol_list = self._get_symbol_in_universe()
-
-        # get sign posting data
-        df = self._sdr.get_sign_posting(
-            symbol_list=symbol_list,
-            end_date=self._end_date,
-            sign_list=["SP"],
-        )
-
-        # normalize date time to midnight
-        df["hold_date"] = df["hold_date"].dt.normalize()
-        df["release_date"] = df["release_date"].dt.normalize()
-
-        # prepare for pivot table
-        df["1"] = 1
-        df["-1"] = -1
-
-        # pivot_table also drop duplicated index
-        df_hold: pd.DataFrame = df.pivot_table(
-            index="hold_date", columns="symbol", values="1"
-        )
-        df_release: pd.DataFrame = df.pivot_table(
-            index="release_date", columns="symbol", values="-1"
-        )
-
-        # merge hold and release dataframe and cumsum
-        df = df_hold.add(df_release, fill_value=0).cumsum()
-
-        # remove multi-index column
-        df.columns.name = None
-
-        # reindex dataframe
-        df = self._reindex(df, method="ffill", fill_value=0)
-
-        # return boolean dataframe
-        return df > 0
-
     """
     Static methods
     """
@@ -745,7 +706,7 @@ class SETSignalCreator:
         df: pd.DataFrame,
         index,
         method: MethodType = None,
-        fill_value=None,
+        fill_value=nan,
     ) -> pd.DataFrame:
         """Reindex and fillna with method and fill_value."""
         index = pd.DatetimeIndex(index)
