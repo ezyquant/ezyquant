@@ -1,0 +1,32 @@
+Field,Description,Return Type
+bad_debt,bad debt,float
+broker_fee,broker fee,float
+change_ppe,change ppe,float
+cos,cost of sale,float
+dividend,dividend,float
+dp,drawing power,float
+ebit,earning before interest and tax,float
+ebitda,"earnings before interest, tax, depreciation, and amortization",float
+ebt,earnings before tax,float
+eps,earning per share,float
+int_dvd_income,interest and dividend income,float
+interest_expense,interest expense,float
+interest_income,interest income,float
+invest_sec_rev,invest revenue,float
+loan_deposit_revenue,loan deposit revenue,float
+net_cash_flow,net cash flow,float
+net_financing,net financing cash flow,float
+net_investing,net investing cash flow,float
+net_operating,net operating cash flow,float
+net_premium,net premium,float
+net_profit,net profit,float
+net_profit_incl_minority,net profit include minority,float
+net_profit_ordinary,ordinary net profit,float
+operating_expense,operating expense,float
+operating_revenue,operating revenue,float
+pl_other_activities,profit (loss) from other activities,float
+sale,sale,float
+selling_admin,selling admin,float
+selling_admin_exc_renumuration,selling admin exclude remuneration,float
+total_expense,total expense,float
+total_revenue,total revenue,float
