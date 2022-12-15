@@ -825,3 +825,80 @@ class TestRank:
         result = SETSignalCreator.rank(factor_df, pct=True, quantity=0.5)
 
         assert_frame_equal(result, expect)
+
+
+class TestScreenUniverse:
+    @pytest.mark.parametrize(
+        ("index_list", "symbol_list"),
+        [
+            ([], ["AOT"]),
+            ([], ["AOT", "BBL"]),
+            (["SET"], []),
+            (["SET", "SET50"], []),
+            (["SET"], ["AOT"]),
+        ],
+    )
+    def test_no_screen(
+        self, ssc: SETSignalCreator, index_list: List[str], symbol_list: List[str]
+    ):
+        # Mock
+        ssc._index_list = index_list
+        ssc._symbol_list = symbol_list
+        df = pd.DataFrame(
+            [[1.0], [2.0], [3.0]],
+            columns=["AOT"],
+            index=pd.bdate_range(start="2022-01-04", periods=3),
+        )
+
+        # Test
+        result = ssc.screen_universe(df)
+
+        # Check
+        assert_frame_equal(result, df)
+
+    def test_banned(self, ssc: SETSignalCreator):
+        """THAI no trade after 2021-05-18, close at 2021-05-17 is 3.32"""
+        # Mock
+        ssc._index_list = []
+        ssc._symbol_list = ["THAI"]
+        df = pd.DataFrame(
+            [[1.0], [2.0], [3.0]],
+            columns=["THAI"],
+            index=pd.bdate_range(start="2021-05-17", periods=3),
+        )
+
+        # Test
+        result = ssc.screen_universe(df)
+
+        # Check
+        expect = pd.DataFrame(
+            [[1.0], [nan], [nan]],
+            columns=["THAI"],
+            index=pd.bdate_range(start="2021-05-17", periods=3),
+        )
+        assert_frame_equal(expect, result)
+
+    def test_universe(self, ssc: SETSignalCreator):
+        """
+        BANPU added to SET50 on 2022
+        https://thestandard.co/set50-set100-2565/
+        """
+        # Mock
+        ssc._index_list = ["SET50"]
+        ssc._symbol_list = []
+        df = pd.DataFrame(
+            [[1.0], [2.0], [3.0]],
+            columns=["BANPU"],
+            index=pd.DatetimeIndex(["2021-12-30", "2022-01-04", "2022-01-05"]),
+        )
+
+        # Test
+        result = ssc.screen_universe(df)
+
+        # Check
+        expect = pd.DataFrame(
+            [[nan], [2.0], [3.0]],
+            columns=["BANPU"],
+            index=pd.DatetimeIndex(["2021-12-30", "2022-01-04", "2022-01-05"]),
+        )
+        assert_frame_equal(expect, result)

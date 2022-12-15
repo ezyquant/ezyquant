@@ -12,6 +12,7 @@ from .indicators import TA
 from .reader import SETDataReader, _SETDataReaderCached
 
 nan = float("nan")
+
 MethodType = Optional[Literal["backfill", "bfill", "ffill", "pad"]]
 
 
@@ -356,6 +357,14 @@ class SETSignalCreator:
         out = self._reindex(out, fill_value=True)
 
         return out
+
+    def screen_universe(self, df: pd.DataFrame, mask_value=nan) -> pd.DataFrame:
+        """Mask Non universe or Banned symbol with given value."""
+        cond = (
+            ~self.is_universe(self._index_list + self._symbol_list) | self.is_banned()
+        )
+        df = df.mask(cond, mask_value)
+        return df
 
     @staticmethod
     def rank(
