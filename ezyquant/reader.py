@@ -2142,8 +2142,10 @@ class SETDataReader:
         else:
             raise ValueError(f"Invalid timeframe {timeframe}")
 
-        # TODO: except r_eps
-        value_column *= 1000  # Database stores in thousands bath
+        db_field = fld.FINANCIAL_STAT_STD_MAP[field_type][field]
+
+        if db_field.startswith("m_"):
+            value_column *= 1000  # Database stores in thousands bath
 
         stmt = (
             select(
@@ -2154,10 +2156,7 @@ class SETDataReader:
                 ]
             )
             .select_from(self._join_security_and_d_trade_subquery(financial_stat_std_t))
-            .where(
-                func.trim(financial_stat_std_t.c.N_ACCOUNT)
-                == fld.FINANCIAL_STAT_STD_MAP_COMPACT[field]
-            )
+            .where(func.trim(financial_stat_std_t.c.N_ACCOUNT) == db_field)
         )
 
         if timeframe == fld.TIMEFRAME_YEARLY:
