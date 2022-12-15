@@ -2149,7 +2149,6 @@ class SETDataReader:
         TIMEFRAME_MAP = {
             fld.TIMEFRAME_QUARTERLY: ("Q1", "Q2", "Q3", "Q4"),
             fld.TIMEFRAME_YEARLY: ("YE",),
-            fld.TIMEFRAME_YTD: ("Q1", "6M", "9M", "YE"),
         }
 
         financial_screen_t = self._table("FINANCIAL_SCREEN")
@@ -2180,24 +2179,24 @@ class SETDataReader:
         security_t = self._table("SECURITY")
         d_trade_subquery = self._d_trade_subquery()
 
+        field_type = ""
+        for i in fld.FINANCIAL_STAT_STD_MAP:
+            if field in fld.FINANCIAL_STAT_STD_MAP[i]:
+                field_type = i
+                break
+
         if timeframe == fld.TIMEFRAME_QUARTERLY:
             value_column = financial_stat_std_t.c["M_ACCOUNT"]
+        elif timeframe == fld.TIMEFRAME_YEARLY and field_type == "B":
+            value_column = financial_stat_std_t.c["M_ACCOUNT"]
         elif timeframe == fld.TIMEFRAME_YEARLY:
-            if field in fld.FINANCIAL_STAT_STD_MAP["B"]:
-                value_column = financial_stat_std_t.c["M_ACCOUNT"]
-            else:
-                value_column = financial_stat_std_t.c["M_ACC_ACCOUNT"]
-        elif timeframe == fld.TIMEFRAME_YTD:
+            value_column = financial_stat_std_t.c["M_ACC_ACCOUNT_12M"]
+        elif timeframe == fld.TIMEFRAME_YTD and field_type != "B":
             value_column = financial_stat_std_t.c["M_ACC_ACCOUNT"]
-        elif timeframe == fld.TIMEFRAME_TTM:
-            if (
-                field not in fld.FINANCIAL_STAT_STD_MAP["I"]
-                and field not in fld.FINANCIAL_STAT_STD_MAP["C"]
-            ):
-                raise ValueError(f"{field} is not a valid field for {timeframe}")
+        elif timeframe == fld.TIMEFRAME_TTM and field_type != "B":
             value_column = financial_stat_std_t.c["M_ACC_ACCOUNT_12M"]
         else:
-            raise ValueError(f"{timeframe} is not a valid timeframe")
+            raise ValueError(f"Invalid timeframe {timeframe}")
 
         # TODO: except r_eps
         value_column *= 1000  # Database stores in thousands bath
@@ -2242,7 +2241,6 @@ class SETDataReader:
         elif field in fld.FINANCIAL_SCREEN_MAP and timeframe in (
             fld.TIMEFRAME_QUARTERLY,
             fld.TIMEFRAME_YEARLY,
-            fld.TIMEFRAME_YTD,
         ):
             stmt = self._get_financial_screen_stmt(field=field, timeframe=timeframe)
         else:
