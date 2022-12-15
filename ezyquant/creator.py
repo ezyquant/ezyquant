@@ -11,6 +11,7 @@ from .errors import InputError
 from .indicators import TA
 from .reader import SETDataReader, _SETDataReaderCached
 
+nan = float("nan")
 MethodType = Optional[Literal["backfill", "bfill", "ffill", "pad"]]
 
 
@@ -474,7 +475,7 @@ class SETSignalCreator:
         )
 
     def _reindex(
-        self, df: pd.DataFrame, method: MethodType = None, fill_value=None
+        self, df: pd.DataFrame, method: MethodType = None, fill_value=nan
     ) -> pd.DataFrame:
         """Reindex dataframe to trading date and symbol.
 
@@ -497,14 +498,12 @@ class SETSignalCreator:
         return df
 
     def _reindex_trade_date(
-        self, df: pd.DataFrame, method: MethodType = None, fill_value=None
+        self, df: pd.DataFrame, method: MethodType = None, fill_value=nan
     ) -> pd.DataFrame:
         td = self._get_trading_dates()
         return self._reindex_date(df=df, index=td, method=method, fill_value=fill_value)
 
-    def _reindex_columns_symbol(
-        self, df: pd.DataFrame, fill_value=None
-    ) -> pd.DataFrame:
+    def _reindex_columns_symbol(self, df: pd.DataFrame, fill_value=nan) -> pd.DataFrame:
         s = self._get_symbol_in_universe()
         return df.reindex(columns=s, fill_value=fill_value)
 
@@ -697,7 +696,7 @@ class SETSignalCreator:
         df: pd.DataFrame,
         index,
         method: MethodType = None,
-        fill_value=None,
+        fill_value=nan,
     ) -> pd.DataFrame:
         """Reindex and fillna with method and fill_value."""
         index = pd.DatetimeIndex(index)
