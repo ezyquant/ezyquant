@@ -81,11 +81,11 @@ def backtest(
         symbol_list=symbol_list,
         mode=price_match_mode,
     )
-    close_price_df = _get_price(
+    close_price_df = _get_price_fill_prior(
         start_date=before_start_date,
         end_date=end_date,
         symbol_list=symbol_list,
-        mode=fld.D_CLOSE,
+        field=fld.D_CLOSE,
     )
 
     # Signal df
@@ -124,14 +124,15 @@ def backtest(
     )
 
 
+sdr = _SETDataReaderCached()
+
+
 def _get_price(
     start_date: str,
     end_date: str,
     symbol_list: List[str],
     mode: str,
 ) -> pd.DataFrame:
-    sdr = _SETDataReaderCached()
-
     def _data(field: str):
         return sdr.get_data_symbol_daily(
             field=field,
@@ -169,3 +170,23 @@ def _get_price(
     out = out.reindex(symbol_list, axis=1)
 
     return out
+
+
+def _get_price_fill_prior(
+    field: str, symbol_list: List[str], start_date: str, end_date: str
+):
+    df = sdr.get_data_symbol_daily(
+        field=field,
+        symbol_list=symbol_list,
+        start_date=start_date,
+        end_date=end_date,
+    ).replace(0.0, nan)
+
+    prior_df = sdr.get_data_symbol_daily(
+        field="prior",
+        symbol_list=symbol_list,
+        start_date=start_date,
+        end_date=end_date,
+    )
+
+    return df.fillna(prior_df)
