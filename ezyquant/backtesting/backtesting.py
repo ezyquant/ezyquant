@@ -75,17 +75,18 @@ def backtest(
     # Price df
     before_start_date = utils.date_to_str(pd.Timestamp(start_date) - SETBusinessDay())
     symbol_list = signal_df.columns.tolist()
-    price_match_df = _get_price(
+    price_match_df = _get_match_price(
         start_date=start_date,
         end_date=end_date,
         symbol_list=symbol_list,
         mode=price_match_mode,
     )
-    close_price_df = _get_price_fill_prior(
+    close_price_df = _get_price(
+        field=fld.D_CLOSE,
         start_date=before_start_date,
         end_date=end_date,
         symbol_list=symbol_list,
-        field=fld.D_CLOSE,
+        is_fill_prior=True,
     )
 
     # Signal df
@@ -124,22 +125,19 @@ def backtest(
     )
 
 
-sdr = _SETDataReaderCached()
-
-
-def _get_price(
+def _get_match_price(
     start_date: str,
     end_date: str,
     symbol_list: List[str],
     mode: str,
 ) -> pd.DataFrame:
-    def _data(field: str):
-        return sdr.get_data_symbol_daily(
+    def _price(field: str):
+        return _get_price(
             field=field,
             symbol_list=symbol_list,
             start_date=start_date,
             end_date=end_date,
-        ).replace(0.0, nan)
+        )
 
     if mode in (
         fld.PRICE_MATCH_MODE_OPEN,
@@ -147,24 +145,25 @@ def _get_price(
         fld.PRICE_MATCH_MODE_LOW,
         fld.PRICE_MATCH_MODE_CLOSE,
     ):
-        out = _data(mode)
+        out = _price(mode)
     elif mode == fld.PRICE_MATCH_MODE_MEDIAN:
-        h = _data(fld.PRICE_MATCH_MODE_HIGH)
-        l = _data(fld.PRICE_MATCH_MODE_LOW)
+        h = _price(fld.PRICE_MATCH_MODE_HIGH)
+        l = _price(fld.PRICE_MATCH_MODE_LOW)
         out = (h + l) / 2
     elif mode == fld.PRICE_MATCH_MODE_TYPICAL:
-        h = _data(fld.PRICE_MATCH_MODE_HIGH)
-        l = _data(fld.PRICE_MATCH_MODE_LOW)
-        c = _data(fld.PRICE_MATCH_MODE_CLOSE)
+        h = _price(fld.PRICE_MATCH_MODE_HIGH)
+        l = _price(fld.PRICE_MATCH_MODE_LOW)
+        c = _price(fld.PRICE_MATCH_MODE_CLOSE)
         out = (h + l + c) / 3
     elif mode == fld.PRICE_MATCH_MODE_WEIGHTED:
-        h = _data(fld.PRICE_MATCH_MODE_HIGH)
-        l = _data(fld.PRICE_MATCH_MODE_LOW)
-        c = _data(fld.PRICE_MATCH_MODE_CLOSE)
+        h = _price(fld.PRICE_MATCH_MODE_HIGH)
+        l = _price(fld.PRICE_MATCH_MODE_LOW)
+        c = _price(fld.PRICE_MATCH_MODE_CLOSE)
         out = (h + l + c + c) / 4
     else:
         raise InputError(f"Invalid price_match_mode: {mode}")
 
+    sdr = _SETDataReaderCached()
     td = sdr.get_trading_dates(start_date=start_date, end_date=end_date)
     out = SETSignalCreator._reindex_date(df=out, index=td)
     out = out.reindex(symbol_list, axis=1)
@@ -172,9 +171,15 @@ def _get_price(
     return out
 
 
-def _get_price_fill_prior(
-    field: str, symbol_list: List[str], start_date: str, end_date: str
+def _get_price(
+    field: str,
+    symbol_list: List[str],
+    start_date: str,
+    end_date: str,
+    is_fill_prior: bool = False,
 ):
+    sdr = _SETDataReaderCached()
+
     df = sdr.get_data_symbol_daily(
         field=field,
         symbol_list=symbol_list,
@@ -182,11 +187,13 @@ def _get_price_fill_prior(
         end_date=end_date,
     ).replace(0.0, nan)
 
-    prior_df = sdr.get_data_symbol_daily(
-        field="prior",
-        symbol_list=symbol_list,
-        start_date=start_date,
-        end_date=end_date,
-    )
+    if is_fill_prior:
+        prior_df = sdr.get_data_symbol_daily(
+            field=fld.D_PRIOR,
+            symbol_list=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
+        ).replace(0.0, nan)
+        df = df.fillna(prior_df)
 
-    return df.fillna(prior_df)
+    return df
