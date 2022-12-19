@@ -4,7 +4,7 @@ from unittest.mock import ANY, Mock
 import pandas as pd
 import pytest
 from numpy import inf, nan
-from pandas.testing import assert_frame_equal, assert_index_equal, assert_series_equal
+from pandas.testing import assert_frame_equal, assert_series_equal
 
 import ezyquant.fields as fld
 from ezyquant import SETSignalCreator
@@ -130,7 +130,7 @@ class TestGetData:
             "KKP",
             "KTB",
             "LHFG",
-            "SCB",
+            "SCBB",
             "TCAP",
             "TISCO",
             "TTB",
@@ -198,7 +198,7 @@ class TestGetData:
 
         # Check
         expect = pd.DataFrame(
-            {"THAI": nan},
+            {"THAI": 3.32},
             index=pd.DatetimeIndex(
                 [
                     "2021-05-18",
@@ -298,7 +298,7 @@ class TestGetData:
         # Mock
         symbols = ["A", "B", "C"]
         ssc._get_symbol_in_universe = Mock(return_value=symbols)
-        ssc._reindex_trade_date = lambda df, **kwargs: df
+        ssc._reindex_trade_date = lambda df, **kwargs: df  # type: ignore
         ssc._sdr._get_fundamental_data = Mock(return_value=data)
         ssc.is_banned = Mock(
             return_value=pd.DataFrame(
@@ -377,55 +377,6 @@ class TestGetData:
 
         assert result.empty
 
-    @pytest.mark.parametrize(
-        ("field", "timeframe", "value_by"),
-        [
-            (fld.D_CLOSE, fld.TIMEFRAME_DAILY, fld.VALUE_BY_STOCK),
-            (fld.D_PE, fld.TIMEFRAME_DAILY, fld.VALUE_BY_STOCK),
-            (fld.Q_EBITDA, fld.TIMEFRAME_QUARTERLY, fld.VALUE_BY_STOCK),
-        ],
-    )
-    @pytest.mark.parametrize("shift", [0, 1, 999])
-    @pytest.mark.parametrize(
-        ("method", "period"),
-        [
-            (fld.METHOD_CONSTANT, 1),
-            (fld.METHOD_MEAN, 1),
-            (fld.METHOD_MEAN, 2),
-            (fld.METHOD_MEAN, 999),
-        ],
-    )
-    def test_reindex_column(
-        self,
-        ssc: SETSignalCreator,
-        field: str,
-        timeframe: str,
-        value_by: str,
-        method: str,
-        period: int,
-        shift: int,
-    ):
-        # Mock
-        ssc._start_date = "2010-01-01"
-        ssc._end_date = "2010-01-31"
-        ssc._symbol_list = ["OR"]
-
-        # Test
-        result = ssc.get_data(
-            field=field,
-            timeframe=timeframe,
-            value_by=value_by,
-            method=method,
-            period=period,
-            shift=shift,
-        )
-
-        # Check
-        self._check(result)
-
-        assert_index_equal(result.columns, pd.Index(["OR"]))
-        assert result.isnull().values.all()
-
 
 IDX_2022_04_01_TO_2022_04_29 = pd.DatetimeIndex(
     [
@@ -462,6 +413,7 @@ class TestIsUniverse:
             fld.SECTOR_BANK,
             fld.SECTOR_INSUR,
             fld.SECTOR_AGRI,
+            "AOT",
         ],
     )
     def test_static(self, ssc: SETSignalCreator, universe: str):
@@ -471,7 +423,7 @@ class TestIsUniverse:
         ssc._end_date = "2022-05-01"
 
         # Test
-        result = ssc.is_universe(universe)
+        result = ssc.is_universe([universe])
 
         # Check
         self._check(result)
@@ -496,7 +448,7 @@ class TestIsUniverse:
         ssc._end_date = "2022-05-01"
 
         # Test
-        result = ssc.is_universe(universe)
+        result = ssc.is_universe([universe])
 
         # Check
         self._check(result)
@@ -510,7 +462,31 @@ class TestIsUniverse:
         ssc._end_date = "2010-02-01"
 
         # Test
-        result = ssc.is_universe(universe)
+        result = ssc.is_universe([universe])
+
+        # Check
+        self._check(result)
+        assert (result == False).all().all()
+
+    def test_multi_universe(self, ssc: SETSignalCreator):
+        # Mock
+        ssc._index_list = [fld.MARKET_SET, fld.MARKET_MAI.upper()]
+
+        # Test
+        result = ssc.is_universe(["AOT", "BBL"])
+
+        # Check
+        self._check(result)
+        assert result["AOT"].all()
+        assert result["BBL"].all()
+        assert (result["CPF"] == False).all()
+
+    def test_no_universe(self, ssc: SETSignalCreator):
+        # Mock
+        ssc._index_list = [fld.MARKET_SET, fld.MARKET_MAI.upper()]
+
+        # Test
+        result = ssc.is_universe([])
 
         # Check
         self._check(result)
@@ -625,7 +601,7 @@ class TestIsUniverse:
         ssc._end_date = "2022-05-01"
 
         # Test
-        result = ssc.is_universe(universe)
+        result = ssc.is_universe([universe])
 
         # Check
         self._check(result)
@@ -634,7 +610,7 @@ class TestIsUniverse:
     @pytest.mark.parametrize("universe", ["", "invalid"])
     def test_invalid_universe(self, ssc: SETSignalCreator, universe: str):
         with pytest.raises(InputError):
-            ssc.is_universe(universe)
+            ssc.is_universe([universe])
 
     @staticmethod
     def _check(result):
@@ -719,13 +695,6 @@ class TestIsBanned:
             ("THAI", "2022-01-01", "2022-02-01", True),
             ("SCBB", "2022-01-01", "2022-02-01", False),
             ("SCBB", "2022-04-26", "2022-04-26", False),
-            ("SCBB", "2022-04-27", "2022-04-27", True),
-            ("SCBB", "2022-05-01", "2022-06-01", True),
-            ("EARTH", "2017-01-01", "2017-02-01", False),
-            ("EARTH", "2017-06-14", "2017-06-14", False),
-            ("EARTH", "2017-06-15", "2017-06-15", True),
-            ("EARTH", "2018-01-01", "2019-01-01", True),
-            ("EARTH", "2019-01-01", "2020-01-01", True),
             ("AOT", "2010-01-01", "2020-01-01", False),
         ],
     )
@@ -750,47 +719,25 @@ class TestIsBanned:
 
         assert (result[symbol] == expect).all()
 
-
-class TestIsBannedSp:
-    @pytest.mark.parametrize(
-        ("data", "expected"),
-        [
-            ([], {"ABICO": [False, False, False, False, False, False, False]}),
-            (
-                [
-                    ["ABICO", "2015-01-01", "2015-02-09", "SP"],
-                    ["ABICO", "2015-01-10", "2015-01-20", "SP"],
-                ],
-                {"ABICO": [True, True, True, True, True, False, False]},
-            ),
-        ],
-    )
-    def test_mock(self, ssc: SETSignalCreator, data, expected):
-        sign_posting_df = pd.DataFrame(
-            data,
-            columns=["symbol", "hold_date", "release_date", "sign"],
-        )
-        sign_posting_df["hold_date"] = pd.to_datetime(sign_posting_df["hold_date"])
-        sign_posting_df["release_date"] = pd.to_datetime(
-            sign_posting_df["release_date"]
-        )
-
-        ssc._symbol_list = ["ABICO"]
-        ssc._start_date = "2015-02-01"
-        ssc._end_date = "2015-02-10"
-        ssc._sdr.get_sign_posting = Mock(return_value=sign_posting_df)
+    def test_scbb_delist(self, ssc: SETSignalCreator):
+        """SCBB delist on 2022-04-27 (2022-04-26 can trade)."""
+        # Mock
+        ssc._symbol_list = ["SCBB"]
+        ssc._start_date = "2022-04-26"
+        ssc._end_date = "2022-04-27"
 
         # Test
-        result = ssc._is_banned_sp()
+        result = ssc.is_banned()
 
         # Check
+        self._check(result)
+
         assert_frame_equal(
             result,
             pd.DataFrame(
-                expected,
-                index=pd.bdate_range(start="2015-02-01", end="2015-02-10"),
+                {"SCBB": [False, True]},
+                index=pd.DatetimeIndex(["2022-04-26", "2022-04-27"]),
             ),
-            check_freq=False,
         )
 
 
@@ -878,3 +825,80 @@ class TestRank:
         result = SETSignalCreator.rank(factor_df, pct=True, quantity=0.5)
 
         assert_frame_equal(result, expect)
+
+
+class TestScreenUniverse:
+    @pytest.mark.parametrize(
+        ("index_list", "symbol_list"),
+        [
+            ([], ["AOT"]),
+            ([], ["AOT", "BBL"]),
+            (["SET"], []),
+            (["SET", "SET50"], []),
+            (["SET"], ["AOT"]),
+        ],
+    )
+    def test_no_screen(
+        self, ssc: SETSignalCreator, index_list: List[str], symbol_list: List[str]
+    ):
+        # Mock
+        ssc._index_list = index_list
+        ssc._symbol_list = symbol_list
+        df = pd.DataFrame(
+            [[1.0], [2.0], [3.0]],
+            columns=["AOT"],
+            index=pd.bdate_range(start="2022-01-04", periods=3),
+        )
+
+        # Test
+        result = ssc.screen_universe(df)
+
+        # Check
+        assert_frame_equal(result, df)
+
+    def test_banned(self, ssc: SETSignalCreator):
+        """THAI no trade after 2021-05-18, close at 2021-05-17 is 3.32"""
+        # Mock
+        ssc._index_list = []
+        ssc._symbol_list = ["THAI"]
+        df = pd.DataFrame(
+            [[1.0], [2.0], [3.0]],
+            columns=["THAI"],
+            index=pd.bdate_range(start="2021-05-17", periods=3),
+        )
+
+        # Test
+        result = ssc.screen_universe(df)
+
+        # Check
+        expect = pd.DataFrame(
+            [[1.0], [nan], [nan]],
+            columns=["THAI"],
+            index=pd.bdate_range(start="2021-05-17", periods=3),
+        )
+        assert_frame_equal(expect, result)
+
+    def test_universe(self, ssc: SETSignalCreator):
+        """
+        BANPU added to SET50 on 2022
+        https://thestandard.co/set50-set100-2565/
+        """
+        # Mock
+        ssc._index_list = ["SET50"]
+        ssc._symbol_list = []
+        df = pd.DataFrame(
+            [[1.0], [2.0], [3.0]],
+            columns=["BANPU"],
+            index=pd.DatetimeIndex(["2021-12-30", "2022-01-04", "2022-01-05"]),
+        )
+
+        # Test
+        result = ssc.screen_universe(df)
+
+        # Check
+        expect = pd.DataFrame(
+            [[nan], [2.0], [3.0]],
+            columns=["BANPU"],
+            index=pd.DatetimeIndex(["2021-12-30", "2022-01-04", "2022-01-05"]),
+        )
+        assert_frame_equal(expect, result)

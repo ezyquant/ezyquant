@@ -17,7 +17,11 @@ from . import utils
 from . import validators as vld
 from .errors import InputError
 
-warnings.filterwarnings("ignore", category=PerformanceWarning)
+warnings.filterwarnings(
+    "ignore",
+    message="Non-vectorized DateOffset being applied to Series or DatetimeIndex.",
+    category=PerformanceWarning,
+)
 
 TRADE_DATE = "trade_date"
 NAME = "name"
@@ -167,8 +171,11 @@ class SETDataReader:
         sector: Optional[str] = None,
         sec_type: Optional[str] = None,
         native: Optional[str] = None,
+        start_has_price_date: Optional[str] = None,
+        end_has_price_date: Optional[str] = None,
     ) -> pd.DataFrame:
-        """Data from table SECURITY.
+        """Data from table SECURITY. Symbol must exist in table
+        DAILY_STOCK_TRADE.
 
         Parameters
         ----------
@@ -206,6 +213,10 @@ class SETDataReader:
                 - F: Foreign
                 - U: Thai Trust Fund
                 - R: NVDR
+        start_has_price_date: Optional[str] = None
+            start of D_TRADE in DAILY_STOCK_TRADE.
+        end_has_price_date: Optional[str] = None
+            end of D_TRADE in DAILY_STOCK_TRADE.
 
         Returns
         -------
@@ -236,6 +247,7 @@ class SETDataReader:
         """
         security_t = self._table("SECURITY")
         sector_t = self._table("SECTOR")
+        daily_stock_t = self._table("DAILY_STOCK_TRADE")
 
         j = self._join_sector_table(security_t, isouter=True)
         stmt = (
@@ -272,6 +284,15 @@ class SETDataReader:
         if native != None:
             native = native.upper()
             stmt = stmt.where(security_t.c.I_NATIVE == native)
+
+        subq = select([daily_stock_t.c.I_SECURITY]).distinct()
+        subq = self._filter_stmt_by_date(
+            stmt=subq,
+            column=daily_stock_t.c.D_TRADE,
+            start_date=start_has_price_date,
+            end_date=end_has_price_date,
+        )
+        stmt = stmt.where(security_t.c.I_SECURITY.in_(subq))
 
         df = self._read_sql_query(stmt)
 
@@ -578,6 +599,8 @@ class SETDataReader:
         2  CB20220A    2020-02-20
         3  CB20220B    2020-02-20
         """
+        warnings.warn("This function is deprecated.", DeprecationWarning)
+
         security_t = self._table("SECURITY")
         security_detail_t = self._table("SECURITY_DETAIL")
 
@@ -653,6 +676,8 @@ class SETDataReader:
         0   THAI 2020-11-12   2020-11-13   SP
         1   THAI 2021-02-25          NaT   SP
         """
+        warnings.warn("This function is deprecated.", DeprecationWarning)
+
         security_t = self._table("SECURITY")
         sign_posting_t = self._table("SIGN_POSTING")
 
@@ -988,6 +1013,10 @@ class SETDataReader:
             - symbol(N_SECURITY): str as column
             - trade_date(D_TRADE): date as index
 
+        Warning
+        -------
+        - OHLCV is 0 if no trade.
+
         Examples
         --------
         >>> from ezyquant import SETDataReader
@@ -1102,112 +1131,101 @@ class SETDataReader:
         """Data from tables FINANCIAL_STAT_STD and FINANCIAL_SCREEN.If field is
         in both table, the data from FINANCIAL_STAT_STD will be used.
 
-        FINANCIAL_STAT_STD using data from column M_ACCOUNT. FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and I_PERIOD in ('Q1','Q2','Q3','Q4').
+        FINANCIAL_STAT_STD using data from column M_ACCOUNT multiply 1000.
+        FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and I_PERIOD in ('Q1','Q2','Q3','Q4').
 
         Index date is the trading date (DAILY_STOCK_STAT.D_TRADE). Data is showing at first trade date which join on D_AS_OF.
 
         Parameters
         ----------
         field: str
-            - year
-            - period_type
-            - period
-            - quarter
-            - accumulate
-            - as_of
-            - total_asset
-            - total_liability
-            - shld_equity
-            - total_revenue
-            - total_expense
-            - net_profit
-            - eps
-            - de
-            - net_profit_margin
-            - gross_profit_margin
-            - roa
-            - roe
-            - asset_turnover
-            - ebit
-            - fix_asset_turnover
-            - current_ratio
-            - quick_ratio
-            - interest_coverage
-            - ar_turnover
-            - inventory_turnover
-            - ap_turnover
-            - cash_cycle
-            - ebitda
-            - net_operating
-            - net_investing
-            - net_financing
-            - net_cashflow
-            - dscr
-            - ibde
             - account_payable
             - account_receivable
             - accrued_int_receive
+            - accumulate
             - allowance
+            - ap_turnover
+            - ar_turnover
+            - as_of
+            - asset_turnover
+            - bad_debt
+            - broker_fee
             - cap_paidin
             - cap_paidup
             - cash
+            - cash_cycle
+            - change_ppe
             - common_share
+            - cos
             - current_asset
             - current_liability
+            - current_ratio
+            - de
             - deposit
+            - dividend
+            - dp
+            - dscr
             - earning_asset
+            - ebit
+            - ebitda
+            - ebt
+            - eps
+            - fix_asset_turnover
+            - gross_profit_margin
+            - ibde
             - int_bearing_debt
+            - int_dvd_income
+            - interest_coverage
+            - interest_expense
+            - interest_income
             - inventory
+            - inventory_turnover
             - invest_asset
-            - investment
+            - invest_sec_rev
             - invest_security
+            - investment
             - loan
+            - loan_deposit_revenue
             - loan_from_relatedparty
             - loan_revenue
             - loan_to_relatedparty
             - longterm_liability_currentportion
             - longterm_liability_net_currentportion
             - minority_interest
+            - net_cash_flow
+            - net_cashflow
+            - net_financing
+            - net_investing
+            - net_operating
+            - net_premium
+            - net_profit
+            - net_profit_incl_minority
+            - net_profit_margin
+            - net_profit_ordinary
+            - operating_expense
+            - operating_revenue
+            - period
+            - period_type
+            - pl_other_activities
             - ppe
             - preferred_share
+            - quarter
+            - quick_ratio
             - retain_earning
             - retain_earning_unappropriate
+            - roa
+            - roe
+            - sale
+            - selling_admin
+            - selling_admin_exc_renumuration
             - shld_equity
             - short_invest
             - total_asset
             - total_equity
-            - total_liability
-            - change_ppe
-            - dividend
-            - dp
-            - net_cash_flow
-            - net_financing
-            - net_investing
-            - net_operating
-            - bad_debt
-            - broker_fee
-            - cos
-            - ebit
-            - ebitda
-            - ebt
-            - int_dvd_income
-            - interest_expense
-            - interest_income
-            - invest_sec_rev
-            - loan_deposit_revenue
-            - net_premium
-            - net_profit
-            - net_profit_incl_minority
-            - net_profit_ordinary
-            - operating_expense
-            - operating_revenue
-            - pl_other_activities
-            - sale
-            - selling_admin
-            - selling_admin_exc_renumuration
             - total_expense
+            - total_liability
             - total_revenue
-            - eps
+            - year
         symbol_list: Optional[List[str]] = None
             N_SECURITY in symbol_list, must be unique.
         start_date: Optional[str] = None
@@ -1254,112 +1272,101 @@ class SETDataReader:
         """Data from table FINANCIAL_STAT_STD and FINANCIAL_SCREEN. If field is
         in both table, the data from FINANCIAL_STAT_STD will be used.
 
-        FINANCIAL_STAT_STD filter by "I_QUARTER"='9' and using data from column M_ACCOUNT. FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and I_PERIOD='YE'.
+        FINANCIAL_STAT_STD filter by "I_QUARTER"='9' and using data from column M_ACCOUNT multiply 1000.
+        FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and I_PERIOD='YE'.
 
         Index date is trade date (DAILY_STOCK_STAT.D_TRADE). Data is showing at first trade date which join on D_AS_OF.
 
         Parameters
         ----------
         field: str
-            - year
-            - period_type
-            - period
-            - quarter
-            - accumulate
-            - as_of
-            - total_asset
-            - total_liability
-            - shld_equity
-            - total_revenue
-            - total_expense
-            - net_profit
-            - eps
-            - de
-            - net_profit_margin
-            - gross_profit_margin
-            - roa
-            - roe
-            - asset_turnover
-            - ebit
-            - fix_asset_turnover
-            - current_ratio
-            - quick_ratio
-            - interest_coverage
-            - ar_turnover
-            - inventory_turnover
-            - ap_turnover
-            - cash_cycle
-            - ebitda
-            - net_operating
-            - net_investing
-            - net_financing
-            - net_cashflow
-            - dscr
-            - ibde
             - account_payable
             - account_receivable
             - accrued_int_receive
+            - accumulate
             - allowance
+            - ap_turnover
+            - ar_turnover
+            - as_of
+            - asset_turnover
+            - bad_debt
+            - broker_fee
             - cap_paidin
             - cap_paidup
             - cash
+            - cash_cycle
+            - change_ppe
             - common_share
+            - cos
             - current_asset
             - current_liability
+            - current_ratio
+            - de
             - deposit
+            - dividend
+            - dp
+            - dscr
             - earning_asset
+            - ebit
+            - ebitda
+            - ebt
+            - eps
+            - fix_asset_turnover
+            - gross_profit_margin
+            - ibde
             - int_bearing_debt
+            - int_dvd_income
+            - interest_coverage
+            - interest_expense
+            - interest_income
             - inventory
+            - inventory_turnover
             - invest_asset
-            - investment
+            - invest_sec_rev
             - invest_security
+            - investment
             - loan
+            - loan_deposit_revenue
             - loan_from_relatedparty
             - loan_revenue
             - loan_to_relatedparty
             - longterm_liability_currentportion
             - longterm_liability_net_currentportion
             - minority_interest
+            - net_cash_flow
+            - net_cashflow
+            - net_financing
+            - net_investing
+            - net_operating
+            - net_premium
+            - net_profit
+            - net_profit_incl_minority
+            - net_profit_margin
+            - net_profit_ordinary
+            - operating_expense
+            - operating_revenue
+            - period
+            - period_type
+            - pl_other_activities
             - ppe
             - preferred_share
+            - quarter
+            - quick_ratio
             - retain_earning
             - retain_earning_unappropriate
+            - roa
+            - roe
+            - sale
+            - selling_admin
+            - selling_admin_exc_renumuration
             - shld_equity
             - short_invest
             - total_asset
             - total_equity
-            - total_liability
-            - change_ppe
-            - dividend
-            - dp
-            - net_cash_flow
-            - net_financing
-            - net_investing
-            - net_operating
-            - bad_debt
-            - broker_fee
-            - cos
-            - ebit
-            - ebitda
-            - ebt
-            - int_dvd_income
-            - interest_expense
-            - interest_income
-            - invest_sec_rev
-            - loan_deposit_revenue
-            - net_premium
-            - net_profit
-            - net_profit_incl_minority
-            - net_profit_ordinary
-            - operating_expense
-            - operating_revenue
-            - pl_other_activities
-            - sale
-            - selling_admin
-            - selling_admin_exc_renumuration
             - total_expense
+            - total_liability
             - total_revenue
-            - eps
+            - year
         symbol_list: Optional[List[str]] = None
             N_SECURITY in symbol_list, must be unique.
         start_date: Optional[str] = None
@@ -1408,33 +1415,34 @@ class SETDataReader:
 
         TTM can be calculate only Income Statement and Cashflow, but not Financial Ratio and Balance Sheet.
 
-        Data from table FINANCIAL_SCREEN.
+        Data from table FINANCIAL_STAT_STD.
 
-        FINANCIAL_STAT_STD filter by using data from column M_ACC_ACCOUNT_12M.
+        FINANCIAL_STAT_STD filter by using data from column M_ACC_ACCOUNT_12M multiply 1000.
 
         Index date is trade date (DAILY_STOCK_STAT.D_TRADE). Data is showing at first trade date which join on D_AS_OF.
 
         Parameters
         ----------
         field : str
-            - change_ppe
-            - dividend
-            - dp
-            - net_cash_flow
-            - net_financing
-            - net_investing
-            - net_operating
             - bad_debt
             - broker_fee
+            - change_ppe
             - cos
+            - dividend
+            - dp
             - ebit
             - ebitda
             - ebt
+            - eps
             - int_dvd_income
             - interest_expense
             - interest_income
             - invest_sec_rev
             - loan_deposit_revenue
+            - net_cash_flow
+            - net_financing
+            - net_investing
+            - net_operating
             - net_premium
             - net_profit
             - net_profit_incl_minority
@@ -1447,7 +1455,6 @@ class SETDataReader:
             - selling_admin_exc_renumuration
             - total_expense
             - total_revenue
-            - eps
         symbol_list : Optional[List[str]]
             N_SECURITY in symbol_list, must be unique.
         start_date : Optional[str]
@@ -1496,99 +1503,33 @@ class SETDataReader:
 
         Data from table FINANCIAL_STAT_STD and FINANCIAL_SCREEN. If field is in both table, the data from FINANCIAL_STAT_STD will be used.
 
-        FINANCIAL_STAT_STD using data from column M_ACC_ACCOUNT. FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and I_PERIOD in ('Q1','6M','9M','YE').
+        FINANCIAL_STAT_STD using data from column M_ACC_ACCOUNT multiply 1000.
+        FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and I_PERIOD in ('Q1','6M','9M','YE').
 
         Index date is trade date (DAILY_STOCK_STAT.D_TRADE). Data is showing at first DAILY_STOCK_STAT.D_TRADE which join on D_AS_OF.
 
         Parameters
         ----------
         field: str
-            - year
-            - period_type
-            - period
-            - quarter
-            - accumulate
-            - as_of
-            - total_asset
-            - total_liability
-            - shld_equity
-            - total_revenue
-            - total_expense
-            - net_profit
-            - eps
-            - de
-            - net_profit_margin
-            - gross_profit_margin
-            - roa
-            - roe
-            - asset_turnover
-            - ebit
-            - fix_asset_turnover
-            - current_ratio
-            - quick_ratio
-            - interest_coverage
-            - ar_turnover
-            - inventory_turnover
-            - ap_turnover
-            - cash_cycle
-            - ebitda
-            - net_operating
-            - net_investing
-            - net_financing
-            - net_cashflow
-            - dscr
-            - ibde
-            - account_payable
-            - account_receivable
-            - accrued_int_receive
-            - allowance
-            - cap_paidin
-            - cap_paidup
-            - cash
-            - common_share
-            - current_asset
-            - current_liability
-            - deposit
-            - earning_asset
-            - int_bearing_debt
-            - inventory
-            - invest_asset
-            - investment
-            - invest_security
-            - loan
-            - loan_from_relatedparty
-            - loan_revenue
-            - loan_to_relatedparty
-            - longterm_liability_currentportion
-            - longterm_liability_net_currentportion
-            - minority_interest
-            - ppe
-            - preferred_share
-            - retain_earning
-            - retain_earning_unappropriate
-            - shld_equity
-            - short_invest
-            - total_asset
-            - total_equity
-            - total_liability
-            - change_ppe
-            - dividend
-            - dp
-            - net_cash_flow
-            - net_financing
-            - net_investing
-            - net_operating
             - bad_debt
             - broker_fee
+            - change_ppe
             - cos
+            - dividend
+            - dp
             - ebit
             - ebitda
             - ebt
+            - eps
             - int_dvd_income
             - interest_expense
             - interest_income
             - invest_sec_rev
             - loan_deposit_revenue
+            - net_cash_flow
+            - net_financing
+            - net_investing
+            - net_operating
             - net_premium
             - net_profit
             - net_profit_incl_minority
@@ -1601,7 +1542,6 @@ class SETDataReader:
             - selling_admin_exc_renumuration
             - total_expense
             - total_revenue
-            - eps
         symbol_list: Optional[List[str]] = None
             N_SECURITY in symbol_list, must be unique.
         start_date: Optional[str] = None
@@ -2157,7 +2097,6 @@ class SETDataReader:
         TIMEFRAME_MAP = {
             fld.TIMEFRAME_QUARTERLY: ("Q1", "Q2", "Q3", "Q4"),
             fld.TIMEFRAME_YEARLY: ("YE",),
-            fld.TIMEFRAME_YTD: ("Q1", "6M", "9M", "YE"),
         }
 
         financial_screen_t = self._table("FINANCIAL_SCREEN")
@@ -2188,21 +2127,29 @@ class SETDataReader:
         security_t = self._table("SECURITY")
         d_trade_subquery = self._d_trade_subquery()
 
+        field_type = ""
+        for i in fld.FINANCIAL_STAT_STD_MAP:
+            if field in fld.FINANCIAL_STAT_STD_MAP[i]:
+                field_type = i
+                break
+
         if timeframe == fld.TIMEFRAME_QUARTERLY:
             value_column = financial_stat_std_t.c["M_ACCOUNT"]
+        elif timeframe == fld.TIMEFRAME_YEARLY and field_type == "B":
+            value_column = financial_stat_std_t.c["M_ACCOUNT"]
         elif timeframe == fld.TIMEFRAME_YEARLY:
-            if field in fld.FINANCIAL_STAT_STD_MAP["B"]:
-                value_column = financial_stat_std_t.c["M_ACCOUNT"]
-            else:
-                value_column = financial_stat_std_t.c["M_ACC_ACCOUNT_12M"]
-        elif timeframe == fld.TIMEFRAME_YTD:
+            value_column = financial_stat_std_t.c["M_ACC_ACCOUNT_12M"]
+        elif timeframe == fld.TIMEFRAME_YTD and field_type != "B":
             value_column = financial_stat_std_t.c["M_ACC_ACCOUNT"]
-        elif timeframe == "average":
-            value_column = financial_stat_std_t.c["M_ACCOUNT_AVG"]
-        elif timeframe == fld.TIMEFRAME_TTM:
+        elif timeframe == fld.TIMEFRAME_TTM and field_type != "B":
             value_column = financial_stat_std_t.c["M_ACC_ACCOUNT_12M"]
         else:
-            raise ValueError(f"{timeframe} is not a valid timeframe")
+            raise ValueError(f"Invalid timeframe {timeframe}")
+
+        db_field = fld.FINANCIAL_STAT_STD_MAP[field_type][field]
+
+        if db_field.startswith("m_"):
+            value_column *= 1000  # Database stores in thousands bath
 
         stmt = (
             select(
@@ -2213,10 +2160,7 @@ class SETDataReader:
                 ]
             )
             .select_from(self._join_security_and_d_trade_subquery(financial_stat_std_t))
-            .where(
-                func.trim(financial_stat_std_t.c.N_ACCOUNT)
-                == fld.FINANCIAL_STAT_STD_MAP_COMPACT[field]
-            )
+            .where(func.trim(financial_stat_std_t.c.N_ACCOUNT) == db_field)
         )
 
         if timeframe == fld.TIMEFRAME_YEARLY:
@@ -2244,7 +2188,6 @@ class SETDataReader:
         elif field in fld.FINANCIAL_SCREEN_MAP and timeframe in (
             fld.TIMEFRAME_QUARTERLY,
             fld.TIMEFRAME_YEARLY,
-            fld.TIMEFRAME_YTD,
         ):
             stmt = self._get_financial_screen_stmt(field=field, timeframe=timeframe)
         else:
@@ -2438,21 +2381,14 @@ class SETDataReader:
     """
 
     @lru_cache(maxsize=128)
-    def _get_holidays(self) -> List[pd.Timestamp]:
+    def _get_holidays(self) -> List[str]:
         tds = self.get_trading_dates()
-        return (
-            pd.concat(
-                [
-                    pd.bdate_range(tds[0], tds[-1]).to_series(),
-                    pd.DatetimeIndex(tds).to_series(),
-                ]
-            )
-            .drop_duplicates(keep=False)
-            .tolist()
-        )
+        bds = pd.bdate_range(tds[0], tds[-1]).strftime("%Y-%m-%d")
+        return list(set(bds) - set(tds))
 
     def _SETBusinessDay(self, n: int = 1) -> CustomBusinessDay:
-        return CustomBusinessDay(n, holidays=self._get_holidays())
+        holidays = self._get_holidays()
+        return CustomBusinessDay(n, normalize=True, holidays=holidays)
 
     """
     Static methods

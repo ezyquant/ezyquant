@@ -1,4 +1,4 @@
-from functools import lru_cache
+from functools import lru_cache, wraps
 from typing import Dict, List, Optional
 
 import numpy as np
@@ -9,7 +9,11 @@ from . import fields as fld
 from . import utils
 from .errors import InputError
 from .indicators import TA
-from .reader import _SETDataReaderCached
+from .reader import SETDataReader, _SETDataReaderCached
+
+nan = float("nan")
+
+MethodType = Optional[Literal["backfill", "bfill", "ffill", "pad"]]
 
 
 class SETSignalCreator:
@@ -45,6 +49,16 @@ class SETSignalCreator:
                 - SET50
         symbol_list: List[str] = []
             List of symbol.
+
+        Examples
+        --------
+        >>> from ezyquant import SETSignalCreator
+        >>> ssc = SETSignalCreator(
+        ...     start_date="2022-01-01",
+        ...     end_date="2022-01-10",
+        ...     index_list=["SET100"],
+        ...     symbol_list=["NETBAY"],
+        ... )
         """
         self._index_list: List[str] = [i.upper() for i in index_list]
         self._symbol_list: List[str] = [i.upper() for i in symbol_list]
@@ -67,7 +81,7 @@ class SETSignalCreator:
         """Return DataFrame which columns are symbols and index is the trading
         date start from start_date to end_date.
 
-        Banned symbols will be replaced with nan.
+        OHLCV fillna with prior value.
 
         Parameters
         ----------
@@ -253,17 +267,15 @@ class SETSignalCreator:
 
         df.index.freq = None  # type: ignore
 
-        df = df.mask(self.is_banned(), np.nan)
-
         return df
 
-    def is_universe(self, universe: str) -> pd.DataFrame:
+    def is_universe(self, universes: List[str]) -> pd.DataFrame:
         """Return Dataframe of boolean is universe.
 
         Parameters
         ----------
-        universe: str
-            Can be Sector, Industry, or Index.
+        universes: List[str]
+            Can be list of Sector, Industry, Index or symbol.
 
         Returns
         -------
@@ -280,7 +292,7 @@ class SETSignalCreator:
         ...     index_list=[],
         ...     symbol_list=["COM7", "MALEE"],
         ... )
-        >>> ssc.is_universe("SET100")
+        >>> ssc.is_universe(["SET100"])
                     COM7  MALEE
         2022-01-04  True  False
         2022-01-05  True  False
@@ -288,17 +300,21 @@ class SETSignalCreator:
         2022-01-07  True  False
         2022-01-10  True  False
         """
-        universe = universe.upper()
+        universes = [i.upper() for i in universes]
 
-        try:
-            return self._is_universe_static(universe)
-        except InputError:
-            return self._is_universe_dynamic(universe)
+        out = self._make_nan_df().fillna(False)
 
-    # TODO: remove cache after improve SETSignalCreator._is_banned_sp
+        for i in universes:
+            try:
+                out = out | self._is_universe_static(i)
+            except InputError:
+                out = out | self._is_universe_dynamic(i)
+
+        return out
+
     @lru_cache(maxsize=1)
     def is_banned(self) -> pd.DataFrame:
-        """Return True when stock was Delisted or Suspension (SP).
+        """Return True when stock has no close, last bid, last offer.
 
         Returns
         -------
@@ -323,7 +339,32 @@ class SETSignalCreator:
         2022-01-07  False  False  True
         2022-01-10  False  False  True
         """
-        return self._is_banned_delisted() | self._is_banned_sp()
+        symbol_list = self._get_symbol_in_universe()
+
+        # TODO: perf - query only no trade date, symbol
+        close_df = self._get_data_symbol_daily(
+            field=fld.D_CLOSE, symbol_list=symbol_list, is_fill_prior=False
+        )
+        last_bid_df = self._get_data_symbol_daily(
+            field=fld.D_LAST_BID, symbol_list=symbol_list, is_fill_prior=False
+        )
+        last_offer_df = self._get_data_symbol_daily(
+            field=fld.D_LAST_OFFER, symbol_list=symbol_list, is_fill_prior=False
+        )
+
+        out = close_df + last_bid_df + last_offer_df
+        out = ~out.fillna(0).astype(bool)
+        out = self._reindex(out, fill_value=True)
+
+        return out
+
+    def screen_universe(self, df: pd.DataFrame, mask_value=nan) -> pd.DataFrame:
+        """Mask Non universe or Banned symbol with given value."""
+        cond = (
+            ~self.is_universe(self._index_list + self._symbol_list) | self.is_banned()
+        )
+        df = df.mask(cond, mask_value)
+        return df
 
     @staticmethod
     def rank(
@@ -390,50 +431,89 @@ class SETSignalCreator:
     Protected methods
     """
 
-    @lru_cache(maxsize=128)
+    @lru_cache(maxsize=1)
+    def _make_nan_df(self) -> pd.DataFrame:
+        """Make empty dataframe with trading dates as index and symbols as
+        columns.
+
+        Returns
+        -------
+        pd.DataFrame
+            Dataframe with nan as values.
+        """
+        return pd.DataFrame(
+            np.nan,
+            index=pd.DatetimeIndex(self._get_trading_dates()),
+            columns=self._get_symbol_in_universe(),
+        )
+
+    @lru_cache(maxsize=1)
     def _get_trading_dates(self) -> List[str]:
         end = self._end_date
         if self._end_date == None:
             end = self._sdr.last_table_update("DAILY_STOCK_TRADE")
         return self._sdr.get_trading_dates(start_date=self._start_date, end_date=end)
 
-    @lru_cache(maxsize=128)
+    @lru_cache(maxsize=1)
     def _get_symbol_in_universe(self) -> List[str]:
-        out = set()
-        if self._symbol_list:
-            df = self._sdr.get_symbol_info(
-                symbol_list=self._symbol_list, sec_type="S", native="L"
-            )
-            out.update(df["symbol"])
-        if fld.MARKET_SET in self._index_list:
-            df = self._sdr.get_symbol_info(
-                market=fld.MARKET_SET, sec_type="S", native="L"
-            )
-            out.update(df["symbol"])
-        if fld.MARKET_MAI.upper() in self._index_list:
-            df = self._sdr.get_symbol_info(
-                market=fld.MARKET_MAI, sec_type="S", native="L"
-            )
-            out.update(df["symbol"])
-
+        symbols = set()
         index_list = [i for i in self._index_list if i not in (fld.MARKET_MAP_UPPER)]
         for i in index_list:
             df = self._get_symbols_by_index(i)
-            out.update(df["symbol"])
+            symbols.update(df["symbol"])
 
-        return sorted(list(out))
+        if fld.MARKET_SET in self._index_list:
+            df = self._get_symbol_info(market=fld.MARKET_SET)
+            symbols.update(df["symbol"])
+        if fld.MARKET_MAI.upper() in self._index_list:
+            df = self._get_symbol_info(market=fld.MARKET_MAI)
+            symbols.update(df["symbol"])
 
-    def _get_symbol_info(self) -> pd.DataFrame:
-        s = self._get_symbol_in_universe()
-        return self._sdr.get_symbol_info(symbol_list=s, sec_type="S", native="L")
+        df = self._get_symbol_info(symbol_list=list(symbols | set(self._symbol_list)))
 
-    def _reindex_trade_date(self, df: pd.DataFrame, **kwargs) -> pd.DataFrame:
-        td = self._get_trading_dates()
-        return self._reindex_date(df=df, index=td, **kwargs)
+        return sorted(df["symbol"].to_list())
 
-    def _reindex_columns_symbol(
-        self, df: pd.DataFrame, fill_value=None
+    @wraps(SETDataReader.get_symbol_info)
+    def _get_symbol_info(self, *args, **kwargs) -> pd.DataFrame:
+        return self._sdr.get_symbol_info(
+            *args,
+            **kwargs,
+            sec_type="S",
+            native="L",
+            start_has_price_date=self._start_date,
+            end_has_price_date=self._end_date,
+        )
+
+    def _reindex(
+        self, df: pd.DataFrame, method: MethodType = None, fill_value=nan
     ) -> pd.DataFrame:
+        """Reindex dataframe to trading date and symbol.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            dataframe to reindex
+        method : MethodType
+            Method to use for filling holes in reindexed DataFrame
+        fill_value : Any
+            Value to use for missing values. Defaults to NaN, but can be any "compatible" value.
+
+        Returns
+        -------
+        pd.DataFrame
+            Dataframe with trading date and symbol as index and columns.
+        """
+        df = self._reindex_trade_date(df, method=method, fill_value=fill_value)
+        df = self._reindex_columns_symbol(df, fill_value=fill_value)
+        return df
+
+    def _reindex_trade_date(
+        self, df: pd.DataFrame, method: MethodType = None, fill_value=nan
+    ) -> pd.DataFrame:
+        td = self._get_trading_dates()
+        return self._reindex_date(df=df, index=td, method=method, fill_value=fill_value)
+
+    def _reindex_columns_symbol(self, df: pd.DataFrame, fill_value=nan) -> pd.DataFrame:
         s = self._get_symbol_in_universe()
         return df.reindex(columns=s, fill_value=fill_value)
 
@@ -481,7 +561,7 @@ class SETSignalCreator:
 
         return series
 
-    @lru_cache(maxsize=128)
+    @lru_cache(maxsize=1)
     def _get_start_as_of_security_index(self) -> Dict[str, str]:
         out = self._sdr._get_last_as_of_date_in_security_index(
             current_date=self._start_date
@@ -497,7 +577,9 @@ class SETSignalCreator:
             end_date=self._end_date,
         )
 
-    def _get_data_symbol_daily(self, symbol_list: List[str], field: str):
+    def _get_data_symbol_daily(
+        self, symbol_list: List[str], field: str, is_fill_prior: bool = True
+    ) -> pd.DataFrame:
         df = self._sdr.get_data_symbol_daily(
             field=field,
             symbol_list=symbol_list,
@@ -506,7 +588,7 @@ class SETSignalCreator:
         )
 
         # Forward fill 0 and NaN with prior
-        if field in {
+        if is_fill_prior and field in {
             fld.D_OPEN,
             fld.D_HIGH,
             fld.D_LOW,
@@ -522,11 +604,10 @@ class SETSignalCreator:
                 end_date=self._end_date,
             )
             prior_df = self._reindex_trade_date(prior_df)
-            prior_df = prior_df.replace(0, np.nan)
-            prior_df = prior_df.fillna(method="ffill")
+            prior_df = prior_df.replace(0.0, np.nan)
 
             df = self._reindex_trade_date(df)
-            df = df.replace(0, np.nan)
+            df = df.replace(0.0, np.nan)
             df = df.fillna(prior_df)
         return df
 
@@ -574,12 +655,17 @@ class SETSignalCreator:
             index_type = "industry"
         elif universe in fld.SECTOR_LIST:
             index_type = "sector"
+        elif universe in self._get_symbol_in_universe():
+            index_type = "symbol"
         else:
             raise InputError(
                 f"{universe} is invalid universe. Please read document to check valid universe."
             )
 
-        df = self._get_symbol_info().set_index("symbol")
+        symbol_list = self._get_symbol_in_universe()
+        df = self._get_symbol_info(symbol_list=symbol_list).set_index(
+            "symbol", drop=False
+        )
         tds = self._get_trading_dates()
 
         is_uni_dict = (df[index_type].str.upper() == universe).to_dict()
@@ -607,63 +693,9 @@ class SETSignalCreator:
         df = df.notna()
 
         # Reindex
-        df = self._reindex_trade_date(df, method="ffill", fill_value=False)
-        df = self._reindex_columns_symbol(df, fill_value=False)
+        df = self._reindex(df, method="ffill", fill_value=False)
 
         return df
-
-    def _is_banned_delisted(self) -> pd.DataFrame:
-        symbol_list = self._get_symbol_in_universe()
-
-        df = self._sdr.get_delisted(
-            symbol_list=symbol_list,
-            end_date=self._end_date,
-        )
-
-        df["true"] = True
-        df = utils.pivot_remove_index_name(
-            df=df, index="delisted_date", columns="symbol", values="true"
-        )
-
-        # Reindex
-        df = self._reindex_trade_date(df, method="ffill", fill_value=False)
-        df = self._reindex_columns_symbol(df, fill_value=False)
-
-        return df
-
-    def _is_banned_sp(self) -> pd.DataFrame:
-        symbol_list = self._get_symbol_in_universe()
-
-        df = self._sdr.get_sign_posting(
-            symbol_list=symbol_list,
-            end_date=self._end_date,
-            sign_list=["SP"],
-        )
-
-        tds = self._get_trading_dates()
-        df = df.fillna({"release_date": pd.Timestamp(tds[-1]) + pd.Timedelta(days=1)})
-
-        # closed="left" because at hold date is not tradable but release date is tradable
-        df["date_range"] = df.apply(
-            lambda x: pd.bdate_range(
-                start=x["hold_date"], end=x["release_date"], closed="left"
-            ),  # type: ignore
-            axis=1,
-            result_type="reduce",
-        )
-        date_range_group = df.groupby("symbol")["date_range"].apply(
-            lambda x: utils.union_datetime_index(x)
-        )
-
-        out = pd.DataFrame(
-            [pd.Series(True, index=v, name=k) for k, v in date_range_group.items()]
-        ).T
-
-        # Reindex
-        out = self._reindex_trade_date(out, fill_value=False)
-        out = self._reindex_columns_symbol(out, fill_value=False)
-
-        return out
 
     """
     Static methods
@@ -673,8 +705,8 @@ class SETSignalCreator:
     def _reindex_date(
         df: pd.DataFrame,
         index,
-        method: Optional[Literal["backfill", "bfill", "ffill", "pad"]] = None,
-        fill_value=None,
+        method: MethodType = None,
+        fill_value=nan,
     ) -> pd.DataFrame:
         """Reindex and fillna with method and fill_value."""
         index = pd.DatetimeIndex(index)

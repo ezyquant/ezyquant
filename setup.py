@@ -24,10 +24,11 @@ setup(
     url="https://doc.ezyquant.com/",
     maintainer="Fintech (Thailand) Company Limited",
     maintainer_email="admin@fintech.co.th",
-    python_requires=">=3.7",
+    python_requires=">=3.8.6",
     install_requires=[
         "pandas>=1.3",
         "sqlalchemy>=1.4",
+        "psycopg2-binary>=2.9",
         "ta>=0.10",
         "XlsxWriter>=3.0",
         "typing_extensions>=4.4",

@@ -47,7 +47,7 @@ def _backtest(
         Index is trade date, columns are symbol, values are weight.
         First row will be used as initial close price.
     price_match_df: pd.DataFrame
-        Dataframe of match price.
+        Dataframe of match price. No trade will be made if price is nan.
         Index is trade date, columns are symbol, values are weight.
         Index and columns must be same as or more than close_price_df.
     pct_buy_slip: float

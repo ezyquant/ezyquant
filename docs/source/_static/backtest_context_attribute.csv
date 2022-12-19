@@ -1,9 +1,0 @@
-Index,Description
-symbol,selected symbol
-signal,input signal
-close_price,close price
-cost_price,cost price
-cash,available cash
-total_cost_value,sum of all stock market value in portfolio
-total_market_value,sum of all stock cost value in portfolio
-port_value,total portfolio value
