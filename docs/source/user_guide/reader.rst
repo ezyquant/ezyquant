@@ -138,7 +138,7 @@ GetData with method and period
 Is_Universe
 -----------
 
-ใช้เช็คว่าหุ้นอยู่ใน Universe ที่ต้องการหรือไม่
+ใช้เช็คว่าหุ้นอยู่ใน Universe ที่ต้องการหรือไม่ ผ่านฟังก์ชั่น :py:meth:`SETSignalCreator.is_universe`
 
 Parameters
     * *universe: str*
@@ -163,13 +163,14 @@ Is_Banned
 Rank
 ----
 
-ใช้ rank หุ้นทุกตัวในแต่ละวัน
+ใช้ rank หุ้นทุกตัวในแต่ละวัน ผ่านฟังก์ชั่น :py:meth:`SETSignalCreator.rank`
 
 Parameters
     * *factor_df: pd.DataFrame*
     * *quantity: Optional[int] = None*
+    * *method: str = "first"*
     * *ascending: bool = True*
-    * *pct: bool = False* (ถ้าเป็น True จะเป็น Quartile โดย quantity จะรับค่าระหว่าง 0.0 - 1.0 )
+    * *pct: bool = False* (ถ้าเป็น True จะเป็น Percentile โดย quantity จะรับค่าระหว่าง 0.0 - 1.0 )
 
 **ตัวอย่าง** การจัดลำดับหุ้นจากน้อยไปมากของราคาปิด และคัดให้เหลือเพียง 10 ตัว
 
