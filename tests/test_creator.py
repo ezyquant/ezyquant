@@ -688,7 +688,7 @@ class TestIsBanned:
         self._check(result)
 
     @pytest.mark.parametrize("symbol_list", [["JTS"], ["JTS", "THAI"]])
-    def test_one_day_sp(self, ssc: SETSignalCreator, symbol_list: List[str]):
+    def test_one_day_sp(self, symbol_list: List[str]):
         """https://portal.settrade.com/NewsEngineTXTDisplay.jsp?newsId=16529175763321&t=H&fp=/simsImg/news/histri/202205/22065589.t22&tk=ee62bd2018156b05378402dcd9cb4828&q=Y"""
         # Mock
         ssc = SETSignalCreator(

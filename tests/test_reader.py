@@ -11,6 +11,8 @@ from ezyquant import validators as vld
 from ezyquant.errors import InputError
 from tests import utils
 
+INDEX_LIST = fld.INDEX_LIST + [fld.MARKET_SET, fld.MARKET_MAI]
+
 
 def test_last_table_update(sdr: SETDataReader):
     # Test
@@ -990,7 +992,7 @@ class TestGetSymbolsByIndex:
         for i in result.columns:
             assert pd.notna(result[i]).all(), f"{i} is null"
 
-        assert result["index"].isin(fld.INDEX_LIST).all()
+        assert result["index"].isin(INDEX_LIST).all()
         assert (result["symbol"] == result["symbol"].str.upper()).all()
 
         return result
@@ -1738,7 +1740,7 @@ class TestGetDataIndexDaily:
         assert result.index.is_unique
         assert (result.index == result.index.normalize()).all()
 
-        assert (result.columns.isin(fld.INDEX_LIST)).all()
+        assert (result.columns.isin(INDEX_LIST)).all()
 
         return result
 
