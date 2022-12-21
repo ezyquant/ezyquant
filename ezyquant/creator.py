@@ -487,13 +487,13 @@ class SETSignalCreator:
 
             symbols.update(df["symbol"])
 
-        df = self._get_symbol_info(symbol_list=list(symbols) + self._symbol_list)
+        df = self._get_symbol_info(symbol_list=list(symbols | set(self._symbol_list)))
 
         invalid_symbols = list(set(self._symbol_list) - set(df["symbol"]))
         if len(invalid_symbols) > 0:
             warnings.warn(f"Symbols {invalid_symbols} is invalid.")
 
-        return sorted(df["symbol"].to_list())
+        return sorted(set(df["symbol"]))
 
     @wraps(SETDataReader.get_symbol_info)
     def _get_symbol_info(self, *args, **kwargs) -> pd.DataFrame:
