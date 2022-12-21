@@ -48,7 +48,50 @@ class SETSignalCreator:
                 - sSET
                 - SET100
                 - SET50
-                - TODO: sector and industry
+                - AGRO
+                - CONSUMP
+                - FINCIAL
+                - INDUS
+                - PROPCON
+                - RESOURC
+                - SERVICE
+                - TECH
+                - AGRO-m
+                - CONSUMP-m
+                - FINCIAL-m
+                - INDUS-m
+                - PROPCON-m
+                - RESOURC-m
+                - SERVICE-m
+                - TECH-m
+                - AGRI
+                - AUTO
+                - BANK
+                - COMM
+                - CONMAT
+                - CONS
+                - ENERG
+                - ETRON
+                - FASHION
+                - FIN
+                - FOOD
+                - HELTH
+                - HOME
+                - ICT
+                - IMM
+                - INSUR
+                - MEDIA
+                - MINE
+                - PAPER
+                - PERSON
+                - PETRO
+                - PF&REIT
+                - PKG
+                - PROF
+                - PROP
+                - STEEL
+                - TOURISM
+                - TRANS
         symbol_list: List[str] = []
             List of symbol ex. ["AOT", "BBL"]
 
