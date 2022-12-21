@@ -80,7 +80,7 @@ class TestGetSymbolInUniverse:
             ),
         ],
     )
-    def test_index_list(
+    def test_dynamic_index_list(
         self,
         ssc: SETSignalCreator,
         index_list: List[str],
@@ -92,6 +92,32 @@ class TestGetSymbolInUniverse:
         ssc._index_list = index_list
         ssc._start_date = start_date
         ssc._end_date = end_date
+
+        # Test
+        result = ssc._get_symbol_in_universe()
+
+        # Check
+        assert set(result) == set(expected)
+
+    @pytest.mark.parametrize(
+        ("index_list", "expected"),
+        [
+            ([fld.INDUSTRY_AGRO], const.ARGO_SET),
+            ([fld.SECTOR_AGRI], const.AGRI_SET),
+            ([fld.SECTOR_AGRI, fld.SECTOR_FOOD], const.ARGO_SET),
+            ([fld.INDUSTRY_AGRO + "-M"], const.ARGO_MAI),
+        ],
+    )
+    def test_static_index_list(
+        self,
+        ssc: SETSignalCreator,
+        index_list: List[str],
+        expected: List[str],
+    ):
+        # Mock
+        ssc._start_date = "2022-11-01"
+        ssc._end_date = "2022-12-01"
+        ssc._index_list = index_list
 
         # Test
         result = ssc._get_symbol_in_universe()
