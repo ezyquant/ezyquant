@@ -132,7 +132,7 @@ class TestGetData:
     def test_sector_daily(self):
         # Mock
         ssc = SETSignalCreator(
-            index_list=[fld.INDEX_SET, fld.INDEX_MAI.upper()],
+            index_list=[fld.MARKET_SET, fld.MARKET_MAI],
             start_date="2021-05-18",
             end_date="2021-05-31",
         )
@@ -170,7 +170,7 @@ class TestGetData:
     def test_industry_daily(self):
         # Mock
         ssc = SETSignalCreator(
-            index_list=[fld.INDEX_SET, fld.INDEX_MAI.upper()],
+            index_list=[fld.MARKET_SET, fld.MARKET_MAI],
             start_date="2021-05-18",
             end_date="2021-05-31",
         )
@@ -439,8 +439,8 @@ class TestIsUniverse:
     @pytest.mark.parametrize(
         "universe",
         [
-            fld.INDEX_SET,
-            fld.INDEX_MAI,
+            fld.MARKET_SET,
+            fld.MARKET_MAI,
             fld.INDUSTRY_FINCIAL,
             fld.INDUSTRY_AGRO,
             fld.SECTOR_BANK,
@@ -452,7 +452,7 @@ class TestIsUniverse:
     def test_static(self, universe: str):
         # Mock
         ssc = SETSignalCreator(
-            index_list=[fld.MARKET_SET, fld.MARKET_MAI.upper()],
+            index_list=[fld.MARKET_SET, fld.MARKET_MAI],
             start_date="2022-04-01",
             end_date="2022-05-01",
         )
@@ -479,7 +479,7 @@ class TestIsUniverse:
     def test_dynamic(self, universe: str):
         # Mock
         ssc = SETSignalCreator(
-            index_list=[fld.MARKET_SET, fld.MARKET_MAI.upper()],
+            index_list=[fld.MARKET_SET, fld.MARKET_MAI],
             start_date="2022-04-01",
             end_date="2022-05-01",
         )
@@ -495,7 +495,7 @@ class TestIsUniverse:
         """sSET launch 2017-01-01"""
         # Mock
         ssc = SETSignalCreator(
-            index_list=[fld.MARKET_SET, fld.MARKET_MAI.upper()],
+            index_list=[fld.MARKET_SET, fld.MARKET_MAI],
             start_date="2010-01-01",
             end_date="2010-02-01",
         )
@@ -509,7 +509,7 @@ class TestIsUniverse:
 
     def test_multi_universe(self):
         # Mock
-        ssc = SETSignalCreator(index_list=[fld.MARKET_SET, fld.MARKET_MAI.upper()])
+        ssc = SETSignalCreator(index_list=[fld.MARKET_SET, fld.MARKET_MAI])
 
         # Test
         result = ssc.is_universe(["AOT", "BBL"])
@@ -522,7 +522,7 @@ class TestIsUniverse:
 
     def test_no_universe(self):
         # Mock
-        ssc = SETSignalCreator(index_list=[fld.MARKET_SET, fld.MARKET_MAI.upper()])
+        ssc = SETSignalCreator(index_list=[fld.MARKET_SET, fld.MARKET_MAI])
 
         # Test
         result = ssc.is_universe([])
@@ -538,24 +538,24 @@ class TestIsUniverse:
             ([], ["SCBB", "SCB", "AU"]),
             ([fld.INDEX_SET50], []),
             ([fld.INDEX_SET100], []),
-            ([fld.INDEX_SET, fld.INDEX_MAI.upper()], []),
+            ([fld.MARKET_SET, fld.MARKET_MAI], []),
             ([fld.INDEX_SET50], ["SCB", "SCBB"]),
             ([fld.INDEX_SET50], ["AU"]),
-            ([fld.INDEX_MAI.upper()], ["SCB", "SCBB"]),
+            ([fld.MARKET_MAI], ["SCB", "SCBB"]),
         ],
     )
     @pytest.mark.parametrize(
         ("universe", "expect"),
         [
             (
-                fld.INDEX_SET,
+                fld.MARKET_SET,
                 pd.DataFrame(
                     {"SCB": True, "SCBB": True},
                     index=IDX_2022_04_01_TO_2022_04_29,
                 ),
             ),
             (
-                fld.INDEX_MAI,
+                fld.MARKET_MAI,
                 pd.DataFrame(
                     {"SCB": False, "SCBB": False},
                     index=IDX_2022_04_01_TO_2022_04_29,
@@ -676,7 +676,7 @@ class TestIsBanned:
     def test_all(self, start_date: str, end_date: str):
         # Mock
         ssc = SETSignalCreator(
-            index_list=[fld.MARKET_SET, fld.MARKET_MAI.upper()],
+            index_list=[fld.MARKET_SET, fld.MARKET_MAI],
             start_date=start_date,
             end_date=end_date,
         )

@@ -1,5 +1,5 @@
-MARKET_SET = INDEX_SET = "SET"
-MARKET_MAI = INDEX_MAI = "mai"
+MARKET_SET = "SET"
+MARKET_MAI = "mai"
 
 MARKET_MAP = {MARKET_SET: "A", MARKET_MAI: "S"}
 MARKET_MAP_UPPER = {k.upper(): v for k, v in MARKET_MAP.items()}
