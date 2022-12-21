@@ -1,7 +1,7 @@
 import pytest
 
 import ezyquant as ez
-from ezyquant import SETDataReader, SETSignalCreator
+from ezyquant import SETDataReader
 
 
 @pytest.fixture(scope="session")
@@ -28,8 +28,3 @@ def connect_postgres():
 @pytest.fixture
 def sdr() -> SETDataReader:
     return SETDataReader()
-
-
-@pytest.fixture
-def ssc() -> SETSignalCreator:
-    return SETSignalCreator(index_list=[], symbol_list=[])

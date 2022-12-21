@@ -69,6 +69,8 @@ class SETSignalCreator:
 
         self._sdr = _SETDataReaderCached()
 
+        self._get_symbol_in_universe()
+
     def get_data(
         self,
         field: str,

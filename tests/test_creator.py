@@ -41,11 +41,9 @@ class TestGetSymbolInUniverse:
             (["COM7", "MALEE"], ["COM7", "MALEE"]),
         ],
     )
-    def test_symbol_list(
-        self, ssc: SETSignalCreator, symbol_list: List[str], expected: List[str]
-    ):
+    def test_symbol_list(self, symbol_list: List[str], expected: List[str]):
         # Mock
-        ssc._symbol_list = symbol_list
+        ssc = SETSignalCreator(symbol_list=symbol_list)
 
         # Test
         result = ssc._get_symbol_in_universe()
@@ -82,16 +80,17 @@ class TestGetSymbolInUniverse:
     )
     def test_dynamic_index_list(
         self,
-        ssc: SETSignalCreator,
         index_list: List[str],
         start_date: str,
         end_date: str,
         expected: List[str],
     ):
         # Mock
-        ssc._index_list = index_list
-        ssc._start_date = start_date
-        ssc._end_date = end_date
+        ssc = SETSignalCreator(
+            index_list=index_list,
+            start_date=start_date,
+            end_date=end_date,
+        )
 
         # Test
         result = ssc._get_symbol_in_universe()
@@ -110,14 +109,15 @@ class TestGetSymbolInUniverse:
     )
     def test_static_index_list(
         self,
-        ssc: SETSignalCreator,
         index_list: List[str],
         expected: List[str],
     ):
         # Mock
-        ssc._start_date = "2022-11-01"
-        ssc._end_date = "2022-12-01"
-        ssc._index_list = index_list
+        ssc = SETSignalCreator(
+            index_list=index_list,
+            start_date="2022-11-01",
+            end_date="2022-12-01",
+        )
 
         # Test
         result = ssc._get_symbol_in_universe()
@@ -129,11 +129,13 @@ class TestGetSymbolInUniverse:
 class TestGetData:
     _check = staticmethod(vld.check_df_symbol_daily)
 
-    def test_sector_daily(self, ssc: SETSignalCreator):
+    def test_sector_daily(self):
         # Mock
-        ssc._start_date = "2021-05-18"
-        ssc._end_date = "2021-05-31"
-        ssc._index_list = [fld.INDEX_SET, fld.INDEX_MAI.upper()]
+        ssc = SETSignalCreator(
+            index_list=[fld.INDEX_SET, fld.INDEX_MAI.upper()],
+            start_date="2021-05-18",
+            end_date="2021-05-31",
+        )
 
         # Test
         result = ssc.get_data(
@@ -165,11 +167,13 @@ class TestGetData:
                 result[i], const.BANK_D_CLOSE_2021_05_18, check_names=False
             )
 
-    def test_industry_daily(self, ssc: SETSignalCreator):
+    def test_industry_daily(self):
         # Mock
-        ssc._start_date = "2021-05-18"
-        ssc._end_date = "2021-05-31"
-        ssc._index_list = [fld.INDEX_SET, fld.INDEX_MAI.upper()]
+        ssc = SETSignalCreator(
+            index_list=[fld.INDEX_SET, fld.INDEX_MAI.upper()],
+            start_date="2021-05-18",
+            end_date="2021-05-31",
+        )
 
         # Test
         result = ssc.get_data(
@@ -205,12 +209,14 @@ class TestGetData:
             fld.D_LAST_OFFER,
         ],
     )
-    def test_stock_daily_fill_prior(self, ssc: SETSignalCreator, field: str):
+    def test_stock_daily_fill_prior(self, field: str):
         """THAI no trade after 2021-05-18, close at 2021-05-17 is 3.32"""
         # Mock
-        ssc._start_date = "2021-05-18"
-        ssc._end_date = "2021-05-31"
-        ssc._symbol_list = ["THAI"]
+        ssc = SETSignalCreator(
+            symbol_list=["THAI"],
+            start_date="2021-05-18",
+            end_date="2021-05-31",
+        )
 
         # Test
         result = ssc.get_data(
@@ -314,7 +320,6 @@ class TestGetData:
     )
     def test_fundamental_mock(
         self,
-        ssc: SETSignalCreator,
         data: pd.DataFrame,
         method: str,
         period: int,
@@ -323,6 +328,7 @@ class TestGetData:
     ):
         # Mock
         symbols = ["A", "B", "C"]
+        ssc = SETSignalCreator()
         ssc._get_symbol_in_universe = Mock(return_value=symbols)
         ssc._reindex_trade_date = lambda df, **kwargs: df  # type: ignore
         ssc._sdr._get_fundamental_data = Mock(return_value=data)
@@ -380,7 +386,6 @@ class TestGetData:
     )
     def test_empty(
         self,
-        ssc: SETSignalCreator,
         field: str,
         timeframe: str,
         value_by: str,
@@ -388,6 +393,8 @@ class TestGetData:
         period: int,
         shift: int,
     ):
+        ssc = SETSignalCreator()
+
         # Test
         result = ssc.get_data(
             field=field,
@@ -442,11 +449,13 @@ class TestIsUniverse:
             "AOT",
         ],
     )
-    def test_static(self, ssc: SETSignalCreator, universe: str):
+    def test_static(self, universe: str):
         # Mock
-        ssc._index_list = [fld.MARKET_SET, fld.MARKET_MAI.upper()]
-        ssc._start_date = "2022-04-01"
-        ssc._end_date = "2022-05-01"
+        ssc = SETSignalCreator(
+            index_list=[fld.MARKET_SET, fld.MARKET_MAI.upper()],
+            start_date="2022-04-01",
+            end_date="2022-05-01",
+        )
 
         # Test
         result = ssc.is_universe([universe])
@@ -467,11 +476,13 @@ class TestIsUniverse:
             fld.INDEX_SET50,
         ],
     )
-    def test_dynamic(self, ssc: SETSignalCreator, universe: str):
+    def test_dynamic(self, universe: str):
         # Mock
-        ssc._index_list = [fld.MARKET_SET, fld.MARKET_MAI.upper()]
-        ssc._start_date = "2022-04-01"
-        ssc._end_date = "2022-05-01"
+        ssc = SETSignalCreator(
+            index_list=[fld.MARKET_SET, fld.MARKET_MAI.upper()],
+            start_date="2022-04-01",
+            end_date="2022-05-01",
+        )
 
         # Test
         result = ssc.is_universe([universe])
@@ -480,12 +491,14 @@ class TestIsUniverse:
         self._check(result)
 
     @pytest.mark.parametrize("universe", [fld.INDEX_SSET])
-    def test_dynamic_universe_not_launch(self, ssc: SETSignalCreator, universe: str):
+    def test_dynamic_universe_not_launch(self, universe: str):
         """sSET launch 2017-01-01"""
         # Mock
-        ssc._index_list = [fld.MARKET_SET, fld.MARKET_MAI.upper()]
-        ssc._start_date = "2010-01-01"
-        ssc._end_date = "2010-02-01"
+        ssc = SETSignalCreator(
+            index_list=[fld.MARKET_SET, fld.MARKET_MAI.upper()],
+            start_date="2010-01-01",
+            end_date="2010-02-01",
+        )
 
         # Test
         result = ssc.is_universe([universe])
@@ -494,9 +507,9 @@ class TestIsUniverse:
         self._check(result)
         assert (result == False).all().all()
 
-    def test_multi_universe(self, ssc: SETSignalCreator):
+    def test_multi_universe(self):
         # Mock
-        ssc._index_list = [fld.MARKET_SET, fld.MARKET_MAI.upper()]
+        ssc = SETSignalCreator(index_list=[fld.MARKET_SET, fld.MARKET_MAI.upper()])
 
         # Test
         result = ssc.is_universe(["AOT", "BBL"])
@@ -507,9 +520,9 @@ class TestIsUniverse:
         assert result["BBL"].all()
         assert (result["CPF"] == False).all()
 
-    def test_no_universe(self, ssc: SETSignalCreator):
+    def test_no_universe(self):
         # Mock
-        ssc._index_list = [fld.MARKET_SET, fld.MARKET_MAI.upper()]
+        ssc = SETSignalCreator(index_list=[fld.MARKET_SET, fld.MARKET_MAI.upper()])
 
         # Test
         result = ssc.is_universe([])
@@ -614,17 +627,18 @@ class TestIsUniverse:
     )
     def test_with_expect(
         self,
-        ssc: SETSignalCreator,
         index_list: List[str],
         symbol_list: List[str],
         universe: str,
         expect: pd.DataFrame,
     ):
         # Mock
-        ssc._index_list = index_list
-        ssc._symbol_list = symbol_list
-        ssc._start_date = "2022-04-01"
-        ssc._end_date = "2022-05-01"
+        ssc = SETSignalCreator(
+            index_list=index_list,
+            symbol_list=symbol_list,
+            start_date="2022-04-01",
+            end_date="2022-05-01",
+        )
 
         # Test
         result = ssc.is_universe([universe])
@@ -634,7 +648,8 @@ class TestIsUniverse:
         assert_frame_equal(result[["SCB", "SCBB"]], expect)
 
     @pytest.mark.parametrize("universe", ["", "invalid"])
-    def test_invalid_universe(self, ssc: SETSignalCreator, universe: str):
+    def test_invalid_universe(self, universe: str):
+        ssc = SETSignalCreator()
         with pytest.raises(InputError):
             ssc.is_universe([universe])
 
@@ -658,11 +673,13 @@ class TestIsBanned:
             ("2021-02-25", "2021-02-25"),
         ],
     )
-    def test_all(self, ssc: SETSignalCreator, start_date: str, end_date: str):
+    def test_all(self, start_date: str, end_date: str):
         # Mock
-        ssc._index_list = [fld.MARKET_SET, fld.MARKET_MAI.upper()]
-        ssc._start_date = start_date
-        ssc._end_date = end_date
+        ssc = SETSignalCreator(
+            index_list=[fld.MARKET_SET, fld.MARKET_MAI.upper()],
+            start_date=start_date,
+            end_date=end_date,
+        )
 
         # Test
         result = ssc.is_banned()
@@ -674,9 +691,11 @@ class TestIsBanned:
     def test_one_day_sp(self, ssc: SETSignalCreator, symbol_list: List[str]):
         """https://portal.settrade.com/NewsEngineTXTDisplay.jsp?newsId=16529175763321&t=H&fp=/simsImg/news/histri/202205/22065589.t22&tk=ee62bd2018156b05378402dcd9cb4828&q=Y"""
         # Mock
-        ssc._symbol_list = symbol_list
-        ssc._start_date = "2022-04-01"
-        ssc._end_date = "2022-05-01"
+        ssc = SETSignalCreator(
+            symbol_list=symbol_list,
+            start_date="2022-04-01",
+            end_date="2022-05-01",
+        )
 
         # Test
         result = ssc.is_banned()
@@ -725,17 +744,14 @@ class TestIsBanned:
         ],
     )
     def test_one_symbol(
-        self,
-        ssc: SETSignalCreator,
-        symbol: str,
-        start_date: str,
-        end_date: str,
-        expect: bool,
+        self, symbol: str, start_date: str, end_date: str, expect: bool
     ):
         # Mock
-        ssc._symbol_list = [symbol]
-        ssc._start_date = start_date
-        ssc._end_date = end_date
+        ssc = SETSignalCreator(
+            symbol_list=[symbol],
+            start_date=start_date,
+            end_date=end_date,
+        )
 
         # Test
         result = ssc.is_banned()
@@ -745,12 +761,14 @@ class TestIsBanned:
 
         assert (result[symbol] == expect).all()
 
-    def test_scbb_delist(self, ssc: SETSignalCreator):
+    def test_scbb_delist(self):
         """SCBB delist on 2022-04-27 (2022-04-26 can trade)."""
         # Mock
-        ssc._symbol_list = ["SCBB"]
-        ssc._start_date = "2022-04-26"
-        ssc._end_date = "2022-04-27"
+        ssc = SETSignalCreator(
+            symbol_list=["SCBB"],
+            start_date="2022-04-26",
+            end_date="2022-04-27",
+        )
 
         # Test
         result = ssc.is_banned()
@@ -864,12 +882,13 @@ class TestScreenUniverse:
             (["SET"], ["AOT"]),
         ],
     )
-    def test_no_screen(
-        self, ssc: SETSignalCreator, index_list: List[str], symbol_list: List[str]
-    ):
+    def test_no_screen(self, index_list: List[str], symbol_list: List[str]):
         # Mock
-        ssc._index_list = index_list
-        ssc._symbol_list = symbol_list
+        ssc = SETSignalCreator(
+            index_list=index_list,
+            symbol_list=symbol_list,
+        )
+
         df = pd.DataFrame(
             [[1.0], [2.0], [3.0]],
             columns=["AOT"],
@@ -882,11 +901,14 @@ class TestScreenUniverse:
         # Check
         assert_frame_equal(result, df)
 
-    def test_banned(self, ssc: SETSignalCreator):
+    def test_banned(self):
         """THAI no trade after 2021-05-18, close at 2021-05-17 is 3.32"""
         # Mock
-        ssc._index_list = []
-        ssc._symbol_list = ["THAI"]
+        ssc = SETSignalCreator(
+            index_list=[],
+            symbol_list=["THAI"],
+        )
+
         df = pd.DataFrame(
             [[1.0], [2.0], [3.0]],
             columns=["THAI"],
@@ -904,14 +926,16 @@ class TestScreenUniverse:
         )
         assert_frame_equal(expect, result)
 
-    def test_universe(self, ssc: SETSignalCreator):
+    def test_universe(self):
         """
         BANPU added to SET50 on 2022
         https://thestandard.co/set50-set100-2565/
         """
         # Mock
-        ssc._index_list = ["SET50"]
-        ssc._symbol_list = []
+        ssc = SETSignalCreator(
+            index_list=["SET50"],
+            symbol_list=[],
+        )
         df = pd.DataFrame(
             [[1.0], [2.0], [3.0]],
             columns=["BANPU"],
