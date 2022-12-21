@@ -29,7 +29,6 @@ VALUE = "value"
 
 
 class SETDataReader:
-
     _engine: Optional[Engine] = None
 
     def __init__(self):

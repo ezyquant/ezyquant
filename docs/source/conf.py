@@ -22,7 +22,9 @@ import ezyquant as ez
 
 project = "Ezyquant"
 author = "Fintech (Thailnd) Company Limited"
-copyright = f"2022-{datetime.now().year}, Thailand Capital Market Development Fund (CMDF)"
+copyright = (
+    f"2022-{datetime.now().year}, Thailand Capital Market Development Fund (CMDF)"
+)
 release = ez.__version__
 
 
