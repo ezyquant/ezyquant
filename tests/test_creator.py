@@ -465,6 +465,30 @@ class TestIsUniverse:
         assert utils.is_df_unique_cols(result)
 
     @pytest.mark.parametrize(
+        ("universe", "expected_true"),
+        [
+            (fld.INDUSTRY_AGRO, const.ARGO_SET),
+            (fld.SECTOR_AGRI, const.AGRI_SET),
+            (fld.INDUSTRY_AGRO + "-M", const.ARGO_MAI),
+        ],
+    )
+    def test_static_with_expect(self, universe: str, expected_true: List[str]):
+        # Mock
+        ssc = SETSignalCreator(
+            index_list=[fld.MARKET_SET, fld.MARKET_MAI],
+            start_date="2022-11-01",
+            end_date="2022-12-01",
+        )
+
+        # Test
+        result = ssc.is_universe([universe])
+
+        # Check
+        self._check(result)
+        assert utils.is_df_unique_cols(result)
+        assert set(result.columns[result.iloc[0]]) == set(expected_true)
+
+    @pytest.mark.parametrize(
         "universe",
         [
             fld.INDEX_SETWB,
