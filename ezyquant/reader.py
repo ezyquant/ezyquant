@@ -29,7 +29,6 @@ VALUE = "value"
 
 
 class SETDataReader:
-
     _engine: Optional[Engine] = None
 
     def __init__(self):
@@ -1629,7 +1628,7 @@ class SETDataReader:
         >>> sdr = SETDataReader()
         >>> sdr.get_data_index_daily(
         ...     field=fld.D_INDEX_CLOSE,
-        ...     index_list=[fld.INDEX_SET, fld.INDEX_SET100],
+        ...     index_list=[fld.MARKET_SET, fld.INDEX_SET100],
         ...     start_date="2022-01-01",
         ...     end_date="2022-01-10",
         ... )
