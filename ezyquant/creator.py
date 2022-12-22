@@ -719,8 +719,7 @@ class SETSignalCreator:
         df = self._get_symbol_info(symbol_list=symbol_list).set_index(
             "symbol", drop=False
         )
-        for i in df.columns:
-            df[i] = df[i].str.upper()
+        df["market"] = df["market"].str.upper()
 
         if universe in fld.MARKET_MAP_UPPER:
             is_uni = df["market"] == universe
