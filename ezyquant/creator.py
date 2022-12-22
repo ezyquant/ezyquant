@@ -406,7 +406,40 @@ class SETSignalCreator:
         return out
 
     def screen_universe(self, df: pd.DataFrame, mask_value=nan) -> pd.DataFrame:
-        """Mask Non universe or Banned symbol with given value."""
+        """Mask Non universe or Banned symbol with given value.
+
+        Parameters
+        ----------
+        df: pd.DataFrame
+            Dataframe to mask.
+        mask_value: Any
+            Value to mask with. Default is nan.
+
+        Returns
+        -------
+        pd.DataFrame
+            Masked dataframe.
+
+        Examples
+        --------
+        >>> from ezyquant import SETSignalCreator
+        >>> ssc = SETSignalCreator(
+        ...     start_date="2022-01-01",
+        ...     end_date="2022-01-10",
+        ...     index_list=[],
+        ...     symbol_list=["COM7", "MALEE", "THAI"],
+        ... )
+        >>> df = pd.DataFrame(
+        ...     [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]],
+        ...     columns=["COM7", "MALEE", "THAI"],
+        ...     index=pd.DatetimeIndex(["2022-01-04", "2022-01-05", "2022-01-06"]),
+        ... )
+        >>> ssc.screen_universe(df)
+                    COM7  MALEE  THAI
+        2022-01-04   1.0    2.0   NaN
+        2022-01-05   4.0    5.0   NaN
+        2022-01-06   7.0    8.0   NaN
+        """
         cond = (
             ~self.is_universe(self._index_list + self._symbol_list) | self.is_banned()
         )
