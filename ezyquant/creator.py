@@ -714,29 +714,33 @@ class SETSignalCreator:
         return df
 
     def _is_universe_static(self, universe: str) -> pd.DataFrame:
+        universe = universe.upper()
+        symbol_list = self._get_symbol_in_universe()
+        df = self._get_symbol_info(symbol_list=symbol_list).set_index(
+            "symbol", drop=False
+        )
+        for i in df.columns:
+            df[i] = df[i].str.upper()
+
         if universe in fld.MARKET_MAP_UPPER:
-            index_type = "market"
+            is_uni = df["market"] == universe
         elif universe in fld.INDUSTRY_LIST:
-            index_type = "industry"
+            is_uni = (df["industry"] == universe) & (df["market"] == fld.MARKET_SET)
         elif universe in fld.SECTOR_LIST:
-            index_type = "sector"
+            is_uni = (df["sector"] == universe) & (df["market"] == fld.MARKET_SET)
+        elif universe[:-2] in fld.INDUSTRY_LIST and universe.endswith("-M"):
+            is_uni = (df["industry"] == universe[:-2]) & (
+                df["market"] == fld.MARKET_MAI.upper()
+            )
         elif universe in self._get_symbol_in_universe():
-            index_type = "symbol"
+            is_uni = df["symbol"] == universe
         else:
             raise InputError(
                 f"{universe} is invalid universe. Please read document to check valid universe."
             )
 
-        symbol_list = self._get_symbol_in_universe()
-        df = self._get_symbol_info(symbol_list=symbol_list).set_index(
-            "symbol", drop=False
-        )
         tds = self._get_trading_dates()
-
-        is_uni_dict = (df[index_type].str.upper() == universe).to_dict()
-        df = pd.DataFrame(is_uni_dict, index=pd.DatetimeIndex(tds))
-
-        # Reindex columns
+        df = pd.DataFrame(is_uni.to_dict(), index=pd.DatetimeIndex(tds))
         df = df.reindex(columns=sorted(df.columns))
 
         return df
