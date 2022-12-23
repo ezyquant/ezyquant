@@ -1,3 +1,4 @@
+import warnings
 from functools import lru_cache, wraps
 from typing import Dict, List, Optional
 
@@ -23,7 +24,7 @@ class SETSignalCreator:
         self,
         start_date: str = "2010-01-01",
         end_date: Optional[str] = None,
-        index_list: List[str] = ["SET100"],
+        index_list: List[str] = [],
         symbol_list: List[str] = [],
     ):
         """Initialize SETSignalCreator.
@@ -37,7 +38,7 @@ class SETSignalCreator:
         end_date: Optional[str] = None
             End date of data.
         index_list: List[str] = ["SET100"]
-            List of index name.
+            List of index, sector, industry name.
                 - SET
                 - mai
                 - SETWB
@@ -47,8 +48,52 @@ class SETSignalCreator:
                 - sSET
                 - SET100
                 - SET50
+                - AGRO
+                - CONSUMP
+                - FINCIAL
+                - INDUS
+                - PROPCON
+                - RESOURC
+                - SERVICE
+                - TECH
+                - AGRO-m
+                - CONSUMP-m
+                - FINCIAL-m
+                - INDUS-m
+                - PROPCON-m
+                - RESOURC-m
+                - SERVICE-m
+                - TECH-m
+                - AGRI
+                - AUTO
+                - BANK
+                - COMM
+                - CONMAT
+                - CONS
+                - ENERG
+                - ETRON
+                - FASHION
+                - FIN
+                - FOOD
+                - HELTH
+                - HOME
+                - ICT
+                - IMM
+                - INSUR
+                - MEDIA
+                - MINE
+                - PAPER
+                - PERSON
+                - PETRO
+                - PF&REIT
+                - PKG
+                - PROF
+                - PROP
+                - STEEL
+                - TOURISM
+                - TRANS
         symbol_list: List[str] = []
-            List of symbol.
+            List of symbol ex. ["AOT", "BBL"]
 
         Examples
         --------
@@ -66,6 +111,8 @@ class SETSignalCreator:
         self._end_date: Optional[str] = end_date
 
         self._sdr = _SETDataReaderCached()
+
+        self._get_symbol_in_universe()
 
     def get_data(
         self,
@@ -359,7 +406,40 @@ class SETSignalCreator:
         return out
 
     def screen_universe(self, df: pd.DataFrame, mask_value=nan) -> pd.DataFrame:
-        """Mask Non universe or Banned symbol with given value."""
+        """Mask Non universe or Banned symbol with given value.
+
+        Parameters
+        ----------
+        df: pd.DataFrame
+            Dataframe to mask.
+        mask_value: Any
+            Value to mask with. Default is nan.
+
+        Returns
+        -------
+        pd.DataFrame
+            Masked dataframe.
+
+        Examples
+        --------
+        >>> from ezyquant import SETSignalCreator
+        >>> ssc = SETSignalCreator(
+        ...     start_date="2022-01-01",
+        ...     end_date="2022-01-10",
+        ...     index_list=[],
+        ...     symbol_list=["COM7", "MALEE", "THAI"],
+        ... )
+        >>> df = pd.DataFrame(
+        ...     [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]],
+        ...     columns=["COM7", "MALEE", "THAI"],
+        ...     index=pd.DatetimeIndex(["2022-01-04", "2022-01-05", "2022-01-06"]),
+        ... )
+        >>> ssc.screen_universe(df)
+                    COM7  MALEE  THAI
+        2022-01-04   1.0    2.0   NaN
+        2022-01-05   4.0    5.0   NaN
+        2022-01-06   7.0    8.0   NaN
+        """
         cond = (
             ~self.is_universe(self._index_list + self._symbol_list) | self.is_banned()
         )
@@ -457,21 +537,39 @@ class SETSignalCreator:
     @lru_cache(maxsize=1)
     def _get_symbol_in_universe(self) -> List[str]:
         symbols = set()
-        index_list = [i for i in self._index_list if i not in (fld.MARKET_MAP_UPPER)]
-        for i in index_list:
+
+        # Dynamic index
+        dynamic_index_list = [i for i in self._index_list if i in fld.INDEX_LIST_UPPER]
+        for i in dynamic_index_list:
             df = self._get_symbols_by_index(i)
             symbols.update(df["symbol"])
 
-        if fld.MARKET_SET in self._index_list:
-            df = self._get_symbol_info(market=fld.MARKET_SET)
-            symbols.update(df["symbol"])
-        if fld.MARKET_MAI.upper() in self._index_list:
-            df = self._get_symbol_info(market=fld.MARKET_MAI)
+        # Static index
+        static_index_list = [
+            i for i in self._index_list if i not in fld.INDEX_LIST_UPPER
+        ]
+        for i in static_index_list:
+            if i in fld.MARKET_MAP_UPPER:
+                df = self._get_symbol_info(market=i)
+            elif i in fld.INDUSTRY_LIST:
+                df = self._get_symbol_info(industry=i, market=fld.MARKET_SET)
+            elif i in fld.SECTOR_LIST:
+                df = self._get_symbol_info(sector=i, market=fld.MARKET_SET)
+            elif i[:-2] in fld.INDUSTRY_LIST and i.endswith("-M"):
+                df = self._get_symbol_info(industry=i[:-2], market=fld.MARKET_MAI)
+            else:
+                warnings.warn(f"Index {i} is invalid.")
+                continue
+
             symbols.update(df["symbol"])
 
         df = self._get_symbol_info(symbol_list=list(symbols | set(self._symbol_list)))
 
-        return sorted(df["symbol"].to_list())
+        invalid_symbols = list(set(self._symbol_list) - set(df["symbol"]))
+        if len(invalid_symbols) > 0:
+            warnings.warn(f"Symbols {invalid_symbols} is invalid.")
+
+        return sorted(set(df["symbol"]))
 
     @wraps(SETDataReader.get_symbol_info)
     def _get_symbol_info(self, *args, **kwargs) -> pd.DataFrame:
@@ -649,29 +747,32 @@ class SETSignalCreator:
         return df
 
     def _is_universe_static(self, universe: str) -> pd.DataFrame:
+        universe = universe.upper()
+        symbol_list = self._get_symbol_in_universe()
+        df = self._get_symbol_info(symbol_list=symbol_list).set_index(
+            "symbol", drop=False
+        )
+        df["market"] = df["market"].str.upper()
+
         if universe in fld.MARKET_MAP_UPPER:
-            index_type = "market"
+            is_uni = df["market"] == universe
         elif universe in fld.INDUSTRY_LIST:
-            index_type = "industry"
+            is_uni = (df["industry"] == universe) & (df["market"] == fld.MARKET_SET)
         elif universe in fld.SECTOR_LIST:
-            index_type = "sector"
+            is_uni = (df["sector"] == universe) & (df["market"] == fld.MARKET_SET)
+        elif universe[:-2] in fld.INDUSTRY_LIST and universe.endswith("-M"):
+            is_uni = (df["industry"] == universe[:-2]) & (
+                df["market"] == fld.MARKET_MAI.upper()
+            )
         elif universe in self._get_symbol_in_universe():
-            index_type = "symbol"
+            is_uni = df["symbol"] == universe
         else:
             raise InputError(
                 f"{universe} is invalid universe. Please read document to check valid universe."
             )
 
-        symbol_list = self._get_symbol_in_universe()
-        df = self._get_symbol_info(symbol_list=symbol_list).set_index(
-            "symbol", drop=False
-        )
         tds = self._get_trading_dates()
-
-        is_uni_dict = (df[index_type].str.upper() == universe).to_dict()
-        df = pd.DataFrame(is_uni_dict, index=pd.DatetimeIndex(tds))
-
-        # Reindex columns
+        df = pd.DataFrame(is_uni.to_dict(), index=pd.DatetimeIndex(tds))
         df = df.reindex(columns=sorted(df.columns))
 
         return df

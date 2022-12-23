@@ -11,6 +11,8 @@ from ezyquant import validators as vld
 from ezyquant.errors import InputError
 from tests import utils
 
+INDEX_LIST = fld.INDEX_LIST + [fld.MARKET_SET, fld.MARKET_MAI]
+
 
 def test_last_table_update(sdr: SETDataReader):
     # Test
@@ -187,7 +189,7 @@ class TestGetSymbolInfo:
         assert (result["industry"] == fld.INDUSTRY_AGRO).all()
         assert (
             result["sector"]
-            .isin([fld.SECTOR_AGRI, fld.SECTOR_FOOD, fld.SECTOR_AGRO])
+            .isin([fld.SECTOR_AGRI, fld.SECTOR_FOOD, fld.INDUSTRY_AGRO])
             .all()
         )
         assert "STA" in result["symbol"].tolist()
@@ -990,7 +992,7 @@ class TestGetSymbolsByIndex:
         for i in result.columns:
             assert pd.notna(result[i]).all(), f"{i} is null"
 
-        assert result["index"].isin(fld.INDEX_LIST).all()
+        assert result["index"].isin(INDEX_LIST).all()
         assert (result["symbol"] == result["symbol"].str.upper()).all()
 
         return result
@@ -1670,15 +1672,15 @@ class TestGetDataIndexDaily:
     @pytest.mark.parametrize(
         ["index", "field", "expected"],
         [
-            (fld.INDEX_SET, fld.D_INDEX_HIGH, 1674.19),
-            (fld.INDEX_SET, fld.D_INDEX_LOW, 1663.50),
-            (fld.INDEX_SET, fld.D_INDEX_CLOSE, 1670.28),
-            (fld.INDEX_SET, fld.D_INDEX_TOTAL_VOLUME, 28684980655.0),
-            (fld.INDEX_SET, fld.D_INDEX_TOTAL_VALUE, 100014911411.57),
-            (fld.INDEX_SET, fld.D_INDEX_MKT_PE, 20.96),
-            (fld.INDEX_SET, fld.D_INDEX_MKT_PBV, 1.80),
-            (fld.INDEX_SET, fld.D_INDEX_MKT_YIELD, 2.08),
-            (fld.INDEX_SET, fld.D_INDEX_MKT_CAP, 19733996617934.5),
+            (fld.MARKET_SET, fld.D_INDEX_HIGH, 1674.19),
+            (fld.MARKET_SET, fld.D_INDEX_LOW, 1663.50),
+            (fld.MARKET_SET, fld.D_INDEX_CLOSE, 1670.28),
+            (fld.MARKET_SET, fld.D_INDEX_TOTAL_VOLUME, 28684980655.0),
+            (fld.MARKET_SET, fld.D_INDEX_TOTAL_VALUE, 100014911411.57),
+            (fld.MARKET_SET, fld.D_INDEX_MKT_PE, 20.96),
+            (fld.MARKET_SET, fld.D_INDEX_MKT_PBV, 1.80),
+            (fld.MARKET_SET, fld.D_INDEX_MKT_YIELD, 2.08),
+            (fld.MARKET_SET, fld.D_INDEX_MKT_CAP, 19733996617934.5),
             (fld.INDEX_SSET, fld.D_INDEX_HIGH, 1156.83),
             (fld.INDEX_SSET, fld.D_INDEX_LOW, 1135.33),
             (fld.INDEX_SSET, fld.D_INDEX_CLOSE, 1156.83),
@@ -1738,7 +1740,7 @@ class TestGetDataIndexDaily:
         assert result.index.is_unique
         assert (result.index == result.index.normalize()).all()
 
-        assert (result.columns.isin(fld.INDEX_LIST)).all()
+        assert (result.columns.isin(INDEX_LIST)).all()
 
         return result
 

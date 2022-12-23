@@ -135,30 +135,20 @@ GetData with method and period
         field="eps", timeframe="yearly", method="sum", period=3
     )
 
-Is_Universe
------------
+Screen_Universe
+---------------
 
-ใช้เช็คว่าหุ้นอยู่ใน Universe ที่ต้องการหรือไม่ ผ่านฟังก์ชั่น :py:meth:`SETSignalCreator.is_universe`
+ใช้ในการเปลี่ยน signal หุ้นที่ไม่ได้อยู่ใน Universe หรือ โดน Banned ให้เป็นไปตาม mask ที่ตั้งไว้ ผ่านฟังก์ชั่น :py:meth:`SETSignalCreator.screen_universe`
 
 Parameters
-    * *universe: str*
+   * *df: pd.DataFrame*
+   * *mask_value*
 
-**ตัวอย่าง** การคัดกรองหุ้นที่อยู่ใน SET100 ในวันนั้นๆ
-
-.. code-block::
-
-   set100_df = ssc.is_universe("SET100")
-
-Is_Banned
----------
-
-ใช้เช็คว่าหุ้นโดน banned หรือไม่
-
-**ตัวอย่าง** การคัดเฉพาะหุ้นที่โดน banned ในแต่ละวัน
+**ตัวอย่าง** การแปลง signal หุ้นที่ไม่ได้อยู่ใน universe กับโดน banned ให้เป็น *
 
 .. code-block::
 
-   banned_df = ssc.is_banned()
+   final_signal = ssc.screen_universe(signal, mask_value="*")
 
 Rank
 ----

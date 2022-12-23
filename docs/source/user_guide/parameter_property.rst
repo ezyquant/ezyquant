@@ -17,7 +17,7 @@ is_universe
 
 .. csv-table::
    :file: ../_static/is_universe.csv
-   :widths: 30,30,30,30,30,30
+   :widths: 30,30,30,30,30,40
    :header-rows: 1
 
 GetData
