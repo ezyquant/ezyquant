@@ -66,8 +66,9 @@ class SETDataReader:
             string with format YYYY-MM-DD.
         """
         t = self._table(table_name)
-        stmt = select([func.max(self._func_date(t.c.D_TRADE))])
+        stmt = select([self._func_date(func.max(t.c.D_TRADE))])
         res = self._execute(stmt).scalar()
+        res = str(res)
         assert isinstance(res, str)
         return res
 
@@ -91,7 +92,7 @@ class SETDataReader:
         d3 = self.last_table_update("MKTSTAT_DAILY_INDEX")
         d4 = self.last_table_update("MKTSTAT_DAILY_MARKET")
         d5 = self.last_table_update("DAILY_SECTOR_INFO")
-        assert d1 == d2 == d3 == d4 == d5, "database is not consistent"
+        assert d1 == d2 == d3 == d4 == d5, "Last update is not the same."
         return d1
 
     def get_trading_dates(
@@ -126,7 +127,7 @@ class SETDataReader:
 
         res = self._execute(stmt).all()
 
-        return [i[0] for i in res]
+        return [str(i[0]) for i in res]
 
     def is_trading_date(self, check_date: str) -> bool:
         """Data from table CALENDAR.
@@ -1837,13 +1838,7 @@ class SETDataReader:
     """
 
     def _func_date(self, column: Column):
-        assert self._engine is not None
-        if self._engine.name == "sqlite":
-            return func.DATE(column)
-        elif self._engine.name == "postgresql":
-            return func.to_char(column, "YYYY-MM-DD")
-        else:
-            raise InputError("Only support sqlite and postgresql database.")
+        return func.DATE(column)
 
     def _table(self, name: str) -> Table:
         return Table(name, self._metadata, autoload=True)
@@ -1917,7 +1912,7 @@ class SETDataReader:
         )
         return stmt
 
-    @lru_cache(maxsize=128)
+    @lru_cache(maxsize=1)
     def _d_trade_subquery(self):
         daily_stock_stat_t = self._table("DAILY_STOCK_STAT")
         return (
@@ -2359,7 +2354,7 @@ class SETDataReader:
             select(
                 [
                     func.trim(sector_t.c.N_SECTOR),
-                    func.max(self._func_date(security_index_t.c.D_AS_OF)),
+                    self._func_date(func.max(security_index_t.c.D_AS_OF)),
                 ]
             )
             .select_from(j)
@@ -2373,13 +2368,13 @@ class SETDataReader:
         )
 
         result = self._execute(stmt).all()
-        return dict(result)  # type: ignore
+        return {i[0]: str(i[1]) for i in result}
 
     """
     Custom business day functions
     """
 
-    @lru_cache(maxsize=128)
+    @lru_cache(maxsize=1)
     def _get_holidays(self) -> List[str]:
         tds = self.get_trading_dates()
         bds = pd.bdate_range(tds[0], tds[-1]).strftime("%Y-%m-%d")
@@ -2399,7 +2394,7 @@ class SETDataReader:
         return df
 
 
-@lru_cache(maxsize=128)
+@lru_cache(maxsize=1)
 def _SETDataReaderCached() -> SETDataReader:
     out: SETDataReader = utils.wrap_cache_class(SETDataReader)()  # type: ignore
 
