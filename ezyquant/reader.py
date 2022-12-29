@@ -66,7 +66,7 @@ class SETDataReader:
             string with format YYYY-MM-DD.
         """
         t = self._table(table_name)
-        stmt = select([func.max(self._func_date(t.c.D_TRADE))])
+        stmt = select([self._func_date(func.max(t.c.D_TRADE))])
         res = self._execute(stmt).scalar()
         assert isinstance(res, str)
         return res
@@ -2359,7 +2359,7 @@ class SETDataReader:
             select(
                 [
                     func.trim(sector_t.c.N_SECTOR),
-                    func.max(self._func_date(security_index_t.c.D_AS_OF)),
+                    self._func_date(func.max(security_index_t.c.D_AS_OF)),
                 ]
             )
             .select_from(j)
