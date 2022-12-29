@@ -92,7 +92,7 @@ class SETDataReader:
         d3 = self.last_table_update("MKTSTAT_DAILY_INDEX")
         d4 = self.last_table_update("MKTSTAT_DAILY_MARKET")
         d5 = self.last_table_update("DAILY_SECTOR_INFO")
-        assert d1 == d2 == d3 == d4 == d5, "database is not consistent"
+        assert d1 == d2 == d3 == d4 == d5, "Last update is not the same."
         return d1
 
     def get_trading_dates(
