@@ -2368,7 +2368,7 @@ class SETDataReader:
         )
 
         result = self._execute(stmt).all()
-        return {r[0]: str(r[1]) for r in result}
+        return {i[0]: str(i[1]) for i in result}
 
     """
     Custom business day functions
