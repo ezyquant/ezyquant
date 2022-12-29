@@ -68,6 +68,7 @@ class SETDataReader:
         t = self._table(table_name)
         stmt = select([self._func_date(func.max(t.c.D_TRADE))])
         res = self._execute(stmt).scalar()
+        res = str(res)
         assert isinstance(res, str)
         return res
 
@@ -126,7 +127,7 @@ class SETDataReader:
 
         res = self._execute(stmt).all()
 
-        return [i[0] for i in res]
+        return [str(i[0]) for i in res]
 
     def is_trading_date(self, check_date: str) -> bool:
         """Data from table CALENDAR.
@@ -1837,13 +1838,7 @@ class SETDataReader:
     """
 
     def _func_date(self, column: Column):
-        assert self._engine is not None
-        if self._engine.name == "sqlite":
-            return func.DATE(column)
-        elif self._engine.name == "postgresql":
-            return func.to_char(column, "YYYY-MM-DD")
-        else:
-            raise InputError("Only support sqlite and postgresql database.")
+        return func.DATE(column)
 
     def _table(self, name: str) -> Table:
         return Table(name, self._metadata, autoload=True)
@@ -2373,7 +2368,7 @@ class SETDataReader:
         )
 
         result = self._execute(stmt).all()
-        return dict(result)  # type: ignore
+        return {r[0]: str(r[1]) for r in result}
 
     """
     Custom business day functions
