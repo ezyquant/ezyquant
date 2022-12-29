@@ -1912,7 +1912,7 @@ class SETDataReader:
         )
         return stmt
 
-    @lru_cache(maxsize=128)
+    @lru_cache(maxsize=1)
     def _d_trade_subquery(self):
         daily_stock_stat_t = self._table("DAILY_STOCK_STAT")
         return (
@@ -2374,7 +2374,7 @@ class SETDataReader:
     Custom business day functions
     """
 
-    @lru_cache(maxsize=128)
+    @lru_cache(maxsize=1)
     def _get_holidays(self) -> List[str]:
         tds = self.get_trading_dates()
         bds = pd.bdate_range(tds[0], tds[-1]).strftime("%Y-%m-%d")
@@ -2394,7 +2394,7 @@ class SETDataReader:
         return df
 
 
-@lru_cache(maxsize=128)
+@lru_cache(maxsize=1)
 def _SETDataReaderCached() -> SETDataReader:
     out: SETDataReader = utils.wrap_cache_class(SETDataReader)()  # type: ignore
 
