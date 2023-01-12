@@ -24,3 +24,4 @@ Ezyquant
    :caption: API Reference
 
    api_reference/ezyquant
+   api_reference/ezyquant_execution
