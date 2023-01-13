@@ -1,6 +1,8 @@
 Ezyquant
 ========
 
+**Version**: |release| **Date**: |today|
+
 .. toctree::
    :maxdepth: 2
    :caption: Get Started

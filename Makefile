@@ -27,7 +27,7 @@ venv:
 
 .PHONY: sphinx
 sphinx:
-	sphinx-build -a -b html docs/source/ docs/build/html
+	sphinx-build -b html docs/source/ docs/build/html
 
 .PHONY: s3
 s3:
