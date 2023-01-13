@@ -31,4 +31,4 @@ sphinx:
 
 .PHONY: s3
 s3:
-	aws s3 cp docs\build\html s3://eazyquant-nonprod/ --recursive
+	aws s3 sync ./docs/build/html s3://eazyquant-nonprod --delete
