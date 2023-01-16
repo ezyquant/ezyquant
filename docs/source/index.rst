@@ -8,6 +8,7 @@ Ezyquant
    :caption: Get Started
 
    get_started/installation
+   get_started/download_database
 
 .. toctree::
    :maxdepth: 2
