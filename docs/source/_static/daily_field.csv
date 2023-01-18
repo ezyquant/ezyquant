@@ -14,7 +14,7 @@ pe,price-to-earning ratio,float
 pb,price-to-book ratio,float
 par,par value,float
 dps,dividend per share,float
-dvd_yield,dividend yield,float
+dvd_yield,dividend yield (%),float
 mkt_cap,market capitalization,float
 eps,earning per share,float
 book_value,book value,float
