@@ -1,5 +1,5 @@
 import math
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import numpy as np
 import pandas as pd
@@ -807,7 +807,7 @@ class SETBacktestReport:
 
     @cached_property
     def _nav_df(self) -> pd.DataFrame:
-        return self.summary_df.set_index("timestamp")[
+        df: pd.DataFrame = self.summary_df.set_index("timestamp")[
             ["port_value", "port_value_with_dividend"]
         ].rename(
             columns={
@@ -815,6 +815,9 @@ class SETBacktestReport:
                 "port_value_with_dividend": "portfolio_with_dividend",
             }
         )
+        df.loc[df.index[0] - timedelta(days=1)] = self._initial_capital  # type: ignore
+        df = df.sort_index()
+        return df
 
     def _summary_trade_cost_price(self, trade_df: pd.DataFrame) -> pd.DataFrame:
         """Add cost_price to trade_df."""
