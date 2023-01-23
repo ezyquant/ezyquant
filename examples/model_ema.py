@@ -33,7 +33,7 @@ first_cross_down_df = ~cross_up_df & cross_up_df.shift(1, fill_value=False)
 signal_df = (first_cross_up_df * 0.1) + (first_cross_down_df * -0.1)
 
 # filter signal by universe and banned
-signal_df *= ssc.is_universe(["SET100"]) * ssc.is_banned()
+signal_df *= ssc.is_universe(["SET100"]) * ~ssc.is_banned()
 
 # drop nan columns (no signal) for faster backtest
 signal_df = signal_df.dropna(axis=1, how="all")
