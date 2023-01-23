@@ -1,11 +1,14 @@
 Ezyquant
 ========
 
+**Version**: |release| **Date**: |today|
+
 .. toctree::
    :maxdepth: 2
    :caption: Get Started
 
    get_started/installation
+   get_started/download_database
 
 .. toctree::
    :maxdepth: 2
@@ -18,9 +21,11 @@ Ezyquant
    user_guide/parameter_property.rst
    user_guide/example.rst
    user_guide/colab_example.rst
+   user_guide/execution.rst
 
 .. toctree::
    :maxdepth: 2
    :caption: API Reference
 
    api_reference/ezyquant
+   api_reference/ezyquant_execution

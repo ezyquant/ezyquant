@@ -22,7 +22,7 @@ ssc = SETSignalCreator(
 pe_df = ssc.get_data("pe", "daily")
 
 # filter signal by universe and banned
-pe_df *= ssc.is_universe(["SET100"]) * ssc.is_banned()
+pe_df *= ssc.is_universe(["SET100"]) * ~ssc.is_banned()
 
 pe_df = pe_df.replace(0, np.nan)
 
@@ -50,4 +50,4 @@ result = backtest(
 )
 
 print(result.stat_df)
-result.to_excel("result.xlsx")
+result.to_excel("model_low_pe_report.xlsx")

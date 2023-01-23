@@ -1,10 +1,10 @@
 import math
-from calendar import month_abbr
 from datetime import datetime
 
 import numpy as np
 import pandas as pd
 from pandas.testing import assert_index_equal
+from quantstats import stats as qs_stats
 
 from . import fields as fld
 from . import utils
@@ -464,21 +464,11 @@ class SETBacktestReport:
         -------
         pd.DataFrame
         """
-        df = self._nav_df
-        init_cap = self.initial_capital
-
-        monthly_return = self._return_by_period(df, init_cap=init_cap, period="M")
-        yearly_return = self._return_by_period(df, init_cap=init_cap, period="Y")
-
-        out = monthly_return.merge(
-            yearly_return,
-            how="inner",
-            left_index=True,
-            right_index=True,
-            validate="1:1",
+        return pd.concat(
+            [qs_stats.monthly_returns(self._nav_df[i]) for i in self._nav_df.columns],
+            keys=list(self._nav_df.columns),
+            names=["name", "year"],
         )
-
-        return out
 
     @cached_property
     def price_distribution_df(self) -> pd.DataFrame:
@@ -535,7 +525,7 @@ class SETBacktestReport:
         pd.DataFrame
             index is trade date, columns is nav names
         """
-        return (self._nav_df / self._nav_df.cummax()) - 1
+        return qs_stats.to_drawdown_series(self._nav_df)
 
     def to_excel(self, path: str):
         """Export to Excel.
@@ -574,26 +564,24 @@ class SETBacktestReport:
         return self.net_profit / self.initial_capital
 
     @property
-    @return_nan_on_failure
     def cagr(self) -> pd.Series:
-        """Compound annual growth rate (CAGR)"""
-        return (self.ending_capital / self.initial_capital) ** (1 / self._n_year) - 1
+        """Calculates the communicative annualized growth return (CAGR%) of
+        access returns.
 
-    @property
-    @return_nan_on_failure
-    def pct_maximum_drawdown(self) -> pd.Series:
-        """Percent maximum drawdown."""
-        nav = self._nav_df
-        return (nav / nav.cummax() - 1).min()
-
-    @property
-    @return_nan_on_failure
-    def cagr_divided_maxdd(self) -> pd.Series:
-        """Compound Annual % Return divided by Max.
-
-        system % drawdown.
+        If rf is non-zero, you must specify periods. In this case, rf is
+        assumed to be expressed in yearly (annualized) terms
         """
-        return self.cagr / self.pct_maximum_drawdown.abs()
+        return qs_stats.cagr(self._nav_df)
+
+    @property
+    def pct_maximum_drawdown(self) -> pd.Series:
+        """Calculates the maximum drawdown."""
+        return qs_stats.max_drawdown(self._nav_df)
+
+    @property
+    def cagr_divided_maxdd(self) -> pd.Series:
+        """Calculates the calmar ratio (CAGR% / MaxDD%)"""
+        return qs_stats.calmar(self._nav_df)
 
     @property
     @return_nan_on_failure
@@ -602,13 +590,9 @@ class SETBacktestReport:
         return self.win_trades / self.all_trades
 
     @property
-    @return_nan_on_failure
     def std(self) -> pd.Series:
-        """Standard deviation of profit/loss."""
-        nav = self._nav_df
-        return_per_day = nav / nav.shift(1) - 1
-        trade_date_per_year = nav.shape[0] / self._n_year
-        return return_per_day.std() * (trade_date_per_year**0.5)
+        """Calculates the volatility of returns for a period."""
+        return qs_stats.volatility(self._nav_df)
 
     @property
     @return_nan_on_failure
@@ -813,11 +797,6 @@ class SETBacktestReport:
         return self._pct_sell_slip
 
     @property
-    def _n_year(self) -> float:
-        """Number of years."""
-        return (self.end_date - self.start_date).days / 365
-
-    @property
     def _is_win_trade(self) -> pd.Series:
         """Is win trade."""
         return self.summary_trade_df["return"] > 0
@@ -881,50 +860,5 @@ class SETBacktestReport:
 
         tmp = df.groupby(["symbol"]).fillna(method="pad")  # type: ignore
         df["entry_at"] = tmp["entry_at"]
-
-        return df
-
-    @staticmethod
-    def _return_by_period(
-        df: pd.DataFrame, init_cap: float, period: str
-    ) -> pd.DataFrame:
-        """Return by period.
-
-        Parameters
-        ----------
-        df : pd.DataFrame
-            Nav dataframe.
-        init_cap : float
-            Initial capital.
-        period : str
-            "M" (monthly) or "Y" (yearly)
-
-        Returns
-        -------
-        pd.DataFrame
-            Return by period.
-        """
-        df = df.resample(period).last()
-        df = df.sort_index()
-        df = (df / df.shift(fill_value=init_cap)) - 1
-
-        df = df.melt(var_name="name", value_name="value", ignore_index=False)
-
-        assert isinstance(df.index, pd.DatetimeIndex)
-        df["year"] = df.index.year
-        df["month"] = df.index.month
-
-        if period == "M":
-            df = pd.pivot_table(
-                df, index=["name", "year"], columns="month", values="value"
-            )
-            df = df.rename(
-                columns={i: month_abbr[i] for i in range(1, len(month_abbr))}
-            )
-            df = df.reindex(columns=month_abbr[1:])  # type: ignore
-        else:
-            df = pd.pivot_table(df, index=["name", "year"], values="value")
-            df = df.rename(columns={"value": "Yr%"})
-            df.columns.name = "month"
 
         return df

@@ -11,10 +11,10 @@ total_expense,total expense,float
 net_profit,net profit,float
 eps,earning per share,float
 de,debt to equity,float
-net_profit_margin,net profit margin,float
-gross_profit_margin,gross profit margin,float
-roa,return on asset,float
-roe,return on equity,float
+net_profit_margin,net profit margin (%),float
+gross_profit_margin,gross profit margin (%),float
+roa,return on asset (%),float
+roe,return on equity (%),float
 asset_turnover,asset turnover,float
 ebit,earning before interest and tax,float
 fix_asset_turnover,fix asset turnover,float
