@@ -2207,6 +2207,7 @@ class SETDataReader:
         if fillna_value != None:
             df = df.fillna(fillna_value)
 
+        assert isinstance(df, pd.DataFrame)
         df = self._pivot_name_value(df)
 
         return df

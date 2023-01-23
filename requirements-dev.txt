@@ -4,6 +4,7 @@ psycopg2-binary>=2.9
 ta>=0.10
 XlsxWriter>=3.0
 typing_extensions>=4.4
+quantstats>=0.0
 
 # Dev
 pytest>=7,<8
@@ -15,4 +16,4 @@ autoflake>=1,<2
 sphinx>=4,<5
 sphinx-book-theme>=0,<1
 pytest-xdist[psutil]>=3,<4
-git+https://github.com/ezyquant/ezyquant-execution@dev # TODO: install from pypi once released
+ezyquant-execution
