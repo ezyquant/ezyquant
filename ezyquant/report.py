@@ -1,5 +1,4 @@
 import math
-from calendar import month_abbr
 from datetime import datetime
 
 import numpy as np
@@ -465,21 +464,11 @@ class SETBacktestReport:
         -------
         pd.DataFrame
         """
-        df = self._nav_df
-        init_cap = self.initial_capital
-
-        monthly_return = self._return_by_period(df, init_cap=init_cap, period="M")
-        yearly_return = self._return_by_period(df, init_cap=init_cap, period="Y")
-
-        out = monthly_return.merge(
-            yearly_return,
-            how="inner",
-            left_index=True,
-            right_index=True,
-            validate="1:1",
+        return pd.concat(
+            [qs_stats.monthly_returns(self._nav_df[i]) for i in self._nav_df.columns],
+            keys=list(self._nav_df.columns),
+            names=["name", "year"],
         )
-
-        return out
 
     @cached_property
     def price_distribution_df(self) -> pd.DataFrame:
@@ -536,7 +525,7 @@ class SETBacktestReport:
         pd.DataFrame
             index is trade date, columns is nav names
         """
-        return (self._nav_df / self._nav_df.cummax()) - 1
+        return qs_stats.to_drawdown_series(self._nav_df)
 
     def to_excel(self, path: str):
         """Export to Excel.
@@ -871,50 +860,5 @@ class SETBacktestReport:
 
         tmp = df.groupby(["symbol"]).fillna(method="pad")  # type: ignore
         df["entry_at"] = tmp["entry_at"]
-
-        return df
-
-    @staticmethod
-    def _return_by_period(
-        df: pd.DataFrame, init_cap: float, period: str
-    ) -> pd.DataFrame:
-        """Return by period.
-
-        Parameters
-        ----------
-        df : pd.DataFrame
-            Nav dataframe.
-        init_cap : float
-            Initial capital.
-        period : str
-            "M" (monthly) or "Y" (yearly)
-
-        Returns
-        -------
-        pd.DataFrame
-            Return by period.
-        """
-        df = df.resample(period).last()
-        df = df.sort_index()
-        df = (df / df.shift(fill_value=init_cap)) - 1
-
-        df = df.melt(var_name="name", value_name="value", ignore_index=False)
-
-        assert isinstance(df.index, pd.DatetimeIndex)
-        df["year"] = df.index.year
-        df["month"] = df.index.month
-
-        if period == "M":
-            df = pd.pivot_table(
-                df, index=["name", "year"], columns="month", values="value"
-            )
-            df = df.rename(
-                columns={i: month_abbr[i] for i in range(1, len(month_abbr))}
-            )
-            df = df.reindex(columns=month_abbr[1:])  # type: ignore
-        else:
-            df = pd.pivot_table(df, index=["name", "year"], values="value")
-            df = df.rename(columns={"value": "Yr%"})
-            df.columns.name = "month"
 
         return df
