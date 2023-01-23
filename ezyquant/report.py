@@ -5,6 +5,7 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 from pandas.testing import assert_index_equal
+from quantstats import stats as qs_stats
 
 from . import fields as fld
 from . import utils
@@ -574,26 +575,24 @@ class SETBacktestReport:
         return self.net_profit / self.initial_capital
 
     @property
-    @return_nan_on_failure
     def cagr(self) -> pd.Series:
-        """Compound annual growth rate (CAGR)"""
-        return (self.ending_capital / self.initial_capital) ** (1 / self._n_year) - 1
+        """Calculates the communicative annualized growth return (CAGR%) of
+        access returns.
 
-    @property
-    @return_nan_on_failure
-    def pct_maximum_drawdown(self) -> pd.Series:
-        """Percent maximum drawdown."""
-        nav = self._nav_df
-        return (nav / nav.cummax() - 1).min()
-
-    @property
-    @return_nan_on_failure
-    def cagr_divided_maxdd(self) -> pd.Series:
-        """Compound Annual % Return divided by Max.
-
-        system % drawdown.
+        If rf is non-zero, you must specify periods. In this case, rf is
+        assumed to be expressed in yearly (annualized) terms
         """
-        return self.cagr / self.pct_maximum_drawdown.abs()
+        return qs_stats.cagr(self._nav_df)
+
+    @property
+    def pct_maximum_drawdown(self) -> pd.Series:
+        """Calculates the maximum drawdown."""
+        return qs_stats.max_drawdown(self._nav_df)
+
+    @property
+    def cagr_divided_maxdd(self) -> pd.Series:
+        """Calculates the calmar ratio (CAGR% / MaxDD%)"""
+        return qs_stats.calmar(self._nav_df)
 
     @property
     @return_nan_on_failure
@@ -602,13 +601,9 @@ class SETBacktestReport:
         return self.win_trades / self.all_trades
 
     @property
-    @return_nan_on_failure
     def std(self) -> pd.Series:
-        """Standard deviation of profit/loss."""
-        nav = self._nav_df
-        return_per_day = nav / nav.shift(1) - 1
-        trade_date_per_year = nav.shape[0] / self._n_year
-        return return_per_day.std() * (trade_date_per_year**0.5)
+        """Calculates the volatility of returns for a period."""
+        return qs_stats.volatility(self._nav_df)
 
     @property
     @return_nan_on_failure
@@ -811,11 +806,6 @@ class SETBacktestReport:
     def pct_sell_slip(self) -> float:
         """Percent sell slip."""
         return self._pct_sell_slip
-
-    @property
-    def _n_year(self) -> float:
-        """Number of years."""
-        return (self.end_date - self.start_date).days / 365
 
     @property
     def _is_win_trade(self) -> pd.Series:
