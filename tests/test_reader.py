@@ -1997,7 +1997,7 @@ class TestSETBusinessDay:
     @pytest.mark.parametrize("n", [-1, 0, 1])
     def test_nat(self, sdr: SETDataReader, n: int):
         # Test
-        result = pd.NaT + sdr._SETBusinessDay(n)  # type: ignore
+        result = pd.NaT + sdr._SETBusinessDay(n)
 
         # Check
         assert pd.isnull(result)

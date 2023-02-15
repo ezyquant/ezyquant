@@ -92,7 +92,7 @@ sns.heatmap(
     return_table,
     annot=True,
     fmt=".1%",
-    linewidths=0.5,
+    linewidths=0.5,  # type: ignore
     ax=ax,
     cmap="PiYG",
     vmin=-0.1,
