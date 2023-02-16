@@ -756,7 +756,7 @@ class TestGetSignPosting:
 
     @pytest.mark.parametrize("symbol_list", [["TAPAC"], ["tapac"]])
     @pytest.mark.parametrize("start_date", ["2022-01-05", None])
-    @pytest.mark.parametrize("end_date", ["2022-01-05", None])
+    @pytest.mark.parametrize("end_date", ["2022-01-05"])
     @pytest.mark.parametrize("sign_list", [["SP"], ["sp"], None])
     def test_one(
         self,

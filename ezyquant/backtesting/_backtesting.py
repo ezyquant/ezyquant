@@ -93,7 +93,7 @@ def _backtest(
         position_dict={},  # TODO: [EZ-79] initial position dict
         trade_list=[],  # TODO: initial trade
     )
-    acct.set_position_close_price(close_price_df.iloc[0].to_dict())  # type: ignore
+    acct.set_position_close_price(close_price_df.iloc[0].to_dict())
 
     # remove first close row
     close_price_df = close_price_df.iloc[1:]

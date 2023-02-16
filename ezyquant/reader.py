@@ -473,7 +473,7 @@ class SETDataReader:
         end_date: Optional[str] = None
             end of ex_date (D_SIGN).
         ca_type_list: Optional[List[str]] = None
-            Coperatie action type (N_CA_TYPE).
+            Corporate action type (N_CA_TYPE).
                 - CD - cash dividend
                 - SD - stock dividend
         adjusted_list: List[str] = ["", "CR", "PC", "RC", "SD", "XR"]
@@ -522,6 +522,112 @@ class SETDataReader:
         1        M  2021-05-10  2021-05-25      CD  0.5
         2        M  2022-05-10  2022-05-25      CD  0.8
         """
+        if ca_type_list is None:
+            ca_type_list = ["CD", "SD"]
+
+        df = self.get_rights_benefit(
+            symbol_list=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
+            ca_type_list=ca_type_list,
+        )
+
+        df = df.rename(columns={"sign_date": "ex_date"})
+
+        # filter dps > 0
+        df = df[df["dps"] > 0]
+
+        df = self._merge_adjust_factor_dividend(df, adjusted_list=adjusted_list)
+
+        return df
+
+    def get_rights_benefit(
+        self,
+        symbol_list: Optional[List[str]] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+        ca_type_list: Optional[List[str]] = None,
+    ) -> pd.DataFrame:
+        """Data from table RIGHTS_BENEFIT. Not include Cancelled
+        (F_CANCEL!='C') sign_date and pay_date can be null.
+
+        Parameters
+        ----------
+        symbol_list: Optional[List[str]] = None
+            N_SECURITY in symbol_list (must be unique).
+        start_date: Optional[str] = None
+            start of sign_date (D_SIGN).
+        end_date: Optional[str] = None
+            end of sign_date (D_SIGN).
+        ca_type_list: Optional[List[str]] = None
+            Corporate action type (N_CA_TYPE).
+                - CD - Cash dividend
+                - SD - Stock dividend
+                - XR - Excluding Right
+                - XM - Excluding Meetings
+                - XI - Excluding Interest
+                - XE - Excluding Exercise
+                - ND - No dividend
+                - XC - Exclude Conversion
+                - CR - Capital Reduction
+                - PP - Private Placement
+                - PO - Public Offering
+                - CA - Capital Announce
+                - XN - Excluding Capital Return
+                - XB - Excluding Other Benefit
+
+        Returns
+        -------
+        pd.DataFrame
+            dividend dataframe contain columns:
+                - symbol: str - SECURITY.N_SECURITY
+                - sign_date: date - D_SIGN
+                - pay_date: date - D_BEG_PAID
+                - ca_type: str - N_CA_TYPE
+                - dps: int - Z_RIGHTS
+
+        Examples
+        --------
+        >>> from ezyquant import SETDataReader
+        >>> sdr = SETDataReader()
+        >>> sdr.get_rights_benefit(["M"])
+           symbol  sign_date   pay_date ca_type  dps
+        0       M        NaT        NaT      CA  NaN
+        1       M        NaT        NaT      CR  NaN
+        2       M 2014-03-13        NaT      XM  NaN
+        3       M 2014-05-06 2014-05-21      CD  1.6
+        4       M 2014-08-20 2014-09-04      CD  0.8
+        5       M 2015-03-10        NaT      XM  NaN
+        6       M 2015-04-30 2015-05-21      CD  1.0
+        7       M 2015-08-24 2015-09-08      CD  0.9
+        8       M 2016-03-08        NaT      XM  NaN
+        9       M 2016-04-28 2016-05-19      CD  1.0
+        10      M 2016-08-23 2016-09-08      CD  1.0
+        11      M 2017-03-08        NaT      XM  NaN
+        12      M 2017-05-04 2017-05-23      CD  1.1
+        13      M 2017-08-22 2017-09-08      CD  1.1
+        14      M 2018-03-09        NaT      XM  NaN
+        15      M 2018-05-07 2018-05-23      CD  1.2
+        16      M 2018-08-22 2018-09-07      CD  1.2
+        17      M 2019-03-11        NaT      XM  NaN
+        18      M 2019-05-07 2019-05-23      CD  1.3
+        19      M 2019-08-26 2019-09-11      CD  1.3
+        20      M 2020-04-22 2020-05-08      CD  1.3
+        21      M 2020-06-22        NaT      XM  NaN
+        22      M 2020-08-24 2020-09-10      CD  0.5
+        23      M 2021-03-09        NaT      XM  NaN
+        24      M 2021-05-10 2021-05-25      CD  0.5
+        25      M 2022-03-09        NaT      XM  NaN
+        26      M 2022-05-10 2022-05-25      CD  0.8
+        27      M 2022-08-23 2022-09-08      CD  0.5
+        >>> sdr.get_rights_benefit(["M"], start_date="2020-07-28", end_date="2022-05-11")
+          symbol  sign_date   pay_date ca_type  dps
+        0      M 2020-08-24 2020-09-10      CD  0.5
+        1      M 2021-03-09        NaT      XM  NaN
+        2      M 2021-05-10 2021-05-25      CD  0.5
+        3      M 2022-03-09        NaT      XM  NaN
+        4      M 2022-05-10 2022-05-25      CD  0.8
+        """
         security_t = self._table("SECURITY")
         rights_benefit_t = self._table("RIGHTS_BENEFIT")
 
@@ -532,16 +638,14 @@ class SETDataReader:
             select(
                 [
                     func.trim(security_t.c.N_SECURITY).label("symbol"),
-                    rights_benefit_t.c.D_SIGN.label("ex_date"),
+                    rights_benefit_t.c.D_SIGN.label("sign_date"),
                     rights_benefit_t.c.D_BEG_PAID.label("pay_date"),
                     func.trim(rights_benefit_t.c.N_CA_TYPE).label("ca_type"),
                     rights_benefit_t.c.Z_RIGHTS.label("dps"),
                 ]
             )
             .select_from(j)
-            .where(func.trim(rights_benefit_t.c.N_CA_TYPE).in_(["CD", "SD"]))
             .where(func.trim(rights_benefit_t.c.F_CANCEL) != "C")
-            .where(rights_benefit_t.c.Z_RIGHTS > 0)
             .order_by(rights_benefit_t.c.D_SIGN)
         )
 
@@ -558,8 +662,6 @@ class SETDataReader:
         )
 
         df = self._read_sql_query(stmt)
-
-        df = self._merge_adjust_factor_dividend(df, adjusted_list=adjusted_list)
 
         return df
 
@@ -656,7 +758,7 @@ class SETDataReader:
                 - NC - Non Compliance
                 - NP - Notice Pending
                 - SP - Suspension
-                - ST
+                - ST - Stabilization
 
         Returns
         -------
@@ -676,8 +778,6 @@ class SETDataReader:
         0   THAI 2020-11-12   2020-11-13   SP
         1   THAI 2021-02-25          NaT   SP
         """
-        warnings.warn("This function is deprecated.", DeprecationWarning)
-
         security_t = self._table("SECURITY")
         sign_posting_t = self._table("SIGN_POSTING")
 
@@ -877,7 +977,7 @@ class SETDataReader:
         end_date: Optional[str] = None
             end of effect_date (D_EFFECT).
         ca_type_list: Optional[List[str]] = None
-            Coperatie action type (N_CA_TYPE).
+            Corporate action type (N_CA_TYPE).
                 - '  '
                 - 'CR' - Capital Reduction
                 - 'PC' - Par Change
@@ -2379,7 +2479,7 @@ class SETDataReader:
     def _get_holidays(self) -> List[str]:
         tds = self.get_trading_dates()
         bds = pd.bdate_range(tds[0], tds[-1]).strftime("%Y-%m-%d")
-        return list(set(bds) - set(tds))
+        return list(set(bds) - set(tds))  # type: ignore
 
     def _SETBusinessDay(self, n: int = 1) -> CustomBusinessDay:
         holidays = self._get_holidays()
