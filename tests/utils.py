@@ -70,7 +70,7 @@ def make_signal_weight_df(n_row: int = N_ROW, n_col: int = N_COL) -> pd.DataFram
     df = (df.rank(axis=1) <= 10).astype(bool) / 10
 
     # Rebalance monthly
-    idx_ym = df.index.strftime("%Y%m")
+    idx_ym = df.index.strftime("%Y%m")  # type: ignore
     df = df[~idx_ym.duplicated()]
     assert isinstance(df, pd.DataFrame)
 

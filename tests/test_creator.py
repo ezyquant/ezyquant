@@ -330,7 +330,7 @@ class TestGetData:
         symbols = ["A", "B", "C"]
         ssc = SETSignalCreator()
         ssc._get_symbol_in_universe = Mock(return_value=symbols)
-        ssc._reindex_trade_date = lambda df, **kwargs: df
+        ssc._reindex_trade_date = lambda df, **kwargs: df  # type: ignore
         ssc._sdr._get_fundamental_data = Mock(return_value=data)
         ssc.is_banned = Mock(
             return_value=pd.DataFrame(

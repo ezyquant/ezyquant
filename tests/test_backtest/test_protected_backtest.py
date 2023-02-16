@@ -33,11 +33,11 @@ def test_backtest_algorithm(return_volume: float):
     m = Mock(return_value=return_volume)
     backtest_algorithm = lambda ctx: m(dclass.replace(ctx))
     close_price_df = pd.DataFrame(
-        [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0], [9.0, 10.0]],
-        index=pd.bdate_range("2000-01-01", periods=5) - BusinessDay(),
+        [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0], [9.0, 10.0]],  # type: ignore
+        index=pd.bdate_range("2000-01-01", periods=5) - BusinessDay(),  # type: ignore
         columns=["A", "B"],
     )
-    close_price_df.index.freq = index.freq
+    close_price_df.index.freq = index.freq  # type: ignore
     price_match_df = signal_df.copy()
     pct_buy_slip = 0.0
     pct_sell_slip = 0.0

@@ -364,7 +364,7 @@ class TestWrapCacheClass:
         # Test
         A1 = utils.wrap_cache_class(A)
 
-        a: A = A1()
+        a: A = A1()  # type: ignore
 
         r1 = a.m1(*args1, **kwargs1)
         r2 = a.m1(*args2, **kwargs2)
