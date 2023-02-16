@@ -976,3 +976,43 @@ class TestScreenUniverse:
             index=pd.DatetimeIndex(["2021-12-30", "2022-01-04", "2022-01-05"]),
         )
         assert_frame_equal(expect, result)
+
+
+class TestGetSymbolsByTradingSign:
+    def test_success_default(self):
+        # Mock
+        ssc = SETSignalCreator(symbol_list=["BTS"])
+
+        # Test
+        result = ssc.get_symbols_by_trading_sign()
+
+        # Check
+        assert result == ["BTS"]
+
+    def test_success_specific(self):
+        # Mock
+        ssc = SETSignalCreator(symbol_list=["BTS"])
+
+        # Test
+        result = ssc.get_symbols_by_trading_sign(
+            start_date="2022-02-07",
+            end_date="2022-02-07",
+            sign_list=["CD"],
+        )
+
+        # Check
+        assert result == ["BTS"]
+
+    def test_empty(self):
+        # Mock
+        ssc = SETSignalCreator(symbol_list=["BTS"])
+
+        # Test
+        result = ssc.get_symbols_by_trading_sign(
+            start_date="2022-02-08",
+            end_date="2022-02-08",
+            sign_list=["CD"],
+        )
+
+        # Check
+        assert result == []
