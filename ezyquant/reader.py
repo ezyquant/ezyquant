@@ -473,7 +473,7 @@ class SETDataReader:
         end_date: Optional[str] = None
             end of ex_date (D_SIGN).
         ca_type_list: Optional[List[str]] = None
-            Coperatie action type (N_CA_TYPE).
+            Corporate action type (N_CA_TYPE).
                 - CD - cash dividend
                 - SD - stock dividend
         adjusted_list: List[str] = ["", "CR", "PC", "RC", "SD", "XR"]
@@ -560,21 +560,21 @@ class SETDataReader:
         end_date: Optional[str] = None
             end of sign_date (D_SIGN).
         ca_type_list: Optional[List[str]] = None
-            Coperatie action type (N_CA_TYPE).
-                - CD - cash dividend
-                - SD - stock dividend
-                - XR - Exclude Rights
-                - XM - Exclude Meeting
-                - XI - Exclude Interest
-                - XE - Exclude Exercise
+            Corporate action type (N_CA_TYPE).
+                - CD - Cash dividend
+                - SD - Stock dividend
+                - XR - Excluding Right
+                - XM - Excluding Meetings
+                - XI - Excluding Interest
+                - XE - Excluding Exercise
                 - ND - No dividend
                 - XC - Exclude Conversion
                 - CR - Capital Reduction
-                - PP - Other Capital Increase
-                - PO - Other Capital Increase
+                - PP - Private Placement
+                - PO - Public Offering
                 - CA - Capital Announce
-                - XN - Capital Return
-                - XB - Other Benefit
+                - XN - Excluding Capital Return
+                - XB - Excluding Other Benefit
 
         Returns
         -------
@@ -758,7 +758,7 @@ class SETDataReader:
                 - NC - Non Compliance
                 - NP - Notice Pending
                 - SP - Suspension
-                - ST
+                - ST - Stabilization
 
         Returns
         -------
@@ -979,7 +979,7 @@ class SETDataReader:
         end_date: Optional[str] = None
             end of effect_date (D_EFFECT).
         ca_type_list: Optional[List[str]] = None
-            Coperatie action type (N_CA_TYPE).
+            Corporate action type (N_CA_TYPE).
                 - '  '
                 - 'CR' - Capital Reduction
                 - 'PC' - Par Change

@@ -462,22 +462,22 @@ class SETSignalCreator:
             end of sign date.
         sign_list : Optional[List[str]]
             list of sign.
-                - right benefit
-                    - CD - cash dividend
-                    - SD - stock dividend
-                    - XR - Exclude Rights
-                    - XM - Exclude Meeting
-                    - XI - Exclude Interest
-                    - XE - Exclude Exercise
+                - Right benefit
+                    - CD - Cash dividend
+                    - SD - Stock dividend
+                    - XR - Excluding Right
+                    - XM - Excluding Meetings
+                    - XI - Excluding Interest
+                    - XE - Excluding Exercise
                     - ND - No dividend
                     - XC - Exclude Conversion
                     - CR - Capital Reduction
-                    - PP - Other Capital Increase
-                    - PO - Other Capital Increase
+                    - PP - Private Placement
+                    - PO - Public Offering
                     - CA - Capital Announce
-                    - XN - Capital Return
-                    - XB - Other Benefit
-                - sign posting
+                    - XN - Excluding Capital Return
+                    - XB - Excluding Other Benefit
+                - Sign posting
                     - C - Caution Flag
                     - CM - Call Market
                     - DS - Designated
@@ -485,7 +485,7 @@ class SETSignalCreator:
                     - NC - Non Compliance
                     - NP - Notice Pending
                     - SP - Suspension
-                    - ST
+                    - ST - Stabilization
         Returns
         -------
         List[str]
