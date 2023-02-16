@@ -490,6 +490,21 @@ class SETSignalCreator:
         -------
         List[str]
             list of symbol.
+
+        Examples
+        --------
+        >>> from ezyquant import SETSignalCreator
+        >>> ssc = SETSignalCreator(
+        ...     start_date="2022-01-01",
+        ...     end_date="2022-01-10",
+        ...     index_list=["SET100"],
+        ... )
+        >>> ssc.get_symbols_by_trading_sign(
+        ...     sign_list=["CD", "SD"],
+        ...     start_date="2020-01-01",
+        ...     end_date="2020-02-01",
+        ... )
+        ['BTS', 'SCBB']
         """
         symbol_list = self._get_symbol_in_universe()
 

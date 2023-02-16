@@ -27,7 +27,7 @@ setup(
     python_requires=">=3.8.6",
     install_requires=[
         "pandas>=1.3",
-        "sqlalchemy~=1.4",
+        "sqlalchemy>=1.4,<1.5",
         "psycopg2-binary>=2.9",
         "ta>=0.10",
         "XlsxWriter>=3.0",

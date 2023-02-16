@@ -778,8 +778,6 @@ class SETDataReader:
         0   THAI 2020-11-12   2020-11-13   SP
         1   THAI 2021-02-25          NaT   SP
         """
-        warnings.warn("This function is deprecated.", DeprecationWarning)
-
         security_t = self._table("SECURITY")
         sign_posting_t = self._table("SIGN_POSTING")
 
