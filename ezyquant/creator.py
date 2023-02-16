@@ -446,6 +446,68 @@ class SETSignalCreator:
         df = df.mask(cond, mask_value)
         return df
 
+    def get_symbols_by_trading_sign(
+        self,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+        sign_list: Optional[List[str]] = None,
+    ) -> List[str]:
+        """Get list of symbol that has trading sign in given date range.
+
+        Parameters
+        ----------
+        start_date : Optional[str]
+            start of sign date.
+        end_date : Optional[str]
+            end of sign date.
+        sign_list : Optional[List[str]]
+            list of sign.
+                - right benefit
+                    - CD - cash dividend
+                    - SD - stock dividend
+                    - XR - Exclude Rights
+                    - XM - Exclude Meeting
+                    - XI - Exclude Interest
+                    - XE - Exclude Exercise
+                    - ND - No dividend
+                    - XC - Exclude Conversion
+                    - CR - Capital Reduction
+                    - PP - Other Capital Increase
+                    - PO - Other Capital Increase
+                    - CA - Capital Announce
+                    - XN - Capital Return
+                    - XB - Other Benefit
+                - sign posting
+                    - C - Caution Flag
+                    - CM - Call Market
+                    - DS - Designated
+                    - H - Halt
+                    - NC - Non Compliance
+                    - NP - Notice Pending
+                    - SP - Suspension
+                    - ST
+        Returns
+        -------
+        List[str]
+            list of symbol.
+        """
+        symbol_list = self._get_symbol_in_universe()
+
+        df_rb = self._sdr.get_rights_benefit(
+            symbol_list=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
+            ca_type_list=sign_list,
+        )
+        df_sp = self._sdr.get_sign_posting(
+            symbol_list=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
+            sign_list=sign_list,
+        )
+
+        return list(set(df_rb.symbol.tolist() + df_sp.symbol.tolist()))
+
     @staticmethod
     def rank(
         factor_df: pd.DataFrame,
