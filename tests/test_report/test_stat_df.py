@@ -25,6 +25,7 @@ def test_pct_maximum_drawdown(
     sbr: SETBacktestReport, nav_list: List[float], expected_result: float
 ):
     # Mock
+    sbr._initial_capital = nav_list[0]
     summary_df = pd.DataFrame(
         {
             "timestamp": utils.make_bdate_range(len(nav_list)),
