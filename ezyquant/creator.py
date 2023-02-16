@@ -446,6 +446,83 @@ class SETSignalCreator:
         df = df.mask(cond, mask_value)
         return df
 
+    def get_symbols_by_trading_sign(
+        self,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+        sign_list: Optional[List[str]] = None,
+    ) -> List[str]:
+        """Get list of symbol that has trading sign in given date range.
+
+        Parameters
+        ----------
+        start_date : Optional[str]
+            start of sign date.
+        end_date : Optional[str]
+            end of sign date.
+        sign_list : Optional[List[str]]
+            list of sign.
+                - Right benefit
+                    - CD - Cash dividend
+                    - SD - Stock dividend
+                    - XR - Excluding Right
+                    - XM - Excluding Meetings
+                    - XI - Excluding Interest
+                    - XE - Excluding Exercise
+                    - ND - No dividend
+                    - XC - Exclude Conversion
+                    - CR - Capital Reduction
+                    - PP - Private Placement
+                    - PO - Public Offering
+                    - CA - Capital Announce
+                    - XN - Excluding Capital Return
+                    - XB - Excluding Other Benefit
+                - Sign posting
+                    - C - Caution Flag
+                    - CM - Call Market
+                    - DS - Designated
+                    - H - Halt
+                    - NC - Non Compliance
+                    - NP - Notice Pending
+                    - SP - Suspension
+                    - ST - Stabilization
+        Returns
+        -------
+        List[str]
+            list of symbol.
+
+        Examples
+        --------
+        >>> from ezyquant import SETSignalCreator
+        >>> ssc = SETSignalCreator(
+        ...     start_date="2022-01-01",
+        ...     end_date="2022-01-10",
+        ...     index_list=["SET100"],
+        ... )
+        >>> ssc.get_symbols_by_trading_sign(
+        ...     sign_list=["CD", "SD"],
+        ...     start_date="2020-01-01",
+        ...     end_date="2020-02-01",
+        ... )
+        ['BTS', 'SCBB']
+        """
+        symbol_list = self._get_symbol_in_universe()
+
+        df_rb = self._sdr.get_rights_benefit(
+            symbol_list=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
+            ca_type_list=sign_list,
+        )
+        df_sp = self._sdr.get_sign_posting(
+            symbol_list=symbol_list,
+            start_date=start_date,
+            end_date=end_date,
+            sign_list=sign_list,
+        )
+
+        return list(set(df_rb.symbol.tolist() + df_sp.symbol.tolist()))
+
     @staticmethod
     def rank(
         factor_df: pd.DataFrame,

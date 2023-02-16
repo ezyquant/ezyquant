@@ -537,7 +537,7 @@ class SETBacktestReport:
         """
         with pd.ExcelWriter(
             path,
-            engine="xlsxwriter",  # type: ignore
+            engine="xlsxwriter",
             datetime_format="YYYY-MM-DD",
         ) as writer:
             self.summary_df.to_excel(writer, sheet_name="summary", index=False)
