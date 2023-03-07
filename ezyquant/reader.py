@@ -1982,8 +1982,6 @@ class SETDataReader:
     ):
         vld.check_start_end_date(start_date, end_date)
 
-        # TODO: check that column is date type
-
         if start_date != None:
             stmt = stmt.where(column >= start_date)
         if end_date != None:
