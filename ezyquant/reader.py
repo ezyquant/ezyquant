@@ -1945,8 +1945,6 @@ class SETDataReader:
         return self._engine
 
     def _func_date(self, column: Column):
-        # Note: SQLite requires DATE function to compare date
-        # For example: D_TRADE = '2022-01-04' will return nothing
         if self.engine.name == "sqlite":
             return func.DATE(column)
         return column
@@ -2029,9 +2027,7 @@ class SETDataReader:
                     func.min(daily_stock_stat_t.c.D_TRADE).label("D_TRADE"),
                 ]
             )
-            .group_by(
-                daily_stock_stat_t.c.I_SECURITY, daily_stock_stat_t.c.D_AS_OF
-            )  # TODO: check need func_date
+            .group_by(daily_stock_stat_t.c.I_SECURITY, daily_stock_stat_t.c.D_AS_OF)
             .subquery()
         )
 
@@ -2044,8 +2040,7 @@ class SETDataReader:
             d_trade_subquery,
             and_(
                 table.c.I_SECURITY == d_trade_subquery.c.I_SECURITY,
-                table.c.D_AS_OF
-                == d_trade_subquery.c.D_AS_OF,  # TODO: check need func_date
+                table.c.D_AS_OF == d_trade_subquery.c.D_AS_OF,
             ),
         )
 

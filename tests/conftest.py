@@ -19,7 +19,7 @@ def connect_postgres():
     ez.connect_postgres(
         host="localhost",
         username="postgres",
-        password="1234",
+        password="postgres",
         port="5432",
         database="psims",
     )
