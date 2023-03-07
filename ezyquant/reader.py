@@ -286,8 +286,8 @@ class SETDataReader:
             native = native.upper()
             stmt = stmt.where(security_t.c.I_NATIVE == native)
 
+        # No if because symbol must exist in DAILY_STOCK_TRADE
         subq = select([daily_stock_t.c.I_SECURITY]).distinct()
-        # TODO: using exists() instead of in_() for performance
         subq = self._filter_stmt_by_date(
             stmt=subq,
             column=daily_stock_t.c.D_TRADE,
