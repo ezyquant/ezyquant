@@ -6,11 +6,10 @@ from typing import Dict, List, Optional
 import pandas as pd
 from pandas.errors import PerformanceWarning
 from pandas.tseries.offsets import CustomBusinessDay
-from sqlalchemy import Column, MetaData, Table, and_, case, func, select
+from sqlalchemy import Column, MetaData, Table, and_, case, exists, func, select
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import DatabaseError
 from sqlalchemy.sql import Select
-from sqlalchemy.sql.selectable import Select
 
 from . import fields as fld
 from . import utils
@@ -66,10 +65,9 @@ class SETDataReader:
             string with format YYYY-MM-DD.
         """
         t = self._table(table_name)
-        stmt = select([self._func_date(func.max(t.c.D_TRADE))])
-        res = self._execute(stmt).scalar()
-        res = str(res)
-        assert isinstance(res, str)
+        stmt = select([func.max(t.c.D_TRADE).label(TRADE_DATE)])
+        df = self._read_sql_query(stmt)
+        res = df[TRADE_DATE].dt.strftime("%Y-%m-%d").iloc[0]
         return res
 
     def last_update(self) -> str:
@@ -114,7 +112,7 @@ class SETDataReader:
         """
         calendar_t = self._table("CALENDAR")
 
-        stmt = select([self._func_date(calendar_t.c.D_TRADE)]).order_by(
+        stmt = select([calendar_t.c.D_TRADE.label(TRADE_DATE)]).order_by(
             calendar_t.c.D_TRADE
         )
 
@@ -125,9 +123,11 @@ class SETDataReader:
             end_date=end_date,
         )
 
-        res = self._execute(stmt).all()
+        df = self._read_sql_query(stmt)
 
-        return [str(i[0]) for i in res]
+        res = df[TRADE_DATE].dt.strftime("%Y-%m-%d").tolist()
+
+        return res
 
     def is_trading_date(self, check_date: str) -> bool:
         """Data from table CALENDAR.
@@ -144,14 +144,15 @@ class SETDataReader:
         """
         calendar_t = self._table("CALENDAR")
 
-        stmt = select([func.count(calendar_t.c.D_TRADE)]).where(
-            self._func_date(calendar_t.c.D_TRADE) == check_date
+        stmt = select(
+            exists().where(self._func_date(calendar_t.c.D_TRADE) == check_date)
         )
 
-        res = self._execute(stmt).scalar()
+        df = self._read_sql_query(stmt)
 
-        assert isinstance(res, int)
-        return res > 0
+        res = bool(df.iloc[0, 0])
+
+        return res
 
     def is_today_trading_date(self) -> bool:
         """Data from table CALENDAR.
@@ -285,6 +286,7 @@ class SETDataReader:
             native = native.upper()
             stmt = stmt.where(security_t.c.I_NATIVE == native)
 
+        # No if because symbol must exist in DAILY_STOCK_TRADE
         subq = select([daily_stock_t.c.I_SECURITY]).distinct()
         subq = self._filter_stmt_by_date(
             stmt=subq,
@@ -1937,27 +1939,29 @@ class SETDataReader:
     Protected methods
     """
 
+    @property
+    def engine(self) -> Engine:
+        assert self._engine is not None
+        return self._engine
+
     def _func_date(self, column: Column):
-        return func.DATE(column)
+        if self.engine.name == "sqlite":
+            return func.DATE(column)
+        return column
 
     def _table(self, name: str) -> Table:
         return Table(name, self._metadata, autoload=True)
 
-    def _execute(self, stmt: Select):
-        assert self._engine is not None
-        return self._engine.execute(stmt)
-
     def _read_sql_query(
         self, stmt: Select, index_col: Optional[str] = None
     ) -> pd.DataFrame:
-        col_name_list = [i.name for i in stmt.selected_columns]
+        col_name_list = [i.name for i in stmt.selected_columns if hasattr(i, "name")]
 
         parse_dates = [i for i in col_name_list if i.endswith("_date")]
 
-        assert self._engine is not None
         df = pd.read_sql_query(
             stmt,
-            self._engine,
+            self.engine,
             index_col=index_col,
             parse_dates=parse_dates,
         )
@@ -2036,8 +2040,7 @@ class SETDataReader:
             d_trade_subquery,
             and_(
                 table.c.I_SECURITY == d_trade_subquery.c.I_SECURITY,
-                self._func_date(table.c.D_AS_OF)
-                == self._func_date(d_trade_subquery.c.D_AS_OF),
+                table.c.D_AS_OF == d_trade_subquery.c.D_AS_OF,
             ),
         )
 
@@ -2454,8 +2457,8 @@ class SETDataReader:
         stmt = (
             select(
                 [
-                    func.trim(sector_t.c.N_SECTOR),
-                    self._func_date(func.max(security_index_t.c.D_AS_OF)),
+                    func.trim(sector_t.c.N_SECTOR).label("sector"),
+                    func.max(security_index_t.c.D_AS_OF).label("as_of_date"),
                 ]
             )
             .select_from(j)
@@ -2468,8 +2471,10 @@ class SETDataReader:
             end_date=current_date,
         )
 
-        result = self._execute(stmt).all()
-        return {i[0]: str(i[1]) for i in result}
+        df = self._read_sql_query(stmt)
+
+        res = df.set_index("sector")["as_of_date"].dt.strftime("%Y-%m-%d").to_dict()
+        return res
 
     """
     Custom business day functions

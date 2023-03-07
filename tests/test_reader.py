@@ -207,6 +207,50 @@ class TestGetSymbolInfo:
         assert (result["sector"] == fld.SECTOR_AGRI).all()
         assert "STA" in result["symbol"].tolist()
 
+    @pytest.mark.parametrize(
+        ("start", "expected"),
+        [("2022-04-26", ["SCBB", "SCB"]), ("2022-04-27", ["SCB"])],
+    )
+    def test_start_has_price_date(
+        self, sdr: SETDataReader, start: str, expected: List[str]
+    ):
+        """
+        SCBB last trade date is 2022-04-26
+        SCB first trade date is 2022-04-27
+        """
+
+        # Test
+        result = sdr.get_symbol_info(
+            symbol_list=["SCBB", "SCB"], start_has_price_date=start
+        )
+
+        # Check
+        self._check(result)
+
+        assert result["symbol"].tolist() == expected
+
+    @pytest.mark.parametrize(
+        ("end", "expected"),
+        [("2022-04-26", ["SCBB"]), ("2022-04-27", ["SCBB", "SCB"])],
+    )
+    def test_end_has_price_date(
+        self, sdr: SETDataReader, end: str, expected: List[str]
+    ):
+        """
+        SCBB last trade date is 2022-04-26
+        SCB first trade date is 2022-04-27
+        """
+
+        # Test
+        result = sdr.get_symbol_info(
+            symbol_list=["SCBB", "SCB"], end_has_price_date=end
+        )
+
+        # Check
+        self._check(result)
+
+        assert result["symbol"].tolist() == expected
+
     @pytest.mark.parametrize("symbol_list", [["TCCC", "PTTGC"]])
     @pytest.mark.parametrize("market", [fld.MARKET_SET, None])
     @pytest.mark.parametrize("industry", [fld.INDUSTRY_INDUS, None])
