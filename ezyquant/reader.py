@@ -1937,15 +1937,21 @@ class SETDataReader:
     Protected methods
     """
 
+    @property
+    def engine(self) -> Engine:
+        assert self._engine is not None
+        return self._engine
+
     def _func_date(self, column: Column):
+        if self.engine.name == "postgresql":
+            return column
         return func.DATE(column)
 
     def _table(self, name: str) -> Table:
         return Table(name, self._metadata, autoload=True)
 
     def _execute(self, stmt: Select):
-        assert self._engine is not None
-        return self._engine.execute(stmt)
+        return self.engine.execute(stmt)
 
     def _read_sql_query(
         self, stmt: Select, index_col: Optional[str] = None
@@ -1954,10 +1960,9 @@ class SETDataReader:
 
         parse_dates = [i for i in col_name_list if i.endswith("_date")]
 
-        assert self._engine is not None
         df = pd.read_sql_query(
             stmt,
-            self._engine,
+            self.engine,
             index_col=index_col,
             parse_dates=parse_dates,
         )
@@ -1978,6 +1983,8 @@ class SETDataReader:
         end_date: Optional[str],
     ):
         vld.check_start_end_date(start_date, end_date)
+
+        # TODO: check that column is date type
 
         if start_date != None:
             stmt = stmt.where(self._func_date(column) >= start_date)
