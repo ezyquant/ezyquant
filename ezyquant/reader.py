@@ -1943,8 +1943,6 @@ class SETDataReader:
         return self._engine
 
     def _func_date(self, column: Column):
-        if self.engine.name == "postgresql":
-            return column
         return func.DATE(column)
 
     def _table(self, name: str) -> Table:
@@ -1987,9 +1985,9 @@ class SETDataReader:
         # TODO: check that column is date type
 
         if start_date != None:
-            stmt = stmt.where(self._func_date(column) >= start_date)
+            stmt = stmt.where(column >= start_date)
         if end_date != None:
-            stmt = stmt.where(self._func_date(column) <= end_date)
+            stmt = stmt.where(column <= end_date)
 
         return stmt
 
@@ -2043,8 +2041,7 @@ class SETDataReader:
             d_trade_subquery,
             and_(
                 table.c.I_SECURITY == d_trade_subquery.c.I_SECURITY,
-                self._func_date(table.c.D_AS_OF)
-                == self._func_date(d_trade_subquery.c.D_AS_OF),
+                table.c.D_AS_OF == d_trade_subquery.c.D_AS_OF,
             ),
         )
 
