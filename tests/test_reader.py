@@ -970,7 +970,7 @@ class TestGetSymbolsByIndex:
                         "THAI",
                         "ADVANC",
                         "DTAC",
-                        "TRUE",
+                        "TRUEE",
                         "DELTA",
                     ],
                     "seq": [i for i in range(1, 51)],
@@ -1313,7 +1313,7 @@ class TestGetDataSymbolDaily:
             ([], []),
             (["COM7"], ["COM7"]),
             (["com7"], ["COM7"]),
-            (["True"], ["TRUE"]),
+            (["Truee"], ["TRUEE"]),
             (["COM7", "MALEE"], ["COM7", "MALEE"]),
             (["MALEE", "COM7"], ["MALEE", "COM7"]),
             # INVALID

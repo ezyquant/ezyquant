@@ -903,7 +903,7 @@ class SETDataReader:
         43 2022-01-04  SET50     AOT   44
         44 2022-01-04  SET50     BTS   45
         45 2022-01-04  SET50    DTAC   46
-        46 2022-01-04  SET50    TRUE   47
+        46 2022-01-04  SET50   TRUEE   47
         47 2022-01-04  SET50  ADVANC   48
         48 2022-01-04  SET50  INTUCH   49
         49 2022-01-04  SET50     KCE   50
