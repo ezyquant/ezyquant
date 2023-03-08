@@ -1971,8 +1971,8 @@ class SETDataReader:
         start_date: Optional[str],
         end_date: Optional[str],
     ):
-        if "D_TRADE" in column.table.columns:
-            last_update_date = self.last_table_update(column.table)
+        if isinstance(column.table, Table) and "D_TRADE" in column.table.columns:
+            last_update_date = self.last_table_update(column.table)  # type: ignore
         else:
             last_update_date = None
 
