@@ -6,7 +6,17 @@ from typing import Dict, List, Optional
 import pandas as pd
 from pandas.errors import PerformanceWarning
 from pandas.tseries.offsets import CustomBusinessDay
-from sqlalchemy import ColumnElement, MetaData, Table, and_, case, exists, func, select
+from sqlalchemy import (
+    ColumnElement,
+    MetaData,
+    Table,
+    and_,
+    case,
+    exists,
+    func,
+    or_,
+    select,
+)
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import DatabaseError
 from sqlalchemy.sql import Select
@@ -58,6 +68,8 @@ class SETDataReader:
             - MKTSTAT_DAILY_INDEX
             - MKTSTAT_DAILY_MARKET
             - DAILY_SECTOR_INFO
+
+            or any table that have D_TRADE column.
 
         Returns
         -------
@@ -268,19 +280,19 @@ class SETDataReader:
         stmt = self._filter_str_in_list(
             stmt=stmt, column=security_t.c.N_SECURITY, values=symbol_list
         )
-        if market != None:
+        if market is not None:
             market = market.upper()
             stmt = stmt.where(security_t.c.I_MARKET == fld.MARKET_MAP_UPPER[market])
-        if industry != None:
+        if industry is not None:
             industry = industry.upper()
             stmt = stmt.where(func.trim(sector_t.c.N_INDUSTRY) == industry)
-        if sector != None:
+        if sector is not None:
             sector = sector.upper()
             stmt = stmt.where(func.trim(sector_t.c.N_SECTOR) == sector)
-        if sec_type != None:
+        if sec_type is not None:
             sec_type = sec_type.upper()
             stmt = stmt.where(security_t.c.I_SEC_TYPE == sec_type)
-        if native != None:
+        if native is not None:
             native = native.upper()
             stmt = stmt.where(security_t.c.I_NATIVE == native)
 
@@ -891,7 +903,7 @@ class SETDataReader:
         43 2022-01-04  SET50     AOT   44
         44 2022-01-04  SET50     BTS   45
         45 2022-01-04  SET50    DTAC   46
-        46 2022-01-04  SET50    TRUE   47
+        46 2022-01-04  SET50   TRUEE   47
         47 2022-01-04  SET50  ADVANC   48
         48 2022-01-04  SET50  INTUCH   49
         49 2022-01-04  SET50     KCE   50
@@ -1084,6 +1096,7 @@ class SETDataReader:
             - caution
             - 12m_dvd_yield
             - peg
+            - has_trade (if close > 0 or last_bid > 0 or last_offer > 0 return 1.0 else 0.0/nan)
         symbol_list: Optional[List[str]] = None
             N_SECURITY in symbol_list (must be unique).
         start_date: Optional[str] = None
@@ -1125,7 +1138,7 @@ class SETDataReader:
         field = field.lower()
 
         if symbol_list:
-            symbol_list = [i.upper() for i in symbol_list]
+            symbol_list = [i.strip().upper() for i in symbol_list]
 
         security_t = self._table("SECURITY")
 
@@ -1135,6 +1148,13 @@ class SETDataReader:
         elif field in fld.DAILY_STOCK_STAT_MAP:
             daily_stock_t = self._table("DAILY_STOCK_STAT")
             value_col = daily_stock_t.c[fld.DAILY_STOCK_STAT_MAP[field]]
+        elif field == "has_trade":
+            daily_stock_t = self._table("DAILY_STOCK_TRADE")
+            value_col = or_(
+                daily_stock_t.c.Z_CLOSE > 0,
+                daily_stock_t.c.Z_LAST_BID > 0,
+                daily_stock_t.c.Z_LAST_OFFER > 0,
+            )
         else:
             raise InputError(
                 f"{field} is invalid field. Please read document to check valid field."
@@ -1158,11 +1178,6 @@ class SETDataReader:
                 func.trim(daily_stock_t.c.I_TRADING_METHOD) == "A"
             )  # Auto Matching
 
-        vld.check_start_end_date(
-            start_date=start_date,
-            end_date=end_date,
-            last_update_date=self.last_table_update(daily_stock_t.name),
-        )
         stmt = self._filter_stmt_by_symbol_and_date(
             stmt=stmt,
             symbol_column=security_t.c.N_SECURITY,
@@ -1200,7 +1215,7 @@ class SETDataReader:
                 df, is_multiply=False, adjusted_list=adjusted_list
             )
 
-        if symbol_list != None:
+        if symbol_list is not None:
             df = df.reindex(columns=[i for i in symbol_list if i in df.columns])
 
         return df
@@ -1751,11 +1766,6 @@ class SETDataReader:
             .order_by(mktstat_daily_t.c.D_TRADE)
         )
 
-        vld.check_start_end_date(
-            start_date=start_date,
-            end_date=end_date,
-            last_update_date=self.last_table_update(mktstat_daily_t.name),
-        )
         stmt = self._filter_stmt_by_symbol_and_date(
             stmt=stmt,
             symbol_column=sector_t.c.N_SECTOR,
@@ -1925,6 +1935,11 @@ class SETDataReader:
         return self._engine
 
     def _func_date(self, column: ColumnElement):
+        """Convert date column to date type for sqlite engine.
+
+        Usually use in where clause. Select clause will be converted
+        automatically by pandas.read_sql_query
+        """
         if self.engine.name == "sqlite":
             return func.DATE(column)
         return column
@@ -1959,11 +1974,20 @@ class SETDataReader:
         start_date: Optional[str],
         end_date: Optional[str],
     ):
-        vld.check_start_end_date(start_date, end_date)
+        if isinstance(column.table, Table) and "D_TRADE" in column.table.columns:
+            last_update_date = self.last_table_update(column.table)  # type: ignore
+        else:
+            last_update_date = None
 
-        if start_date != None:
+        vld.check_start_end_date(
+            start_date=start_date,
+            end_date=end_date,
+            last_update_date=last_update_date,
+        )
+
+        if start_date is not None:
             stmt = stmt.where(self._func_date(column) >= start_date)
-        if end_date != None:
+        if end_date is not None:
             stmt = stmt.where(self._func_date(column) <= end_date)
 
         return stmt
@@ -1972,7 +1996,7 @@ class SETDataReader:
         self, stmt: Select, column: ColumnElement, values: Optional[List[str]]
     ):
         vld.check_duplicate(values)
-        if values != None:
+        if values is not None:
             values = [i.strip().upper() for i in values]
             stmt = stmt.where(func.upper(func.trim(column)).in_(values))
         return stmt
@@ -2279,7 +2303,7 @@ class SETDataReader:
         df = df.drop_duplicates(subset=[TRADE_DATE, NAME], keep="last")
         df = df.set_index(TRADE_DATE)
 
-        if fillna_value != None:
+        if fillna_value is not None:
             df = df.fillna(fillna_value)
 
         df = self._pivot_name_value(df)
@@ -2327,11 +2351,6 @@ class SETDataReader:
             .order_by(daily_sector_info_t.c.D_TRADE)
         )
 
-        vld.check_start_end_date(
-            start_date=start_date,
-            end_date=end_date,
-            last_update_date=self.last_table_update(daily_sector_info_t.name),
-        )
         stmt = self._filter_stmt_by_symbol_and_date(
             stmt=stmt,
             symbol_column=sector_t.c.N_SECTOR,
@@ -2365,18 +2384,17 @@ class SETDataReader:
         sector_t = self._table("SECTOR")
         daily_sector_info_t = self._table("DAILY_SECTOR_INFO")
 
+        onclause = and_(
+            sector_t.c.I_MARKET == security_t.c.I_MARKET,
+            sector_t.c.I_INDUSTRY == security_t.c.I_INDUSTRY,
+            sector_t.c.I_SUBSECTOR == security_t.c.I_SUBSECTOR,
+        )
+
+        if f_data == "S":
+            onclause = and_(onclause, sector_t.c.I_SECTOR == security_t.c.I_SECTOR)
+
         j = self._join_sector_table(daily_sector_info_t).join(
-            security_t,
-            and_(
-                *[
-                    sector_t.c.I_MARKET == security_t.c.I_MARKET,
-                    sector_t.c.I_INDUSTRY == security_t.c.I_INDUSTRY,
-                    sector_t.c.I_SUBSECTOR == security_t.c.I_SUBSECTOR,
-                ]
-                + [sector_t.c.I_SECTOR == security_t.c.I_SECTOR]
-                if f_data == "S"
-                else []
-            ),
+            security_t, onclause=onclause
         )
 
         try:
@@ -2399,11 +2417,6 @@ class SETDataReader:
             .order_by(daily_sector_info_t.c.D_TRADE)
         )
 
-        vld.check_start_end_date(
-            start_date=start_date,
-            end_date=end_date,
-            last_update_date=self.last_table_update(daily_sector_info_t.name),
-        )
         stmt = self._filter_stmt_by_symbol_and_date(
             stmt=stmt,
             symbol_column=security_t.c.N_SECURITY,

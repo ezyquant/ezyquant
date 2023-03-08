@@ -229,7 +229,7 @@ def cache_dataframe_wrapper(method: Callable):
         end_date: Optional[str] = None,
         **kwargs,
     ):
-        if symbol_list != None:
+        if symbol_list is not None:
             symbol_list = [i.upper() for i in symbol_list]
 
         call_key = tuple(sorted(kwargs.items()))
@@ -272,11 +272,11 @@ def cache_dataframe_wrapper(method: Callable):
             "end_date": c_end_date,
         }
 
-        if symbol_list != None:
+        if symbol_list is not None:
             df = df[[i for i in symbol_list if i in df.columns]]
-        if start_date != None:
+        if start_date is not None:
             df = df[df.index >= start_date]
-        if end_date != None:
+        if end_date is not None:
             df = df[df.index <= end_date]
 
         return df.copy()

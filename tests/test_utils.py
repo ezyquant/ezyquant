@@ -478,7 +478,7 @@ class TestCacheDataframeWrapper:
         df_none = pd.DataFrame(columns=["AAA", "AAB", "AAC"])
         m = Mock(
             side_effect=[
-                pd.DataFrame(columns=list(i)) if i != None else df_none.copy()
+                pd.DataFrame(columns=list(i)) if i is not None else df_none.copy()
                 for i in expected_symbol_lists
             ]
         )
@@ -490,7 +490,7 @@ class TestCacheDataframeWrapper:
             # Check
             assert_frame_equal(
                 result,
-                pd.DataFrame(columns=i) if i != None else df_none.copy(),
+                pd.DataFrame(columns=i) if i is not None else df_none.copy(),
             )
 
         # Check
@@ -531,7 +531,7 @@ class TestCacheDataframeWrapper:
         m = Mock(
             side_effect=[
                 pd.DataFrame(index=pd.bdate_range(start=i, periods=4))
-                if i != None
+                if i is not None
                 else df_none.copy()
                 for i in expected_start_date_list
             ]
@@ -545,7 +545,7 @@ class TestCacheDataframeWrapper:
             assert_frame_equal(
                 result,
                 pd.DataFrame(index=pd.bdate_range(start=i, periods=4))
-                if i != None
+                if i is not None
                 else df_none.copy(),
             )
 
@@ -587,7 +587,7 @@ class TestCacheDataframeWrapper:
         m = Mock(
             side_effect=[
                 pd.DataFrame(index=pd.bdate_range(end=i, periods=4))
-                if i != None
+                if i is not None
                 else df_none.copy()
                 for i in expected_end_date_list
             ]
@@ -601,7 +601,7 @@ class TestCacheDataframeWrapper:
             assert_frame_equal(
                 result,
                 pd.DataFrame(index=pd.bdate_range(end=i, periods=4))
-                if i != None
+                if i is not None
                 else df_none.copy(),
             )
 

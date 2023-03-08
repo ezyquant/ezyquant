@@ -388,19 +388,11 @@ class SETSignalCreator:
         """
         symbol_list = self._get_symbol_in_universe()
 
-        # TODO: perf - query only no trade date, symbol
-        close_df = self._get_data_symbol_daily(
-            field=fld.D_CLOSE, symbol_list=symbol_list, is_fill_prior=False
-        )
-        last_bid_df = self._get_data_symbol_daily(
-            field=fld.D_LAST_BID, symbol_list=symbol_list, is_fill_prior=False
-        )
-        last_offer_df = self._get_data_symbol_daily(
-            field=fld.D_LAST_OFFER, symbol_list=symbol_list, is_fill_prior=False
+        has_trade = self._get_data_symbol_daily(
+            field="has_trade", symbol_list=symbol_list, is_fill_prior=False
         )
 
-        out = close_df + last_bid_df + last_offer_df
-        out = ~out.fillna(0).astype(bool)
+        out = ~(has_trade.fillna(0.0).astype(bool))
         out = self._reindex(out, fill_value=True)
 
         return out
@@ -572,7 +564,7 @@ class SETSignalCreator:
         2  1.0  1.0  1.0
         """
         df = factor_df.rank(ascending=ascending, axis=1, method=method, pct=pct)
-        if quantity != None:
+        if quantity is not None:
             if quantity <= 0:
                 raise InputError(
                     f"quantity must be greater than 0. but {quantity} is given."
@@ -894,9 +886,9 @@ class SETSignalCreator:
         dr = pd.date_range(start=start, end=end)
         df = df.reindex(dr)
 
-        if method != None:
+        if method is not None:
             df = df.fillna(method=method)
-        if fill_value != None:
+        if fill_value is not None:
             df = df.fillna(fill_value)
 
         return df.reindex(index=index)
