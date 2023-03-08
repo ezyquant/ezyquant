@@ -36,7 +36,6 @@ class TA:
             Simple Moving Average (SMA)
         """
         df = _sma(close, periods=window, fillna=fillna)
-        assert isinstance(df, pd.DataFrame)
         return df
 
     @staticmethod
@@ -60,7 +59,6 @@ class TA:
             Exponential Moving Average (EMA)
         """
         df = _ema(close, periods=window, fillna=fillna)
-        assert isinstance(df, pd.DataFrame)
         return df
 
     @staticmethod
