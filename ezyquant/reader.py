@@ -1137,6 +1137,9 @@ class SETDataReader:
         adjusted_list = list(adjusted_list)  # copy to avoid modify original list
         field = field.lower()
 
+        if symbol_list is not None:
+            symbol_list = [s.strip().upper() for s in symbol_list]
+
         security_t = self._table("SECURITY")
 
         if field in fld.DAILY_STOCK_TRADE_MAP:
