@@ -16,7 +16,7 @@ INDEX_LIST = fld.INDEX_LIST + [fld.MARKET_SET, fld.MARKET_MAI]
 
 def test_last_table_update(sdr: SETDataReader):
     # Test
-    result = sdr.last_table_update("MKTSTAT_DAILY_INDEX")
+    result = sdr.last_table_update("DAILY_STOCK_TRADE")
 
     assert isinstance(result, str)
 
@@ -1728,12 +1728,7 @@ class TestGetDataSymbolYtd:
 class TestGetDataIndexDaily:
     @pytest.mark.parametrize(
         "field",
-        [
-            fld.D_INDEX_CLOSE,
-            fld.D_INDEX_TRI,
-            fld.D_INDEX_TOTAL_TRANS,
-            fld.D_INDEX_MKT_PAR_VALUE,
-        ],
+        [fld.D_INDEX_CLOSE, fld.D_INDEX_BETA],
     )
     def test_field(self, sdr: SETDataReader, field: str):
         # Test
@@ -1750,8 +1745,8 @@ class TestGetDataIndexDaily:
             (fld.MARKET_SET, fld.D_INDEX_HIGH, 1674.19),
             (fld.MARKET_SET, fld.D_INDEX_LOW, 1663.50),
             (fld.MARKET_SET, fld.D_INDEX_CLOSE, 1670.28),
-            (fld.MARKET_SET, fld.D_INDEX_TOTAL_VOLUME, 28684980655.0),
-            (fld.MARKET_SET, fld.D_INDEX_TOTAL_VALUE, 100014911411.57),
+            (fld.MARKET_SET, fld.D_INDEX_VOLUME, 28684980655.0),
+            (fld.MARKET_SET, fld.D_INDEX_VALUE, 100014911411.57),
             (fld.MARKET_SET, fld.D_INDEX_MKT_PE, 20.96),
             (fld.MARKET_SET, fld.D_INDEX_MKT_PBV, 1.80),
             (fld.MARKET_SET, fld.D_INDEX_MKT_YIELD, 2.08),
@@ -1790,12 +1785,7 @@ class TestGetDataIndexDaily:
 
     @pytest.mark.parametrize(
         "field",
-        [
-            fld.D_INDEX_CLOSE,
-            fld.D_INDEX_TRI,
-            fld.D_INDEX_TOTAL_TRANS,
-            fld.D_INDEX_MKT_PAR_VALUE,
-        ],
+        [fld.D_INDEX_CLOSE, fld.D_INDEX_12M_DVD_YIELD],
     )
     def test_empty(self, sdr: SETDataReader, field: str):
         # Test

@@ -65,8 +65,6 @@ class SETDataReader:
 
             - DAILY_STOCK_TRADE
             - DAILY_STOCK_STAT
-            - MKTSTAT_DAILY_INDEX
-            - MKTSTAT_DAILY_MARKET
             - DAILY_SECTOR_INFO
 
             or any table that have D_TRADE column.
@@ -88,8 +86,6 @@ class SETDataReader:
 
         - DAILY_STOCK_TRADE
         - DAILY_STOCK_STAT
-        - MKTSTAT_DAILY_INDEX
-        - MKTSTAT_DAILY_MARKET
         - DAILY_SECTOR_INFO
 
         Returns
@@ -99,10 +95,8 @@ class SETDataReader:
         """
         d1 = self.last_table_update("DAILY_STOCK_TRADE")
         d2 = self.last_table_update("DAILY_STOCK_STAT")
-        d3 = self.last_table_update("MKTSTAT_DAILY_INDEX")
-        d4 = self.last_table_update("MKTSTAT_DAILY_MARKET")
-        d5 = self.last_table_update("DAILY_SECTOR_INFO")
-        assert d1 == d2 == d3 == d4 == d5, "Last update is not the same."
+        d3 = self.last_table_update("DAILY_SECTOR_INFO")
+        assert d1 == d2 == d3, "Last update is not the same."
         return d1
 
     def get_trading_dates(
@@ -349,6 +343,9 @@ class SETDataReader:
         0           1    BBL  ธนาคารกรุงเทพ จำกัด (มหาชน)  ...  1/12/1944  เมื่อผลประกอบการของธนาคารมีกำไร (โดยมีเงื่อนไข...  Pays when company has profit (with additional ...
         1         646    PTT    บริษัท ปตท. จำกัด (มหาชน)  ...  1/10/2001  ไม่ต่ำกว่าร้อยละ 25 ของกำไรสุทธิที่เหลือหลังหั...  Not less than 25% of net income after deductio...
         """
+        warnings.warn(
+            "This function will be deprecated in the future.", DeprecationWarning
+        )
         company_t = self._table("COMPANY")
         security_t = self._table("SECURITY")
 
@@ -425,6 +422,9 @@ class SETDataReader:
         4       2794    SMG-WB  2014-08-28    SCSMG-WB     SMG-WB
         5       3375  SMG-W1-R  2014-08-28  SCSMG-W1-R   SMG-W1-R
         """
+        warnings.warn(
+            "This function will be deprecated in the future.", DeprecationWarning
+        )
         security_t = self._table("SECURITY")
         change_name_t = self._table("CHANGE_NAME_SECURITY")
 
@@ -707,7 +707,9 @@ class SETDataReader:
         2  CB20220A    2020-02-20
         3  CB20220B    2020-02-20
         """
-        warnings.warn("This function is deprecated.", DeprecationWarning)
+        warnings.warn(
+            "This function will be deprecated in the future.", DeprecationWarning
+        )
 
         security_t = self._table("SECURITY")
         security_detail_t = self._table("SECURITY_DETAIL")
@@ -1684,6 +1686,7 @@ class SETDataReader:
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
     ) -> pd.DataFrame:
+        # TODO: docstring
         """Data from table MKTSTAT_DAILY_INDEX, MKTSTAT_DAILY_MARKET.
 
         Parameters
@@ -1739,47 +1742,13 @@ class SETDataReader:
         2022-01-07  1657.62  2257.40
         2022-01-10  1657.06  2256.14
         """
-        field = field.lower()
-
-        sector_t = self._table("SECTOR")
-
-        if field in fld.MKTSTAT_DAILY_INDEX_MAP:
-            mktstat_daily_t = self._table("MKTSTAT_DAILY_INDEX")
-            field_col = mktstat_daily_t.c[fld.MKTSTAT_DAILY_INDEX_MAP[field]]
-        elif field in fld.MKTSTAT_DAILY_MARKET_MAP:
-            mktstat_daily_t = self._table("MKTSTAT_DAILY_MARKET")
-            field_col = mktstat_daily_t.c[fld.MKTSTAT_DAILY_MARKET_MAP[field]]
-        else:
-            raise InputError(
-                f"{field} is invalid field. Please read document to check valid field."
-            )
-
-        j = self._join_sector_table(mktstat_daily_t)
-
-        stmt = (
-            select(
-                mktstat_daily_t.c.D_TRADE.label(TRADE_DATE),
-                func.trim(sector_t.c.N_SECTOR).label(NAME),
-                field_col.label(VALUE),
-            )
-            .select_from(j)
-            .order_by(mktstat_daily_t.c.D_TRADE)
-        )
-
-        stmt = self._filter_stmt_by_symbol_and_date(
-            stmt=stmt,
-            symbol_column=sector_t.c.N_SECTOR,
-            date_column=mktstat_daily_t.c.D_TRADE,
+        return self._get_daily_sector_info(
+            field=field,
             symbol_list=index_list,
             start_date=start_date,
             end_date=end_date,
+            f_data="M",
         )
-
-        df = self._read_sql_query(stmt, index_col=TRADE_DATE)
-
-        df = self._pivot_name_value(df)
-
-        return df
 
     def get_data_sector_daily(
         self,
