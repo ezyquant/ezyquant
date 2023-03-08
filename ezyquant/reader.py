@@ -6,7 +6,17 @@ from typing import Dict, List, Optional
 import pandas as pd
 from pandas.errors import PerformanceWarning
 from pandas.tseries.offsets import CustomBusinessDay
-from sqlalchemy import ColumnElement, MetaData, Table, and_, case, exists, func, select
+from sqlalchemy import (
+    ColumnElement,
+    MetaData,
+    Table,
+    and_,
+    case,
+    exists,
+    func,
+    or_,
+    select,
+)
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import DatabaseError
 from sqlalchemy.sql import Select
@@ -1086,6 +1096,7 @@ class SETDataReader:
             - caution
             - 12m_dvd_yield
             - peg
+            - has_trade (if close > 0 or last_bid > 0 or last_offer > 0 return 1.0 else 0.0/nan)
         symbol_list: Optional[List[str]] = None
             N_SECURITY in symbol_list (must be unique).
         start_date: Optional[str] = None
@@ -1134,6 +1145,13 @@ class SETDataReader:
         elif field in fld.DAILY_STOCK_STAT_MAP:
             daily_stock_t = self._table("DAILY_STOCK_STAT")
             value_col = daily_stock_t.c[fld.DAILY_STOCK_STAT_MAP[field]]
+        elif field == "has_trade":
+            daily_stock_t = self._table("DAILY_STOCK_TRADE")
+            value_col = or_(
+                daily_stock_t.c.Z_CLOSE > 0,
+                daily_stock_t.c.Z_LAST_BID > 0,
+                daily_stock_t.c.Z_LAST_OFFER > 0,
+            )
         else:
             raise InputError(
                 f"{field} is invalid field. Please read document to check valid field."

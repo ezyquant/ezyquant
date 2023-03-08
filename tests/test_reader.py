@@ -1125,7 +1125,8 @@ class TestGetDataSymbolDaily:
     _check = staticmethod(vld.check_df_symbol_daily)
 
     @pytest.mark.parametrize(
-        "field", [fld.D_AVERAGE, fld.D_VALUE, fld.D_TURNOVER, fld.D_12M_DVD_YIELD]
+        "field",
+        [fld.D_AVERAGE, fld.D_VALUE, fld.D_TURNOVER, fld.D_12M_DVD_YIELD, "has_trade"],
     )
     def test_field(self, sdr: SETDataReader, field: str):
         symbol_list = ["COM7"]
@@ -1244,6 +1245,21 @@ class TestGetDataSymbolDaily:
                     ],
                 ),
             ),
+            # THAI no trade after 2021-05-18, close at 2021-05-17 is 3.32
+            (
+                "has_trade",
+                "THAI",
+                "2021-05-17",
+                "2021-05-18",
+                True,
+                pd.DataFrame(
+                    {"THAI": [1.0, 0.0]},
+                    index=[
+                        pd.Timestamp("2021-05-17"),
+                        pd.Timestamp("2021-05-18"),
+                    ],
+                ),
+            ),
         ],
     )
     def test_with_expect(
@@ -1279,7 +1295,8 @@ class TestGetDataSymbolDaily:
         assert_frame_equal(result, expected)
 
     @pytest.mark.parametrize(
-        "field", [fld.D_AVERAGE, fld.D_VALUE, fld.D_TURNOVER, fld.D_12M_DVD_YIELD]
+        "field",
+        [fld.D_AVERAGE, fld.D_VALUE, fld.D_TURNOVER, fld.D_12M_DVD_YIELD, "has_trade"],
     )
     def test_empty(self, sdr: SETDataReader, field: str):
         # Test
