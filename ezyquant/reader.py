@@ -2381,18 +2381,17 @@ class SETDataReader:
         sector_t = self._table("SECTOR")
         daily_sector_info_t = self._table("DAILY_SECTOR_INFO")
 
+        onclause = and_(
+            sector_t.c.I_MARKET == security_t.c.I_MARKET,
+            sector_t.c.I_INDUSTRY == security_t.c.I_INDUSTRY,
+            sector_t.c.I_SUBSECTOR == security_t.c.I_SUBSECTOR,
+        )
+
+        if f_data == "S":
+            onclause = and_(onclause, sector_t.c.I_SECTOR == security_t.c.I_SECTOR)
+
         j = self._join_sector_table(daily_sector_info_t).join(
-            security_t,
-            and_(
-                *[
-                    sector_t.c.I_MARKET == security_t.c.I_MARKET,
-                    sector_t.c.I_INDUSTRY == security_t.c.I_INDUSTRY,
-                    sector_t.c.I_SUBSECTOR == security_t.c.I_SUBSECTOR,
-                ]
-                + [sector_t.c.I_SECTOR == security_t.c.I_SECTOR]
-                if f_data == "S"
-                else []
-            ),
+            security_t, onclause=onclause
         )
 
         try:
