@@ -193,7 +193,7 @@ class SETDataReader:
         industry: Optional[str] = None
             SECTOR.N_INDUSTRY
         sector: Optional[str] = None
-            SECTOR.N_SECTOR
+            SECTOR.N_SYMBOL_FEED
         sec_type: Optional[str] = None
             Security type
                 - S: Common
@@ -233,7 +233,7 @@ class SETDataReader:
                 - symbol: str - N_SECURITY
                 - market: str - I_MARKET
                 - industry: str - SECTOR.N_INDUSTRY
-                - sector: str - SECTOR.N_SECTOR
+                - sector: str - SECTOR.N_SYMBOL_FEED
                 - sec_type: str - I_SEC_TYPE
                 - native: str - I_NATIVE
 
@@ -252,6 +252,7 @@ class SETDataReader:
         2        169  THL-U    SET  RESOURC   MINE        S      U
         3       2968  THL-F    SET  RESOURC   MINE        F      F
         """
+        # TODO: select/where by N_SYMBOL_FEED
         security_t = self._table("SECURITY")
         sector_t = self._table("SECTOR")
         daily_stock_t = self._table("DAILY_STOCK_TRADE")
@@ -263,7 +264,7 @@ class SETDataReader:
                 func.trim(security_t.c.N_SECURITY).label("symbol"),
                 security_t.c.I_MARKET.label("market"),
                 func.trim(sector_t.c.N_INDUSTRY).label("industry"),
-                func.trim(sector_t.c.N_SECTOR).label("sector"),
+                func.trim(sector_t.c.N_SYMBOL_FEED).label("sector"),
                 security_t.c.I_SEC_TYPE.label("sec_type"),
                 security_t.c.I_NATIVE.label("native"),
             )
@@ -282,7 +283,7 @@ class SETDataReader:
             stmt = stmt.where(func.trim(sector_t.c.N_INDUSTRY) == industry)
         if sector is not None:
             sector = sector.upper()
-            stmt = stmt.where(func.trim(sector_t.c.N_SECTOR) == sector)
+            stmt = stmt.where(func.trim(sector_t.c.N_SYMBOL_FEED) == sector)
         if sec_type is not None:
             sec_type = sec_type.upper()
             stmt = stmt.where(security_t.c.I_SEC_TYPE == sec_type)
@@ -826,7 +827,7 @@ class SETDataReader:
         Parameters
         ----------
         index_list: Optional[List[str]] = None
-            index (SECTOR.N_SECTOR)
+            index (SECTOR.N_SYMBOL_FEED)
                 - SETWB
                 - SETTHSI
                 - SETCLMV
@@ -843,7 +844,7 @@ class SETDataReader:
         -------
         pd.DataFrame
             - as_of_date: date - D_AS_OF
-            - index: str - SECTOR.N_SECTOR
+            - index: str - SECTOR.N_SYMBOL_FEED
             - symbol: str - SECURITY.N_SECURITY
             - seq: int - SECURITY_INDEX.S_SEQ
 
@@ -920,7 +921,7 @@ class SETDataReader:
         stmt = (
             select(
                 security_index_t.c.D_AS_OF.label("as_of_date"),
-                func.trim(sector_t.c.N_SECTOR).label("index"),
+                func.trim(sector_t.c.N_SYMBOL_FEED).label("index"),
                 func.trim(security_t.c.N_SECURITY).label("symbol"),
                 security_index_t.c.S_SEQ.label("seq"),
             )
@@ -928,15 +929,15 @@ class SETDataReader:
             .where(
                 case(
                     (
-                        func.trim(sector_t.c.N_SECTOR) == fld.INDEX_SET50,
+                        func.trim(sector_t.c.N_SYMBOL_FEED) == fld.INDEX_SET50,
                         security_index_t.c.S_SEQ <= 50,
                     ),
                     (
-                        func.trim(sector_t.c.N_SECTOR) == fld.INDEX_SET100,
+                        func.trim(sector_t.c.N_SYMBOL_FEED) == fld.INDEX_SET100,
                         security_index_t.c.S_SEQ <= 100,
                     ),
                     (
-                        func.trim(sector_t.c.N_SECTOR) == fld.INDEX_SETHD,
+                        func.trim(sector_t.c.N_SYMBOL_FEED) == fld.INDEX_SETHD,
                         security_index_t.c.S_SEQ <= 30,
                     ),
                     else_=True,
@@ -944,13 +945,13 @@ class SETDataReader:
             )
             .order_by(
                 security_index_t.c.D_AS_OF,
-                sector_t.c.N_SECTOR,
+                sector_t.c.N_SYMBOL_FEED,
                 security_index_t.c.S_SEQ,
             )
         )
         stmt = self._filter_stmt_by_symbol_and_date(
             stmt=stmt,
-            symbol_column=sector_t.c.N_SECTOR,
+            symbol_column=sector_t.c.N_SYMBOL_FEED,
             date_column=security_index_t.c.D_AS_OF,
             symbol_list=index_list,
             start_date=start_date,
@@ -1712,7 +1713,7 @@ class SETDataReader:
             - listed_company
             - listed_stock
         index_list: Optional[List[str]] = None
-            N_SECTOR in index_list. More index can be found in ezyquant.fields.
+            N_SYMBOL_FEED in index_list. More index can be found in ezyquant.fields.
         start_date: Optional[str] = None
             start of trade_date (D_TRADE).
         end_date: Optional[str] = None
@@ -1783,7 +1784,7 @@ class SETDataReader:
         market: str = fld.MARKET_SET
             I_MARKET (e.g. 'SET', 'mai').
         sector_list: Optional[List[str]] = None
-            N_SECTOR in sector_list. More sector can be found in ezyquant.fields.
+            N_SYMBOL_FEED in sector_list. More sector can be found in ezyquant.fields.
         start_date: Optional[str] = None
             start of trade_date (D_TRADE).
         end_date: Optional[str] = None
@@ -2299,11 +2300,11 @@ class SETDataReader:
         j = self._join_sector_table(security_index_t)
         stmt = (
             select(
-                func.trim(sector_t.c.N_SECTOR).label("sector"),
+                func.trim(sector_t.c.N_SYMBOL_FEED).label("sector"),
                 func.max(security_index_t.c.D_AS_OF).label("as_of_date"),
             )
             .select_from(j)
-            .group_by(sector_t.c.N_SECTOR)
+            .group_by(sector_t.c.N_SYMBOL_FEED)
         )
         stmt = self._filter_stmt_by_date(
             stmt=stmt,

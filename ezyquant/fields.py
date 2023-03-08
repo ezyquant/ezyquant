@@ -4,16 +4,6 @@ MARKET_MAI = "mai"
 MARKET_MAP = {MARKET_SET: "A", MARKET_MAI: "S"}
 MARKET_MAP_UPPER = {k.upper(): v for k, v in MARKET_MAP.items()}
 
-# SELECT
-#     DISTINCT("N_INDUSTRY")
-# FROM
-#     "SECTOR"
-# WHERE
-#     "F_DATA" = 'I'
-#     AND "D_CANCEL" is null
-# ORDER BY
-#     "N_INDUSTRY"
-
 INDUSTRY_AGRO = "AGRO"
 INDUSTRY_CONSUMP = "CONSUMP"
 INDUSTRY_FINCIAL = "FINCIAL"
@@ -35,18 +25,6 @@ INDUSTRY_LIST = [
     v for k, v in locals().items() if isinstance(k, str) and k.startswith("INDUSTRY_")
 ]
 
-# SELECT
-#     DISTINCT("N_SECTOR")
-# FROM
-#     "SECTOR"
-# WHERE
-#     "F_DATA" = 'S'
-#     AND "I_MARKET" in ('A', 'S')
-#     AND "D_CANCEL" is null
-# ORDER BY
-#     "N_SECTOR"
-
-# SET SECTOR
 SECTOR_AGRI = "AGRI"
 SECTOR_AUTO = "AUTO"
 SECTOR_BANK = "BANK"
@@ -87,12 +65,6 @@ SECTOR_TECH_MAI = "TECH-ms"
 SECTOR_LIST = [
     v for k, v in locals().items() if isinstance(k, str) and k.startswith("SECTOR_")
 ]
-
-# SELECT
-#     DISTINCT("SECTOR"."N_SECTOR")
-# FROM
-#     "SECURITY_INDEX"
-#     JOIN "SECTOR" USING("I_SECTOR")
 
 INDEX_SETWB = "SETWB"
 INDEX_SETTHSI = "SETTHSI"
