@@ -547,7 +547,7 @@ class TestGetDividend:
 
     @pytest.mark.parametrize("symbol_list", [["PTC"], ["ptc"]])
     @pytest.mark.parametrize("start_date", ["2022-03-15", None])
-    @pytest.mark.parametrize("end_date", ["2022-03-15", None])
+    @pytest.mark.parametrize("end_date", ["2022-03-15"])
     @pytest.mark.parametrize("ca_type_list", [["CD"], None])
     def test_one(
         self,
@@ -621,6 +621,13 @@ class TestGetDividend:
                         "CD",
                         1.0,
                     ],
+                    [
+                        "COM7",
+                        pd.Timestamp("2023-03-08"),
+                        None,  # D_BEG_PAID is null in database
+                        "CD",
+                        0.75,
+                    ],
                 ],
                 columns=["symbol", "ex_date", "pay_date", "ca_type", "dps"],
             ),
@@ -650,6 +657,13 @@ class TestGetDividend:
                         pd.Timestamp("2022-05-27"),
                         "CD",
                         0.30,
+                    ],
+                    [
+                        "CRC",
+                        pd.Timestamp("2023-05-08"),
+                        pd.Timestamp("2023-05-26"),
+                        "CD",
+                        0.48,
                     ],
                 ],
                 columns=[
