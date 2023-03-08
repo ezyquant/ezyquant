@@ -25,6 +25,7 @@ ema20 = ssc.ta.ema(df_close, 20)
 ema100 = ssc.ta.ema(df_close, 100)
 signal_df = ema20 > ema100
 
+
 # สร้าง วิธีการซื้อขาย
 def backtest_algorithm(c: Context):
     if c.symbol == "AOT":
