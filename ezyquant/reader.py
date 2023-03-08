@@ -270,19 +270,19 @@ class SETDataReader:
         stmt = self._filter_str_in_list(
             stmt=stmt, column=security_t.c.N_SECURITY, values=symbol_list
         )
-        if market != None:
+        if market is not None:
             market = market.upper()
             stmt = stmt.where(security_t.c.I_MARKET == fld.MARKET_MAP_UPPER[market])
-        if industry != None:
+        if industry is not None:
             industry = industry.upper()
             stmt = stmt.where(func.trim(sector_t.c.N_INDUSTRY) == industry)
-        if sector != None:
+        if sector is not None:
             sector = sector.upper()
             stmt = stmt.where(func.trim(sector_t.c.N_SECTOR) == sector)
-        if sec_type != None:
+        if sec_type is not None:
             sec_type = sec_type.upper()
             stmt = stmt.where(security_t.c.I_SEC_TYPE == sec_type)
-        if native != None:
+        if native is not None:
             native = native.upper()
             stmt = stmt.where(security_t.c.I_NATIVE == native)
 
@@ -430,7 +430,7 @@ class SETDataReader:
                 func.trim(change_name_t.c.N_SECURITY_NEW).label("symbol_new"),
             )
             .select_from(j)
-            .where(change_name_t.c.D_EFFECT != None)
+            .where(change_name_t.c.D_EFFECT is not None)
             .where(
                 func.trim(change_name_t.c.N_SECURITY_OLD)
                 != func.trim(change_name_t.c.N_SECURITY_NEW)
@@ -711,7 +711,7 @@ class SETDataReader:
                 security_detail_t.c.D_DELISTED.label("delisted_date"),
             )
             .select_from(j)
-            .where(security_detail_t.c.D_DELISTED != None)
+            .where(security_detail_t.c.D_DELISTED is not None)
             .order_by(security_detail_t.c.D_DELISTED)
         )
         stmt = self._filter_stmt_by_symbol_and_date(
@@ -1194,7 +1194,7 @@ class SETDataReader:
                 df, is_multiply=False, adjusted_list=adjusted_list
             )
 
-        if symbol_list != None:
+        if symbol_list is not None:
             df = df.reindex(columns=[i for i in symbol_list if i in df.columns])
 
         return df
@@ -1964,9 +1964,9 @@ class SETDataReader:
             last_update_date=last_update_date,
         )
 
-        if start_date != None:
+        if start_date is not None:
             stmt = stmt.where(self._func_date(column) >= start_date)
-        if end_date != None:
+        if end_date is not None:
             stmt = stmt.where(self._func_date(column) <= end_date)
 
         return stmt
@@ -1975,7 +1975,7 @@ class SETDataReader:
         self, stmt: Select, column: ColumnElement, values: Optional[List[str]]
     ):
         vld.check_duplicate(values)
-        if values != None:
+        if values is not None:
             values = [i.strip().upper() for i in values]
             stmt = stmt.where(func.upper(func.trim(column)).in_(values))
         return stmt
@@ -2282,7 +2282,7 @@ class SETDataReader:
         df = df.drop_duplicates(subset=[TRADE_DATE, NAME], keep="last")
         df = df.set_index(TRADE_DATE)
 
-        if fillna_value != None:
+        if fillna_value is not None:
             df = df.fillna(fillna_value)
 
         df = self._pivot_name_value(df)

@@ -572,7 +572,7 @@ class SETSignalCreator:
         2  1.0  1.0  1.0
         """
         df = factor_df.rank(ascending=ascending, axis=1, method=method, pct=pct)
-        if quantity != None:
+        if quantity is not None:
             if quantity <= 0:
                 raise InputError(
                     f"quantity must be greater than 0. but {quantity} is given."
@@ -894,9 +894,9 @@ class SETSignalCreator:
         dr = pd.date_range(start=start, end=end)
         df = df.reindex(dr)
 
-        if method != None:
+        if method is not None:
             df = df.fillna(method=method)
-        if fill_value != None:
+        if fill_value is not None:
             df = df.fillna(fill_value)
 
         return df.reindex(index=index)
