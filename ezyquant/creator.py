@@ -251,20 +251,22 @@ class SETSignalCreator:
             if value_by == fld.VALUE_BY_STOCK:
                 df = self._get_data_symbol_daily(symbol_list=symbol_list, field=field)
             elif value_by == fld.VALUE_BY_SECTOR:
-                df = self._sdr._get_daily_sector_info_by_security(
+                df = self._sdr._get_daily_sector_info(
                     field=field,
                     symbol_list=symbol_list,
                     start_date=self._start_date,
                     end_date=self._end_date,
                     f_data="S",
+                    is_stock_column=True,
                 )
             elif value_by == fld.VALUE_BY_INDUSTRY:
-                df = self._sdr._get_daily_sector_info_by_security(
+                df = self._sdr._get_daily_sector_info(
                     field=field,
                     symbol_list=symbol_list,
                     start_date=self._start_date,
                     end_date=self._end_date,
                     f_data="I",
+                    is_stock_column=True,
                 )
             else:
                 raise InputError(

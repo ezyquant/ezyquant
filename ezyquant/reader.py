@@ -1784,11 +1784,11 @@ class SETDataReader:
     def get_data_sector_daily(
         self,
         field: str,
-        market: str = fld.MARKET_SET,
         sector_list: Optional[List[str]] = None,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
     ) -> pd.DataFrame:
+        # TODO: docstring
         """Data from table DAILY_SECTOR_INFO. Filter only sector data.
 
         Parameters
@@ -1846,83 +1846,26 @@ class SETDataReader:
         """
         return self._get_daily_sector_info(
             field=field,
-            sector_list=sector_list,
+            symbol_list=sector_list,
             start_date=start_date,
             end_date=end_date,
-            market=market,
-            f_data="S",  # sector
+            f_data="S",
         )
 
     def get_data_industry_daily(
         self,
         field: str,
-        market: str = fld.MARKET_SET,
         industry_list: Optional[List[str]] = None,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
     ) -> pd.DataFrame:
-        """Data from table DAILY_SECTOR_INFO. Filter only industry data.
-
-        Parameters
-        ----------
-        field: str
-            - prior
-            - open
-            - high
-            - low
-            - close
-            - trans
-            - volume
-            - value
-            - mkt_pe
-            - mkt_pbv
-            - mkt_yield
-            - mkt_cap
-            - turnover
-            - share_listed_avg
-            - beta
-            - turnover_volume
-            - 12m_dvd_yield
-        market: str = fld.MARKET_SET
-            I_MARKET (e.g. 'SET', 'mai').
-        industry_list: Optional[List[str]] = None
-            N_SECTOR in industry_list. More industry can be found in ezyquant.fields.
-        start_date: Optional[str] = None
-            start of trade_date (D_TRADE).
-        end_date: Optional[str] = None
-            end of trade_date (D_TRADE).
-
-        Returns
-        -------
-        pd.DataFrame
-            - industry: str as column
-            - trade_date: date as index
-
-        Examples
-        --------
-        >>> from ezyquant import SETDataReader
-        >>> from ezyquant import fields as fld
-        >>> sdr = SETDataReader()
-        >>> sdr.get_data_industry_daily(
-        ...     field=fld.D_INDUSTRY_CLOSE,
-        ...     industry_list=[fld.INDUSTRY_AGRO, fld.INDUSTRY_CONSUMP],
-        ...     start_date="2022-01-01",
-        ...     end_date="2022-01-10",
-        ... )
-                      AGRO  CONSUMP
-        2022-01-04  485.98    92.55
-        2022-01-05  484.98    93.21
-        2022-01-06  482.90    92.96
-        2022-01-07  484.50    93.04
-        2022-01-10  487.10    93.97
-        """
+        """A synonym for SETDataReader.get_data_sector_daily."""
         return self._get_daily_sector_info(
             field=field,
-            sector_list=industry_list,
+            symbol_list=industry_list,
             start_date=start_date,
             end_date=end_date,
-            market=market,
-            f_data="I",  # industry
+            f_data="I",
         )
 
     """
@@ -2052,7 +1995,6 @@ class SETDataReader:
                 table.c.I_MARKET == sector_t.c.I_MARKET,
                 table.c.I_INDUSTRY == sector_t.c.I_INDUSTRY,
                 table.c.I_SECTOR == sector_t.c.I_SECTOR,
-                table.c.I_SUBSECTOR == sector_t.c.I_SUBSECTOR,
             ),
             isouter=isouter,
         )
@@ -2313,89 +2255,37 @@ class SETDataReader:
     def _get_daily_sector_info(
         self,
         field: str,
-        sector_list: Optional[List[str]],
-        start_date: Optional[str],
-        end_date: Optional[str],
-        market: str,
-        f_data: str,
-    ) -> pd.DataFrame:
-        market = market.upper()
-        field = field.lower()
-        f_data = f_data.upper()
-
-        assert f_data in {"I", "S"}, f"{f_data} is not a valid f_data"
-
-        sector_t = self._table("SECTOR")
-        daily_sector_info_t = self._table("DAILY_SECTOR_INFO")
-
-        j = self._join_sector_table(daily_sector_info_t)
-
-        try:
-            field_col = daily_sector_info_t.c[fld.DAILY_SECTOR_INFO_MAP[field]]
-        except KeyError:
-            raise InputError(
-                f"{field} is invalid field. Please read document to check valid field."
-            )
-
-        # N_SECTOR is the industry name in F_DATA = 'I'
-        stmt = (
-            select(
-                daily_sector_info_t.c.D_TRADE.label(TRADE_DATE),
-                func.trim(sector_t.c.N_SECTOR).label(NAME),
-                field_col.label(VALUE),
-            )
-            .select_from(j)
-            .where(sector_t.c.F_DATA == f_data)
-            .where(sector_t.c.I_MARKET == fld.MARKET_MAP_UPPER[market])
-            .where(sector_t.c.D_CANCEL == None)
-            .order_by(daily_sector_info_t.c.D_TRADE)
-        )
-
-        stmt = self._filter_stmt_by_symbol_and_date(
-            stmt=stmt,
-            symbol_column=sector_t.c.N_SECTOR,
-            date_column=daily_sector_info_t.c.D_TRADE,
-            symbol_list=sector_list,
-            start_date=start_date,
-            end_date=end_date,
-        )
-
-        df = self._read_sql_query(stmt, index_col=TRADE_DATE)
-
-        df = self._pivot_name_value(df)
-
-        return df
-
-    def _get_daily_sector_info_by_security(
-        self,
-        field: str,
         symbol_list: Optional[List[str]],
         start_date: Optional[str],
         end_date: Optional[str],
         f_data: str,
+        is_stock_column: bool = False,
     ) -> pd.DataFrame:
-        # TODO: Duplicate code with _get_daily_sector_info
         field = field.lower()
         f_data = f_data.upper()
 
-        assert f_data in {"I", "S"}, f"{f_data} is not a valid f_data"
+        assert f_data in ("I", "S", "M"), "Invalid f_data"
 
         security_t = self._table("SECURITY")
         sector_t = self._table("SECTOR")
         daily_sector_info_t = self._table("DAILY_SECTOR_INFO")
 
-        onclause = and_(
-            sector_t.c.I_MARKET == security_t.c.I_MARKET,
-            sector_t.c.I_INDUSTRY == security_t.c.I_INDUSTRY,
-            sector_t.c.I_SUBSECTOR == security_t.c.I_SUBSECTOR,
-        )
+        j = self._join_sector_table(daily_sector_info_t)
 
-        if f_data == "S":
-            onclause = and_(onclause, sector_t.c.I_SECTOR == security_t.c.I_SECTOR)
+        if is_stock_column:
+            j = j.join(
+                security_t,
+                onclause=and_(
+                    sector_t.c.I_MARKET == security_t.c.I_MARKET,
+                    sector_t.c.I_INDUSTRY == security_t.c.I_INDUSTRY,
+                    sector_t.c.I_SECTOR
+                    == (security_t.c.I_SECTOR if f_data == "S" else 0),
+                ),
+            )
 
-        j = self._join_sector_table(daily_sector_info_t).join(
-            security_t, onclause=onclause
-        )
+            symbol_column = security_t.c.N_SECURITY
+        else:
+            symbol_column = sector_t.c.N_SYMBOL_FEED
 
         try:
             field_col = daily_sector_info_t.c[fld.DAILY_SECTOR_INFO_MAP[field]]
@@ -2404,11 +2294,10 @@ class SETDataReader:
                 f"{field} is invalid field. Please read document to check valid field."
             )
 
-        # N_SECTOR is the industry name in F_DATA = 'I'
         stmt = (
             select(
                 daily_sector_info_t.c.D_TRADE.label(TRADE_DATE),
-                func.trim(security_t.c.N_SECURITY).label(NAME),
+                func.trim(symbol_column).label(NAME),
                 field_col.label(VALUE),
             )
             .select_from(j)
@@ -2419,12 +2308,13 @@ class SETDataReader:
 
         stmt = self._filter_stmt_by_symbol_and_date(
             stmt=stmt,
-            symbol_column=security_t.c.N_SECURITY,
+            symbol_column=symbol_column,
             date_column=daily_sector_info_t.c.D_TRADE,
             symbol_list=symbol_list,
             start_date=start_date,
             end_date=end_date,
         )
+
         df = self._read_sql_query(stmt, index_col=TRADE_DATE)
 
         df = self._pivot_name_value(df)
@@ -2492,9 +2382,6 @@ def _SETDataReaderCached() -> SETDataReader:
     )  # type: ignore
     out._get_daily_sector_info = utils.cache_dataframe_wrapper(
         utils.cache_wrapper(out._get_daily_sector_info)
-    )  # type: ignore
-    out._get_daily_sector_info_by_security = utils.cache_dataframe_wrapper(
-        utils.cache_wrapper(out._get_daily_sector_info_by_security)
     )  # type: ignore
 
     return out
