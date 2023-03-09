@@ -2323,8 +2323,14 @@ class SETDataReader:
         from_clause = self._join_sector_table(daily_sector_info_t)
 
         if is_stock_column:
-            from_clause = self._join_sector_table(
-                from_clause, is_join_sector=(f_data == "S")
+            from_clause = from_clause.join(
+                security_t,
+                onclause=and_(
+                    sector_t.c.I_MARKET == security_t.c.I_MARKET,
+                    sector_t.c.I_INDUSTRY == security_t.c.I_INDUSTRY,
+                    sector_t.c.I_SECTOR
+                    == (security_t.c.I_SECTOR if f_data == "S" else 0),
+                ),
             )
             symbol_column = security_t.c.N_SECURITY
         else:
