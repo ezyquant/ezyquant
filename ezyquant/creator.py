@@ -1,5 +1,5 @@
 import warnings
-from functools import lru_cache, wraps
+from functools import lru_cache
 from typing import Dict, List, Optional
 
 import numpy as np
@@ -10,7 +10,7 @@ from . import fields as fld
 from . import utils
 from .errors import InputError
 from .indicators import TA
-from .reader import SETDataReader, _SETDataReaderCached
+from .reader import _SETDataReaderCached
 
 nan = float("nan")
 
@@ -642,7 +642,6 @@ class SETSignalCreator:
 
         return sorted(set(df["symbol"]))
 
-    @wraps(SETDataReader.get_symbol_info)
     def _get_symbol_info(self, *args, **kwargs) -> pd.DataFrame:
         return self._sdr.get_symbol_info(
             *args,

@@ -53,7 +53,7 @@ def make_bdate_range(n: int = N_ROW) -> pd.DatetimeIndex:
 
 
 def make_trading_dates(n: int = N_ROW) -> List[str]:
-    return make_bdate_range(n).strftime("%Y-%m-%d").to_list()
+    return make_bdate_range(n).strftime("%Y-%m-%d").to_list()  # type: ignore
 
 
 def make_data_df(data, n_row: int = N_ROW, n_col: int = N_COL) -> pd.DataFrame:
