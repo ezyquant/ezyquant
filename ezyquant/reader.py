@@ -182,7 +182,6 @@ class SETDataReader:
         start_has_price_date: Optional[str] = None,
         end_has_price_date: Optional[str] = None,
     ) -> pd.DataFrame:
-        # TODO: docstring
         """Data from table SECURITY. Symbol must exist in table
         DAILY_STOCK_TRADE.
 
@@ -1708,33 +1707,30 @@ class SETDataReader:
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
     ) -> pd.DataFrame:
-        # TODO: docstring
-        """Data from table MKTSTAT_DAILY_INDEX, MKTSTAT_DAILY_MARKET.
+        """Data from table DAILY_SECTOR_INFO. Filter only market data.
 
         Parameters
         ----------
         field: str
+            - prior
+            - open
             - high
             - low
             - close
-            - tri
-            - total_trans
-            - total_volume
-            - total_value
+            - trans
+            - volume
+            - value
             - mkt_pe
             - mkt_pbv
             - mkt_yield
             - mkt_cap
-            - mkt_par_value
-            - trading_day
-            - new_company
-            - delisted_company
-            - move_in_company
-            - move_out_company
-            - listed_company
-            - listed_stock
+            - turnover
+            - share_listed_avg
+            - beta
+            - turnover_volume
+            - 12m_dvd_yield
         index_list: Optional[List[str]] = None
-            N_SYMBOL_FEED in index_list. More index can be found in ezyquant.fields.
+            N_SYMBOL_FEED in index_list. More index can be found in ezyquant.fields
         start_date: Optional[str] = None
             start of trade_date (D_TRADE).
         end_date: Optional[str] = None
@@ -1779,7 +1775,6 @@ class SETDataReader:
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
     ) -> pd.DataFrame:
-        # TODO: docstring
         """Data from table DAILY_SECTOR_INFO. Filter only sector data.
 
         Parameters
@@ -1802,10 +1797,8 @@ class SETDataReader:
             - beta
             - turnover_volume
             - 12m_dvd_yield
-        market: str = fld.MARKET_SET
-            I_MARKET (e.g. 'SET', 'mai').
         sector_list: Optional[List[str]] = None
-            N_SYMBOL_FEED in sector_list. More sector can be found in ezyquant.fields.
+            N_SYMBOL_FEED in sector_list. More sector can be found in ezyquant.fields
         start_date: Optional[str] = None
             start of trade_date (D_TRADE).
         end_date: Optional[str] = None
@@ -1850,7 +1843,59 @@ class SETDataReader:
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
     ) -> pd.DataFrame:
-        """A synonym for SETDataReader.get_data_sector_daily."""
+        """Data from table DAILY_SECTOR_INFO. Filter only industry data.
+
+        Parameters
+        ----------
+        field: str
+            - prior
+            - open
+            - high
+            - low
+            - close
+            - trans
+            - volume
+            - value
+            - mkt_pe
+            - mkt_pbv
+            - mkt_yield
+            - mkt_cap
+            - turnover
+            - share_listed_avg
+            - beta
+            - turnover_volume
+            - 12m_dvd_yield
+        industry_list: Optional[List[str]] = None
+            N_SYMBOL_FEED in industry_list. More industry can be found in ezyquant.fields
+        start_date: Optional[str] = None
+            start of trade_date (D_TRADE).
+        end_date: Optional[str] = None
+            end of trade_date (D_TRADE).
+
+        Returns
+        -------
+        pd.DataFrame
+            - industry: str as column
+            - trade_date: date as index
+
+        Examples
+        --------
+        >>> from ezyquant import SETDataReader
+        >>> from ezyquant import fields as fld
+        >>> sdr = SETDataReader()
+        >>> sdr.get_data_industry_daily(
+        ...     field=fld.D_INDUSTRY_CLOSE,
+        ...     industry_list=[fld.INDUSTRY_AGRO, fld.INDUSTRY_FINCIAL],
+        ...     start_date="2022-01-01",
+        ...     end_date="2022-01-10",
+        ... )
+                      AGRO  FINCIAL
+        2022-01-04  485.98   182.10
+        2022-01-05  484.98   183.50
+        2022-01-06  482.90   181.39
+        2022-01-07  484.50   182.81
+        2022-01-10  487.10   182.79
+        """
         return self._get_daily_sector_info(
             field=field,
             symbol_list=industry_list,
