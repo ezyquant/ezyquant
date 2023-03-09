@@ -19,7 +19,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import DatabaseError
-from sqlalchemy.sql import Select
+from sqlalchemy.orm import aliased
+from sqlalchemy.sql import FromClause, Join, Select
 
 from . import fields as fld
 from . import utils
@@ -181,6 +182,7 @@ class SETDataReader:
         start_has_price_date: Optional[str] = None,
         end_has_price_date: Optional[str] = None,
     ) -> pd.DataFrame:
+        # TODO: docstring
         """Data from table SECURITY. Symbol must exist in table
         DAILY_STOCK_TRADE.
 
@@ -191,7 +193,7 @@ class SETDataReader:
         market: Optional[str] = None
             I_MARKET e.g. 'SET', 'mai'
         industry: Optional[str] = None
-            SECTOR.N_INDUSTRY
+            SECTOR.N_SYMBOL_FEED
         sector: Optional[str] = None
             SECTOR.N_SYMBOL_FEED
         sec_type: Optional[str] = None
@@ -232,7 +234,7 @@ class SETDataReader:
                 - symbol_id: int - I_SECURITY
                 - symbol: str - N_SECURITY
                 - market: str - I_MARKET
-                - industry: str - SECTOR.N_INDUSTRY
+                - industry: str - SECTOR.N_SYMBOL_FEED
                 - sector: str - SECTOR.N_SYMBOL_FEED
                 - sec_type: str - I_SEC_TYPE
                 - native: str - I_NATIVE
@@ -252,23 +254,36 @@ class SETDataReader:
         2        169  THL-U    SET  RESOURC   MINE        S      U
         3       2968  THL-F    SET  RESOURC   MINE        F      F
         """
-        # TODO: select/where by N_SYMBOL_FEED
         security_t = self._table("SECURITY")
         sector_t = self._table("SECTOR")
         daily_stock_t = self._table("DAILY_STOCK_TRADE")
 
-        j = self._join_sector_table(security_t, isouter=True)
+        sector_industry_t = aliased(sector_t)
+        sector_sector_t = aliased(sector_t)
+
+        from_clause = self._join_sector_table(
+            security_t,
+            isouter=True,
+            sector_t=sector_industry_t,
+            is_join_sector=False,
+        )
+        from_clause = self._join_sector_table(
+            from_clause,
+            isouter=True,
+            sector_t=sector_sector_t,
+            is_join_sector=True,
+        )
         stmt = (
             select(
                 security_t.c.I_SECURITY.label("symbol_id"),
                 func.trim(security_t.c.N_SECURITY).label("symbol"),
                 security_t.c.I_MARKET.label("market"),
-                func.trim(sector_t.c.N_INDUSTRY).label("industry"),
-                func.trim(sector_t.c.N_SYMBOL_FEED).label("sector"),
+                func.trim(sector_industry_t.c.N_SYMBOL_FEED).label("industry"),
+                func.trim(sector_sector_t.c.N_SYMBOL_FEED).label("sector"),
                 security_t.c.I_SEC_TYPE.label("sec_type"),
                 security_t.c.I_NATIVE.label("native"),
             )
-            .select_from(j)
+            .select_from(from_clause)
             .order_by(security_t.c.I_SECURITY)
         )
 
@@ -280,10 +295,10 @@ class SETDataReader:
             stmt = stmt.where(security_t.c.I_MARKET == fld.MARKET_MAP_UPPER[market])
         if industry is not None:
             industry = industry.upper()
-            stmt = stmt.where(func.trim(sector_t.c.N_INDUSTRY) == industry)
+            stmt = stmt.where(func.trim(sector_industry_t.c.N_SYMBOL_FEED) == industry)
         if sector is not None:
             sector = sector.upper()
-            stmt = stmt.where(func.trim(sector_t.c.N_SYMBOL_FEED) == sector)
+            stmt = stmt.where(func.trim(sector_sector_t.c.N_SYMBOL_FEED) == sector)
         if sec_type is not None:
             sec_type = sec_type.upper()
             stmt = stmt.where(security_t.c.I_SEC_TYPE == sec_type)
@@ -350,7 +365,9 @@ class SETDataReader:
         company_t = self._table("COMPANY")
         security_t = self._table("SECURITY")
 
-        j = security_t.join(company_t, company_t.c.I_COMPANY == security_t.c.I_COMPANY)
+        from_clause = security_t.join(
+            company_t, company_t.c.I_COMPANY == security_t.c.I_COMPANY
+        )
         stmt = (
             select(
                 company_t.c.I_COMPANY.label("company_id"),
@@ -368,7 +385,7 @@ class SETDataReader:
                 company_t.c.E_DVD_POLICY_T.label("dvd_policy_t"),
                 company_t.c.E_DVD_POLICY_E.label("dvd_policy_e"),
             )
-            .select_from(j)
+            .select_from(from_clause)
             .order_by(company_t.c.I_COMPANY)
         )
 
@@ -429,7 +446,7 @@ class SETDataReader:
         security_t = self._table("SECURITY")
         change_name_t = self._table("CHANGE_NAME_SECURITY")
 
-        j = change_name_t.join(
+        from_clause = change_name_t.join(
             security_t, security_t.c.I_SECURITY == change_name_t.c.I_SECURITY
         )
         stmt = (
@@ -440,7 +457,7 @@ class SETDataReader:
                 func.trim(change_name_t.c.N_SECURITY_OLD).label("symbol_old"),
                 func.trim(change_name_t.c.N_SECURITY_NEW).label("symbol_new"),
             )
-            .select_from(j)
+            .select_from(from_clause)
             .where(change_name_t.c.D_EFFECT != None)
             .where(
                 func.trim(change_name_t.c.N_SECURITY_OLD)
@@ -640,7 +657,7 @@ class SETDataReader:
         security_t = self._table("SECURITY")
         rights_benefit_t = self._table("RIGHTS_BENEFIT")
 
-        j = rights_benefit_t.join(
+        from_clause = rights_benefit_t.join(
             security_t, security_t.c.I_SECURITY == rights_benefit_t.c.I_SECURITY
         )
         stmt = (
@@ -651,7 +668,7 @@ class SETDataReader:
                 func.trim(rights_benefit_t.c.N_CA_TYPE).label("ca_type"),
                 rights_benefit_t.c.Z_RIGHTS.label("dps"),
             )
-            .select_from(j)
+            .select_from(from_clause)
             .where(func.trim(rights_benefit_t.c.F_CANCEL) != "C")
             .order_by(rights_benefit_t.c.D_SIGN)
         )
@@ -715,7 +732,7 @@ class SETDataReader:
         security_t = self._table("SECURITY")
         security_detail_t = self._table("SECURITY_DETAIL")
 
-        j = security_detail_t.join(
+        from_clause = security_detail_t.join(
             security_t, security_t.c.I_SECURITY == security_detail_t.c.I_SECURITY
         )
         stmt = (
@@ -723,7 +740,7 @@ class SETDataReader:
                 func.trim(security_t.c.N_SECURITY).label("symbol"),
                 security_detail_t.c.D_DELISTED.label("delisted_date"),
             )
-            .select_from(j)
+            .select_from(from_clause)
             .where(security_detail_t.c.D_DELISTED != None)
             .order_by(security_detail_t.c.D_DELISTED)
         )
@@ -788,7 +805,7 @@ class SETDataReader:
         security_t = self._table("SECURITY")
         sign_posting_t = self._table("SIGN_POSTING")
 
-        j = sign_posting_t.join(
+        from_clause = sign_posting_t.join(
             security_t, security_t.c.I_SECURITY == sign_posting_t.c.I_SECURITY
         )
         stmt = (
@@ -798,7 +815,7 @@ class SETDataReader:
                 sign_posting_t.c.D_RELEASE.label("release_date"),
                 func.trim(sign_posting_t.c.N_SIGN).label("sign"),
             )
-            .select_from(j)
+            .select_from(from_clause)
             .order_by(sign_posting_t.c.D_HOLD)
         )
         stmt = self._filter_stmt_by_symbol_and_date(
@@ -915,7 +932,7 @@ class SETDataReader:
         sector_t = self._table("SECTOR")
         security_index_t = self._table("SECURITY_INDEX")
 
-        j = self._join_sector_table(security_index_t).join(
+        from_clause = self._join_sector_table(security_index_t).join(
             security_t, security_t.c.I_SECURITY == security_index_t.c.I_SECURITY
         )
         stmt = (
@@ -925,7 +942,7 @@ class SETDataReader:
                 func.trim(security_t.c.N_SECURITY).label("symbol"),
                 security_index_t.c.S_SEQ.label("seq"),
             )
-            .select_from(j)
+            .select_from(from_clause)
             .where(
                 case(
                     (
@@ -1009,7 +1026,7 @@ class SETDataReader:
         security_t = self._table("SECURITY")
         adjust_factor_t = self._table("ADJUST_FACTOR")
 
-        j = adjust_factor_t.join(
+        from_clause = adjust_factor_t.join(
             security_t, security_t.c.I_SECURITY == adjust_factor_t.c.I_SECURITY
         )
         stmt = (
@@ -1019,7 +1036,7 @@ class SETDataReader:
                 adjust_factor_t.c.N_CA_TYPE.label("ca_type"),
                 adjust_factor_t.c.R_ADJUST_FACTOR.label("adjust_factor"),
             )
-            .select_from(j)
+            .select_from(from_clause)
             .order_by(adjust_factor_t.c.D_EFFECT)
         )
         stmt = self._filter_stmt_by_symbol_and_date(
@@ -1163,7 +1180,7 @@ class SETDataReader:
                 f"{field} is invalid field. Please read document to check valid field."
             )
 
-        j = daily_stock_t.join(
+        from_clause = daily_stock_t.join(
             security_t, daily_stock_t.c.I_SECURITY == security_t.c.I_SECURITY
         )
 
@@ -1173,7 +1190,7 @@ class SETDataReader:
                 func.trim(security_t.c.N_SECURITY).label(NAME),
                 value_col.label(VALUE),
             )
-            .select_from(j)
+            .select_from(from_clause)
             .order_by(daily_stock_t.c.D_TRADE)
         )
         if "I_TRADING_METHOD" in daily_stock_t.c:
@@ -1957,14 +1974,28 @@ class SETDataReader:
             ),
         )
 
-    def _join_sector_table(self, table: Table, isouter: bool = False):
-        sector_t = self._table("SECTOR")
+    def _join_sector_table(
+        self,
+        table: FromClause,
+        isouter: bool = False,
+        sector_t: Optional[FromClause] = None,
+        is_join_sector: bool = True,
+    ):
+        if sector_t is None:
+            sector_t = self._table("SECTOR")
+
+        prefix = ""
+        if isinstance(table, Join):
+            assert isinstance(table.left, Table)
+            prefix = table.left.name + "_"
+
         return table.join(
             sector_t,
-            and_(
-                table.c.I_MARKET == sector_t.c.I_MARKET,
-                table.c.I_INDUSTRY == sector_t.c.I_INDUSTRY,
-                table.c.I_SECTOR == sector_t.c.I_SECTOR,
+            onclause=and_(
+                sector_t.c.I_MARKET == table.c[f"{prefix}I_MARKET"],
+                sector_t.c.I_INDUSTRY == table.c[f"{prefix}I_INDUSTRY"],
+                sector_t.c.I_SECTOR
+                == (table.c[f"{prefix}I_SECTOR"] if is_join_sector else 0),
             ),
             isouter=isouter,
         )
@@ -2240,19 +2271,12 @@ class SETDataReader:
         sector_t = self._table("SECTOR")
         daily_sector_info_t = self._table("DAILY_SECTOR_INFO")
 
-        j = self._join_sector_table(daily_sector_info_t)
+        from_clause = self._join_sector_table(daily_sector_info_t)
 
         if is_stock_column:
-            j = j.join(
-                security_t,
-                onclause=and_(
-                    sector_t.c.I_MARKET == security_t.c.I_MARKET,
-                    sector_t.c.I_INDUSTRY == security_t.c.I_INDUSTRY,
-                    sector_t.c.I_SECTOR
-                    == (security_t.c.I_SECTOR if f_data == "S" else 0),
-                ),
+            from_clause = self._join_sector_table(
+                from_clause, is_join_sector=(f_data == "S")
             )
-
             symbol_column = security_t.c.N_SECURITY
         else:
             symbol_column = sector_t.c.N_SYMBOL_FEED
@@ -2270,7 +2294,7 @@ class SETDataReader:
                 func.trim(symbol_column).label(NAME),
                 field_col.label(VALUE),
             )
-            .select_from(j)
+            .select_from(from_clause)
             .where(sector_t.c.F_DATA == f_data)
             .where(sector_t.c.D_CANCEL == None)
             .order_by(daily_sector_info_t.c.D_TRADE)
@@ -2297,13 +2321,13 @@ class SETDataReader:
         sector_t = self._table("SECTOR")
         security_index_t = self._table("SECURITY_INDEX")
 
-        j = self._join_sector_table(security_index_t)
+        from_clause = self._join_sector_table(security_index_t)
         stmt = (
             select(
                 func.trim(sector_t.c.N_SYMBOL_FEED).label("sector"),
                 func.max(security_index_t.c.D_AS_OF).label("as_of_date"),
             )
-            .select_from(j)
+            .select_from(from_clause)
             .group_by(sector_t.c.N_SYMBOL_FEED)
         )
         stmt = self._filter_stmt_by_date(
