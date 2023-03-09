@@ -24,6 +24,7 @@ INDUSTRY_TECH_MAI = "TECH-m"
 INDUSTRY_LIST = [
     v for k, v in locals().items() if isinstance(k, str) and k.startswith("INDUSTRY_")
 ]
+INDUSTRY_LIST_UPPER = [k.upper() for k in INDUSTRY_LIST]
 
 SECTOR_AGRI = "AGRI"
 SECTOR_AUTO = "AUTO"
@@ -65,6 +66,7 @@ SECTOR_TECH_MAI = "TECH-ms"
 SECTOR_LIST = [
     v for k, v in locals().items() if isinstance(k, str) and k.startswith("SECTOR_")
 ]
+SECTOR_LIST_UPPER = [k.upper() for k in SECTOR_LIST]
 
 INDEX_SETWB = "SETWB"
 INDEX_SETTHSI = "SETTHSI"

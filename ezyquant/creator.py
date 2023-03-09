@@ -622,12 +622,10 @@ class SETSignalCreator:
         for i in static_index_list:
             if i in fld.MARKET_MAP_UPPER:
                 df = self._get_symbol_info(market=i)
-            elif i in fld.INDUSTRY_LIST:
-                df = self._get_symbol_info(industry=i, market=fld.MARKET_SET)
-            elif i in fld.SECTOR_LIST:
-                df = self._get_symbol_info(sector=i, market=fld.MARKET_SET)
-            elif i[:-2] in fld.INDUSTRY_LIST and i.endswith("-M"):
-                df = self._get_symbol_info(industry=i[:-2], market=fld.MARKET_MAI)
+            elif i in fld.INDUSTRY_LIST_UPPER:
+                df = self._get_symbol_info(industry=i)
+            elif i in fld.SECTOR_LIST_UPPER:
+                df = self._get_symbol_info(sector=i)
             else:
                 warnings.warn(f"Index {i} is invalid.")
                 continue
@@ -818,32 +816,30 @@ class SETSignalCreator:
 
     def _is_universe_static(self, universe: str) -> pd.DataFrame:
         universe = universe.upper()
+
         symbol_list = self._get_symbol_in_universe()
         df = self._get_symbol_info(symbol_list=symbol_list).set_index(
             "symbol", drop=False
         )
-        df["market"] = df["market"].str.upper()
 
         if universe in fld.MARKET_MAP_UPPER:
-            is_uni = df["market"] == universe
-        elif universe in fld.INDUSTRY_LIST:
-            is_uni = (df["industry"] == universe) & (df["market"] == fld.MARKET_SET)
-        elif universe in fld.SECTOR_LIST:
-            is_uni = (df["sector"] == universe) & (df["market"] == fld.MARKET_SET)
-        elif universe[:-2] in fld.INDUSTRY_LIST and universe.endswith("-M"):
-            is_uni = (df["industry"] == universe[:-2]) & (
-                df["market"] == fld.MARKET_MAI.upper()
-            )
+            uni_typ = "market"
+        elif universe in fld.INDUSTRY_LIST_UPPER:
+            uni_typ = "industry"
+        elif universe in fld.SECTOR_LIST_UPPER:
+            uni_typ = "sector"
         elif universe in self._get_symbol_in_universe():
-            is_uni = df["symbol"] == universe
+            uni_typ = "symbol"
         else:
             raise InputError(
                 f"{universe} is invalid universe. Please read document to check valid universe."
             )
 
+        is_uni = df[uni_typ].str.upper() == universe
+
         tds = self._get_trading_dates()
         df = pd.DataFrame(is_uni.to_dict(), index=pd.DatetimeIndex(tds))
-        df = df.reindex(columns=sorted(df.columns))
+        df = self._reindex(df)
 
         return df
 

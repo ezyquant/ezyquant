@@ -295,10 +295,14 @@ class SETDataReader:
             stmt = stmt.where(security_t.c.I_MARKET == fld.MARKET_MAP_UPPER[market])
         if industry is not None:
             industry = industry.upper()
-            stmt = stmt.where(func.trim(sector_industry_t.c.N_SYMBOL_FEED) == industry)
+            stmt = stmt.where(
+                func.upper(func.trim(sector_industry_t.c.N_SYMBOL_FEED)) == industry
+            )
         if sector is not None:
             sector = sector.upper()
-            stmt = stmt.where(func.trim(sector_sector_t.c.N_SYMBOL_FEED) == sector)
+            stmt = stmt.where(
+                func.upper(func.trim(sector_sector_t.c.N_SYMBOL_FEED)) == sector
+            )
         if sec_type is not None:
             sec_type = sec_type.upper()
             stmt = stmt.where(security_t.c.I_SEC_TYPE == sec_type)
