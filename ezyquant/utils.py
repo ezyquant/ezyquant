@@ -5,7 +5,6 @@ from functools import lru_cache, wraps
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import pandas as pd
-from dateutil.relativedelta import relativedelta
 
 from .errors import InputError
 
@@ -55,17 +54,9 @@ def is_rebalance_weekly(
     pd.Series
         Series of bool. True if the date is a rebalance date.
     """
-    # TODO: combine with is_rebalance_monthly
-    if not trade_date_index.is_monotonic_increasing or not trade_date_index.is_unique:
-        raise InputError("trade_date_index must be monotonic and unique")
-    if rebalance_at < 1 or rebalance_at > 5:
-        raise InputError("rebalance_at must be between 1 and 5")
-
-    td_s = trade_date_index.to_series()
-
-    rule = f"W-{calendar.day_abbr[rebalance_at-2]}"
-    rbs = td_s.resample(rule=rule).first()
-    return td_s.isin(rbs)
+    return is_rebalance(
+        trade_date_index=trade_date_index, rebalance_at=rebalance_at, freq="W"
+    )
 
 
 def is_rebalance_monthly(
@@ -86,22 +77,40 @@ def is_rebalance_monthly(
     pd.Series
         Series of bool, True if the date is a rebalance date.
     """
+    return is_rebalance(
+        trade_date_index=trade_date_index, rebalance_at=rebalance_at, freq="M"
+    )
+
+
+def is_rebalance(
+    trade_date_index: pd.DatetimeIndex, rebalance_at: int, freq: str
+) -> pd.Series:
     if not trade_date_index.is_monotonic_increasing or not trade_date_index.is_unique:
         raise InputError("trade_date_index must be monotonic and unique")
-    if rebalance_at < 1 or rebalance_at > 31:
-        raise InputError("rebalance_at must be between 1 and 31")
 
-    td_s = trade_date_index.to_series()
+    tds = trade_date_index.to_series()
 
-    def func(x: pd.Timestamp):
-        d = date(x.year, x.month, 1)
+    if freq == "W":
+        if not 1 <= rebalance_at <= 5:
+            raise InputError("rebalance_at must be between 1 and 5")
 
-        if x.day < rebalance_at:
-            d -= relativedelta(months=1)
+        rule = f"W-{calendar.day_abbr[rebalance_at-2]}"
+        by = pd.Grouper(freq=rule)
 
-        return d
+    elif freq == "M":
+        if not 1 <= rebalance_at <= 31:
+            raise InputError("rebalance_at must be between 1 and 31")
 
-    return td_s.groupby(func).apply(lambda x: x == x[0])
+        tds = tds.mask(
+            tds.dt.day < rebalance_at,
+            tds - pd.DateOffset(months=1),  # type: ignore
+        )
+        by = [tds.dt.year, tds.dt.month]
+
+    else:
+        raise InputError("freq must be either W or M")
+
+    return tds.groupby(by=by, group_keys=False).apply(lambda x: x == x[0])
 
 
 def count_true_consecutive(s: pd.Series) -> pd.Series:
