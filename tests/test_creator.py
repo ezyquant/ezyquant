@@ -104,7 +104,7 @@ class TestGetSymbolInUniverse:
             ([fld.INDUSTRY_AGRO], const.ARGO_SET),
             ([fld.SECTOR_AGRI], const.AGRI_SET),
             ([fld.SECTOR_AGRI, fld.SECTOR_FOOD], const.ARGO_SET),
-            ([fld.INDUSTRY_AGRO + "-M"], const.ARGO_MAI),
+            ([fld.INDUSTRY_AGRO_MAI], const.ARGO_MAI),
         ],
     )
     def test_static_index_list(
@@ -469,7 +469,7 @@ class TestIsUniverse:
         [
             (fld.INDUSTRY_AGRO, const.ARGO_SET),
             (fld.SECTOR_AGRI, const.AGRI_SET),
-            (fld.INDUSTRY_AGRO + "-M", const.ARGO_MAI),
+            (fld.INDUSTRY_AGRO_MAI, const.ARGO_MAI),
         ],
     )
     def test_static_with_expect(self, universe: str, expected_true: List[str]):

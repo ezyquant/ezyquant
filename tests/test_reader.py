@@ -16,7 +16,7 @@ INDEX_LIST = fld.INDEX_LIST + [fld.MARKET_SET, fld.MARKET_MAI]
 
 def test_last_table_update(sdr: SETDataReader):
     # Test
-    result = sdr.last_table_update("MKTSTAT_DAILY_INDEX")
+    result = sdr.last_table_update("DAILY_STOCK_TRADE")
 
     assert isinstance(result, str)
 
@@ -547,7 +547,7 @@ class TestGetDividend:
 
     @pytest.mark.parametrize("symbol_list", [["PTC"], ["ptc"]])
     @pytest.mark.parametrize("start_date", ["2022-03-15", None])
-    @pytest.mark.parametrize("end_date", ["2022-03-15", None])
+    @pytest.mark.parametrize("end_date", ["2022-03-15"])
     @pytest.mark.parametrize("ca_type_list", [["CD"], None])
     def test_one(
         self,
@@ -621,6 +621,13 @@ class TestGetDividend:
                         "CD",
                         1.0,
                     ],
+                    [
+                        "COM7",
+                        pd.Timestamp("2023-03-08"),
+                        None,  # D_BEG_PAID is null in database
+                        "CD",
+                        0.75,
+                    ],
                 ],
                 columns=["symbol", "ex_date", "pay_date", "ca_type", "dps"],
             ),
@@ -650,6 +657,13 @@ class TestGetDividend:
                         pd.Timestamp("2022-05-27"),
                         "CD",
                         0.30,
+                    ],
+                    [
+                        "CRC",
+                        pd.Timestamp("2023-05-08"),
+                        pd.Timestamp("2023-05-26"),
+                        "CD",
+                        0.48,
                     ],
                 ],
                 columns=[
@@ -970,7 +984,7 @@ class TestGetSymbolsByIndex:
                         "THAI",
                         "ADVANC",
                         "DTAC",
-                        "TRUE",
+                        "TRUEE",
                         "DELTA",
                     ],
                     "seq": [i for i in range(1, 51)],
@@ -1125,7 +1139,8 @@ class TestGetDataSymbolDaily:
     _check = staticmethod(vld.check_df_symbol_daily)
 
     @pytest.mark.parametrize(
-        "field", [fld.D_AVERAGE, fld.D_VALUE, fld.D_TURNOVER, fld.D_12M_DVD_YIELD]
+        "field",
+        [fld.D_AVERAGE, fld.D_VALUE, fld.D_TURNOVER, fld.D_12M_DVD_YIELD, "has_trade"],
     )
     def test_field(self, sdr: SETDataReader, field: str):
         symbol_list = ["COM7"]
@@ -1244,6 +1259,21 @@ class TestGetDataSymbolDaily:
                     ],
                 ),
             ),
+            # THAI no trade after 2021-05-18, close at 2021-05-17 is 3.32
+            (
+                "has_trade",
+                "THAI",
+                "2021-05-17",
+                "2021-05-18",
+                True,
+                pd.DataFrame(
+                    {"THAI": [1.0, 0.0]},
+                    index=[
+                        pd.Timestamp("2021-05-17"),
+                        pd.Timestamp("2021-05-18"),
+                    ],
+                ),
+            ),
         ],
     )
     def test_with_expect(
@@ -1279,7 +1309,8 @@ class TestGetDataSymbolDaily:
         assert_frame_equal(result, expected)
 
     @pytest.mark.parametrize(
-        "field", [fld.D_AVERAGE, fld.D_VALUE, fld.D_TURNOVER, fld.D_12M_DVD_YIELD]
+        "field",
+        [fld.D_AVERAGE, fld.D_VALUE, fld.D_TURNOVER, fld.D_12M_DVD_YIELD, "has_trade"],
     )
     def test_empty(self, sdr: SETDataReader, field: str):
         # Test
@@ -1296,7 +1327,7 @@ class TestGetDataSymbolDaily:
             ([], []),
             (["COM7"], ["COM7"]),
             (["com7"], ["COM7"]),
-            (["True"], ["TRUE"]),
+            (["Truee"], ["TRUEE"]),
             (["COM7", "MALEE"], ["COM7", "MALEE"]),
             (["MALEE", "COM7"], ["MALEE", "COM7"]),
             # INVALID
@@ -1697,12 +1728,7 @@ class TestGetDataSymbolYtd:
 class TestGetDataIndexDaily:
     @pytest.mark.parametrize(
         "field",
-        [
-            fld.D_INDEX_CLOSE,
-            fld.D_INDEX_TRI,
-            fld.D_INDEX_TOTAL_TRANS,
-            fld.D_INDEX_MKT_PAR_VALUE,
-        ],
+        [fld.D_INDEX_CLOSE, fld.D_INDEX_BETA],
     )
     def test_field(self, sdr: SETDataReader, field: str):
         # Test
@@ -1719,8 +1745,8 @@ class TestGetDataIndexDaily:
             (fld.MARKET_SET, fld.D_INDEX_HIGH, 1674.19),
             (fld.MARKET_SET, fld.D_INDEX_LOW, 1663.50),
             (fld.MARKET_SET, fld.D_INDEX_CLOSE, 1670.28),
-            (fld.MARKET_SET, fld.D_INDEX_TOTAL_VOLUME, 28684980655.0),
-            (fld.MARKET_SET, fld.D_INDEX_TOTAL_VALUE, 100014911411.57),
+            (fld.MARKET_SET, fld.D_INDEX_VOLUME, 28684980655.0),
+            (fld.MARKET_SET, fld.D_INDEX_VALUE, 100014911411.57),
             (fld.MARKET_SET, fld.D_INDEX_MKT_PE, 20.96),
             (fld.MARKET_SET, fld.D_INDEX_MKT_PBV, 1.80),
             (fld.MARKET_SET, fld.D_INDEX_MKT_YIELD, 2.08),
@@ -1759,12 +1785,7 @@ class TestGetDataIndexDaily:
 
     @pytest.mark.parametrize(
         "field",
-        [
-            fld.D_INDEX_CLOSE,
-            fld.D_INDEX_TRI,
-            fld.D_INDEX_TOTAL_TRANS,
-            fld.D_INDEX_MKT_PAR_VALUE,
-        ],
+        [fld.D_INDEX_CLOSE, fld.D_INDEX_12M_DVD_YIELD],
     )
     def test_empty(self, sdr: SETDataReader, field: str):
         # Test

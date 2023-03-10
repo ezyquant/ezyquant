@@ -6,10 +6,21 @@ from typing import Dict, List, Optional
 import pandas as pd
 from pandas.errors import PerformanceWarning
 from pandas.tseries.offsets import CustomBusinessDay
-from sqlalchemy import Column, MetaData, Table, and_, case, exists, func, select
+from sqlalchemy import (
+    ColumnElement,
+    MetaData,
+    Table,
+    and_,
+    case,
+    exists,
+    func,
+    or_,
+    select,
+)
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import DatabaseError
-from sqlalchemy.sql import Select
+from sqlalchemy.orm import aliased
+from sqlalchemy.sql import FromClause, Join, Select
 
 from . import fields as fld
 from . import utils
@@ -37,7 +48,7 @@ class SETDataReader:
                 "You need to connect sqlite using ezyquant.connect_sqlite."
             )
 
-        self._metadata = MetaData(self._engine)
+        self._metadata = MetaData()
 
         # ping database
         try:
@@ -55,9 +66,9 @@ class SETDataReader:
 
             - DAILY_STOCK_TRADE
             - DAILY_STOCK_STAT
-            - MKTSTAT_DAILY_INDEX
-            - MKTSTAT_DAILY_MARKET
             - DAILY_SECTOR_INFO
+
+            or any table that have D_TRADE column.
 
         Returns
         -------
@@ -65,7 +76,7 @@ class SETDataReader:
             string with format YYYY-MM-DD.
         """
         t = self._table(table_name)
-        stmt = select([func.max(t.c.D_TRADE).label(TRADE_DATE)])
+        stmt = select(func.max(t.c.D_TRADE).label(TRADE_DATE))
         df = self._read_sql_query(stmt)
         res = df[TRADE_DATE].dt.strftime("%Y-%m-%d").iloc[0]
         return res
@@ -76,8 +87,6 @@ class SETDataReader:
 
         - DAILY_STOCK_TRADE
         - DAILY_STOCK_STAT
-        - MKTSTAT_DAILY_INDEX
-        - MKTSTAT_DAILY_MARKET
         - DAILY_SECTOR_INFO
 
         Returns
@@ -87,10 +96,8 @@ class SETDataReader:
         """
         d1 = self.last_table_update("DAILY_STOCK_TRADE")
         d2 = self.last_table_update("DAILY_STOCK_STAT")
-        d3 = self.last_table_update("MKTSTAT_DAILY_INDEX")
-        d4 = self.last_table_update("MKTSTAT_DAILY_MARKET")
-        d5 = self.last_table_update("DAILY_SECTOR_INFO")
-        assert d1 == d2 == d3 == d4 == d5, "Last update is not the same."
+        d3 = self.last_table_update("DAILY_SECTOR_INFO")
+        assert d1 == d2 == d3, "Last update is not the same."
         return d1
 
     def get_trading_dates(
@@ -112,7 +119,7 @@ class SETDataReader:
         """
         calendar_t = self._table("CALENDAR")
 
-        stmt = select([calendar_t.c.D_TRADE.label(TRADE_DATE)]).order_by(
+        stmt = select(calendar_t.c.D_TRADE.label(TRADE_DATE)).order_by(
             calendar_t.c.D_TRADE
         )
 
@@ -185,9 +192,9 @@ class SETDataReader:
         market: Optional[str] = None
             I_MARKET e.g. 'SET', 'mai'
         industry: Optional[str] = None
-            SECTOR.N_INDUSTRY
+            SECTOR.N_SYMBOL_FEED
         sector: Optional[str] = None
-            SECTOR.N_SECTOR
+            SECTOR.N_SYMBOL_FEED
         sec_type: Optional[str] = None
             Security type
                 - S: Common
@@ -226,8 +233,8 @@ class SETDataReader:
                 - symbol_id: int - I_SECURITY
                 - symbol: str - N_SECURITY
                 - market: str - I_MARKET
-                - industry: str - SECTOR.N_INDUSTRY
-                - sector: str - SECTOR.N_SECTOR
+                - industry: str - SECTOR.N_SYMBOL_FEED
+                - sector: str - SECTOR.N_SYMBOL_FEED
                 - sec_type: str - I_SEC_TYPE
                 - native: str - I_NATIVE
 
@@ -250,44 +257,60 @@ class SETDataReader:
         sector_t = self._table("SECTOR")
         daily_stock_t = self._table("DAILY_STOCK_TRADE")
 
-        j = self._join_sector_table(security_t, isouter=True)
+        sector_industry_t = aliased(sector_t)
+        sector_sector_t = aliased(sector_t)
+
+        from_clause = self._join_sector_table(
+            security_t,
+            isouter=True,
+            sector_t=sector_industry_t,
+            is_join_sector=False,
+        )
+        from_clause = self._join_sector_table(
+            from_clause,
+            isouter=True,
+            sector_t=sector_sector_t,
+            is_join_sector=True,
+        )
         stmt = (
             select(
-                [
-                    security_t.c.I_SECURITY.label("symbol_id"),
-                    func.trim(security_t.c.N_SECURITY).label("symbol"),
-                    security_t.c.I_MARKET.label("market"),
-                    func.trim(sector_t.c.N_INDUSTRY).label("industry"),
-                    func.trim(sector_t.c.N_SECTOR).label("sector"),
-                    security_t.c.I_SEC_TYPE.label("sec_type"),
-                    security_t.c.I_NATIVE.label("native"),
-                ]
+                security_t.c.I_SECURITY.label("symbol_id"),
+                func.trim(security_t.c.N_SECURITY).label("symbol"),
+                security_t.c.I_MARKET.label("market"),
+                func.trim(sector_industry_t.c.N_SYMBOL_FEED).label("industry"),
+                func.trim(sector_sector_t.c.N_SYMBOL_FEED).label("sector"),
+                security_t.c.I_SEC_TYPE.label("sec_type"),
+                security_t.c.I_NATIVE.label("native"),
             )
-            .select_from(j)
+            .select_from(from_clause)
             .order_by(security_t.c.I_SECURITY)
         )
 
         stmt = self._filter_str_in_list(
             stmt=stmt, column=security_t.c.N_SECURITY, values=symbol_list
         )
-        if market != None:
+        if market is not None:
             market = market.upper()
             stmt = stmt.where(security_t.c.I_MARKET == fld.MARKET_MAP_UPPER[market])
-        if industry != None:
+        if industry is not None:
             industry = industry.upper()
-            stmt = stmt.where(func.trim(sector_t.c.N_INDUSTRY) == industry)
-        if sector != None:
+            stmt = stmt.where(
+                func.upper(func.trim(sector_industry_t.c.N_SYMBOL_FEED)) == industry
+            )
+        if sector is not None:
             sector = sector.upper()
-            stmt = stmt.where(func.trim(sector_t.c.N_SECTOR) == sector)
-        if sec_type != None:
+            stmt = stmt.where(
+                func.upper(func.trim(sector_sector_t.c.N_SYMBOL_FEED)) == sector
+            )
+        if sec_type is not None:
             sec_type = sec_type.upper()
             stmt = stmt.where(security_t.c.I_SEC_TYPE == sec_type)
-        if native != None:
+        if native is not None:
             native = native.upper()
             stmt = stmt.where(security_t.c.I_NATIVE == native)
 
         # No if because symbol must exist in DAILY_STOCK_TRADE
-        subq = select([daily_stock_t.c.I_SECURITY]).distinct()
+        subq = select(daily_stock_t.c.I_SECURITY).distinct()
         subq = self._filter_stmt_by_date(
             stmt=subq,
             column=daily_stock_t.c.D_TRADE,
@@ -339,30 +362,33 @@ class SETDataReader:
         0           1    BBL  ธนาคารกรุงเทพ จำกัด (มหาชน)  ...  1/12/1944  เมื่อผลประกอบการของธนาคารมีกำไร (โดยมีเงื่อนไข...  Pays when company has profit (with additional ...
         1         646    PTT    บริษัท ปตท. จำกัด (มหาชน)  ...  1/10/2001  ไม่ต่ำกว่าร้อยละ 25 ของกำไรสุทธิที่เหลือหลังหั...  Not less than 25% of net income after deductio...
         """
+        warnings.warn(
+            "This function will be deprecated in the future.", DeprecationWarning
+        )
         company_t = self._table("COMPANY")
         security_t = self._table("SECURITY")
 
-        j = security_t.join(company_t, company_t.c.I_COMPANY == security_t.c.I_COMPANY)
+        from_clause = security_t.join(
+            company_t, company_t.c.I_COMPANY == security_t.c.I_COMPANY
+        )
         stmt = (
             select(
-                [
-                    company_t.c.I_COMPANY.label("company_id"),
-                    func.trim(security_t.c.N_SECURITY).label("symbol"),
-                    company_t.c.N_COMPANY_T.label("company_name_t"),
-                    company_t.c.N_COMPANY_E.label("company_name_e"),
-                    company_t.c.A_COMPANY_T.label("address_t"),
-                    company_t.c.A_COMPANY_E.label("address_e"),
-                    company_t.c.I_ZIP.label("zip"),
-                    company_t.c.E_TEL.label("tel"),
-                    company_t.c.E_FAX.label("fax"),
-                    company_t.c.E_EMAIL.label("email"),
-                    company_t.c.E_URL.label("url"),
-                    func.trim(company_t.c.D_ESTABLISH).label("establish"),
-                    company_t.c.E_DVD_POLICY_T.label("dvd_policy_t"),
-                    company_t.c.E_DVD_POLICY_E.label("dvd_policy_e"),
-                ]
+                company_t.c.I_COMPANY.label("company_id"),
+                func.trim(security_t.c.N_SECURITY).label("symbol"),
+                company_t.c.N_COMPANY_T.label("company_name_t"),
+                company_t.c.N_COMPANY_E.label("company_name_e"),
+                company_t.c.A_COMPANY_T.label("address_t"),
+                company_t.c.A_COMPANY_E.label("address_e"),
+                company_t.c.I_ZIP.label("zip"),
+                company_t.c.E_TEL.label("tel"),
+                company_t.c.E_FAX.label("fax"),
+                company_t.c.E_EMAIL.label("email"),
+                company_t.c.E_URL.label("url"),
+                func.trim(company_t.c.D_ESTABLISH).label("establish"),
+                company_t.c.E_DVD_POLICY_T.label("dvd_policy_t"),
+                company_t.c.E_DVD_POLICY_E.label("dvd_policy_e"),
             )
-            .select_from(j)
+            .select_from(from_clause)
             .order_by(company_t.c.I_COMPANY)
         )
 
@@ -417,23 +443,24 @@ class SETDataReader:
         4       2794    SMG-WB  2014-08-28    SCSMG-WB     SMG-WB
         5       3375  SMG-W1-R  2014-08-28  SCSMG-W1-R   SMG-W1-R
         """
+        warnings.warn(
+            "This function will be deprecated in the future.", DeprecationWarning
+        )
         security_t = self._table("SECURITY")
         change_name_t = self._table("CHANGE_NAME_SECURITY")
 
-        j = change_name_t.join(
+        from_clause = change_name_t.join(
             security_t, security_t.c.I_SECURITY == change_name_t.c.I_SECURITY
         )
         stmt = (
             select(
-                [
-                    change_name_t.c.I_SECURITY.label("symbol_id"),
-                    func.trim(security_t.c.N_SECURITY).label("symbol"),
-                    change_name_t.c.D_EFFECT.label("effect_date"),
-                    func.trim(change_name_t.c.N_SECURITY_OLD).label("symbol_old"),
-                    func.trim(change_name_t.c.N_SECURITY_NEW).label("symbol_new"),
-                ]
+                change_name_t.c.I_SECURITY.label("symbol_id"),
+                func.trim(security_t.c.N_SECURITY).label("symbol"),
+                change_name_t.c.D_EFFECT.label("effect_date"),
+                func.trim(change_name_t.c.N_SECURITY_OLD).label("symbol_old"),
+                func.trim(change_name_t.c.N_SECURITY_NEW).label("symbol_new"),
             )
-            .select_from(j)
+            .select_from(from_clause)
             .where(change_name_t.c.D_EFFECT != None)
             .where(
                 func.trim(change_name_t.c.N_SECURITY_OLD)
@@ -633,20 +660,18 @@ class SETDataReader:
         security_t = self._table("SECURITY")
         rights_benefit_t = self._table("RIGHTS_BENEFIT")
 
-        j = rights_benefit_t.join(
+        from_clause = rights_benefit_t.join(
             security_t, security_t.c.I_SECURITY == rights_benefit_t.c.I_SECURITY
         )
         stmt = (
             select(
-                [
-                    func.trim(security_t.c.N_SECURITY).label("symbol"),
-                    rights_benefit_t.c.D_SIGN.label("sign_date"),
-                    rights_benefit_t.c.D_BEG_PAID.label("pay_date"),
-                    func.trim(rights_benefit_t.c.N_CA_TYPE).label("ca_type"),
-                    rights_benefit_t.c.Z_RIGHTS.label("dps"),
-                ]
+                func.trim(security_t.c.N_SECURITY).label("symbol"),
+                rights_benefit_t.c.D_SIGN.label("sign_date"),
+                rights_benefit_t.c.D_BEG_PAID.label("pay_date"),
+                func.trim(rights_benefit_t.c.N_CA_TYPE).label("ca_type"),
+                rights_benefit_t.c.Z_RIGHTS.label("dps"),
             )
-            .select_from(j)
+            .select_from(from_clause)
             .where(func.trim(rights_benefit_t.c.F_CANCEL) != "C")
             .order_by(rights_benefit_t.c.D_SIGN)
         )
@@ -703,22 +728,22 @@ class SETDataReader:
         2  CB20220A    2020-02-20
         3  CB20220B    2020-02-20
         """
-        warnings.warn("This function is deprecated.", DeprecationWarning)
+        warnings.warn(
+            "This function will be deprecated in the future.", DeprecationWarning
+        )
 
         security_t = self._table("SECURITY")
         security_detail_t = self._table("SECURITY_DETAIL")
 
-        j = security_detail_t.join(
+        from_clause = security_detail_t.join(
             security_t, security_t.c.I_SECURITY == security_detail_t.c.I_SECURITY
         )
         stmt = (
             select(
-                [
-                    func.trim(security_t.c.N_SECURITY).label("symbol"),
-                    security_detail_t.c.D_DELISTED.label("delisted_date"),
-                ]
+                func.trim(security_t.c.N_SECURITY).label("symbol"),
+                security_detail_t.c.D_DELISTED.label("delisted_date"),
             )
-            .select_from(j)
+            .select_from(from_clause)
             .where(security_detail_t.c.D_DELISTED != None)
             .order_by(security_detail_t.c.D_DELISTED)
         )
@@ -783,19 +808,17 @@ class SETDataReader:
         security_t = self._table("SECURITY")
         sign_posting_t = self._table("SIGN_POSTING")
 
-        j = sign_posting_t.join(
+        from_clause = sign_posting_t.join(
             security_t, security_t.c.I_SECURITY == sign_posting_t.c.I_SECURITY
         )
         stmt = (
             select(
-                [
-                    func.trim(security_t.c.N_SECURITY).label("symbol"),
-                    sign_posting_t.c.D_HOLD.label("hold_date"),
-                    sign_posting_t.c.D_RELEASE.label("release_date"),
-                    func.trim(sign_posting_t.c.N_SIGN).label("sign"),
-                ]
+                func.trim(security_t.c.N_SECURITY).label("symbol"),
+                sign_posting_t.c.D_HOLD.label("hold_date"),
+                sign_posting_t.c.D_RELEASE.label("release_date"),
+                func.trim(sign_posting_t.c.N_SIGN).label("sign"),
             )
-            .select_from(j)
+            .select_from(from_clause)
             .order_by(sign_posting_t.c.D_HOLD)
         )
         stmt = self._filter_stmt_by_symbol_and_date(
@@ -824,7 +847,7 @@ class SETDataReader:
         Parameters
         ----------
         index_list: Optional[List[str]] = None
-            index (SECTOR.N_SECTOR)
+            index (SECTOR.N_SYMBOL_FEED)
                 - SETWB
                 - SETTHSI
                 - SETCLMV
@@ -841,7 +864,7 @@ class SETDataReader:
         -------
         pd.DataFrame
             - as_of_date: date - D_AS_OF
-            - index: str - SECTOR.N_SECTOR
+            - index: str - SECTOR.N_SYMBOL_FEED
             - symbol: str - SECURITY.N_SECURITY
             - seq: int - SECURITY_INDEX.S_SEQ
 
@@ -903,7 +926,7 @@ class SETDataReader:
         43 2022-01-04  SET50     AOT   44
         44 2022-01-04  SET50     BTS   45
         45 2022-01-04  SET50    DTAC   46
-        46 2022-01-04  SET50    TRUE   47
+        46 2022-01-04  SET50   TRUEE   47
         47 2022-01-04  SET50  ADVANC   48
         48 2022-01-04  SET50  INTUCH   49
         49 2022-01-04  SET50     KCE   50
@@ -912,31 +935,29 @@ class SETDataReader:
         sector_t = self._table("SECTOR")
         security_index_t = self._table("SECURITY_INDEX")
 
-        j = self._join_sector_table(security_index_t).join(
+        from_clause = self._join_sector_table(security_index_t).join(
             security_t, security_t.c.I_SECURITY == security_index_t.c.I_SECURITY
         )
         stmt = (
             select(
-                [
-                    security_index_t.c.D_AS_OF.label("as_of_date"),
-                    func.trim(sector_t.c.N_SECTOR).label("index"),
-                    func.trim(security_t.c.N_SECURITY).label("symbol"),
-                    security_index_t.c.S_SEQ.label("seq"),
-                ]
+                security_index_t.c.D_AS_OF.label("as_of_date"),
+                func.trim(sector_t.c.N_SYMBOL_FEED).label("index"),
+                func.trim(security_t.c.N_SECURITY).label("symbol"),
+                security_index_t.c.S_SEQ.label("seq"),
             )
-            .select_from(j)
+            .select_from(from_clause)
             .where(
                 case(
                     (
-                        func.trim(sector_t.c.N_SECTOR) == fld.INDEX_SET50,
+                        func.trim(sector_t.c.N_SYMBOL_FEED) == fld.INDEX_SET50,
                         security_index_t.c.S_SEQ <= 50,
                     ),
                     (
-                        func.trim(sector_t.c.N_SECTOR) == fld.INDEX_SET100,
+                        func.trim(sector_t.c.N_SYMBOL_FEED) == fld.INDEX_SET100,
                         security_index_t.c.S_SEQ <= 100,
                     ),
                     (
-                        func.trim(sector_t.c.N_SECTOR) == fld.INDEX_SETHD,
+                        func.trim(sector_t.c.N_SYMBOL_FEED) == fld.INDEX_SETHD,
                         security_index_t.c.S_SEQ <= 30,
                     ),
                     else_=True,
@@ -944,13 +965,13 @@ class SETDataReader:
             )
             .order_by(
                 security_index_t.c.D_AS_OF,
-                sector_t.c.N_SECTOR,
+                sector_t.c.N_SYMBOL_FEED,
                 security_index_t.c.S_SEQ,
             )
         )
         stmt = self._filter_stmt_by_symbol_and_date(
             stmt=stmt,
-            symbol_column=sector_t.c.N_SECTOR,
+            symbol_column=sector_t.c.N_SYMBOL_FEED,
             date_column=security_index_t.c.D_AS_OF,
             symbol_list=index_list,
             start_date=start_date,
@@ -1008,19 +1029,17 @@ class SETDataReader:
         security_t = self._table("SECURITY")
         adjust_factor_t = self._table("ADJUST_FACTOR")
 
-        j = adjust_factor_t.join(
+        from_clause = adjust_factor_t.join(
             security_t, security_t.c.I_SECURITY == adjust_factor_t.c.I_SECURITY
         )
         stmt = (
             select(
-                [
-                    func.trim(security_t.c.N_SECURITY).label("symbol"),
-                    adjust_factor_t.c.D_EFFECT.label("effect_date"),
-                    adjust_factor_t.c.N_CA_TYPE.label("ca_type"),
-                    adjust_factor_t.c.R_ADJUST_FACTOR.label("adjust_factor"),
-                ]
+                func.trim(security_t.c.N_SECURITY).label("symbol"),
+                adjust_factor_t.c.D_EFFECT.label("effect_date"),
+                adjust_factor_t.c.N_CA_TYPE.label("ca_type"),
+                adjust_factor_t.c.R_ADJUST_FACTOR.label("adjust_factor"),
             )
-            .select_from(j)
+            .select_from(from_clause)
             .order_by(adjust_factor_t.c.D_EFFECT)
         )
         stmt = self._filter_stmt_by_symbol_and_date(
@@ -1100,6 +1119,7 @@ class SETDataReader:
             - caution
             - 12m_dvd_yield
             - peg
+            - has_trade (if close > 0 or last_bid > 0 or last_offer > 0 return 1.0 else 0.0/nan)
         symbol_list: Optional[List[str]] = None
             N_SECURITY in symbol_list (must be unique).
         start_date: Optional[str] = None
@@ -1141,7 +1161,7 @@ class SETDataReader:
         field = field.lower()
 
         if symbol_list:
-            symbol_list = [i.upper() for i in symbol_list]
+            symbol_list = [i.strip().upper() for i in symbol_list]
 
         security_t = self._table("SECURITY")
 
@@ -1151,24 +1171,29 @@ class SETDataReader:
         elif field in fld.DAILY_STOCK_STAT_MAP:
             daily_stock_t = self._table("DAILY_STOCK_STAT")
             value_col = daily_stock_t.c[fld.DAILY_STOCK_STAT_MAP[field]]
+        elif field == "has_trade":
+            daily_stock_t = self._table("DAILY_STOCK_TRADE")
+            value_col = or_(
+                daily_stock_t.c.Z_CLOSE > 0,
+                daily_stock_t.c.Z_LAST_BID > 0,
+                daily_stock_t.c.Z_LAST_OFFER > 0,
+            )
         else:
             raise InputError(
                 f"{field} is invalid field. Please read document to check valid field."
             )
 
-        j = daily_stock_t.join(
+        from_clause = daily_stock_t.join(
             security_t, daily_stock_t.c.I_SECURITY == security_t.c.I_SECURITY
         )
 
         stmt = (
             select(
-                [
-                    daily_stock_t.c.D_TRADE.label(TRADE_DATE),
-                    func.trim(security_t.c.N_SECURITY).label(NAME),
-                    value_col.label(VALUE),
-                ]
+                daily_stock_t.c.D_TRADE.label(TRADE_DATE),
+                func.trim(security_t.c.N_SECURITY).label(NAME),
+                value_col.label(VALUE),
             )
-            .select_from(j)
+            .select_from(from_clause)
             .order_by(daily_stock_t.c.D_TRADE)
         )
         if "I_TRADING_METHOD" in daily_stock_t.c:
@@ -1176,11 +1201,6 @@ class SETDataReader:
                 func.trim(daily_stock_t.c.I_TRADING_METHOD) == "A"
             )  # Auto Matching
 
-        vld.check_start_end_date(
-            start_date=start_date,
-            end_date=end_date,
-            last_update_date=self.last_table_update(daily_stock_t.name),
-        )
         stmt = self._filter_stmt_by_symbol_and_date(
             stmt=stmt,
             symbol_column=security_t.c.N_SECURITY,
@@ -1218,7 +1238,7 @@ class SETDataReader:
                 df, is_multiply=False, adjusted_list=adjusted_list
             )
 
-        if symbol_list != None:
+        if symbol_list is not None:
             df = df.reindex(columns=[i for i in symbol_list if i in df.columns])
 
         return df
@@ -1687,32 +1707,30 @@ class SETDataReader:
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
     ) -> pd.DataFrame:
-        """Data from table MKTSTAT_DAILY_INDEX, MKTSTAT_DAILY_MARKET.
+        """Data from table DAILY_SECTOR_INFO. Filter only market data.
 
         Parameters
         ----------
         field: str
+            - prior
+            - open
             - high
             - low
             - close
-            - tri
-            - total_trans
-            - total_volume
-            - total_value
+            - trans
+            - volume
+            - value
             - mkt_pe
             - mkt_pbv
             - mkt_yield
             - mkt_cap
-            - mkt_par_value
-            - trading_day
-            - new_company
-            - delisted_company
-            - move_in_company
-            - move_out_company
-            - listed_company
-            - listed_stock
+            - turnover
+            - share_listed_avg
+            - beta
+            - turnover_volume
+            - 12m_dvd_yield
         index_list: Optional[List[str]] = None
-            N_SECTOR in index_list. More index can be found in ezyquant.fields.
+            N_SYMBOL_FEED in index_list. More index can be found in ezyquant.fields
         start_date: Optional[str] = None
             start of trade_date (D_TRADE).
         end_date: Optional[str] = None
@@ -1742,59 +1760,17 @@ class SETDataReader:
         2022-01-07  1657.62  2257.40
         2022-01-10  1657.06  2256.14
         """
-        field = field.lower()
-
-        sector_t = self._table("SECTOR")
-
-        if field in fld.MKTSTAT_DAILY_INDEX_MAP:
-            mktstat_daily_t = self._table("MKTSTAT_DAILY_INDEX")
-            field_col = mktstat_daily_t.c[fld.MKTSTAT_DAILY_INDEX_MAP[field]]
-        elif field in fld.MKTSTAT_DAILY_MARKET_MAP:
-            mktstat_daily_t = self._table("MKTSTAT_DAILY_MARKET")
-            field_col = mktstat_daily_t.c[fld.MKTSTAT_DAILY_MARKET_MAP[field]]
-        else:
-            raise InputError(
-                f"{field} is invalid field. Please read document to check valid field."
-            )
-
-        j = self._join_sector_table(mktstat_daily_t)
-
-        stmt = (
-            select(
-                [
-                    mktstat_daily_t.c.D_TRADE.label(TRADE_DATE),
-                    func.trim(sector_t.c.N_SECTOR).label(NAME),
-                    field_col.label(VALUE),
-                ]
-            )
-            .select_from(j)
-            .order_by(mktstat_daily_t.c.D_TRADE)
-        )
-
-        vld.check_start_end_date(
-            start_date=start_date,
-            end_date=end_date,
-            last_update_date=self.last_table_update(mktstat_daily_t.name),
-        )
-        stmt = self._filter_stmt_by_symbol_and_date(
-            stmt=stmt,
-            symbol_column=sector_t.c.N_SECTOR,
-            date_column=mktstat_daily_t.c.D_TRADE,
+        return self._get_daily_sector_info(
+            field=field,
             symbol_list=index_list,
             start_date=start_date,
             end_date=end_date,
+            f_data="M",
         )
-
-        df = self._read_sql_query(stmt, index_col=TRADE_DATE)
-
-        df = self._pivot_name_value(df)
-
-        return df
 
     def get_data_sector_daily(
         self,
         field: str,
-        market: str = fld.MARKET_SET,
         sector_list: Optional[List[str]] = None,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
@@ -1821,10 +1797,8 @@ class SETDataReader:
             - beta
             - turnover_volume
             - 12m_dvd_yield
-        market: str = fld.MARKET_SET
-            I_MARKET (e.g. 'SET', 'mai').
         sector_list: Optional[List[str]] = None
-            N_SECTOR in sector_list. More sector can be found in ezyquant.fields.
+            N_SYMBOL_FEED in sector_list. More sector can be found in ezyquant.fields
         start_date: Optional[str] = None
             start of trade_date (D_TRADE).
         end_date: Optional[str] = None
@@ -1856,17 +1830,15 @@ class SETDataReader:
         """
         return self._get_daily_sector_info(
             field=field,
-            sector_list=sector_list,
+            symbol_list=sector_list,
             start_date=start_date,
             end_date=end_date,
-            market=market,
-            f_data="S",  # sector
+            f_data="S",
         )
 
     def get_data_industry_daily(
         self,
         field: str,
-        market: str = fld.MARKET_SET,
         industry_list: Optional[List[str]] = None,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
@@ -1893,10 +1865,8 @@ class SETDataReader:
             - beta
             - turnover_volume
             - 12m_dvd_yield
-        market: str = fld.MARKET_SET
-            I_MARKET (e.g. 'SET', 'mai').
         industry_list: Optional[List[str]] = None
-            N_SECTOR in industry_list. More industry can be found in ezyquant.fields.
+            N_SYMBOL_FEED in industry_list. More industry can be found in ezyquant.fields
         start_date: Optional[str] = None
             start of trade_date (D_TRADE).
         end_date: Optional[str] = None
@@ -1915,24 +1885,23 @@ class SETDataReader:
         >>> sdr = SETDataReader()
         >>> sdr.get_data_industry_daily(
         ...     field=fld.D_INDUSTRY_CLOSE,
-        ...     industry_list=[fld.INDUSTRY_AGRO, fld.INDUSTRY_CONSUMP],
+        ...     industry_list=[fld.INDUSTRY_AGRO, fld.INDUSTRY_FINCIAL],
         ...     start_date="2022-01-01",
         ...     end_date="2022-01-10",
         ... )
-                      AGRO  CONSUMP
-        2022-01-04  485.98    92.55
-        2022-01-05  484.98    93.21
-        2022-01-06  482.90    92.96
-        2022-01-07  484.50    93.04
-        2022-01-10  487.10    93.97
+                      AGRO  FINCIAL
+        2022-01-04  485.98   182.10
+        2022-01-05  484.98   183.50
+        2022-01-06  482.90   181.39
+        2022-01-07  484.50   182.81
+        2022-01-10  487.10   182.79
         """
         return self._get_daily_sector_info(
             field=field,
-            sector_list=industry_list,
+            symbol_list=industry_list,
             start_date=start_date,
             end_date=end_date,
-            market=market,
-            f_data="I",  # industry
+            f_data="I",
         )
 
     """
@@ -1944,13 +1913,18 @@ class SETDataReader:
         assert self._engine is not None
         return self._engine
 
-    def _func_date(self, column: Column):
+    def _func_date(self, column: ColumnElement):
+        """Convert date column to date type for sqlite engine.
+
+        Usually use in where clause. Select clause will be converted
+        automatically by pandas.read_sql_query
+        """
         if self.engine.name == "sqlite":
             return func.DATE(column)
         return column
 
     def _table(self, name: str) -> Table:
-        return Table(name, self._metadata, autoload=True)
+        return Table(name, self._metadata, autoload_with=self._engine)
 
     def _read_sql_query(
         self, stmt: Select, index_col: Optional[str] = None
@@ -1959,12 +1933,10 @@ class SETDataReader:
 
         parse_dates = [i for i in col_name_list if i.endswith("_date")]
 
-        df = pd.read_sql_query(
-            stmt,
-            self.engine,
-            index_col=index_col,
-            parse_dates=parse_dates,
-        )
+        with self.engine.connect() as conn:
+            df = pd.read_sql_query(
+                stmt, con=conn, index_col=index_col, parse_dates=parse_dates
+            )
 
         if VALUE in col_name_list:
             try:
@@ -1977,24 +1949,33 @@ class SETDataReader:
     def _filter_stmt_by_date(
         self,
         stmt: Select,
-        column: Column,
+        column: ColumnElement,
         start_date: Optional[str],
         end_date: Optional[str],
     ):
-        vld.check_start_end_date(start_date, end_date)
+        if isinstance(column.table, Table) and "D_TRADE" in column.table.columns:
+            last_update_date = self.last_table_update(column.table)  # type: ignore
+        else:
+            last_update_date = None
 
-        if start_date != None:
+        vld.check_start_end_date(
+            start_date=start_date,
+            end_date=end_date,
+            last_update_date=last_update_date,
+        )
+
+        if start_date is not None:
             stmt = stmt.where(self._func_date(column) >= start_date)
-        if end_date != None:
+        if end_date is not None:
             stmt = stmt.where(self._func_date(column) <= end_date)
 
         return stmt
 
     def _filter_str_in_list(
-        self, stmt: Select, column: Column, values: Optional[List[str]]
+        self, stmt: Select, column: ColumnElement, values: Optional[List[str]]
     ):
         vld.check_duplicate(values)
-        if values != None:
+        if values is not None:
             values = [i.strip().upper() for i in values]
             stmt = stmt.where(func.upper(func.trim(column)).in_(values))
         return stmt
@@ -2002,8 +1983,8 @@ class SETDataReader:
     def _filter_stmt_by_symbol_and_date(
         self,
         stmt: Select,
-        symbol_column: Column,
-        date_column: Column,
+        symbol_column: ColumnElement,
+        date_column: ColumnElement,
         symbol_list: Optional[List[str]],
         start_date: Optional[str],
         end_date: Optional[str],
@@ -2021,11 +2002,9 @@ class SETDataReader:
         daily_stock_stat_t = self._table("DAILY_STOCK_STAT")
         return (
             select(
-                [
-                    daily_stock_stat_t.c.I_SECURITY,
-                    daily_stock_stat_t.c.D_AS_OF,
-                    func.min(daily_stock_stat_t.c.D_TRADE).label("D_TRADE"),
-                ]
+                daily_stock_stat_t.c.I_SECURITY,
+                daily_stock_stat_t.c.D_AS_OF,
+                func.min(daily_stock_stat_t.c.D_TRADE).label("D_TRADE"),
             )
             .group_by(daily_stock_stat_t.c.I_SECURITY, daily_stock_stat_t.c.D_AS_OF)
             .subquery()
@@ -2044,15 +2023,28 @@ class SETDataReader:
             ),
         )
 
-    def _join_sector_table(self, table: Table, isouter: bool = False):
-        sector_t = self._table("SECTOR")
+    def _join_sector_table(
+        self,
+        table: FromClause,
+        isouter: bool = False,
+        sector_t: Optional[FromClause] = None,
+        is_join_sector: bool = True,
+    ):
+        if sector_t is None:
+            sector_t = self._table("SECTOR")
+
+        prefix = ""
+        if isinstance(table, Join):
+            assert isinstance(table.left, Table)
+            prefix = table.left.name + "_"
+
         return table.join(
             sector_t,
-            and_(
-                table.c.I_MARKET == sector_t.c.I_MARKET,
-                table.c.I_INDUSTRY == sector_t.c.I_INDUSTRY,
-                table.c.I_SECTOR == sector_t.c.I_SECTOR,
-                table.c.I_SUBSECTOR == sector_t.c.I_SUBSECTOR,
+            onclause=and_(
+                sector_t.c.I_MARKET == table.c[f"{prefix}I_MARKET"],
+                sector_t.c.I_INDUSTRY == table.c[f"{prefix}I_INDUSTRY"],
+                sector_t.c.I_SECTOR
+                == (table.c[f"{prefix}I_SECTOR"] if is_join_sector else 0),
             ),
             isouter=isouter,
         )
@@ -2204,11 +2196,9 @@ class SETDataReader:
 
         stmt = (
             select(
-                [
-                    d_trade_subquery.c.D_TRADE.label(TRADE_DATE),
-                    func.trim(security_t.c.N_SECURITY).label(NAME),
-                    value_column.label(VALUE),
-                ]
+                d_trade_subquery.c.D_TRADE.label(TRADE_DATE),
+                func.trim(security_t.c.N_SECURITY).label(NAME),
+                value_column.label(VALUE),
             )
             .select_from(self._join_security_and_d_trade_subquery(financial_screen_t))
             .where(func.trim(financial_screen_t.c.I_PERIOD_TYPE) == "QY")
@@ -2250,11 +2240,9 @@ class SETDataReader:
 
         stmt = (
             select(
-                [
-                    d_trade_subquery.c.D_TRADE.label(TRADE_DATE),
-                    func.trim(security_t.c.N_SECURITY).label(NAME),
-                    value_column.label(VALUE),
-                ]
+                d_trade_subquery.c.D_TRADE.label(TRADE_DATE),
+                func.trim(security_t.c.N_SECURITY).label(NAME),
+                value_column.label(VALUE),
             )
             .select_from(self._join_security_and_d_trade_subquery(financial_stat_std_t))
             .where(func.trim(financial_stat_std_t.c.N_ACCOUNT) == db_field)
@@ -2307,10 +2295,9 @@ class SETDataReader:
         df = df.drop_duplicates(subset=[TRADE_DATE, NAME], keep="last")
         df = df.set_index(TRADE_DATE)
 
-        if fillna_value != None:
+        if fillna_value is not None:
             df = df.fillna(fillna_value)
 
-        assert isinstance(df, pd.DataFrame)
         df = self._pivot_name_value(df)
 
         return df
@@ -2318,93 +2305,36 @@ class SETDataReader:
     def _get_daily_sector_info(
         self,
         field: str,
-        sector_list: Optional[List[str]],
-        start_date: Optional[str],
-        end_date: Optional[str],
-        market: str,
-        f_data: str,
-    ) -> pd.DataFrame:
-        market = market.upper()
-        field = field.lower()
-        f_data = f_data.upper()
-
-        assert f_data in {"I", "S"}, f"{f_data} is not a valid f_data"
-
-        sector_t = self._table("SECTOR")
-        daily_sector_info_t = self._table("DAILY_SECTOR_INFO")
-
-        j = self._join_sector_table(daily_sector_info_t)
-
-        try:
-            field_col = daily_sector_info_t.c[fld.DAILY_SECTOR_INFO_MAP[field]]
-        except KeyError:
-            raise InputError(
-                f"{field} is invalid field. Please read document to check valid field."
-            )
-
-        # N_SECTOR is the industry name in F_DATA = 'I'
-        stmt = (
-            select(
-                [
-                    daily_sector_info_t.c.D_TRADE.label(TRADE_DATE),
-                    func.trim(sector_t.c.N_SECTOR).label(NAME),
-                    field_col.label(VALUE),
-                ]
-            )
-            .select_from(j)
-            .where(sector_t.c.F_DATA == f_data)
-            .where(sector_t.c.I_MARKET == fld.MARKET_MAP_UPPER[market])
-            .where(sector_t.c.D_CANCEL == None)
-            .order_by(daily_sector_info_t.c.D_TRADE)
-        )
-
-        vld.check_start_end_date(
-            start_date=start_date,
-            end_date=end_date,
-            last_update_date=self.last_table_update(daily_sector_info_t.name),
-        )
-        stmt = self._filter_stmt_by_symbol_and_date(
-            stmt=stmt,
-            symbol_column=sector_t.c.N_SECTOR,
-            date_column=daily_sector_info_t.c.D_TRADE,
-            symbol_list=sector_list,
-            start_date=start_date,
-            end_date=end_date,
-        )
-
-        df = self._read_sql_query(stmt, index_col=TRADE_DATE)
-
-        df = self._pivot_name_value(df)
-
-        return df
-
-    def _get_daily_sector_info_by_security(
-        self,
-        field: str,
         symbol_list: Optional[List[str]],
         start_date: Optional[str],
         end_date: Optional[str],
         f_data: str,
+        is_stock_column: bool = False,
     ) -> pd.DataFrame:
-        # TODO: Duplicate code with _get_daily_sector_info
         field = field.lower()
         f_data = f_data.upper()
 
-        assert f_data in {"I", "S"}, f"{f_data} is not a valid f_data"
+        assert f_data in ("I", "S", "M"), "Invalid f_data"
 
         security_t = self._table("SECURITY")
         sector_t = self._table("SECTOR")
         daily_sector_info_t = self._table("DAILY_SECTOR_INFO")
 
-        j = self._join_sector_table(daily_sector_info_t).join(
-            security_t,
-            and_(
-                sector_t.c.I_MARKET == security_t.c.I_MARKET,
-                sector_t.c.I_INDUSTRY == security_t.c.I_INDUSTRY,
-                sector_t.c.I_SECTOR == security_t.c.I_SECTOR if f_data == "S" else True,
-                sector_t.c.I_SUBSECTOR == security_t.c.I_SUBSECTOR,
-            ),
-        )
+        from_clause = self._join_sector_table(daily_sector_info_t)
+
+        if is_stock_column:
+            from_clause = from_clause.join(
+                security_t,
+                onclause=and_(
+                    sector_t.c.I_MARKET == security_t.c.I_MARKET,
+                    sector_t.c.I_INDUSTRY == security_t.c.I_INDUSTRY,
+                    sector_t.c.I_SECTOR
+                    == (security_t.c.I_SECTOR if f_data == "S" else 0),
+                ),
+            )
+            symbol_column = security_t.c.N_SECURITY
+        else:
+            symbol_column = sector_t.c.N_SYMBOL_FEED
 
         try:
             field_col = daily_sector_info_t.c[fld.DAILY_SECTOR_INFO_MAP[field]]
@@ -2413,34 +2343,27 @@ class SETDataReader:
                 f"{field} is invalid field. Please read document to check valid field."
             )
 
-        # N_SECTOR is the industry name in F_DATA = 'I'
         stmt = (
             select(
-                [
-                    daily_sector_info_t.c.D_TRADE.label(TRADE_DATE),
-                    func.trim(security_t.c.N_SECURITY).label(NAME),
-                    field_col.label(VALUE),
-                ]
+                daily_sector_info_t.c.D_TRADE.label(TRADE_DATE),
+                func.trim(symbol_column).label(NAME),
+                field_col.label(VALUE),
             )
-            .select_from(j)
+            .select_from(from_clause)
             .where(sector_t.c.F_DATA == f_data)
             .where(sector_t.c.D_CANCEL == None)
             .order_by(daily_sector_info_t.c.D_TRADE)
         )
 
-        vld.check_start_end_date(
-            start_date=start_date,
-            end_date=end_date,
-            last_update_date=self.last_table_update(daily_sector_info_t.name),
-        )
         stmt = self._filter_stmt_by_symbol_and_date(
             stmt=stmt,
-            symbol_column=security_t.c.N_SECURITY,
+            symbol_column=symbol_column,
             date_column=daily_sector_info_t.c.D_TRADE,
             symbol_list=symbol_list,
             start_date=start_date,
             end_date=end_date,
         )
+
         df = self._read_sql_query(stmt, index_col=TRADE_DATE)
 
         df = self._pivot_name_value(df)
@@ -2453,16 +2376,14 @@ class SETDataReader:
         sector_t = self._table("SECTOR")
         security_index_t = self._table("SECURITY_INDEX")
 
-        j = self._join_sector_table(security_index_t)
+        from_clause = self._join_sector_table(security_index_t)
         stmt = (
             select(
-                [
-                    func.trim(sector_t.c.N_SECTOR).label("sector"),
-                    func.max(security_index_t.c.D_AS_OF).label("as_of_date"),
-                ]
+                func.trim(sector_t.c.N_SYMBOL_FEED).label("sector"),
+                func.max(security_index_t.c.D_AS_OF).label("as_of_date"),
             )
-            .select_from(j)
-            .group_by(sector_t.c.N_SECTOR)
+            .select_from(from_clause)
+            .group_by(sector_t.c.N_SYMBOL_FEED)
         )
         stmt = self._filter_stmt_by_date(
             stmt=stmt,
@@ -2483,8 +2404,8 @@ class SETDataReader:
     @lru_cache(maxsize=1)
     def _get_holidays(self) -> List[str]:
         tds = self.get_trading_dates()
-        bds = pd.bdate_range(tds[0], tds[-1]).strftime("%Y-%m-%d")
-        return list(set(bds) - set(tds))  # type: ignore
+        bds = pd.bdate_range(tds[0], tds[-1]).strftime("%Y-%m-%d")  # type: ignore
+        return list(set(bds) - set(tds))
 
     def _SETBusinessDay(self, n: int = 1) -> CustomBusinessDay:
         holidays = self._get_holidays()
@@ -2510,9 +2431,6 @@ def _SETDataReaderCached() -> SETDataReader:
     )  # type: ignore
     out._get_daily_sector_info = utils.cache_dataframe_wrapper(
         utils.cache_wrapper(out._get_daily_sector_info)
-    )  # type: ignore
-    out._get_daily_sector_info_by_security = utils.cache_dataframe_wrapper(
-        utils.cache_wrapper(out._get_daily_sector_info_by_security)
     )  # type: ignore
 
     return out

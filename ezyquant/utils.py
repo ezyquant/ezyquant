@@ -54,16 +54,9 @@ def is_rebalance_weekly(
     pd.Series
         Series of bool. True if the date is a rebalance date.
     """
-    if not trade_date_index.is_monotonic_increasing or not trade_date_index.is_unique:
-        raise InputError("trade_date_index must be monotonic and unique")
-    if rebalance_at < 1 or rebalance_at > 5:
-        raise InputError("rebalance_at must be between 1 and 5")
-
-    td_s = trade_date_index.to_series()
-
-    rule = f"W-{calendar.day_abbr[rebalance_at-2]}"
-    rbs = td_s.resample(rule=rule).first()
-    return td_s.isin(rbs)
+    return is_rebalance(
+        trade_date_index=trade_date_index, rebalance_at=rebalance_at, freq="W"
+    )
 
 
 def is_rebalance_monthly(
@@ -84,52 +77,40 @@ def is_rebalance_monthly(
     pd.Series
         Series of bool, True if the date is a rebalance date.
     """
-    if not trade_date_index.is_monotonic_increasing or not trade_date_index.is_unique:
-        raise InputError("trade_date_index must be monotonic and unique")
-    if rebalance_at < 1 or rebalance_at > 31:
-        raise InputError("rebalance_at must be between 1 and 31")
-
-    td_s = trade_date_index.to_series()
-
-    # TODO: improve is_rebalance_monthly
-    v = _date_range(
-        start_month=td_s[0].month,
-        start_year=td_s[0].year,
-        end_month=td_s[-1].month,
-        end_year=td_s[-1].year,
-        day_of_month=rebalance_at,
+    return is_rebalance(
+        trade_date_index=trade_date_index, rebalance_at=rebalance_at, freq="M"
     )
 
-    idx = td_s.searchsorted(v, side="left")
-    idx = idx[idx != td_s.size]
 
-    return td_s.isin(td_s[idx])  # type: ignore
+def is_rebalance(
+    trade_date_index: pd.DatetimeIndex, rebalance_at: int, freq: str
+) -> pd.Series:
+    if not trade_date_index.is_monotonic_increasing or not trade_date_index.is_unique:
+        raise InputError("trade_date_index must be monotonic and unique")
 
+    tds = trade_date_index.to_series()
 
-def _date_range(
-    start_month: int,
-    start_year: int,
-    end_month: int,
-    end_year: int,
-    day_of_month: int,
-):
-    out = []
+    if freq == "W":
+        if not 1 <= rebalance_at <= 5:
+            raise InputError("rebalance_at must be between 1 and 5")
 
-    ym_start = 12 * start_year + start_month - 2
-    ym_end = 12 * end_year + end_month + 1
+        rule = f"W-{calendar.day_abbr[rebalance_at-2]}"
+        by = pd.Grouper(freq=rule)
 
-    for ym in range(ym_start, ym_end):
-        y, m = divmod(ym, 12)
-        try:
-            out.append(date(y, m + 1, day_of_month))
-        except ValueError:
-            assert day_of_month > 28
-            out.append(date(y, m + 2, 1))
+    elif freq == "M":
+        if not 1 <= rebalance_at <= 31:
+            raise InputError("rebalance_at must be between 1 and 31")
 
-    assert len(out) >= 3
+        tds = tds.mask(
+            tds.dt.day < rebalance_at,
+            tds - pd.DateOffset(months=1),  # type: ignore
+        )
+        by = [tds.dt.year, tds.dt.month]
 
-    out = pd.to_datetime(out)
-    return out
+    else:
+        raise InputError("freq must be either W or M")
+
+    return tds.groupby(by=by, group_keys=False).apply(lambda x: x == x[0])
 
 
 def count_true_consecutive(s: pd.Series) -> pd.Series:
@@ -229,7 +210,7 @@ def cache_dataframe_wrapper(method: Callable):
         end_date: Optional[str] = None,
         **kwargs,
     ):
-        if symbol_list != None:
+        if symbol_list is not None:
             symbol_list = [i.upper() for i in symbol_list]
 
         call_key = tuple(sorted(kwargs.items()))
@@ -272,11 +253,11 @@ def cache_dataframe_wrapper(method: Callable):
             "end_date": c_end_date,
         }
 
-        if symbol_list != None:
+        if symbol_list is not None:
             df = df[[i for i in symbol_list if i in df.columns]]
-        if start_date != None:
+        if start_date is not None:
             df = df[df.index >= start_date]
-        if end_date != None:
+        if end_date is not None:
             df = df[df.index <= end_date]
 
         return df.copy()

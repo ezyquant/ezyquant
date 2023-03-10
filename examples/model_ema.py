@@ -14,7 +14,7 @@ start_load_date = ezutils.date_to_str(
 )  # load more data for signal calculation
 end_date = "2019-12-31"
 
-#%% create signal
+# %% create signal
 ssc = SETSignalCreator(
     start_date=start_load_date,
     end_date=end_date,
@@ -43,7 +43,7 @@ def backtest_algorithm(ctx: Context) -> float:
     return ctx.buy_pct_port(ctx.signal)
 
 
-#%% Backtest
+# %% Backtest
 initial_cash = 1e6
 
 result = backtest(
