@@ -5,6 +5,7 @@ from functools import lru_cache, wraps
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import pandas as pd
+from dateutil.relativedelta import relativedelta
 
 from .errors import InputError
 
@@ -54,6 +55,7 @@ def is_rebalance_weekly(
     pd.Series
         Series of bool. True if the date is a rebalance date.
     """
+    # TODO: combine with is_rebalance_monthly
     if not trade_date_index.is_monotonic_increasing or not trade_date_index.is_unique:
         raise InputError("trade_date_index must be monotonic and unique")
     if rebalance_at < 1 or rebalance_at > 5:
@@ -91,45 +93,15 @@ def is_rebalance_monthly(
 
     td_s = trade_date_index.to_series()
 
-    # TODO: improve is_rebalance_monthly
-    v = _date_range(
-        start_month=td_s[0].month,
-        start_year=td_s[0].year,
-        end_month=td_s[-1].month,
-        end_year=td_s[-1].year,
-        day_of_month=rebalance_at,
-    )
+    def func(x: pd.Timestamp):
+        d = date(x.year, x.month, 1)
 
-    idx = td_s.searchsorted(v, side="left")
-    idx = idx[idx != td_s.size]
+        if x.day < rebalance_at:
+            d -= relativedelta(months=1)
 
-    return td_s.isin(td_s[idx])  # type: ignore
+        return d
 
-
-def _date_range(
-    start_month: int,
-    start_year: int,
-    end_month: int,
-    end_year: int,
-    day_of_month: int,
-):
-    out = []
-
-    ym_start = 12 * start_year + start_month - 2
-    ym_end = 12 * end_year + end_month + 1
-
-    for ym in range(ym_start, ym_end):
-        y, m = divmod(ym, 12)
-        try:
-            out.append(date(y, m + 1, day_of_month))
-        except ValueError:
-            assert day_of_month > 28
-            out.append(date(y, m + 2, 1))
-
-    assert len(out) >= 3
-
-    out = pd.to_datetime(out)
-    return out
+    return td_s.groupby(func).apply(lambda x: x == x[0])
 
 
 def count_true_consecutive(s: pd.Series) -> pd.Series:
