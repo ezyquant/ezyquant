@@ -55,7 +55,7 @@ Execute on timer
         ctx.cancel_all_orders()
         ctx.target_pct_port(ctx.signal)
 
-จากตัวอย่างจะยกเลย order ทั่้งหมดและวาง order ใหม่ตาม signal ที่ได้จาก ezyquant
+จากตัวอย่างจะยกเลิก order ทั้งหมดและวาง order ใหม่ตาม signal ที่ได้จาก ezyquant
 
 .. currentmodule:: ezyquant_execution.executing
 
