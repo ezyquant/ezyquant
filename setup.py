@@ -21,7 +21,7 @@ setup(
     long_description="Powerful backtest python library for Thai stocks",
     author="Fintech (Thailand) Company Limited",
     author_email="admin@fintech.co.th",
-    url="https://pydoc.ezyquant.com/",
+    url="https://www.ezyquant.com/",
     maintainer="Fintech (Thailand) Company Limited",
     maintainer_email="admin@fintech.co.th",
     python_requires=">=3.8.6",
