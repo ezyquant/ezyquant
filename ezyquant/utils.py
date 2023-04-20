@@ -210,6 +210,9 @@ def cache_dataframe_wrapper(method: Callable):
         end_date: Optional[str] = None,
         **kwargs,
     ):
+        if symbol_list:
+            symbol_list = list(symbol_list)
+
         call_key = tuple(sorted(kwargs.items()))
 
         if call_key not in call_dict:
