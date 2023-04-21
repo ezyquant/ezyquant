@@ -342,25 +342,15 @@ class SETDataReader:
                 - symbol: str - SECURITY.N_SECURITY
                 - company_name_t: str - N_COMPANY_T
                 - company_name_e: str - N_COMPANY_E
-                - address_t: str - A_COMPANY_T
-                - address_e: str - A_COMPANY_E
-                - zip: str - I_ZIP
-                - tel: str - E_TEL
-                - fax: str - E_FAX
-                - email: str - E_EMAIL
-                - url: str - E_URL
-                - establish: date - D_ESTABLISH
-                - dvd_policy_t: str - E_DVD_POLICY_T
-                - dvd_policy_e: str - E_DVD_POLICY_E
 
         Examples
         --------
         >>> from ezyquant import SETDataReader
         >>> sdr = SETDataReader()
         >>> sdr.get_company_info(symbol_list=["BBL", "PTT"])
-           company_id symbol               company_name_t  ...  establish                                       dvd_policy_t                                       dvd_policy_e
-        0           1    BBL  ธนาคารกรุงเทพ จำกัด (มหาชน)  ...  1/12/1944  เมื่อผลประกอบการของธนาคารมีกำไร (โดยมีเงื่อนไข...  Pays when company has profit (with additional ...
-        1         646    PTT    บริษัท ปตท. จำกัด (มหาชน)  ...  1/10/2001  ไม่ต่ำกว่าร้อยละ 25 ของกำไรสุทธิที่เหลือหลังหั...  Not less than 25% of net income after deductio...
+           company_id symbol               company_name_t                       company_name_e
+        0           1    BBL    ธนาคารกรุงเทพ จำกัด (มหาชน)  BANGKOK BANK PUBLIC COMPANY LIMITED
+        1         646    PTT     บริษัท ปตท. จำกัด (มหาชน)           PTT PUBLIC COMPANY LIMITED
         """
         warnings.warn(
             "This function will be deprecated in the future.", DeprecationWarning
@@ -377,16 +367,6 @@ class SETDataReader:
                 func.trim(security_t.c.N_SECURITY).label("symbol"),
                 company_t.c.N_COMPANY_T.label("company_name_t"),
                 company_t.c.N_COMPANY_E.label("company_name_e"),
-                company_t.c.A_COMPANY_T.label("address_t"),
-                company_t.c.A_COMPANY_E.label("address_e"),
-                company_t.c.I_ZIP.label("zip"),
-                company_t.c.E_TEL.label("tel"),
-                company_t.c.E_FAX.label("fax"),
-                company_t.c.E_EMAIL.label("email"),
-                company_t.c.E_URL.label("url"),
-                func.trim(company_t.c.D_ESTABLISH).label("establish"),
-                company_t.c.E_DVD_POLICY_T.label("dvd_policy_t"),
-                company_t.c.E_DVD_POLICY_E.label("dvd_policy_e"),
             )
             .select_from(from_clause)
             .order_by(company_t.c.I_COMPANY)
