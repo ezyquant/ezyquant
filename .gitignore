@@ -161,3 +161,4 @@ cython_debug/
 
 # sphinx
 docs/source/api
+.DS_Store
