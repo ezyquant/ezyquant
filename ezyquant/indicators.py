@@ -348,6 +348,48 @@ class TA:
         return rsi
 
     @staticmethod
+    def rsi_divergence(
+        high: pd.DataFrame,
+        low: pd.DataFrame,
+        close: pd.DataFrame,
+        rsi_period: int = 14,
+        pivot_lookback_left: int = 5,
+        pivot_lookback_right: int = 5,
+    ) -> pd.DataFrame:
+        """Relative Strength Index (RSI) Divergence.
+
+        Parameters
+        ----------
+        high: pd.DataFrame
+            dataset 'High' dataframe.
+        low: pd.DataFrame
+            dataset 'Low' dataframe.
+        close: pd.DataFrame
+            dataset 'Close' dataframe.
+        rsi_period: int = 14
+            n period for RSI.
+        pivot_lookback_left: int = 5
+            n period for pivot lookback left.
+        pivot_lookback_right: int = 5
+            n period for pivot lookback right.
+
+        Returns
+        -------
+        pd.DataFrame
+            Relative Strength Index (RSI) Divergence
+        """
+        return close.apply(
+            lambda x: rsi_divergence(
+                high=high[x.name],
+                low=low[x.name],
+                close=x,
+                rsi_period=rsi_period,
+                pivot_lookback_left=pivot_lookback_left,
+                pivot_lookback_right=pivot_lookback_right,
+            )
+        )
+
+    @staticmethod
     def sto(
         high: pd.DataFrame,
         low: pd.DataFrame,
