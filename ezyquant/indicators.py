@@ -1,7 +1,7 @@
 from typing import Callable, Tuple
 
 import pandas as pd
-from ta.momentum import ROCIndicator, RSIIndicator, StochasticOscillator
+from ta.momentum import ROCIndicator, RSIIndicator, StochasticOscillator, rsi
 from ta.trend import MACD, ADXIndicator, CCIIndicator, IchimokuIndicator, PSARIndicator
 from ta.utils import _ema, _sma
 from ta.volatility import (
@@ -669,21 +669,105 @@ def _apply_t(series: pd.Series, func: Callable) -> pd.DataFrame:
     return df
 
 
-def pivot_high(data: pd.Series, left_bars: int, right_bars: int) -> pd.Series:
-    """This function returns price of the pivot high point.
+"""
+Pivot
+"""
+
+
+def pivot_high(high: pd.Series, left_bars: int, right_bars: int) -> pd.Series:
+    """Returns price of the pivot high point.
 
     It returns 'NaN', if there was no pivot high point.
     """
-    return data.where(
-        data.rolling(window=left_bars + right_bars + 1, center=True).max() == data
+    return high.where(
+        high.rolling(window=left_bars + right_bars + 1, center=True).max() == high
     )
 
 
-def pivot_low(data: pd.Series, left_bars: int, right_bars: int) -> pd.Series:
-    """This function returns price of the pivot low point.
+def pivot_low(low: pd.Series, left_bars: int, right_bars: int) -> pd.Series:
+    """Returns price of the pivot low point.
 
     It returns 'NaN', if there was no pivot low point.
     """
-    return data.where(
-        data.rolling(window=left_bars + right_bars + 1, center=True).min() == data
+    return low.where(
+        low.rolling(window=left_bars + right_bars + 1, center=True).min() == low
     )
+
+
+"""
+RSI Divergence
+"""
+
+
+def rsi_bullish_divergence(
+    low: pd.Series,
+    close: pd.Series,
+    rsi_period: int = 14,
+    pivot_lookback_left: int = 5,
+    pivot_lookback_right: int = 5,
+) -> pd.Series:
+    """Return RSI of the bullish divergence points. Otherwise, return NaN.
+
+    Reference
+    ---------
+    https://www.tradingview.com/support/solutions/43000589127-divergence/#:~:text=A%20divergence%20occurs%20when%20an,is%20weakening%20or%20changing%20direction.
+    """
+    rsi_ = rsi(close, rsi_period)
+    rsi_pl = pivot_low(
+        rsi_, left_bars=pivot_lookback_left, right_bars=pivot_lookback_right
+    ).dropna()
+    low_pl = low.loc[rsi_pl.index]
+    return rsi_.where((rsi_pl > rsi_pl.shift(1)) & (low_pl < low_pl.shift(1)))
+
+
+def rsi_bearish_divergence(
+    high: pd.Series,
+    close: pd.Series,
+    rsi_period: int = 14,
+    pivot_lookback_left: int = 5,
+    pivot_lookback_right: int = 5,
+) -> pd.Series:
+    """Return RSI of the bearish divergence points. Otherwise, return NaN.
+
+    Reference
+    ---------
+    https://www.tradingview.com/support/solutions/43000589127-divergence/#:~:text=A%20divergence%20occurs%20when%20an,is%20weakening%20or%20changing%20direction.
+    """
+    rsi_ = rsi(close, rsi_period)
+    rsi_ph = pivot_high(
+        rsi_, left_bars=pivot_lookback_left, right_bars=pivot_lookback_right
+    ).dropna()
+    high_ph = high.loc[rsi_ph.index]
+    return rsi_.where((rsi_ph < rsi_ph.shift(1)) & (high_ph > high_ph.shift(1)))
+
+
+def rsi_divergence(
+    high: pd.Series,
+    low: pd.Series,
+    close: pd.Series,
+    rsi_period: int = 14,
+    pivot_lookback_left: int = 5,
+    pivot_lookback_right: int = 5,
+):
+    """Return Positive RSI of the bullish divergence points and Negative RSI of
+    the bearish divergence points. Otherwise, return NaN.
+
+    Reference
+    ---------
+    https://www.tradingview.com/support/solutions/43000589127-divergence/#:~:text=A%20divergence%20occurs%20when%20an,is%20weakening%20or%20changing%20direction.
+    """
+    bullish = rsi_bullish_divergence(
+        low=low,
+        close=close,
+        rsi_period=rsi_period,
+        pivot_lookback_left=pivot_lookback_left,
+        pivot_lookback_right=pivot_lookback_right,
+    )
+    bearish = rsi_bearish_divergence(
+        high=high,
+        close=close,
+        rsi_period=rsi_period,
+        pivot_lookback_left=pivot_lookback_left,
+        pivot_lookback_right=pivot_lookback_right,
+    )
+    return bullish.fillna(-bearish)
