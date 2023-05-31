@@ -1,10 +1,13 @@
 import string
+from functools import lru_cache
 
 import numpy as np
 import pandas as pd
 import pytest
+import yfinance as yf
 
 from ezyquant import SETSignalCreator
+from ezyquant import indicators as ind
 from ezyquant import validators as vld
 from ezyquant.errors import InputError
 
@@ -17,6 +20,11 @@ def make_random_df(n_row: int = 1, n_col: int = 1):
     )
     df[df < 0.5] = np.nan
     return df
+
+
+@lru_cache
+def make_aapl_df():
+    return yf.download("AAPL", start="2020-01-01")
 
 
 class TestTa:
@@ -124,6 +132,20 @@ class TestTa:
 
         # Test
         result = SETSignalCreator.ta.rsi(df1)
+
+        # Check
+        self._check(result)
+
+    @pytest.mark.parametrize("n_row", [1, 20])
+    @pytest.mark.parametrize("n_col", [1, 20])
+    def test_rsi_divergence(self, n_row: int, n_col: int):
+        # Mock
+        df1 = make_random_df(n_row=n_row, n_col=n_col)
+        df2 = make_random_df(n_row=n_row, n_col=n_col)
+        df3 = make_random_df(n_row=n_row, n_col=n_col)
+
+        # Test
+        result = SETSignalCreator.ta.rsi_divergence(df1, df2, df3)
 
         # Check
         self._check(result)
@@ -347,3 +369,27 @@ class TestTaEmpty:
         # Test
         with pytest.raises(InputError):
             SETSignalCreator.ta.kc(df, df, df)
+
+
+# TODO: test rsi divergence
+
+
+@pytest.mark.parametrize(
+    "data", [pd.Series([1, 2, 3, 2, 1]), pd.Series([1, 2, 3, 4, 5, 4, 3, 2, 1])]
+)
+def test_pivot_high(data):
+    actual = ind.pivot_high(data, 2, 2)
+    print(actual)
+
+
+def test_rsi_divergence():
+    """This test compare with tradingview's RSI divergence indicator"""
+    data = make_aapl_df()
+
+    actual = ind.rsi_divergence(
+        high=data["High"],
+        low=data["Low"],
+        close=data["Close"],
+    )
+
+    print(actual[actual.notna()])
