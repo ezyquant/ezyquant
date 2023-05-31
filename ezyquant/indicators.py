@@ -667,3 +667,23 @@ def _apply_t(series: pd.Series, func: Callable) -> pd.DataFrame:
         raise InputError(f"{func.__name__} returned an empty dataframe")
     assert isinstance(df, pd.DataFrame)
     return df
+
+
+def pivot_high(data: pd.Series, left_bars: int, right_bars: int) -> pd.Series:
+    """This function returns price of the pivot high point.
+
+    It returns 'NaN', if there was no pivot high point.
+    """
+    return data.where(
+        data.rolling(window=left_bars + right_bars + 1, center=True).max() == data
+    )
+
+
+def pivot_low(data: pd.Series, left_bars: int, right_bars: int) -> pd.Series:
+    """This function returns price of the pivot low point.
+
+    It returns 'NaN', if there was no pivot low point.
+    """
+    return data.where(
+        data.rolling(window=left_bars + right_bars + 1, center=True).min() == data
+    )
