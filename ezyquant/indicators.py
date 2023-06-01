@@ -1,5 +1,6 @@
 from typing import Callable, Tuple
 
+import numpy as np
 import pandas as pd
 from ta.momentum import ROCIndicator, RSIIndicator, StochasticOscillator, rsi
 from ta.trend import MACD, ADXIndicator, CCIIndicator, IchimokuIndicator, PSARIndicator
@@ -386,6 +387,7 @@ class TA:
                 rsi_period=rsi_period,
                 pivot_lookback_left=pivot_lookback_left,
                 pivot_lookback_right=pivot_lookback_right,
+                only_signal=True,
             )
         )
 
@@ -790,9 +792,27 @@ def rsi_divergence(
     rsi_period: int = 14,
     pivot_lookback_left: int = 5,
     pivot_lookback_right: int = 5,
-):
+    only_signal: bool = False,
+) -> pd.Series:
     """Return Positive RSI of the bullish divergence points and Negative RSI of
-    the bearish divergence points. Otherwise, return NaN.
+    the bearish divergence points.
+
+    Parameters
+    ----------
+    high : pd.Series
+        Series of 'high' prices.
+    low : pd.Series
+        Series of 'low' prices.
+    close : pd.Series
+        Series of 'close' prices.
+    rsi_period : int, optional
+        RSI period, by default 14
+    pivot_lookback_left : int, optional
+        Left lookback period for pivot points, by default 5
+    pivot_lookback_right : int, optional
+        Right lookback period for pivot points, by default 5
+    only_signal : bool, optional
+        If True, bullish divergence points are represented by 1 and bearish divergence points are represented by -1. Otherwise, return 0.
 
     Reference
     ---------
@@ -812,4 +832,7 @@ def rsi_divergence(
         pivot_lookback_left=pivot_lookback_left,
         pivot_lookback_right=pivot_lookback_right,
     )
-    return bullish.fillna(-bearish)
+    out = bullish.fillna(-bearish)
+    if only_signal:
+        out = pd.Series(np.sign(out)).fillna(0)
+    return out
