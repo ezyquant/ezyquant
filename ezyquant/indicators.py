@@ -14,6 +14,8 @@ from ta.volatility import (
 
 from .errors import InputError
 
+nan = float("nan")
+
 
 class TA:
     """Trend Indicators."""
@@ -718,24 +720,41 @@ Pivot
 """
 
 
-def pivot_high(high: pd.Series, left_bars: int, right_bars: int) -> pd.Series:
-    """Returns price of the pivot high point.
+def pivot_points_high(high: pd.Series, left_bars: int, right_bars: int) -> pd.Series:
+    """Pivot Points High.
 
-    It returns 'NaN', if there was no pivot high point.
+    High is the highest high in a window of left_bars + right_bars + 1
+    bars, where the center bar is the highest high in a window of
+    right_bars bars.
     """
-    return high.where(
-        high.rolling(window=left_bars + right_bars + 1, center=True).max() == high
-    )
+    max_ = high.rolling(window=left_bars + right_bars + 1, center=True).max()
+    max_right = high.rolling(window=right_bars).max().shift(-right_bars)
+
+    return high.where((max_ == high) & (max_ != max_right))
 
 
-def pivot_low(low: pd.Series, left_bars: int, right_bars: int) -> pd.Series:
-    """Returns price of the pivot low point.
+def pivot_points_low(low: pd.Series, left_bars: int, right_bars: int) -> pd.Series:
+    """Pivot Points Low.
 
-    It returns 'NaN', if there was no pivot low point.
+    Low is the lowest low in a window of left_bars + right_bars + 1
+    bars, where the center bar is the lowest low in a window of
+    right_bars bars.
     """
-    return low.where(
-        low.rolling(window=left_bars + right_bars + 1, center=True).min() == low
-    )
+    min_ = low.rolling(window=left_bars + right_bars + 1, center=True).min()
+    min_right = low.rolling(window=right_bars).min().shift(-right_bars)
+
+    return low.where((min_ == low) & (min_ != min_right))
+
+
+def pivot_points_high_low(
+    high: pd.Series,
+    low: pd.Series,
+    min_change: float = 0.01,
+) -> pd.Series:
+    ph = pivot_points_high(high=high, left_bars=1, right_bars=1)
+    pl = pivot_points_low(low=low, left_bars=1, right_bars=1)
+
+    ...
 
 
 """
@@ -757,7 +776,7 @@ def rsi_bullish_divergence(
     https://www.tradingview.com/support/solutions/43000589127-divergence/#:~:text=A%20divergence%20occurs%20when%20an,is%20weakening%20or%20changing%20direction.
     """
     rsi_ = rsi(close, rsi_period)
-    rsi_pl = pivot_low(
+    rsi_pl = pivot_points_low(
         rsi_, left_bars=pivot_lookback_left, right_bars=pivot_lookback_right
     ).dropna()
     low_pl = low.loc[rsi_pl.index]
@@ -778,7 +797,7 @@ def rsi_bearish_divergence(
     https://www.tradingview.com/support/solutions/43000589127-divergence/#:~:text=A%20divergence%20occurs%20when%20an,is%20weakening%20or%20changing%20direction.
     """
     rsi_ = rsi(close, rsi_period)
-    rsi_ph = pivot_high(
+    rsi_ph = pivot_points_high(
         rsi_, left_bars=pivot_lookback_left, right_bars=pivot_lookback_right
     ).dropna()
     high_ph = high.loc[rsi_ph.index]
