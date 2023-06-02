@@ -2,6 +2,7 @@ from typing import Callable, Tuple
 
 import numpy as np
 import pandas as pd
+from numpy import isnan
 from ta.momentum import ROCIndicator, RSIIndicator, StochasticOscillator, rsi
 from ta.trend import MACD, ADXIndicator, CCIIndicator, IchimokuIndicator, PSARIndicator
 from ta.utils import _ema, _sma
@@ -754,7 +755,39 @@ def pivot_points_high_low(
     ph = pivot_points_high(high=high, left_bars=1, right_bars=1)
     pl = pivot_points_low(low=low, left_bars=1, right_bars=1)
 
-    ...
+    ph = ph.dropna()
+    pl = pl.dropna()
+
+    ph_m = ph.index.max()
+    pl_m = pl.index.max()
+
+    if isnan(ph_m) and isnan(pl_m):
+        d = {}
+    elif ph_m > pl_m or isnan(pl_m):
+        d = {ph_m: ph.loc[ph_m]}
+    elif ph_m < pl_m or isnan(ph_m):
+        d = {pl_m: -pl.loc[pl_m]}  # negative value for low pivot
+    else:
+        d = {}
+
+    while True:
+        k = min(d, default=nan)
+        v = d.get(k, nan)
+
+        if v > 0:
+            v = abs(v)
+            s = pl[(pl.index < k) & (pl < v)]
+            s *= -1
+        else:
+            v = abs(v)
+            s = ph[(ph.index < k) & (ph > v)]
+
+        if len(s) == 0:
+            break
+        else:
+            d[s.index[-1]] = s.iloc[-1]
+
+    return pd.Series(d).reindex(high.index)
 
 
 """
