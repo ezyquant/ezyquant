@@ -5,11 +5,14 @@ import numpy as np
 import pandas as pd
 import pytest
 import yfinance as yf
+from pandas.testing import assert_series_equal
 
 from ezyquant import SETSignalCreator
 from ezyquant import indicators as ind
 from ezyquant import validators as vld
 from ezyquant.errors import InputError
+
+series_empty = pd.Series([], dtype=float)
 
 
 def make_random_df(n_row: int = 1, n_col: int = 1):
@@ -24,7 +27,9 @@ def make_random_df(n_row: int = 1, n_col: int = 1):
 
 @lru_cache
 def make_aapl_df():
-    return yf.download("AAPL", start="2020-01-01")
+    df = yf.download("AAPL", start="2020-01-01")
+    df["Close"] = df["Adj Close"]
+    return df
 
 
 class TestTa:
@@ -371,25 +376,95 @@ class TestTaEmpty:
             SETSignalCreator.ta.kc(df, df, df)
 
 
-# TODO: test rsi divergence
+@pytest.mark.parametrize(
+    "data, expected",
+    [
+        # No pivot
+        (series_empty, series_empty),
+        (pd.Series([1.0]), series_empty),
+        (pd.Series([1.0, 2.0, 3.0, 4.0, 5.0]), series_empty),
+        (pd.Series([5.0, 4.0, 3.0, 2.0, 1.0]), series_empty),
+        (pd.Series([1.0, 2.0, 3.0, 4.0, 3.0]), series_empty),
+        (pd.Series([1.0, 1.0, 1.0, 1.0, 1.0]), series_empty),
+        (pd.Series([1.0, 1.0, 2.0, 2.0, 3.0, 3.0]), series_empty),
+        # One pivot
+        (pd.Series([1.0, 2.0, 3.0, 2.0, 1.0]), pd.Series({2: 3.0})),
+        (pd.Series([1.0, 1.0, 2.0, 2.0, 1.0, 1.0]), pd.Series({3: 2.0})),
+        (pd.Series([1.0, 1.0, 2.0, 1.0, 2.0, 1.0, 1.0]), pd.Series({4: 2.0})),
+        # Two pivots
+        (
+            pd.Series([1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0, 1.0]),
+            pd.Series({2: 3.0, 6: 3.0}),
+        ),
+    ],
+)
+def test_pivot_points_high(data, expected):
+    # Test
+    actual = ind.pivot_points_high(data, 2, 2)
+
+    # Check
+    assert_series_equal(actual.dropna(), expected)
 
 
 @pytest.mark.parametrize(
-    "data", [pd.Series([1, 2, 3, 2, 1]), pd.Series([1, 2, 3, 4, 5, 4, 3, 2, 1])]
+    "data, expected",
+    [
+        # No pivot
+        (series_empty, series_empty),
+        (pd.Series([1.0]), series_empty),
+        (pd.Series([1.0, 2.0, 3.0, 4.0, 5.0]), series_empty),
+        (pd.Series([1.0, 1.0, 1.0, 1.0, 1.0]), series_empty),
+        # One pivot
+        (pd.Series([1.0, 2.0, 1.0]), pd.Series({1: 2.0})),
+        (pd.Series([1.0, 2.0, 3.0, 4.0, 3.0]), pd.Series({3: 4.0})),
+        (pd.Series([1.0, 1.0, 2.0, 2.0, 1.0, 1.0]), pd.Series({3: 2.0})),
+        (pd.Series([1.0, 1.0, 2.0, 2.0, 3.0, 3.0]), series_empty),
+        # Two pivots
+        (
+            pd.Series([1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0, 1.0]),
+            pd.Series({2: 3.0, 4: -1.0, 6: 3.0}),
+        ),
+    ],
 )
-def test_pivot_high(data):
-    actual = ind.pivot_high(data, 2, 2)
-    print(actual)
+def test_pivot_points_high_low(data, expected):
+    # Test
+    actual = ind.pivot_points_high_low(data, data)
+
+    # Check
+    assert_series_equal(actual.dropna(), expected)
 
 
 def test_rsi_divergence():
     """This test compare with tradingview's RSI divergence indicator"""
+    # Mock
     data = make_aapl_df()
 
+    # Test
     actual = ind.rsi_divergence(
         high=data["High"],
         low=data["Low"],
         close=data["Close"],
     )
 
-    print(actual[actual.notna()])
+    # Check
+    expected = pd.Series(
+        {
+            pd.Timestamp("2020-03-12"): 33.550798,
+            pd.Timestamp("2020-03-23"): 34.127448,
+            pd.Timestamp("2020-05-20"): -67.284375,
+            pd.Timestamp("2020-06-23"): -74.839948,
+            pd.Timestamp("2021-01-26"): -69.888877,
+            pd.Timestamp("2021-03-08"): 31.646517,
+            pd.Timestamp("2021-03-30"): 42.716665,
+            pd.Timestamp("2021-07-26"): -67.816579,
+            pd.Timestamp("2021-12-27"): -66.906709,
+            pd.Timestamp("2022-06-13"): 32.981632,
+            pd.Timestamp("2022-09-16"): 38.302628,
+            pd.Timestamp("2022-11-09"): 37.559835,
+            pd.Timestamp("2023-03-06"): -61.346874,
+            pd.Timestamp("2023-04-19"): -66.297255,
+            pd.Timestamp("2023-05-19"): -67.310193,
+        }
+    )
+
+    assert_series_equal(actual.dropna(), expected, check_names=False)
