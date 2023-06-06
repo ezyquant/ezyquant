@@ -27,7 +27,7 @@ def make_random_df(n_row: int = 1, n_col: int = 1):
 
 @lru_cache
 def make_aapl_df():
-    df = yf.download("AAPL", start="2020-01-01", end="2020-01-31", progress=False)
+    df = yf.download("AAPL", start="2020-01-01", end="2020-12-31", progress=False)
     df["Close"] = df["Adj Close"]
     return df
 
@@ -421,11 +421,7 @@ def test_rsi_divergence():
     data = make_aapl_df()
 
     # Test
-    actual = ind.rsi_divergence(
-        high=data["High"],
-        low=data["Low"],
-        close=data["Close"],
-    )
+    actual = ind.rsi_divergence(close=data["Close"])
 
     # Check
     print(actual.dropna())

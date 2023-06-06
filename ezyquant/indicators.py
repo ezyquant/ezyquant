@@ -357,8 +357,8 @@ class TA:
         low: pd.DataFrame,
         close: pd.DataFrame,
         rsi_period: int = 14,
-        pivot_up_thresh: float = 0.01,
-        pivot_down_thresh: float = -0.01,
+        pivot_up_thresh: float = 0.05,
+        pivot_down_thresh: float = -0.05,
     ) -> pd.DataFrame:
         """Relative Strength Index (RSI) Divergence.
 
@@ -372,9 +372,9 @@ class TA:
             dataset 'Close' dataframe.
         rsi_period: int = 14
             n period for RSI.
-        pivot_up_thresh: float = 0.01
+        pivot_up_thresh: float = 0.05
             threshold for pivot up.
-        pivot_down_thresh: float = -0.01
+        pivot_down_thresh: float = -0.05
             threshold for pivot down.
 
         Returns
@@ -384,8 +384,6 @@ class TA:
         """
         out = close.apply(
             lambda x: rsi_divergence(
-                high=high[x.name],
-                low=low[x.name],
                 close=x,
                 rsi_period=rsi_period,
                 pivot_up_thresh=pivot_up_thresh,
@@ -758,12 +756,10 @@ RSI Divergence
 
 
 def rsi_divergence(
-    high: pd.Series,
-    low: pd.Series,
     close: pd.Series,
     rsi_period: int = 14,
-    pivot_up_thresh: float = 0.01,
-    pivot_down_thresh: float = -0.01,
+    pivot_up_thresh: float = 0.05,
+    pivot_down_thresh: float = -0.05,
 ) -> pd.Series:
     """Return Positive RSI of the bullish divergence points and Negative RSI of
     the bearish divergence points.
@@ -779,25 +775,27 @@ def rsi_divergence(
     rsi_period : int, optional
         RSI period, by default 14
     pivot_up_thresh : int
-        Pivot up threshold, by default 0.01
+        Pivot up threshold, by default 0.05
     pivot_down_thresh : int
-        Pivot down threshold, by default -0.01
+        Pivot down threshold, by default -0.05
     """
     # Calculate RSI
     rsi_ = rsi(close, window=rsi_period)
 
-    # Calculate RSI pivot points using zigzag
-    rsi_dropna = rsi_.replace(0, nan).dropna()  # Dropna is needed for zigzag
+    # Calculate pivot points using zigzag
     zz_ = zigzag.peak_valley_pivots(  # type: ignore
-        rsi_dropna,
+        close,
         up_thresh=pivot_up_thresh,
         down_thresh=pivot_down_thresh,
     )
-    rsi_pl = rsi_dropna[zz_ < 0]
-    rsi_ph = rsi_dropna[zz_ > 0]
+    close_pl = close[zz_ < 0]
+    close_ph = close[zz_ > 0]
 
     # Calculate Divergence
-    bull_df = rsi_.where((rsi_pl > rsi_pl.shift(1)) & (low < low.shift(1)))
-    bear_df = rsi_.where((rsi_ph < rsi_ph.shift(1)) & (high > high.shift(1)))
+    rsi_pl = rsi_.loc[close_pl.index]
+    bull_df = rsi_.where((close_pl > close_pl.shift(1)) & (rsi_pl < rsi_pl.shift(1)))
+
+    rsi_ph = rsi_.loc[close_ph.index]
+    bear_df = rsi_.where((close_ph < close_ph.shift(1)) & (rsi_ph > rsi_ph.shift(1)))
 
     return bull_df.fillna(-bear_df)
