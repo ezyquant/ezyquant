@@ -2,7 +2,7 @@ from typing import Callable, Tuple
 
 import numpy as np
 import pandas as pd
-from pandas import isna
+import zigzag
 from ta.momentum import ROCIndicator, RSIIndicator, StochasticOscillator, rsi
 from ta.trend import MACD, ADXIndicator, CCIIndicator, IchimokuIndicator, PSARIndicator
 from ta.utils import _ema, _sma
@@ -357,7 +357,8 @@ class TA:
         low: pd.DataFrame,
         close: pd.DataFrame,
         rsi_period: int = 14,
-        pivot_min_percent_change: float = 0.01,
+        pivot_up_thresh: float = 0.01,
+        pivot_down_thresh: float = -0.01,
     ) -> pd.DataFrame:
         """Relative Strength Index (RSI) Divergence.
 
@@ -371,24 +372,33 @@ class TA:
             dataset 'Close' dataframe.
         rsi_period: int = 14
             n period for RSI.
-        pivot_min_percent_change: float = 0.01
-            minimum percent change for pivot.
+        pivot_up_thresh: float = 0.01
+            threshold for pivot up.
+        pivot_down_thresh: float = -0.01
+            threshold for pivot down.
 
         Returns
         -------
         pd.DataFrame
             Relative Strength Index (RSI) Divergence
         """
-        return close.apply(
+        out = close.apply(
             lambda x: rsi_divergence(
                 high=high[x.name],
                 low=low[x.name],
                 close=x,
                 rsi_period=rsi_period,
-                pivot_min_percent_change=pivot_min_percent_change,
-                only_signal=True,
+                pivot_up_thresh=pivot_up_thresh,
+                pivot_down_thresh=pivot_down_thresh,
             )
         )
+
+        # Return only signal
+        out = np.sign(out)
+
+        assert isinstance(out, pd.DataFrame)
+
+        return out
 
     @staticmethod
     def sto(
@@ -742,102 +752,9 @@ def pivot_points_low(low: pd.Series, left_bars: int, right_bars: int) -> pd.Seri
     return low.where((min_ == low) & (min_ < min_right))
 
 
-def pivot_points_high_low(
-    high: pd.Series,
-    low: pd.Series,
-    min_percent_change: float = 0.01,
-) -> pd.Series:
-    """Pivot Points High Low.
-
-    1. Pivot points high and low are surrounded by each other.
-    2. Pivot points high and low must change at least min percent change from the previous pivot point.
-    """
-    ph = pivot_points_high(high=high, left_bars=1, right_bars=1).dropna()
-    pl = pivot_points_low(low=low, left_bars=1, right_bars=1).dropna()
-
-    ph_m = ph.index.max()
-    pl_m = pl.index.max()
-
-    if isna(ph_m) and isna(pl_m):
-        d = {}
-    elif ph_m > pl_m or isna(pl_m):
-        d = {ph_m: ph.loc[ph_m]}
-    elif ph_m < pl_m or isna(ph_m):
-        d = {pl_m: -pl.loc[pl_m]}  # negative value for low pivot
-    else:
-        d = {}
-
-    pl_mul_change = pl * (1 + min_percent_change)
-    ph_mul_change = ph * (1 - min_percent_change)
-
-    while True:
-        k = min(d, default=nan)
-        v = d.get(k, nan)
-
-        if v > 0:
-            s = -pl[(pl.index < k) & (pl_mul_change < v)]
-        else:
-            s = ph[(ph.index < k) & (ph_mul_change > -v)]
-
-        if len(s) == 0:
-            break
-        else:
-            d[s.index[-1]] = s.iloc[-1]
-
-    return pd.Series(d, index=high.index)
-
-
 """
 RSI Divergence
 """
-
-
-def rsi_bullish_divergence(
-    low: pd.Series,
-    close: pd.Series,
-    rsi_period: int = 14,
-    pivot_min_percent_change: float = 0.01,
-) -> pd.Series:
-    """Return RSI of the bullish divergence points.
-
-    Otherwise, return NaN.
-    """
-    # Calculate RSI
-    rsi_ = rsi(close, rsi_period)
-
-    # Calculate RSI pivot points
-    rsi_pp = pivot_points_high_low(
-        rsi_, rsi_, min_percent_change=pivot_min_percent_change
-    ).dropna()
-    rsi_pl = rsi_pp[rsi_pp < 0]
-
-    # Calculate price pivot points
-    low_pl = low.loc[rsi_pl.index]
-    return rsi_.where((rsi_pl > rsi_pl.shift(1)) & (low_pl < low_pl.shift(1)))
-
-
-def rsi_bearish_divergence(
-    high: pd.Series,
-    close: pd.Series,
-    rsi_period: int = 14,
-    pivot_min_percent_change: float = 0.01,
-) -> pd.Series:
-    """Return RSI of the bearish divergence points.
-
-    Otherwise, return NaN.
-    """
-    # Calculate RSI
-    rsi_ = rsi(close, rsi_period)
-
-    # Calculate RSI pivot points
-    rsi_pp = pivot_points_high_low(
-        rsi_, rsi_, min_percent_change=pivot_min_percent_change
-    ).dropna()
-    rsi_ph = rsi_pp[rsi_pp > 0]
-
-    # Calculate price pivot points
-    high_ph = high.loc[rsi_ph.index]
-    return rsi_.where((rsi_ph < rsi_ph.shift(1)) & (high_ph > high_ph.shift(1)))
 
 
 def rsi_divergence(
@@ -845,8 +762,8 @@ def rsi_divergence(
     low: pd.Series,
     close: pd.Series,
     rsi_period: int = 14,
-    pivot_min_percent_change: float = 0.01,
-    only_signal: bool = False,
+    pivot_up_thresh: float = 0.01,
+    pivot_down_thresh: float = -0.01,
 ) -> pd.Series:
     """Return Positive RSI of the bullish divergence points and Negative RSI of
     the bearish divergence points.
@@ -861,24 +778,26 @@ def rsi_divergence(
         Series of 'close' prices.
     rsi_period : int, optional
         RSI period, by default 14
-    pivot_min_percent_change : int
-        Minimum percent change for pivot points, by default 0.01
-    only_signal : bool, optional
-        If True, bullish divergence points are represented by 1 and bearish divergence points are represented by -1. Otherwise, return 0.
+    pivot_up_thresh : int
+        Pivot up threshold, by default 0.01
+    pivot_down_thresh : int
+        Pivot down threshold, by default -0.01
     """
-    bullish = rsi_bullish_divergence(
-        low=low,
-        close=close,
-        rsi_period=rsi_period,
-        pivot_min_percent_change=pivot_min_percent_change,
+    # Calculate RSI
+    rsi_ = rsi(close, window=rsi_period)
+
+    # Calculate RSI pivot points using zigzag
+    rsi_dropna = rsi_.replace(0, nan).dropna()  # Dropna is needed for zigzag
+    zz_ = zigzag.peak_valley_pivots(  # type: ignore
+        rsi_dropna,
+        up_thresh=pivot_up_thresh,
+        down_thresh=pivot_down_thresh,
     )
-    bearish = rsi_bearish_divergence(
-        high=high,
-        close=close,
-        rsi_period=rsi_period,
-        pivot_min_percent_change=pivot_min_percent_change,
-    )
-    out = bullish.fillna(-bearish)
-    if only_signal:
-        out = pd.Series(np.sign(out)).fillna(0)
-    return out
+    rsi_pl = rsi_dropna[zz_ < 0]
+    rsi_ph = rsi_dropna[zz_ > 0]
+
+    # Calculate Divergence
+    bull_df = rsi_.where((rsi_pl > rsi_pl.shift(1)) & (low < low.shift(1)))
+    bear_df = rsi_.where((rsi_ph < rsi_ph.shift(1)) & (high > high.shift(1)))
+
+    return bull_df.fillna(-bear_df)

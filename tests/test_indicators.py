@@ -416,54 +416,6 @@ def test_pivot_points_high(data, expected):
     assert_series_equal(actual.dropna(), expected)
 
 
-@pytest.mark.parametrize(
-    "data, expected",
-    [
-        # No data
-        (series_empty, series_empty),
-        # One data
-        (pd.Series([1.0]), series_empty),
-        # Data increasing
-        (pd.Series([1.0, 2.0, 3.0, 4.0, 5.0]), series_empty),
-        (pd.Series([1.0, 1.0, 2.0, 2.0, 3.0, 3.0]), pd.Series({3: -2.0})),
-        # Data decreasing
-        (pd.Series([5.0, 4.0, 3.0, 2.0, 1.0]), series_empty),
-        (pd.Series([3.0, 3.0, 2.0, 2.0, 1.0, 1.0]), pd.Series({3: 2.0})),
-        # Pivot edge
-        (pd.Series([1.0, 2.0, 3.0, 4.0, 3.0]), pd.Series({3: 4.0})),
-        (pd.Series([3.0, 4.0, 3.0, 2.0, 1.0]), pd.Series({1: 4.0})),
-        # Data same
-        (pd.Series([1.0, 1.0, 1.0, 1.0, 1.0]), series_empty),
-        # Pivot low
-        (pd.Series([3.0, 2.0, 1.0, 2.0, 3.0]), pd.Series({2: -1.0})),
-        # Pivot high
-        (pd.Series([1.0, 2.0, 3.0, 2.0, 1.0]), pd.Series({2: 3.0})),
-        # Two same pivots
-        (pd.Series([1.0, 1.0, 2.0, 2.0, 1.0, 1.0]), pd.Series({1: -1.0, 3: 2.0})),
-        (
-            pd.Series([1.0, 1.0, 2.0, 1.0, 2.0, 1.0, 1.0]),
-            pd.Series({1: -1.0, 2: 2.0, 3: -1.0, 4: 2.0}),
-        ),
-        # Two pivots high
-        (
-            pd.Series([1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0, 1.0]),
-            pd.Series({2: 3.0, 4: -1.0, 6: 3.0}),
-        ),
-        # Less that min pct change
-        (
-            pd.Series([1.001, 1.002, 1.003, 1.002, 1.001, 1.002, 1.003, 1.002, 1.001]),
-            pd.Series({6: 1.003}),
-        ),
-    ],
-)
-def test_pivot_points_high_low(data, expected):
-    # Test
-    actual = ind.pivot_points_high_low(data, data)
-
-    # Check
-    assert_series_equal(actual.dropna(), expected)
-
-
 def test_rsi_divergence():
     # Mock
     data = make_aapl_df()
@@ -476,4 +428,4 @@ def test_rsi_divergence():
     )
 
     # Check
-    print(actual)
+    print(actual.dropna())
