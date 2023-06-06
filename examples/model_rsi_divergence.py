@@ -5,6 +5,8 @@ from ezyquant import utils as ezutils
 from ezyquant.backtesting import Context
 from ezyquant.reader import SETBusinessDay
 
+nan = float("nan")
+
 # Connect Database
 ez.connect_sqlite("ezyquant.db")
 
@@ -25,17 +27,15 @@ df_low = ssc.get_data("low", "daily")
 df_close = ssc.get_data("close", "daily")
 
 signal_df = ssc.ta.rsi_divergence(high=df_high, low=df_low, close=df_close)
-
-signal_df = signal_df.iloc[14:]
+signal_df = signal_df.replace(0, nan).fillna(method="ffill")
 
 
 # Backtest Algorithm
 def backtest_algorithm(c: Context):
     if c.signal > 0:
         return c.target_pct_port(0.1)
-    elif c.signal < 0:
+    else:
         return c.target_pct_port(0)
-    return 0.0
 
 
 # Backtest
