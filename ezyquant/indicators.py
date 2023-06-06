@@ -792,9 +792,9 @@ def rsi_divergence(
 
     # Calculate Divergence
     rsi_pl = rsi_.loc[close_pl.index]
-    bull_df = rsi_.where((close_pl > close_pl.shift(1)) & (rsi_pl < rsi_pl.shift(1)))
+    bull_df = rsi_.where((close_pl < close_pl.shift(1)) & (rsi_pl > rsi_pl.shift(1)))
 
     rsi_ph = rsi_.loc[close_ph.index]
-    bear_df = rsi_.where((close_ph < close_ph.shift(1)) & (rsi_ph > rsi_ph.shift(1)))
+    bear_df = rsi_.where((close_ph > close_ph.shift(1)) & (rsi_ph < rsi_ph.shift(1)))
 
     return bull_df.fillna(-bear_df)
