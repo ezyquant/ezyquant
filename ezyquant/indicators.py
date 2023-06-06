@@ -393,9 +393,7 @@ class TA:
 
         # Return only signal
         out = np.sign(out)
-
         assert isinstance(out, pd.DataFrame)
-
         return out
 
     @staticmethod
