@@ -752,13 +752,15 @@ def pivot_points_low(low: pd.Series, left_bars: int, right_bars: int) -> pd.Seri
 def pivot_points_high_low(
     high: pd.Series,
     low: pd.Series,
-    min_change: float = 0.01,
+    min_percent_change: float = 0.01,
 ) -> pd.Series:
-    ph = pivot_points_high(high=high, left_bars=1, right_bars=1)
-    pl = pivot_points_low(low=low, left_bars=1, right_bars=1)
+    """Pivot Points High Low.
 
-    ph = ph.dropna()
-    pl = pl.dropna()
+    1. Pivot points high and low are surrounded by each other.
+    2. Pivot points high and low must change at least min percent change from the previous pivot point.
+    """
+    ph = pivot_points_high(high=high, left_bars=1, right_bars=1).dropna()
+    pl = pivot_points_low(low=low, left_bars=1, right_bars=1).dropna()
 
     ph_m = ph.index.max()
     pl_m = pl.index.max()
@@ -772,24 +774,24 @@ def pivot_points_high_low(
     else:
         d = {}
 
+    pl_mul_change = pl * (1 + min_percent_change)
+    ph_mul_change = ph * (1 - min_percent_change)
+
     while True:
         k = min(d, default=nan)
         v = d.get(k, nan)
 
         if v > 0:
-            v = abs(v)
-            s = pl[(pl.index < k) & (pl < v)]
-            s *= -1
+            s = -pl[(pl.index < k) & (pl_mul_change < v)]
         else:
-            v = abs(v)
-            s = ph[(ph.index < k) & (ph > v)]
+            s = ph[(ph.index < k) & (ph_mul_change > -v)]
 
         if len(s) == 0:
             break
         else:
             d[s.index[-1]] = s.iloc[-1]
 
-    return pd.Series(d).reindex(high.index)
+    return pd.Series(d, index=high.index)
 
 
 """
