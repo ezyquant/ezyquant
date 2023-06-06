@@ -724,27 +724,29 @@ Pivot
 def pivot_points_high(high: pd.Series, left_bars: int, right_bars: int) -> pd.Series:
     """Pivot Points High.
 
-    High is the highest high in a window of left_bars + right_bars + 1
-    bars, where the center bar is the highest high in a window of
-    right_bars bars.
+    High is the highest high in a window of left_bars + 1 bars, where
+    the center bar is the highest high in a window of right_bars bars.
+    If price is the same for two or more bars in the window, then the
+    rightmost bar is taken as the highest high.
     """
-    max_ = high.rolling(window=left_bars + right_bars + 1, center=True).max()
+    max_ = high.rolling(window=left_bars + 1).max()
     max_right = high.rolling(window=right_bars).max().shift(-right_bars)
 
-    return high.where((max_ == high) & (max_ != max_right))
+    return high.where((max_ == high) & (max_ > max_right))
 
 
 def pivot_points_low(low: pd.Series, left_bars: int, right_bars: int) -> pd.Series:
     """Pivot Points Low.
 
-    Low is the lowest low in a window of left_bars + right_bars + 1
-    bars, where the center bar is the lowest low in a window of
-    right_bars bars.
+    Low is the lowest low in a window of left_bars + 1 bars, where the
+    center bar is the lowest low in a window of right_bars bars. If
+    price is the same for two or more bars in the window, then the
+    rightmost bar is taken as the lowest low.
     """
-    min_ = low.rolling(window=left_bars + right_bars + 1, center=True).min()
+    min_ = low.rolling(window=left_bars + 1).min()
     min_right = low.rolling(window=right_bars).min().shift(-right_bars)
 
-    return low.where((min_ == low) & (min_ != min_right))
+    return low.where((min_ == low) & (min_ < min_right))
 
 
 def pivot_points_high_low(

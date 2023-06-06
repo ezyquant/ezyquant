@@ -379,16 +379,26 @@ class TestTaEmpty:
 @pytest.mark.parametrize(
     "data, expected",
     [
-        # No pivot
+        # No pivot - no data
         (series_empty, series_empty),
+        # No pivot - one data
         (pd.Series([1.0]), series_empty),
+        # No pivot - data increasing
         (pd.Series([1.0, 2.0, 3.0, 4.0, 5.0]), series_empty),
-        (pd.Series([5.0, 4.0, 3.0, 2.0, 1.0]), series_empty),
-        (pd.Series([1.0, 2.0, 3.0, 4.0, 3.0]), series_empty),
-        (pd.Series([1.0, 1.0, 1.0, 1.0, 1.0]), series_empty),
         (pd.Series([1.0, 1.0, 2.0, 2.0, 3.0, 3.0]), series_empty),
+        # No pivot - data decreasing
+        (pd.Series([5.0, 4.0, 3.0, 2.0, 1.0]), series_empty),
+        (pd.Series([3.0, 3.0, 2.0, 2.0, 1.0, 1.0]), series_empty),
+        # No pivot - pivot edge
+        (pd.Series([1.0, 2.0, 3.0, 4.0, 3.0]), series_empty),
+        (pd.Series([3.0, 4.0, 3.0, 2.0, 1.0]), series_empty),
+        # No pivot - data same
+        (pd.Series([1.0, 1.0, 1.0, 1.0, 1.0]), series_empty),
+        # No pivot - pivot low
+        (pd.Series([3.0, 2.0, 1.0, 2.0, 3.0]), series_empty),
         # One pivot
         (pd.Series([1.0, 2.0, 3.0, 2.0, 1.0]), pd.Series({2: 3.0})),
+        # One pivot - two same pivots
         (pd.Series([1.0, 1.0, 2.0, 2.0, 1.0, 1.0]), pd.Series({3: 2.0})),
         (pd.Series([1.0, 1.0, 2.0, 1.0, 2.0, 1.0, 1.0]), pd.Series({4: 2.0})),
         # Two pivots
