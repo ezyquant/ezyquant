@@ -2,7 +2,7 @@ from typing import Callable, Tuple
 
 import numpy as np
 import pandas as pd
-from numpy import isnan
+from pandas import isna
 from ta.momentum import ROCIndicator, RSIIndicator, StochasticOscillator, rsi
 from ta.trend import MACD, ADXIndicator, CCIIndicator, IchimokuIndicator, PSARIndicator
 from ta.utils import _ema, _sma
@@ -357,8 +357,7 @@ class TA:
         low: pd.DataFrame,
         close: pd.DataFrame,
         rsi_period: int = 14,
-        pivot_lookback_left: int = 5,
-        pivot_lookback_right: int = 5,
+        pivot_min_percent_change: float = 0.01,
     ) -> pd.DataFrame:
         """Relative Strength Index (RSI) Divergence.
 
@@ -372,10 +371,8 @@ class TA:
             dataset 'Close' dataframe.
         rsi_period: int = 14
             n period for RSI.
-        pivot_lookback_left: int = 5
-            n period for pivot lookback left.
-        pivot_lookback_right: int = 5
-            n period for pivot lookback right.
+        pivot_min_percent_change: float = 0.01
+            minimum percent change for pivot.
 
         Returns
         -------
@@ -388,8 +385,7 @@ class TA:
                 low=low[x.name],
                 close=x,
                 rsi_period=rsi_period,
-                pivot_lookback_left=pivot_lookback_left,
-                pivot_lookback_right=pivot_lookback_right,
+                pivot_min_percent_change=pivot_min_percent_change,
                 only_signal=True,
             )
         )
@@ -765,11 +761,11 @@ def pivot_points_high_low(
     ph_m = ph.index.max()
     pl_m = pl.index.max()
 
-    if isnan(ph_m) and isnan(pl_m):
+    if isna(ph_m) and isna(pl_m):
         d = {}
-    elif ph_m > pl_m or isnan(pl_m):
+    elif ph_m > pl_m or isna(pl_m):
         d = {ph_m: ph.loc[ph_m]}
-    elif ph_m < pl_m or isnan(ph_m):
+    elif ph_m < pl_m or isna(ph_m):
         d = {pl_m: -pl.loc[pl_m]}  # negative value for low pivot
     else:
         d = {}
@@ -803,19 +799,22 @@ def rsi_bullish_divergence(
     low: pd.Series,
     close: pd.Series,
     rsi_period: int = 14,
-    pivot_lookback_left: int = 5,
-    pivot_lookback_right: int = 5,
+    pivot_min_percent_change: float = 0.01,
 ) -> pd.Series:
-    """Return RSI of the bullish divergence points. Otherwise, return NaN.
+    """Return RSI of the bullish divergence points.
 
-    Reference
-    ---------
-    https://www.tradingview.com/support/solutions/43000589127-divergence/#:~:text=A%20divergence%20occurs%20when%20an,is%20weakening%20or%20changing%20direction.
+    Otherwise, return NaN.
     """
+    # Calculate RSI
     rsi_ = rsi(close, rsi_period)
-    rsi_pl = pivot_points_low(
-        rsi_, left_bars=pivot_lookback_left, right_bars=pivot_lookback_right
+
+    # Calculate RSI pivot points
+    rsi_pp = pivot_points_high_low(
+        rsi_, rsi_, min_percent_change=pivot_min_percent_change
     ).dropna()
+    rsi_pl = rsi_pp[rsi_pp < 0]
+
+    # Calculate price pivot points
     low_pl = low.loc[rsi_pl.index]
     return rsi_.where((rsi_pl > rsi_pl.shift(1)) & (low_pl < low_pl.shift(1)))
 
@@ -824,19 +823,22 @@ def rsi_bearish_divergence(
     high: pd.Series,
     close: pd.Series,
     rsi_period: int = 14,
-    pivot_lookback_left: int = 5,
-    pivot_lookback_right: int = 5,
+    pivot_min_percent_change: float = 0.01,
 ) -> pd.Series:
-    """Return RSI of the bearish divergence points. Otherwise, return NaN.
+    """Return RSI of the bearish divergence points.
 
-    Reference
-    ---------
-    https://www.tradingview.com/support/solutions/43000589127-divergence/#:~:text=A%20divergence%20occurs%20when%20an,is%20weakening%20or%20changing%20direction.
+    Otherwise, return NaN.
     """
+    # Calculate RSI
     rsi_ = rsi(close, rsi_period)
-    rsi_ph = pivot_points_high(
-        rsi_, left_bars=pivot_lookback_left, right_bars=pivot_lookback_right
+
+    # Calculate RSI pivot points
+    rsi_pp = pivot_points_high_low(
+        rsi_, rsi_, min_percent_change=pivot_min_percent_change
     ).dropna()
+    rsi_ph = rsi_pp[rsi_pp > 0]
+
+    # Calculate price pivot points
     high_ph = high.loc[rsi_ph.index]
     return rsi_.where((rsi_ph < rsi_ph.shift(1)) & (high_ph > high_ph.shift(1)))
 
@@ -846,8 +848,7 @@ def rsi_divergence(
     low: pd.Series,
     close: pd.Series,
     rsi_period: int = 14,
-    pivot_lookback_left: int = 5,
-    pivot_lookback_right: int = 5,
+    pivot_min_percent_change: float = 0.01,
     only_signal: bool = False,
 ) -> pd.Series:
     """Return Positive RSI of the bullish divergence points and Negative RSI of
@@ -863,30 +864,22 @@ def rsi_divergence(
         Series of 'close' prices.
     rsi_period : int, optional
         RSI period, by default 14
-    pivot_lookback_left : int, optional
-        Left lookback period for pivot points, by default 5
-    pivot_lookback_right : int, optional
-        Right lookback period for pivot points, by default 5
+    pivot_min_percent_change : int
+        Minimum percent change for pivot points, by default 0.01
     only_signal : bool, optional
         If True, bullish divergence points are represented by 1 and bearish divergence points are represented by -1. Otherwise, return 0.
-
-    Reference
-    ---------
-    https://www.tradingview.com/support/solutions/43000589127-divergence/#:~:text=A%20divergence%20occurs%20when%20an,is%20weakening%20or%20changing%20direction.
     """
     bullish = rsi_bullish_divergence(
         low=low,
         close=close,
         rsi_period=rsi_period,
-        pivot_lookback_left=pivot_lookback_left,
-        pivot_lookback_right=pivot_lookback_right,
+        pivot_min_percent_change=pivot_min_percent_change,
     )
     bearish = rsi_bearish_divergence(
         high=high,
         close=close,
         rsi_period=rsi_period,
-        pivot_lookback_left=pivot_lookback_left,
-        pivot_lookback_right=pivot_lookback_right,
+        pivot_min_percent_change=pivot_min_percent_change,
     )
     out = bullish.fillna(-bearish)
     if only_signal:
