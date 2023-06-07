@@ -2,8 +2,6 @@ import re
 
 from setuptools import find_packages, setup
 
-NAME = "ezyquant"
-
 VERSIONFILE = "ezyquant/_version.py"
 verstrline = open(VERSIONFILE, "rt").read()
 VSRE = r"^__version__ = ['\"]([^'\"]*)['\"]"
@@ -14,8 +12,8 @@ else:
     raise RuntimeError("Unable to find version string in %s." % (VERSIONFILE,))
 
 setup(
-    name=NAME,
-    packages=find_packages(include=[NAME, f"{NAME}.*"]),
+    name="ezyquant",
+    packages=find_packages(include=["ezyquant", "ezyquant.*"]),
     version=verstr,
     description="Powerful backtest python library for Thai stocks",
     long_description="Powerful backtest python library for Thai stocks",
@@ -26,7 +24,7 @@ setup(
     maintainer_email="admin@fintech.co.th",
     python_requires=">=3.8",
     install_requires=[
-        "pandas>=1.3",
+        "pandas>=1.5",
         "sqlalchemy>=2.0",
         "psycopg2-binary>=2.9",
         "ta>=0.10",
