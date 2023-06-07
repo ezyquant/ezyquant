@@ -27,15 +27,21 @@ df_low = ssc.get_data("low", "daily")
 df_close = ssc.get_data("close", "daily")
 
 signal_df = ssc.ta.rsi_divergence(high=df_high, low=df_low, close=df_close)
-signal_df = signal_df.replace(0, nan).fillna(method="ffill")
 
 
 # Backtest Algorithm
 def backtest_algorithm(c: Context):
+    # Buy signal
     if c.signal > 0:
         return c.target_pct_port(0.1)
-    else:
+    # Take profit
+    if 1.1 * c.cost_price < c.close_price:
         return c.target_pct_port(0)
+    # Stop loss
+    if c.close_price < 0.95 * c.cost_price:
+        return c.target_pct_port(0)
+
+    return 0
 
 
 # Backtest
