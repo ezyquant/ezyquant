@@ -7,14 +7,17 @@ typing_extensions~=4.4
 quantstats~=0.0
 zigzag~=0.3.2 # TODO: use pandas_ta instead when it's released
 
-# Dev
-pytest
-pytest-kwparametrize
-isort
-black[jupyter]
-docformatter
-autoflake
-sphinx
-sphinx-book-theme
-pytest-xdist[psutil]
-ezyquant-execution
+# Sytle
+isort~=5.0
+black~=22.0
+docformatter~=1.0
+autoflake~=1.0
+
+# Test
+pytest~=7.0
+pytest-kwparametrize~=0.0
+pytest-xdist[psutil]~=3.0
+
+# Doc
+sphinx~=6.2
+sphinx-book-theme~=1.0
