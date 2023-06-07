@@ -80,5 +80,6 @@ html_theme_options = {
     "use_download_button": True,
     "use_sidenotes": True,
     "use_fullscreen_button": False,
+    "home_page_in_toc": True,
     "show_navbar_depth": 2,
 }
