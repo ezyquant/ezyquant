@@ -1,6 +1,16 @@
-# Ezyquant
+<div align="center">
+  <img src="docs\source\_static\logo.svg" style="width: 50%;">
+</div>
 
-Powerful backtest python library for Thai stocks
+-----------------
+
+# Ezyquant: Powerful backtest python library for Thai stocks
+
+[![PyPI](https://img.shields.io/pypi/v/ezyquant?label=PyPI)](https://pydoc.ezyquant.com/)
+[![PyPI - Downloads](https://img.shields.io/pypi/dm/ezyquant?label=PyPI%20Downloads)](https://pepy.tech/project/ezyquant)
+[![License](https://img.shields.io/pypi/l/ezyquant.svg)](https://github.com/ezyquant/ezyquant/blob/main/LICENSE.txt)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
 
 ## Features
 
@@ -10,19 +20,19 @@ Powerful backtest python library for Thai stocks
 
 ## Installation
 
-```
+```bash
 pip install ezyquant
 ```
 
 or
 
-```
+```bash
 pip install git+https://github.com/ezyquant/ezyquant
 ```
 
 ## Quick Example
 
-```
+```python
 import pandas as pd
 
 import ezyquant as ez
@@ -60,7 +70,7 @@ report = backtest(
 
 Backtest report:
 
-```
+```python
                                port_value port_value_with_dividend
 pct_net_profit                   0.024916                 0.024916
 cagr                             0.025055                 0.025055
