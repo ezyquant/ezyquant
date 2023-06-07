@@ -1,5 +1,7 @@
 .PHONY: install
 install:
+# Fix zigzag
+	pip install -U Cython numpy
 	pip install -U -r requirements-dev.txt
 
 .PHONY: test
