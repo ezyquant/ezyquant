@@ -147,11 +147,9 @@ class TestTa:
     def test_rsi_divergence(self, n_row: int, n_col: int):
         # Mock
         df1 = make_random_df(n_row=n_row, n_col=n_col)
-        df2 = make_random_df(n_row=n_row, n_col=n_col)
-        df3 = make_random_df(n_row=n_row, n_col=n_col)
 
         # Test
-        result = SETSignalCreator.ta.rsi_divergence(df1, df2, df3)
+        result = SETSignalCreator.ta.rsi_divergence(df1)
 
         # Check
         self._check(result)

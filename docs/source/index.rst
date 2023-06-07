@@ -1,7 +1,16 @@
 Ezyquant
 ========
 
-**Version**: |release| **Date**: |today|
+Powerful backtest python library for Thai stocks
+
+.. image:: https://img.shields.io/pypi/v/ezyquant?style=for-the-badge
+   :alt: PyPI
+   :target: https://pypi.org/project/ezyquant/
+.. image:: https://img.shields.io/pypi/dm/ezyquant?label=PyPI%20Downloads&style=for-the-badge
+   :alt: PyPI - Downloads
+   :target: https://pepy.tech/project/ezyquant
+
+|
 
 .. toctree::
    :maxdepth: 2

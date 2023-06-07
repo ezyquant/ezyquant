@@ -61,7 +61,7 @@ exclude_patterns = []
 # a list of builtin themes.
 #
 html_theme = "sphinx_book_theme"
-html_logo = "_static/logo.svg"
+html_logo = "_static/logo-text-right.svg"
 html_title = project
 html_copy_source = True
 html_favicon = "_static/logo.svg"

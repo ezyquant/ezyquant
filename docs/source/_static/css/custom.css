@@ -2,8 +2,3 @@
 .bd-sidebar-primary {
   flex-basis: 25%;
 }
-
-/* Reduce Logo Size */
-.navbar-brand img {
-  max-width: 80%;
-}
