@@ -14,8 +14,8 @@ Globlex
 - หมายเลขบัญชี - หมายเลขบัญชี 7 หลักของ Globlex
 - หมายเลขโทรศัพท์ - หมายเลขโทรศัพท์ 10 หลักที่ลงทะเบียนกับ Globlex
 
-  ..  image:: ../_static/gbs_login.PNG
+  ..  image:: ../_static/gbs_login.png
 
 2. Download Database
 
-   ..  image:: ../_static/gbs_download.PNG
+   ..  image:: ../_static/gbs_download.png

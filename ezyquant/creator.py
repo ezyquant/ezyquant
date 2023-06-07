@@ -193,7 +193,7 @@ class SETSignalCreator:
         ...     timeframe="daily",
         ...     value_by="stock",
         ...     method="constant",
-        ...     period=0,
+        ...     period=1,
         ...     shift=0,
         ... )
                       COM7  MALEE
@@ -214,7 +214,7 @@ class SETSignalCreator:
         ...     timeframe="quarterly",
         ...     value_by="stock",
         ...     method="constant",
-        ...     period=0,
+        ...     period=1,
         ...     shift=0,
         ... )
                           COM7     MALEE

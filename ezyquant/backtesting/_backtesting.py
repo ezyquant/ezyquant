@@ -13,6 +13,8 @@ from .trade import SETTrade
 position_df_columns = ["timestamp"] + [i.name for i in fields(SETPosition)]
 trade_df_columns = [i.name for i in fields(SETTrade)]
 
+nan = float("nan")
+
 
 def _backtest(
     initial_cash: float,
@@ -146,7 +148,7 @@ def _backtest(
                 ctx.cost_price = pos.cost_price
             else:
                 ctx.volume = 0.0
-                ctx.cost_price = 0.0
+                ctx.cost_price = nan
 
             trade_volume = backtest_algorithm(ctx)
 

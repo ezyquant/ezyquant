@@ -66,13 +66,6 @@ html_title = project
 html_copy_source = True
 html_favicon = "_static/logo.svg"
 
-html_sidebars = {
-    "**": [
-        "sidebar-logo.html",
-        "search-field.html",
-        "sbt-sidebar-nav.html",
-    ]
-}
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
@@ -87,5 +80,5 @@ html_theme_options = {
     "use_download_button": True,
     "use_sidenotes": True,
     "use_fullscreen_button": False,
-    "logo_only": True,
+    "show_navbar_depth": 2,
 }

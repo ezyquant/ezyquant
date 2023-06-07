@@ -24,7 +24,7 @@ setup(
     url="https://www.ezyquant.com/",
     maintainer="Fintech (Thailand) Company Limited",
     maintainer_email="admin@fintech.co.th",
-    python_requires=">=3.8.6",
+    python_requires=">=3.8",
     install_requires=[
         "pandas>=1.3",
         "sqlalchemy>=2.0",
@@ -33,6 +33,7 @@ setup(
         "XlsxWriter>=3.0",
         "typing_extensions>=4.4",
         "quantstats>=0.0",
+        "zigzag>=0.3.2",
     ],
     license="The MIT License (MIT)",
     classifiers=[
