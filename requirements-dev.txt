@@ -1,11 +1,11 @@
-pandas>=1.3
-sqlalchemy>=2.0
-psycopg2-binary>=2.9
-ta>=0.10
-XlsxWriter>=3.0
-typing_extensions>=4.4
-quantstats>=0.0
-zigzag # TODO: use pandas_ta instead when it's released
+pandas~=1.3
+sqlalchemy~=2.0
+psycopg2-binary~=2.9
+ta~=0.10
+XlsxWriter~=3.0
+typing_extensions~=4.4
+quantstats~=0.0
+zigzag~=0.3.2 # TODO: use pandas_ta instead when it's released
 
 # Dev
 pytest
