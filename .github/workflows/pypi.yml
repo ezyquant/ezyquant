@@ -18,7 +18,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          make Install
+          pip install --upgrade pip
+          make install
 
       - name: Build a binary wheel and a source tarball
         run: |

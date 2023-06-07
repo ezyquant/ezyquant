@@ -19,6 +19,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          pip install --upgrade pip
           make install
 
       - name: Sphinx Build
