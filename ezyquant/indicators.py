@@ -1,3 +1,4 @@
+import operator
 from typing import Callable, Tuple
 
 import numpy as np
@@ -791,10 +792,36 @@ def rsi_divergence(
     close_ph = close[zz_ > 0]
 
     # Calculate Divergence
-    rsi_pl = rsi_.loc[close_pl.index]
-    bull_df = rsi_.where((close_pl < close_pl.shift(1)) & (rsi_pl > rsi_pl.shift(1)))
+    bullish = _divergence(close_pl, rsi_, bullish=True)
+    bearish = _divergence(close_ph, rsi_, bullish=False)
 
-    rsi_ph = rsi_.loc[close_ph.index]
-    bear_df = rsi_.where((close_ph > close_ph.shift(1)) & (rsi_ph < rsi_ph.shift(1)))
+    return bullish.fillna(-bearish)
 
-    return bull_df.fillna(-bear_df)
+
+def _divergence(
+    price_pivot: pd.Series, indicator: pd.Series, bullish: bool = True
+) -> pd.Series:
+    """Divergence.
+
+    Parameters
+    ----------
+    price_pivot : pd.Series
+        Price pivot points. low for bullish divergence and high for bearish divergence.
+    indicator : pd.Series
+        indicator series.
+    bullish : bool, optional
+        bullish or bearish divergence, by default True
+
+    Returns
+    -------
+    pd.Series
+        Divergence series. Not NaN when divergence occurs.
+    """
+    indicator_pivot = indicator[price_pivot.index]
+
+    op = operator.lt if bullish else operator.gt
+
+    return indicator.where(
+        op(price_pivot, price_pivot.shift(1))
+        & op(indicator_pivot.shift(1), indicator_pivot)
+    )
