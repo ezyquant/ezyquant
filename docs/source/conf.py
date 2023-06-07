@@ -61,7 +61,7 @@ exclude_patterns = []
 # a list of builtin themes.
 #
 html_theme = "sphinx_book_theme"
-html_logo = "_static/logo.svg"
+html_logo = "_static/logo-text-right.svg"
 html_title = project
 html_copy_source = True
 html_favicon = "_static/logo.svg"
@@ -80,6 +80,5 @@ html_theme_options = {
     "use_download_button": True,
     "use_sidenotes": True,
     "use_fullscreen_button": False,
-    "home_page_in_toc": True,
     "show_navbar_depth": 2,
 }

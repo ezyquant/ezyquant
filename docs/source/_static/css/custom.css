@@ -2,13 +2,3 @@
 .bd-sidebar-primary {
   flex-basis: 25%;
 }
-
-/* Reduce Logo Size */
-.navbar-brand img {
-  max-width: 50%;
-}
-
-/* Increase home_page_in_toc Font Size */
-.bd-sidenav__home-link {
-  font-size: x-large;
-}
