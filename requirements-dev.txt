@@ -5,15 +5,16 @@ ta>=0.10
 XlsxWriter>=3.0
 typing_extensions>=4.4
 quantstats>=0.0
+zigzag # TODO: use pandas_ta instead when it's released
 
 # Dev
-pytest>=7,<8
-pytest-kwparametrize>=0,<1
-isort>=5,<6
-black>=22,<23
-docformatter>=1,<2
-autoflake>=1,<2
-sphinx>=4,<5
-sphinx-book-theme>=0,<1
-pytest-xdist[psutil]>=3,<4
+pytest
+pytest-kwparametrize
+isort
+black[jupyter]
+docformatter
+autoflake
+sphinx
+sphinx-book-theme
+pytest-xdist[psutil]
 ezyquant-execution

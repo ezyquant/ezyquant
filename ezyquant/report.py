@@ -673,7 +673,7 @@ class SETBacktestReport:
     @property
     @return_nan_on_failure
     def avg_bar_held(self) -> float:
-        """sum of bars in trades / number of trades."""
+        """Sum of bars in trades / number of trades."""
         df = self.summary_trade_df
         return df["hold_days"].mean()
 
