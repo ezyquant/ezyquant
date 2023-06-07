@@ -5,7 +5,7 @@ ta~=0.10
 XlsxWriter~=3.0
 typing_extensions~=4.4
 quantstats~=0.0
-zigzag~=0.3.2 # TODO: use pandas_ta instead when it's released
+zigzag==0.2.2 # TODO: use pandas_ta instead when it's released
 
 # Sytle
 isort~=5.0
@@ -22,3 +22,9 @@ pytest-xdist[psutil]~=3.0
 sphinx~=6.2
 sphinx-book-theme~=1.0
 ezyquant-execution
+
+# Build
+wheel
+setuptools
+twine
+build

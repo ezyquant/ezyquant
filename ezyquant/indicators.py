@@ -354,8 +354,6 @@ class TA:
 
     @staticmethod
     def rsi_divergence(
-        high: pd.DataFrame,
-        low: pd.DataFrame,
         close: pd.DataFrame,
         rsi_period: int = 14,
         pivot_up_thresh: float = 0.05,
@@ -365,10 +363,6 @@ class TA:
 
         Parameters
         ----------
-        high: pd.DataFrame
-            dataset 'High' dataframe.
-        low: pd.DataFrame
-            dataset 'Low' dataframe.
         close: pd.DataFrame
             dataset 'Close' dataframe.
         rsi_period: int = 14
@@ -784,7 +778,7 @@ def rsi_divergence(
 
     # Calculate pivot points using zigzag
     zz_ = zigzag.peak_valley_pivots(  # type: ignore
-        close,
+        close.to_numpy(),
         up_thresh=pivot_up_thresh,
         down_thresh=pivot_down_thresh,
     )

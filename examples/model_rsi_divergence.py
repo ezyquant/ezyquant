@@ -26,7 +26,7 @@ df_high = ssc.get_data("high", "daily")
 df_low = ssc.get_data("low", "daily")
 df_close = ssc.get_data("close", "daily")
 
-signal_df = ssc.ta.rsi_divergence(high=df_high, low=df_low, close=df_close)
+signal_df = ssc.ta.rsi_divergence(close=df_close)
 
 
 # Backtest Algorithm

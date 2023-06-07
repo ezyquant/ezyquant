@@ -15,7 +15,7 @@ else:
 
 setup(
     name=NAME,
-    packages=find_packages(include=["ezyquant", "ezyquant.*"]),
+    packages=find_packages(include=[NAME, f"{NAME}.*"]),
     version=verstr,
     description="Powerful backtest python library for Thai stocks",
     long_description="Powerful backtest python library for Thai stocks",
@@ -33,7 +33,7 @@ setup(
         "XlsxWriter>=3.0",
         "typing_extensions>=4.4",
         "quantstats>=0.0",
-        "zigzag>=0.3.2",
+        "zigzag==0.2.2",
     ],
     license="The MIT License (MIT)",
     classifiers=[

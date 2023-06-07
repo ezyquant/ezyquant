@@ -18,7 +18,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install --U build twine
+          make Install
 
       - name: Build a binary wheel and a source tarball
         run: |
