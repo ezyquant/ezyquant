@@ -27,9 +27,9 @@ def rsi_divergence(
         Series of 'close' prices.
     rsi_period : int, optional
         RSI period, by default 14
-    pivot_up_thresh : int
+    pivot_up_thresh : float
         Pivot up threshold, by default 0.05
-    pivot_down_thresh : int
+    pivot_down_thresh : float
         Pivot down threshold, by default -0.05
     """
     # Calculate RSI
