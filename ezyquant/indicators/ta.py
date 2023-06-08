@@ -344,7 +344,7 @@ class TA:
         Returns
         -------
         pd.DataFrame
-            Zig Zag value.
+            Zig Zag value. If the value is 1, it means high. If the value is -1, it means low.
         """
         out = close.apply(
             lambda x: peak_valley_pivots_candlestick(
@@ -420,7 +420,7 @@ class TA:
         Returns
         -------
         pd.DataFrame
-            Relative Strength Index (RSI) Divergence
+            Relative Strength Index (RSI) Divergence. If bullish divergence, return 1. If bearish divergence, return -1.
         """
         out = close.apply(
             lambda x: rsi_divergence(

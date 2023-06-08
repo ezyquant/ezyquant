@@ -112,6 +112,7 @@ class TestTa:
         df1 = make_random_df(n_row=n_row, n_col=n_col)
         df2 = make_random_df(n_row=n_row, n_col=n_col)
         df3 = make_random_df(n_row=n_row, n_col=n_col)
+
         # Test
         result = SETSignalCreator.ta.psar(df1, df2, df3)
 
@@ -126,6 +127,7 @@ class TestTa:
         df1 = make_random_df(n_row=n_row, n_col=n_col)
         df2 = make_random_df(n_row=n_row, n_col=n_col)
         df3 = make_random_df(n_row=n_row, n_col=n_col)
+
         # Test
         result = SETSignalCreator.ta.zigzag(df1, df2, df3)
 
