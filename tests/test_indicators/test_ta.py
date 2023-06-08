@@ -121,6 +121,19 @@ class TestTa:
 
     @pytest.mark.parametrize("n_row", [1, 20])
     @pytest.mark.parametrize("n_col", [1, 20])
+    def test_zigzag(self, n_row: int, n_col: int):
+        # Mock
+        df1 = make_random_df(n_row=n_row, n_col=n_col)
+        df2 = make_random_df(n_row=n_row, n_col=n_col)
+        df3 = make_random_df(n_row=n_row, n_col=n_col)
+        # Test
+        result = SETSignalCreator.ta.zigzag(df1, df2, df3)
+
+        # Check
+        self._check(result)
+
+    @pytest.mark.parametrize("n_row", [1, 20])
+    @pytest.mark.parametrize("n_col", [1, 20])
     def test_rsi(self, n_row: int, n_col: int):
         # Mock
         df1 = make_random_df(n_row=n_row, n_col=n_col)
