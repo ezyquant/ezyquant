@@ -1,4 +1,4 @@
-[![Logo](docs/source/_static/logo-text-right.svg)](https://pydoc.ezyquant.com/)
+[![Logo](https://pydoc.ezyquant.com/_static/logo-text-right.svg)](https://pydoc.ezyquant.com/)
 
 # EzyQuant: Powerful Python backtesting for Thai stocks
 
@@ -7,6 +7,7 @@
 [![License](https://img.shields.io/pypi/l/ezyquant.svg)](https://github.com/ezyquant/ezyquant/blob/main/LICENSE.txt)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
+[![Formatter: docformatter](https://img.shields.io/badge/%20formatter-docformatter-fedcba.svg)](https://github.com/PyCQA/docformatter)
 
 ## Features
 
