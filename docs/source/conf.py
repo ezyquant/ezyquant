@@ -20,7 +20,7 @@ import ezyquant as ez
 
 # -- Project information -----------------------------------------------------
 
-project = "Ezyquant"
+project = "EzyQuant"
 author = "Fintech (Thailand) Company Limited"
 copyright = (
     f"2022-{datetime.now().year}, Thailand Capital Market Development Fund (CMDF)"
