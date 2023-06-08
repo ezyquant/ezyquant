@@ -12,8 +12,8 @@ from ta.volatility import (
     KeltnerChannel,
 )
 
-from ._indicator.rsi_divergence import rsi_divergence
-from .errors import InputError
+from ..errors import InputError
+from .rsi_divergence import rsi_divergence
 
 nan = float("nan")
 
