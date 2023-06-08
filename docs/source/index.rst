@@ -1,7 +1,7 @@
-Ezyquant
+EzyQuant
 ========
 
-Powerful backtest python library for Thai stocks
+Powerful Python backtesting for Thai stocks
 
 .. image:: https://img.shields.io/pypi/v/ezyquant?style=for-the-badge
    :alt: PyPI

@@ -14,6 +14,7 @@ from ta.volatility import (
 
 from ..errors import InputError
 from .rsi_divergence import rsi_divergence
+from .zigzag import peak_valley_pivots_candlestick
 
 nan = float("nan")
 
@@ -317,6 +318,45 @@ class TA:
 
         return psar, psar_down, psar_down_indicator, psar_up, psar_up_indicator
 
+    @staticmethod
+    def zigzag(
+        high: pd.DataFrame,
+        low: pd.DataFrame,
+        close: pd.DataFrame,
+        up_thresh: float = 0.05,
+        down_thresh: float = -0.05,
+    ) -> pd.DataFrame:
+        """Zig Zag.
+
+        Parameters
+        ----------
+        high: pd.DataFrame
+            dataset 'High' dataframe.
+        low: pd.DataFrame
+            dataset 'Low' dataframe.
+        close: pd.DataFrame
+            dataset 'Close' dataframe.
+        up_thresh: float = 0.05
+            up threshold value.
+        down_thresh: float = -0.05
+            down threshold value.
+
+        Returns
+        -------
+        pd.DataFrame
+            Zig Zag value. If the value is 1, it means high. If the value is -1, it means low.
+        """
+        out = close.apply(
+            lambda x: peak_valley_pivots_candlestick(
+                close=x,
+                high=high[x.name],
+                low=low[x.name],
+                up_thresh=up_thresh,
+                down_thresh=down_thresh,
+            )
+        )
+        return out
+
     """Momentum Indicators"""
 
     @staticmethod
@@ -380,7 +420,7 @@ class TA:
         Returns
         -------
         pd.DataFrame
-            Relative Strength Index (RSI) Divergence
+            Relative Strength Index (RSI) Divergence. If bullish divergence, return 1. If bearish divergence, return -1.
         """
         out = close.apply(
             lambda x: rsi_divergence(
@@ -397,6 +437,7 @@ class TA:
         out = np.sign(out)
         assert isinstance(out, pd.DataFrame)
         out = out.fillna(0)
+
         return out
 
     @staticmethod
