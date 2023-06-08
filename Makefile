@@ -1,7 +1,5 @@
 .PHONY: install
 install:
-# Fix zigzag
-	pip install -U Cython numpy wheel
 	pip install -U -r requirements-dev.txt
 
 .PHONY: test
@@ -16,7 +14,7 @@ format:
 
 	docformatter -i ezyquant/reader.py
 	docformatter -i ezyquant/creator.py
-	docformatter -i ezyquant/indicators.py
+	docformatter -i ezyquant/indicators/ta.py
 	docformatter -i ezyquant/report.py
 	docformatter -i ezyquant/utils.py
 	docformatter -i ezyquant/backtesting/_backtesting.py
