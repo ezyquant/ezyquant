@@ -1,11 +1,14 @@
 import operator
 
 import pandas as pd
-import zigzag
 from ta.momentum import rsi
+
+from . import zigzag
 
 
 def rsi_divergence(
+    high: pd.Series,
+    low: pd.Series,
     close: pd.Series,
     rsi_period: int = 14,
     pivot_up_thresh: float = 0.05,
@@ -33,8 +36,10 @@ def rsi_divergence(
     rsi_ = rsi(close, window=rsi_period)
 
     # Calculate pivot points using zigzag
-    zz_ = zigzag.peak_valley_pivots(  # type: ignore
-        close.to_numpy(),
+    zz_ = zigzag.peak_valley_pivots_candlestick(
+        close=close,
+        high=high,
+        low=low,
         up_thresh=pivot_up_thresh,
         down_thresh=pivot_down_thresh,
     )

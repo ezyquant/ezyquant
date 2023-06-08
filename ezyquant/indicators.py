@@ -353,6 +353,8 @@ class TA:
 
     @staticmethod
     def rsi_divergence(
+        high: pd.DataFrame,
+        low: pd.DataFrame,
         close: pd.DataFrame,
         rsi_period: int = 14,
         pivot_up_thresh: float = 0.05,
@@ -362,6 +364,10 @@ class TA:
 
         Parameters
         ----------
+        high: pd.DataFrame
+            dataset 'High' dataframe.
+        low: pd.DataFrame
+            dataset 'Low' dataframe.
         close: pd.DataFrame
             dataset 'Close' dataframe.
         rsi_period: int = 14
@@ -379,6 +385,8 @@ class TA:
         out = close.apply(
             lambda x: rsi_divergence(
                 close=x,
+                high=high[x.name],
+                low=low[x.name],
                 rsi_period=rsi_period,
                 pivot_up_thresh=pivot_up_thresh,
                 pivot_down_thresh=pivot_down_thresh,

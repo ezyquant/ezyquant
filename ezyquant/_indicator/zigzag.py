@@ -34,6 +34,9 @@ def _identify_initial_pivot(X, up_thresh, down_thresh):
     return VALLEY if x_0 < X[t_n] else PEAK
 
 
+# TODO: use pandas_ta instead when it's released
+
+
 def peak_valley_pivots_candlestick(close, high, low, up_thresh, down_thresh):
     """
     Finds the peaks and valleys of a series of HLC (open is not necessary).

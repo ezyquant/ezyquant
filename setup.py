@@ -31,7 +31,6 @@ setup(
         "XlsxWriter>=3.0",
         "typing_extensions>=4.4",
         "quantstats>=0.0",
-        "zigzag==0.2.2",
     ],
     license="The MIT License (MIT)",
     classifiers=[
