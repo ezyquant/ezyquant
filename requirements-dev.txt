@@ -8,7 +8,7 @@ quantstats~=0.0
 
 # Sytle
 isort~=5.0
-black~=22.0
+black[jupyter]~=22.0
 docformatter~=1.0
 autoflake~=1.0
 

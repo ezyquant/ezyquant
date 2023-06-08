@@ -1,3 +1,7 @@
+# https://stackoverflow.com/questions/65800877/python-zig-zag-algorithm-function-not-returning-expected-results
+
+# TODO: use pandas_ta instead when it's released
+
 import numpy as np
 
 PEAK, VALLEY = 1, -1
@@ -32,9 +36,6 @@ def _identify_initial_pivot(X, up_thresh, down_thresh):
 
     t_n = len(X) - 1
     return VALLEY if x_0 < X[t_n] else PEAK
-
-
-# TODO: use pandas_ta instead when it's released
 
 
 def peak_valley_pivots_candlestick(close, high, low, up_thresh, down_thresh):
