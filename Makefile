@@ -14,7 +14,7 @@ format:
 
 	docformatter -i ezyquant/reader.py
 	docformatter -i ezyquant/creator.py
-	docformatter -i ezyquant/indicators/_ta.py
+	docformatter -i ezyquant/indicators/ta.py
 	docformatter -i ezyquant/report.py
 	docformatter -i ezyquant/utils.py
 	docformatter -i ezyquant/backtesting/_backtesting.py

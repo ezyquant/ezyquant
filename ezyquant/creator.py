@@ -9,7 +9,7 @@ from typing_extensions import Literal
 from . import fields as fld
 from . import utils
 from .errors import InputError
-from .indicators import TA
+from .indicators.ta import TA
 from .reader import _SETDataReaderCached
 
 nan = float("nan")
