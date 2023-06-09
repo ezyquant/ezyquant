@@ -9,6 +9,7 @@ from pandas.tseries.offsets import CustomBusinessDay
 from sqlalchemy import (
     ColumnElement,
     MetaData,
+    Subquery,
     Table,
     and_,
     case,
@@ -182,8 +183,7 @@ class SETDataReader:
         start_has_price_date: Optional[str] = None,
         end_has_price_date: Optional[str] = None,
     ) -> pd.DataFrame:
-        """Data from table SECURITY. Symbol must exist in table
-        DAILY_STOCK_TRADE.
+        """Data from table SECURITY. Symbol must exist in table DAILY_STOCK_TRADE.
 
         Parameters
         ----------
@@ -465,9 +465,9 @@ class SETDataReader:
         ca_type_list: Optional[List[str]] = None,
         adjusted_list: List[str] = ["", "CR", "PC", "RC", "SD", "XR"],
     ) -> pd.DataFrame:
-        """Data from table RIGHTS_BENEFIT. Include only Cash Dividend (CD) and
-        Stock Dividend (SD). Not include Cancelled (F_CANCEL!='C') and dps more
-        than 0 (Z_RIGHTS>0). ex_date and pay_date can be null.
+        """Data from table RIGHTS_BENEFIT. Include only Cash Dividend (CD) and Stock
+        Dividend (SD). Not include Cancelled (F_CANCEL!='C') and dps more than 0
+        (Z_RIGHTS>0). ex_date and pay_date can be null.
 
         Parameters
         ----------
@@ -553,8 +553,8 @@ class SETDataReader:
         end_date: Optional[str] = None,
         ca_type_list: Optional[List[str]] = None,
     ) -> pd.DataFrame:
-        """Data from table RIGHTS_BENEFIT. Not include Cancelled
-        (F_CANCEL!='C') sign_date and pay_date can be null.
+        """Data from table RIGHTS_BENEFIT. Not include Cancelled (F_CANCEL!='C')
+        sign_date and pay_date can be null.
 
         Parameters
         ----------
@@ -674,8 +674,7 @@ class SETDataReader:
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
     ) -> pd.DataFrame:
-        """Data from table SECURITY_DETAIL. Filter delisted by D_DELISTED !=
-        None.
+        """Data from table SECURITY_DETAIL. Filter delisted by D_DELISTED != None.
 
         Parameters
         ----------
@@ -1226,8 +1225,8 @@ class SETDataReader:
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
     ) -> pd.DataFrame:
-        """Data from tables FINANCIAL_STAT_STD and FINANCIAL_SCREEN.If field is
-        in both table, the data from FINANCIAL_STAT_STD will be used.
+        """Data from tables FINANCIAL_STAT_STD and FINANCIAL_SCREEN.If field is in both
+        table, the data from FINANCIAL_STAT_STD will be used.
 
         FINANCIAL_STAT_STD using data from column M_ACCOUNT multiply 1000.
         FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and I_PERIOD in ('Q1','Q2','Q3','Q4').
@@ -1367,8 +1366,8 @@ class SETDataReader:
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
     ) -> pd.DataFrame:
-        """Data from table FINANCIAL_STAT_STD and FINANCIAL_SCREEN. If field is
-        in both table, the data from FINANCIAL_STAT_STD will be used.
+        """Data from table FINANCIAL_STAT_STD and FINANCIAL_SCREEN. If field is in both
+        table, the data from FINANCIAL_STAT_STD will be used.
 
         FINANCIAL_STAT_STD filter by "I_QUARTER"='9' and using data from column M_ACCOUNT multiply 1000.
         FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and I_PERIOD='YE'.
@@ -1508,8 +1507,8 @@ class SETDataReader:
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
     ) -> pd.DataFrame:
-        """Trailing 12 months (TTM) is a term used to describe the past 12
-        consecutive months of a company's performance data.
+        """Trailing 12 months (TTM) is a term used to describe the past 12 consecutive
+        months of a company's performance data.
 
         TTM can be calculate only Income Statement and Cashflow, but not Financial Ratio and Balance Sheet.
 
@@ -1596,8 +1595,8 @@ class SETDataReader:
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
     ) -> pd.DataFrame:
-        """Year to date (YTD) refers to the period of time beginning the first
-        day of the current calendar year or fiscal year up to the current date.
+        """Year to date (YTD) refers to the period of time beginning the first day of
+        the current calendar year or fiscal year up to the current date.
 
         Data from table FINANCIAL_STAT_STD and FINANCIAL_SCREEN. If field is in both table, the data from FINANCIAL_STAT_STD will be used.
 
@@ -1892,8 +1891,8 @@ class SETDataReader:
     def _func_date(self, column: ColumnElement):
         """Convert date column to date type for sqlite engine.
 
-        Usually use in where clause. Select clause will be converted
-        automatically by pandas.read_sql_query
+        Usually use in where clause. Select clause will be converted automatically by
+        pandas.read_sql_query
         """
         if self.engine.name == "sqlite":
             return func.DATE(column)
@@ -1973,31 +1972,37 @@ class SETDataReader:
         )
         return stmt
 
-    @lru_cache(maxsize=1)
-    def _d_trade_subquery(self):
+    def _d_trade_subquery(
+        self, start_date: Optional[str] = None, end_date: Optional[str] = None
+    ) -> Subquery:
         daily_stock_stat_t = self._table("DAILY_STOCK_STAT")
-        return (
-            select(
-                daily_stock_stat_t.c.I_SECURITY,
-                daily_stock_stat_t.c.D_AS_OF,
-                func.min(daily_stock_stat_t.c.D_TRADE).label("D_TRADE"),
-            )
-            .group_by(daily_stock_stat_t.c.I_SECURITY, daily_stock_stat_t.c.D_AS_OF)
-            .subquery()
+        stmt = select(
+            daily_stock_stat_t.c.I_SECURITY,
+            daily_stock_stat_t.c.D_AS_OF,
+            func.min(daily_stock_stat_t.c.D_TRADE).label("D_TRADE"),
         )
+        stmt = self._filter_stmt_by_date(
+            stmt=stmt,
+            column=daily_stock_stat_t.c.D_TRADE,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        stmt = stmt.group_by(
+            daily_stock_stat_t.c.I_SECURITY, daily_stock_stat_t.c.D_AS_OF
+        )
+        return stmt.subquery()
 
-    def _join_security_and_d_trade_subquery(self, table: Table):
+    def _join_security_and_d_trade_subquery(
+        self, table: Table, d_trade_subquery: Subquery
+    ) -> Join:
         security_t = self._table("SECURITY")
-        d_trade_subquery = self._d_trade_subquery()
-        return table.join(
-            security_t, table.c.I_SECURITY == security_t.c.I_SECURITY
-        ).join(
-            d_trade_subquery,
+        return d_trade_subquery.join(
+            table,
             and_(
                 table.c.I_SECURITY == d_trade_subquery.c.I_SECURITY,
                 table.c.D_AS_OF == d_trade_subquery.c.D_AS_OF,
             ),
-        )
+        ).join(security_t, security_t.c.I_SECURITY == d_trade_subquery.c.I_SECURITY)
 
     def _join_sector_table(
         self,
@@ -2156,7 +2161,9 @@ class SETDataReader:
 
         return df
 
-    def _get_financial_screen_stmt(self, timeframe: str, field: str) -> Select:
+    def _get_financial_screen_stmt(
+        self, timeframe: str, field: str, d_trade_subquery: Subquery
+    ) -> Select:
         TIMEFRAME_MAP = {
             fld.TIMEFRAME_QUARTERLY: ("Q1", "Q2", "Q3", "Q4"),
             fld.TIMEFRAME_YEARLY: ("YE",),
@@ -2164,7 +2171,6 @@ class SETDataReader:
 
         financial_screen_t = self._table("FINANCIAL_SCREEN")
         security_t = self._table("SECURITY")
-        d_trade_subquery = self._d_trade_subquery()
 
         value_column = financial_screen_t.c[fld.FINANCIAL_SCREEN_MAP[field]]
 
@@ -2174,7 +2180,11 @@ class SETDataReader:
                 func.trim(security_t.c.N_SECURITY).label(NAME),
                 value_column.label(VALUE),
             )
-            .select_from(self._join_security_and_d_trade_subquery(financial_screen_t))
+            .select_from(
+                self._join_security_and_d_trade_subquery(
+                    financial_screen_t, d_trade_subquery=d_trade_subquery
+                )
+            )
             .where(func.trim(financial_screen_t.c.I_PERIOD_TYPE) == "QY")
             .where(
                 func.trim(financial_screen_t.c.I_PERIOD).in_(TIMEFRAME_MAP[timeframe])
@@ -2183,10 +2193,11 @@ class SETDataReader:
 
         return stmt
 
-    def _get_financial_stat_std_stmt(self, timeframe: str, field: str) -> Select:
+    def _get_financial_stat_std_stmt(
+        self, timeframe: str, field: str, d_trade_subquery: Subquery
+    ) -> Select:
         financial_stat_std_t = self._table("FINANCIAL_STAT_STD")
         security_t = self._table("SECURITY")
-        d_trade_subquery = self._d_trade_subquery()
 
         field_type = ""
         for i in fld.FINANCIAL_STAT_STD_MAP:
@@ -2218,7 +2229,11 @@ class SETDataReader:
                 func.trim(security_t.c.N_SECURITY).label(NAME),
                 value_column.label(VALUE),
             )
-            .select_from(self._join_security_and_d_trade_subquery(financial_stat_std_t))
+            .select_from(
+                self._join_security_and_d_trade_subquery(
+                    financial_stat_std_t, d_trade_subquery=d_trade_subquery
+                )
+            )
             .where(func.trim(financial_stat_std_t.c.N_ACCOUNT) == db_field)
         )
 
@@ -2239,28 +2254,29 @@ class SETDataReader:
         timeframe = timeframe.lower()
         field = field.lower()
 
-        security_t = self._table("SECURITY")
-        d_trade_subquery = self._d_trade_subquery()
+        d_trade_subquery = self._d_trade_subquery(
+            start_date=start_date, end_date=end_date
+        )
 
         if field in fld.FINANCIAL_STAT_STD_MAP_COMPACT:
-            stmt = self._get_financial_stat_std_stmt(field=field, timeframe=timeframe)
+            stmt = self._get_financial_stat_std_stmt(
+                field=field, timeframe=timeframe, d_trade_subquery=d_trade_subquery
+            )
         elif field in fld.FINANCIAL_SCREEN_MAP and timeframe in (
             fld.TIMEFRAME_QUARTERLY,
             fld.TIMEFRAME_YEARLY,
         ):
-            stmt = self._get_financial_screen_stmt(field=field, timeframe=timeframe)
+            stmt = self._get_financial_screen_stmt(
+                field=field, timeframe=timeframe, d_trade_subquery=d_trade_subquery
+            )
         else:
             raise InputError(
                 f"{field} is invalid field. Please read document to check valid field."
             )
 
-        stmt = self._filter_stmt_by_symbol_and_date(
-            stmt=stmt,
-            symbol_column=security_t.c.N_SECURITY,
-            date_column=d_trade_subquery.c.D_TRADE,
-            symbol_list=symbol_list,
-            start_date=start_date,
-            end_date=end_date,
+        security_t = self._table("SECURITY")
+        stmt = self._filter_str_in_list(
+            stmt=stmt, column=security_t.c.N_SECURITY, values=symbol_list
         )
 
         df = self._read_sql_query(stmt)
