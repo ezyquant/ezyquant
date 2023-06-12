@@ -153,3 +153,18 @@ class Context:
             buy/sell volume, not round 100
         """
         return self.buy_value(value) - self.volume
+
+    # For testing
+    def __eq__(self, other):
+        self_nan_dict, self_not_nan_dict = nan_not_nan_dict(self.__dict__)
+        other_nan_dict, other_not_nan_dict = nan_not_nan_dict(other.__dict__)
+        return (
+            self_not_nan_dict == other_not_nan_dict
+            and self_nan_dict.keys() == other_nan_dict.keys()
+        )
+
+
+def nan_not_nan_dict(d):
+    return {k: v for k, v in d.items() if pd.isna(v)}, {
+        k: v for k, v in d.items() if not pd.isna(v)
+    }

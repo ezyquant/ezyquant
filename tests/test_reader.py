@@ -1458,7 +1458,7 @@ class TestGetDataSymbolYearly:
         [
             # Financial Ratio
             (fld.Q_ROA, [1.6829434061191892]),
-            (fld.Q_GROSS_PROFIT_MARGIN, [-float("nan")]),
+            (fld.Q_GROSS_PROFIT_MARGIN, [72.95928471247944]),
             # Balance Sheet
             (fld.Q_CASH, [233127550000.0]),
             # Income Statement
