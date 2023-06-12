@@ -1,8 +1,10 @@
 import math
 from datetime import datetime, timedelta
+from typing import Optional
 
 import numpy as np
 import pandas as pd
+import quantstats as qs
 from pandas.testing import assert_index_equal
 from quantstats import stats as qs_stats
 
@@ -552,6 +554,260 @@ class SETBacktestReport:
             self.dividend_df.to_excel(writer, sheet_name="dividend", index=False)
             self.price_distribution_df.to_excel(writer, sheet_name="price_distribution")
             self.drawdown_percent_df.to_excel(writer, sheet_name="drawdown_percent")
+
+    def to_snapshot(
+        self,
+        with_dividend=True,
+        grayscale=False,
+        figsize=(10, 8),
+        title="Portfolio Summary",
+        fontname="Arial",
+        lw=1.5,
+        mode="comp",
+        subtitle=True,
+        savefig=None,
+        show=True,
+        log_scale=False,
+    ):
+        """Generates a snapshot plot of portfolio performance. including Cumulative Return,
+        Drawdown and Daily Return.
+
+        Parameters
+        ----------
+        with_dividend : bool, optional
+            Include dividend values in the portfolio values, by default True.
+        grayscale : bool, optional
+            Generate grayscale visualizations, by default False.
+        figsize : tuple, optional
+            Size of the figure for visualizations, by default (10, 8).
+        title : str, optional
+            Title of the plot, by default "Portfolio Summary".
+        fontname : str, optional
+            Font name for the plot, by default "Arial".
+        lw : float, optional
+            Line width for the plot, by default 1.5
+        mode : str, optional
+            Mode of returns calculation. 'comp' for compounded returns, 'sum' for simple returns, by default "comp"
+        subtitle : bool, optional
+            Display the subtitle "start date to end date" and "sharp ratio", by default True
+        savefig : None, optional
+            Saving the plot image, by default None
+        show : bool, optional
+            Display the plot if not return a Figure instead object instead, by default True
+        log_scale : bool, optional
+            Use a logarithmic scale for the y-axis, by default False
+
+        Returns
+        -------
+        None
+            Plot the portfolio performance that is base on "show" arguments.
+        """
+        return qs.plots.snapshot(
+            returns=self._get_nav_series(with_dividend=with_dividend),
+            grayscale=grayscale,
+            figsize=figsize,
+            title=title,
+            fontname=fontname,
+            lw=lw,
+            mode=mode,
+            subtitle=subtitle,
+            savefig=savefig,
+            show=show,
+            log_scale=log_scale,
+        )
+
+    def to_html(
+        self,
+        with_dividend=True,
+        benchmark: Optional[pd.DataFrame] = None,
+        rf=0.0,
+        grayscale=False,
+        title="Strategy Tearsheet",
+        output=None,
+        compounded=True,
+        periods_per_year=252,
+        download_filename="quantstats-tearsheet.html",
+        figfmt="svg",
+        template_path=None,
+        match_dates=False,
+        **kwargs
+    ):
+        """Generates an HTML tearsheet for strategy performance analysis.
+
+        Parameters
+        ----------
+        with_dividend : bool, optional
+            Include dividend values in the portfolio values, by default True.
+        benchmark : Optional[pd.DataFrame], optional
+            Time-series of benchmark returns, by default is None.
+        rf : float, optional
+            Risk-free rate of return, by default is 0.
+        grayscale : bool, optional
+            Generate grayscale visualizations, by default False.
+        title : str, optional
+            Title of the tearsheet, by default "Strategy Tearsheet".
+        output : None, optional
+            Output file name for saving the HTML tearsheet If set to None,
+            the tearsheet will be opened in the File Explorer instead of saving to a file., by default None.
+        compounded : bool, optional
+            Calculate compounded returns for performance metrics, by default True.
+        periods_per_year : int, optional
+            Number of periods per year for calculating annualized metrics, by default 252.
+        download_filename : str, optional
+            Output the file name HTML tearsheet, by default "quantstats-tearsheet.html"
+        figfmt : str, optional
+            Format of the saved figure file, by default "svg".
+        template_path : None, optional
+            Path to the custom template file for the HTML tearsheet, by default None
+        match_dates : bool, optional
+            Match the dates of strategy and benchmark returns, by default False.
+
+        Returns
+        -------
+        None
+            If output is None (HTML tearsheet is displayed in the browser).
+        """
+        return qs.reports.html(
+            returns=self._get_nav_series(with_dividend=with_dividend),
+            benchmark=benchmark,
+            rf=rf,
+            grayscale=grayscale,
+            title=title,
+            output=output,
+            compounded=compounded,
+            periods_per_year=periods_per_year,
+            download_filename=download_filename,
+            figfmt=figfmt,
+            template_path=template_path,
+            match_dates=match_dates,
+            **kwargs
+        )
+
+    def to_basic(
+        self,
+        with_dividend=True,
+        benchmark: Optional[pd.DataFrame] = None,
+        rf=0.0,
+        grayscale=False,
+        figsize=(8, 5),
+        display=True,
+        compounded=True,
+        periods_per_year=252,
+        match_dates=False,
+    ):
+        """Calculate performance metrics and generate visualizations for a given strategy.
+
+        Parameters
+        ----------
+        with_dividend : bool, optional
+            Include dividend values in the portfolio values, by default True.
+        benchmark : Optional[pd.DataFrame], optional
+            Time-series of benchmark returns, by default is None.
+        rf : float, optional
+            Risk-free rate of return, by default is 0.
+        grayscale : bool, optional
+            Generate grayscale visualizations, by default False.
+        figsize : tuple, optional
+            Size of the figure for visualizations, by default (8, 5)
+        display : bool, optional
+            Display the performance metrics, by default True.
+        compounded : bool, optional
+            Calculate compounded returns for performance metrics, by default True
+        periods_per_year : int, optional
+            Number of periods per year for calculating annualized metrics, by default 252.
+        match_dates : bool, optional
+            Match the dates of strategy and benchmark returns, by default False.
+
+        Returns
+        -------
+        None
+            The function generates performance metrics and visualizations based on the provided parameters.
+        """
+        return qs.reports.basic(
+            returns=self._get_nav_series(with_dividend=with_dividend),
+            benchmark=benchmark,
+            rf=rf,
+            grayscale=grayscale,
+            figsize=figsize,
+            display=display,
+            compounded=compounded,
+            periods_per_year=periods_per_year,
+            match_dates=match_dates,
+        )
+
+    def to_full(
+        self,
+        with_dividend=True,
+        benchmark: Optional[pd.DataFrame] = None,
+        rf=0.0,
+        grayscale=False,
+        figsize=(8, 5),
+        display=True,
+        compounded=True,
+        periods_per_year=252,
+        match_dates=False,
+    ):
+        """Calculate performance metrics and generate visualizations for a given strategy.
+
+        Parameters
+        ----------
+        with_dividend : bool, optional
+            Include dividend values in the portfolio values, by default True.
+        benchmark : Optional[pd.DataFrame], optional
+            Time-series of benchmark returns, by default is None.
+        rf : float, optional
+            Risk-free rate of return, by default is 0.
+        grayscale : bool, optional
+            Generate grayscale visualizations, by default False.
+        figsize : tuple, optional
+            Size of the figure for visualizations, by default (8, 5).
+        display : bool, optional
+            Display the performance metrics, by default True.
+        compounded : bool, optional
+            Calculate compounded returns for performance metrics, by default True.
+        periods_per_year : int, optional
+            Number of periods per year for calculating annualized metrics, by default 252.
+        match_dates : bool, optional
+            Match the dates of strategy and benchmark returns, by default False.
+
+        Returns
+        -------
+        None
+            The function generates performance metrics and visualizations based on the provided parameters.
+        """
+
+        return qs.reports.full(
+            returns=self._get_nav_series(with_dividend=with_dividend),
+            benchmark=benchmark,
+            rf=rf,
+            grayscale=grayscale,
+            figsize=figsize,
+            display=display,
+            compounded=compounded,
+            periods_per_year=periods_per_year,
+            match_dates=match_dates,
+        )
+
+    """
+    Pipeline To Quantstats Reports
+    """
+
+    def _get_nav_series(self, with_dividend: bool = True) -> pd.Series:
+        """Selects and returns a pandas Series containing the portfolio values.
+        Before implementing it with the QuanStats libraries.
+
+        Parameters
+        ----------
+        with_dividend : bool, optional
+            Flag indicating whether to include dividend values in the portfolio values, by default True.
+
+        Returns
+        -------
+        pd.Series
+            Pandas Series containing the portfolio values based on the specified criteria.
+
+        """
+        return self._nav_df["portfolio_with_dividend" if with_dividend else "portfolio"]
 
     """
     Stat
