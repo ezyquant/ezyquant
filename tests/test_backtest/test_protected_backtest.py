@@ -61,12 +61,12 @@ def test_backtest_algorithm(return_volume: float):
         [
             call(
                 Context(
-                    ts=pd.Timestamp("2000-01-03 00:00:00"),
+                    ts=pd.Timestamp("2000-01-03 00:00:00", freq="B"),
                     symbol="A",
                     signal=3.0,
                     close_price=1.0,
                     volume=0.0,
-                    cost_price=0.0,
+                    cost_price=nan,
                     cash=1000000.0,
                     total_cost_value=0.0,
                     total_market_value=0.0,
@@ -75,12 +75,12 @@ def test_backtest_algorithm(return_volume: float):
             ),
             call(
                 Context(
-                    ts=pd.Timestamp("2000-01-03 00:00:00"),
+                    ts=pd.Timestamp("2000-01-03 00:00:00", freq="B"),
                     symbol="B",
                     signal=4.0,
                     close_price=2.0,
                     volume=0.0,
-                    cost_price=0.0,
+                    cost_price=nan,
                     cash=1000000.0,
                     total_cost_value=0.0,
                     total_market_value=0.0,
@@ -89,7 +89,7 @@ def test_backtest_algorithm(return_volume: float):
             ),
             call(
                 Context(
-                    ts=pd.Timestamp("2000-01-04 00:00:00"),
+                    ts=pd.Timestamp("2000-01-04 00:00:00", freq="B"),
                     symbol="A",
                     signal=5.0,
                     close_price=3.0,
@@ -103,7 +103,7 @@ def test_backtest_algorithm(return_volume: float):
             ),
             call(
                 Context(
-                    ts=pd.Timestamp("2000-01-04 00:00:00"),
+                    ts=pd.Timestamp("2000-01-04 00:00:00", freq="B"),
                     symbol="B",
                     signal=6.0,
                     close_price=4.0,
@@ -117,7 +117,7 @@ def test_backtest_algorithm(return_volume: float):
             ),
             call(
                 Context(
-                    ts=pd.Timestamp("2000-01-05 00:00:00"),
+                    ts=pd.Timestamp("2000-01-05 00:00:00", freq="B"),
                     symbol="A",
                     signal=7.0,
                     close_price=5.0,
@@ -131,7 +131,7 @@ def test_backtest_algorithm(return_volume: float):
             ),
             call(
                 Context(
-                    ts=pd.Timestamp("2000-01-05 00:00:00"),
+                    ts=pd.Timestamp("2000-01-05 00:00:00", freq="B"),
                     symbol="B",
                     signal=8.0,
                     close_price=6.0,
@@ -145,7 +145,7 @@ def test_backtest_algorithm(return_volume: float):
             ),
             call(
                 Context(
-                    ts=pd.Timestamp("2000-01-06 00:00:00"),
+                    ts=pd.Timestamp("2000-01-06 00:00:00", freq="B"),
                     symbol="A",
                     signal=9.0,
                     close_price=7.0,
@@ -159,7 +159,7 @@ def test_backtest_algorithm(return_volume: float):
             ),
             call(
                 Context(
-                    ts=pd.Timestamp("2000-01-06 00:00:00"),
+                    ts=pd.Timestamp("2000-01-06 00:00:00", freq="B"),
                     symbol="B",
                     signal=10.0,
                     close_price=8.0,
