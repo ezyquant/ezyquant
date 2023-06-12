@@ -5,12 +5,12 @@ import pytest
 from ezyquant.report import SETBacktestReport
 
 trade_in_columns = ["matched_at", "symbol", "volume", "price", "pct_commission"]
-date_range = pd.bdate_range(start="2000-01-03", periods=30)
+date_range = pd.bdate_range(start="2000-01-03", periods=400)
 
 
 @pytest.mark.parametrize(
     "cash_series",
-    [pd.Series(np.random.rand(len(date_range)) + 0.1, index=date_range, name="cash")],
+    [pd.Series(np.random.rand(len(date_range)) + 100.0, index=date_range, name="cash")],
 )
 @pytest.mark.parametrize(
     "trade_df",
@@ -28,7 +28,7 @@ date_range = pd.bdate_range(start="2000-01-03", periods=30)
     [
         None,
         pd.Series(
-            np.random.rand(len(date_range)) + 0.1, index=date_range, name="benchmark"
+            np.random.rand(len(date_range)) + 100.0, index=date_range, name="benchmark"
         ),
     ],
 )
