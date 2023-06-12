@@ -75,8 +75,8 @@ class SETAccount:
         volume: float,
         price: float,
     ):
-        """Buy/Sell with enough cash/position. skip if price is invalid (<=0,
-        NaN). Volume don't need to be rounded to 100.
+        """Buy/Sell with enough cash/position. skip if price is invalid (<=0, NaN).
+        Volume don't need to be rounded to 100.
 
         Parameters
         ----------

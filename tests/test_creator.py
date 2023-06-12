@@ -210,7 +210,7 @@ class TestGetData:
         ],
     )
     def test_stock_daily_fill_prior(self, field: str):
-        """THAI no trade after 2021-05-18, close at 2021-05-17 is 3.32"""
+        """THAI no trade after 2021-05-18, close at 2021-05-17 is 3.32."""
         # Mock
         ssc = SETSignalCreator(
             symbol_list=["THAI"],
@@ -516,7 +516,7 @@ class TestIsUniverse:
 
     @pytest.mark.parametrize("universe", [fld.INDEX_SSET])
     def test_dynamic_universe_not_launch(self, universe: str):
-        """sSET launch 2017-01-01"""
+        """SSET launch 2017-01-01."""
         # Mock
         ssc = SETSignalCreator(
             index_list=[fld.MARKET_SET, fld.MARKET_MAI],
@@ -926,7 +926,7 @@ class TestScreenUniverse:
         assert_frame_equal(result, df)
 
     def test_banned(self):
-        """THAI no trade after 2021-05-18, close at 2021-05-17 is 3.32"""
+        """THAI no trade after 2021-05-18, close at 2021-05-17 is 3.32."""
         # Mock
         ssc = SETSignalCreator(
             index_list=[],

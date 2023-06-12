@@ -125,8 +125,8 @@ class SETSignalCreator:
         period: int = 1,
         shift: int = 0,
     ) -> pd.DataFrame:
-        """Return DataFrame which columns are symbols and index is the trading
-        date start from start_date to end_date.
+        """Return DataFrame which columns are symbols and index is the trading date
+        start from start_date to end_date.
 
         OHLCV fillna with prior value.
 
@@ -584,8 +584,7 @@ class SETSignalCreator:
 
     @lru_cache(maxsize=1)
     def _make_nan_df(self) -> pd.DataFrame:
-        """Make empty dataframe with trading dates as index and symbols as
-        columns.
+        """Make empty dataframe with trading dates as index and symbols as columns.
 
         Returns
         -------

@@ -569,8 +569,8 @@ class SETBacktestReport:
         show=True,
         log_scale=False,
     ):
-        """Generates a snapshot plot of portfolio performance. including Cumulative Return,
-        Drawdown and Daily Return.
+        """Generates a snapshot plot of portfolio performance. including Cumulative
+        Return, Drawdown and Daily Return.
 
         Parameters
         ----------
@@ -630,7 +630,7 @@ class SETBacktestReport:
         figfmt="svg",
         template_path=None,
         match_dates=False,
-        **kwargs
+        **kwargs,
     ):
         """Generates an HTML tearsheet for strategy performance analysis.
 
@@ -680,7 +680,7 @@ class SETBacktestReport:
             figfmt=figfmt,
             template_path=template_path,
             match_dates=match_dates,
-            **kwargs
+            **kwargs,
         )
 
     def to_basic(
@@ -695,7 +695,8 @@ class SETBacktestReport:
         periods_per_year=252,
         match_dates=False,
     ):
-        """Calculate performance metrics and generate visualizations for a given strategy.
+        """Calculate performance metrics and generate visualizations for a given
+        strategy.
 
         Parameters
         ----------
@@ -747,7 +748,8 @@ class SETBacktestReport:
         periods_per_year=252,
         match_dates=False,
     ):
-        """Calculate performance metrics and generate visualizations for a given strategy.
+        """Calculate performance metrics and generate visualizations for a given
+        strategy.
 
         Parameters
         ----------
@@ -793,8 +795,8 @@ class SETBacktestReport:
     """
 
     def _get_nav_series(self, with_dividend: bool = True) -> pd.Series:
-        """Selects and returns a pandas Series containing the portfolio values.
-        Before implementing it with the QuanStats libraries.
+        """Selects and returns a pandas Series containing the portfolio values. Before
+        implementing it with the QuanStats libraries.
 
         Parameters
         ----------
@@ -805,7 +807,6 @@ class SETBacktestReport:
         -------
         pd.Series
             Pandas Series containing the portfolio values based on the specified criteria.
-
         """
         return self._nav_df["portfolio_with_dividend" if with_dividend else "portfolio"]
 
@@ -821,11 +822,11 @@ class SETBacktestReport:
 
     @property
     def cagr(self) -> pd.Series:
-        """Calculates the communicative annualized growth return (CAGR%) of
-        access returns.
+        """Calculates the communicative annualized growth return (CAGR%) of access
+        returns.
 
-        If rf is non-zero, you must specify periods. In this case, rf is
-        assumed to be expressed in yearly (annualized) terms
+        If rf is non-zero, you must specify periods. In this case, rf is assumed to be
+        expressed in yearly (annualized) terms
         """
         return qs_stats.cagr(self._nav_df)
 

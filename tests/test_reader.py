@@ -214,9 +214,9 @@ class TestGetSymbolInfo:
     def test_start_has_price_date(
         self, sdr: SETDataReader, start: str, expected: List[str]
     ):
-        """
-        SCBB last trade date is 2022-04-26
-        SCB first trade date is 2022-04-27
+        """SCBB last trade date is 2022-04-26.
+
+        SCB first trade date is 2022-04-27.
         """
 
         # Test
@@ -236,9 +236,9 @@ class TestGetSymbolInfo:
     def test_end_has_price_date(
         self, sdr: SETDataReader, end: str, expected: List[str]
     ):
-        """
-        SCBB last trade date is 2022-04-26
-        SCB first trade date is 2022-04-27
+        """SCBB last trade date is 2022-04-26.
+
+        SCB first trade date is 2022-04-27.
         """
 
         # Test
@@ -954,7 +954,7 @@ class TestGetSymbolsByIndex:
         start_date: Optional[str],
         end_date: Optional[str],
     ):
-        """sSET is not upper"""
+        """SSET is not upper."""
         # Test
         result = sdr.get_symbols_by_index(
             index_list=index_list,

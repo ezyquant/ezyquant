@@ -39,8 +39,8 @@ def round_down(value, base=100.0):
 def is_rebalance_weekly(
     trade_date_index: pd.DatetimeIndex, rebalance_at: int
 ) -> pd.Series:
-    """Return a series of bool, True if the date is a rebalance date. Always
-    rebalance on first day of index.
+    """Return a series of bool, True if the date is a rebalance date. Always rebalance
+    on first day of index.
 
     Parameters
     ----------
@@ -62,8 +62,8 @@ def is_rebalance_weekly(
 def is_rebalance_monthly(
     trade_date_index: pd.DatetimeIndex, rebalance_at: int
 ) -> pd.Series:
-    """Return a series of bool, True if the date is a rebalance date. Always
-    rebalance on first day of index.
+    """Return a series of bool, True if the date is a rebalance date. Always rebalance
+    on first day of index.
 
     Parameters
     ----------

@@ -8,31 +8,29 @@ nan = float("nan")
 
 @dataclass
 class Context:
-    """
-    Context class for backtest.
-    """
+    """Context class for backtest."""
 
     ts: pd.Timestamp
-    """Current timestamp"""
+    """Current timestamp."""
     symbol: str = ""
-    """Selected symbol"""
+    """Selected symbol."""
     signal: Any = nan
-    """Signal"""
+    """Signal."""
     close_price: float = nan
-    """Close price"""
+    """Close price."""
     volume: float = nan
-    """Current Volume"""
+    """Current Volume."""
     cost_price: float = nan
-    """Cost price"""
+    """Cost price."""
 
     cash: float = nan
-    """Available cash"""
+    """Available cash."""
     total_cost_value: float = nan
-    """Sum of all stock market value in portfolio"""
+    """Sum of all stock market value in portfolio."""
     total_market_value: float = nan
-    """Sum of all stock cost value in portfolio"""
+    """Sum of all stock cost value in portfolio."""
     port_value: float = nan
-    """Total portfolio value"""
+    """Total portfolio value."""
 
     def buy_pct_port(self, pct_port: float) -> float:
         """Calculate buy volume from the percentage of the portfolio.
@@ -81,6 +79,7 @@ class Context:
 
     def sell_pct_port(self, pct_port: float) -> float:
         """Calculate sell volume from the percentage of the portfolio.
+
         Parameters
         ----------
         pct_port: float
@@ -124,8 +123,8 @@ class Context:
         return self.buy_pct_position(-pct_position)
 
     def target_pct_port(self, pct_port: float) -> float:
-        """Calculate buy/sell volume to make the current position reach the target percentage of
-        the portfolio.
+        """Calculate buy/sell volume to make the current position reach the target
+        percentage of the portfolio.
 
         Parameters
         ----------
@@ -140,7 +139,8 @@ class Context:
         return self.buy_pct_port(pct_port) - self.volume
 
     def target_value(self, value: float) -> float:
-        """Calculate buy/sell volume to make the current position reach the target value.
+        """Calculate buy/sell volume to make the current position reach the target
+        value.
 
         Parameters
         ----------

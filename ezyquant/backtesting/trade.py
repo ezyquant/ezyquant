@@ -6,7 +6,7 @@ from ..utils import cached_property
 
 @dataclass(frozen=True)
 class SETTrade:
-    """SETTrade
+    """SETTrade.
 
     Parameters
     ----------
@@ -56,15 +56,18 @@ class SETTrade:
 
     @cached_property
     def value(self) -> float:
-        """Positive is Buy, Negative is Sell"""
+        """Positive is Buy, Negative is Sell."""
         return self.price * self.volume
 
     @cached_property
     def commission(self) -> float:
-        """Always positive"""
+        """Always positive."""
         return abs(self.value * self.pct_commission)
 
     @cached_property
     def value_with_commission(self) -> float:
-        """Amount of cash reduced by this trade. Positive is Buy, Negative is Sell"""
+        """Amount of cash reduced by this trade.
+
+        Positive is Buy, Negative is Sell
+        """
         return self.value + self.commission
