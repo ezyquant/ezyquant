@@ -9,7 +9,8 @@ date_range = pd.bdate_range(start="2000-01-03", periods=30)
 
 
 @pytest.mark.parametrize(
-    "cash_series", [pd.Series(np.random.rand(len(date_range)) + 1.0, index=date_range)]
+    "cash_series",
+    [pd.Series(np.random.rand(len(date_range)) + 0.1, index=date_range, name="cash")],
 )
 @pytest.mark.parametrize(
     "trade_df",
@@ -26,7 +27,9 @@ date_range = pd.bdate_range(start="2000-01-03", periods=30)
     "benchmark",
     [
         None,
-        pd.Series(np.random.rand(len(date_range)) + 1.0, index=date_range),
+        pd.Series(
+            np.random.rand(len(date_range)) + 0.1, index=date_range, name="benchmark"
+        ),
     ],
 )
 class TestQuantStats:
@@ -61,7 +64,7 @@ class TestQuantStats:
     ):
         sbr = self._sbr(cash_series, trade_df)
 
-        sbr.to_html(with_dividend=with_dividend, benchmark=benchmark)
+        sbr.to_html(with_dividend=with_dividend, benchmark=benchmark, output="")
 
     def test_to_basic(
         self,
