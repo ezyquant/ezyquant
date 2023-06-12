@@ -8,7 +8,9 @@ trade_in_columns = ["matched_at", "symbol", "volume", "price", "pct_commission"]
 date_range = pd.bdate_range(start="2000-01-03", periods=30)
 
 
-@pytest.mark.parametrize("cash_series", [pd.Series(1.0, index=date_range)])
+@pytest.mark.parametrize(
+    "cash_series", [pd.Series(np.random.rand(len(date_range)) + 1.0, index=date_range)]
+)
 @pytest.mark.parametrize(
     "trade_df",
     [
@@ -24,10 +26,7 @@ date_range = pd.bdate_range(start="2000-01-03", periods=30)
     "benchmark",
     [
         None,
-        pd.DataFrame(
-            {"SET": np.random.randint(0, 100, size=len(date_range))},
-            index=date_range,
-        ),
+        pd.Series(np.random.rand(len(date_range)) + 1.0, index=date_range),
     ],
 )
 class TestQuantStats:
