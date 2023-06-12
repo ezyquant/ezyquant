@@ -63,3 +63,21 @@ def test_generate_basic_with_benchmark(
     )
 
     sbr.to_basic(with_dividend=False, benchmark=benchmark)
+
+
+@pytest.mark.parametrize(
+    ("cash_series"),
+    [(pd.Series(1.0, index=date_range))],
+)
+def test_generate_basic_no_trade(cash_series: pd.Series):
+    sbr = SETBacktestReport(
+        initial_capital=1.0,
+        pct_commission=0.0,
+        pct_buy_slip=0.0,
+        pct_sell_slip=0.0,
+        cash_series=cash_series,
+        position_df=pd.DataFrame(),
+        trade_df=pd.DataFrame(columns=trade_in_columns),
+    )
+
+    sbr.to_basic(with_dividend=False)

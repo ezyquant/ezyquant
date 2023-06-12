@@ -555,7 +555,6 @@ class SETBacktestReport:
             self.price_distribution_df.to_excel(writer, sheet_name="price_distribution")
             self.drawdown_percent_df.to_excel(writer, sheet_name="drawdown_percent")
 
-    # [QD-75]
     def to_snapshot(
         self,
         with_dividend=True,
@@ -604,9 +603,7 @@ class SETBacktestReport:
             Plot the portfolio performance that is base on "show" arguments.
         """
         return qs.plots.snapshot(
-            returns=self._select_port(
-                result=self.summary_df, with_dividend=with_dividend
-            ),
+            returns=self._get_nav_series(with_dividend=with_dividend),
             grayscale=grayscale,
             figsize=figsize,
             title=title,
@@ -671,9 +668,7 @@ class SETBacktestReport:
             If output is None (HTML tearsheet is displayed in the browser).
         """
         return qs.reports.html(
-            returns=self._select_port(
-                result=self.summary_df, with_dividend=with_dividend
-            ),
+            returns=self._get_nav_series(with_dividend=with_dividend),
             benchmark=benchmark,
             rf=rf,
             grayscale=grayscale,
@@ -729,9 +724,7 @@ class SETBacktestReport:
             The function generates performance metrics and visualizations based on the provided parameters.
         """
         return qs.reports.basic(
-            returns=self._select_port(
-                result=self.summary_df, with_dividend=with_dividend
-            ),
+            returns=self._get_nav_series(with_dividend=with_dividend),
             benchmark=benchmark,
             rf=rf,
             grayscale=grayscale,
@@ -784,9 +777,7 @@ class SETBacktestReport:
         """
 
         return qs.reports.full(
-            returns=self._select_port(
-                result=self.summary_df, with_dividend=with_dividend
-            ),
+            returns=self._get_nav_series(with_dividend=with_dividend),
             benchmark=benchmark,
             rf=rf,
             grayscale=grayscale,
@@ -801,15 +792,12 @@ class SETBacktestReport:
     Pipeline To Quantstats Reports
     """
 
-    @staticmethod
-    def _select_port(result: pd.DataFrame, with_dividend=True) -> pd.Series:
+    def _get_nav_series(self, with_dividend: bool = True) -> pd.Series:
         """Selects and returns a pandas Series containing the portfolio values.
         Before implementing it with the QuanStats libraries.
 
         Parameters
         ----------
-        result : pd.DataFrame
-            Summary DataFrame
         with_dividend : bool, optional
             Flag indicating whether to include dividend values in the portfolio values, by default True.
 
@@ -819,14 +807,7 @@ class SETBacktestReport:
             Pandas Series containing the portfolio values based on the specified criteria.
 
         """
-        summary_df = result.set_index("timestamp")
-        returns = (
-            summary_df["port_value_with_dividend"]
-            if with_dividend
-            else summary_df["port_value"]
-        )
-
-        return returns
+        return self._nav_df["portfolio_with_dividend" if with_dividend else "portfolio"]
 
     """
     Stat
