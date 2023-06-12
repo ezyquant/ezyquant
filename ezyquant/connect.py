@@ -17,7 +17,7 @@ def connect_sqlite(sqlite_path: str):
     if not os.path.isfile(sqlite_path):
         raise InputError(f"{sqlite_path} is not found")
 
-    url = f"sqlite:///{sqlite_path}"
+    url = f"sqlite:///{sqlite_path}?mode=ro"
     return _set_engine(url)
 
 

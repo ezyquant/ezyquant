@@ -57,6 +57,8 @@ class SETDataReader:
         except DatabaseError as e:
             raise InputError(e)
 
+    # TODO: Clear cache
+    @lru_cache
     def last_table_update(self, table_name: str) -> str:
         """Last D_TRADE in table.
 
@@ -1943,9 +1945,11 @@ class SETDataReader:
             last_update_date=last_update_date,
         )
 
-        if start_date is not None:
+        if start_date is not None and end_date is not None:
+            stmt = stmt.where(self._func_date(column).between(start_date, end_date))
+        elif start_date is not None:
             stmt = stmt.where(self._func_date(column) >= start_date)
-        if end_date is not None:
+        elif end_date is not None:
             stmt = stmt.where(self._func_date(column) <= end_date)
 
         return stmt
