@@ -2,14 +2,14 @@ from typing import Callable, List
 
 import pandas as pd
 
-from .. import fields as fld
-from .. import utils
-from ..creator import SETSignalCreator
-from ..errors import InputError
-from ..reader import SETBusinessDay, _SETDataReaderCached
-from ..report import SETBacktestReport
-from ._backtesting import _backtest
-from .context import Context
+from ezyquant import fields as fld
+from ezyquant import utils
+from ezyquant.backtesting._backtesting import _backtest
+from ezyquant.backtesting.context import Context
+from ezyquant.creator import SETSignalCreator
+from ezyquant.errors import InputError
+from ezyquant.reader import SETBusinessDay, _SETDataReaderCached
+from ezyquant.report import SETBacktestReport
 
 nan = float("nan")
 
@@ -161,7 +161,8 @@ def _get_match_price(
         c = _price(fld.PRICE_MATCH_MODE_CLOSE)
         out = (h + l + c + c) / 4
     else:
-        raise InputError(f"Invalid price_match_mode: {mode}")
+        msg = f"Invalid price_match_mode: {mode}"
+        raise InputError(msg)
 
     sdr = _SETDataReaderCached()
     td = sdr.get_trading_dates(start_date=start_date, end_date=end_date)

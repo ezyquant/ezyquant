@@ -12,9 +12,9 @@ from ta.volatility import (
     KeltnerChannel,
 )
 
-from ..errors import InputError
-from .rsi_divergence import rsi_divergence
-from .zigzag import peak_valley_pivots_candlestick
+from ezyquant.errors import InputError
+from ezyquant.indicators.rsi_divergence import rsi_divergence
+from ezyquant.indicators.zigzag import peak_valley_pivots_candlestick
 
 nan = float("nan")
 
@@ -435,7 +435,9 @@ class TA:
 
         # Return only signal
         out = np.sign(out)
-        assert isinstance(out, pd.DataFrame)
+        if not isinstance(out, pd.DataFrame):
+            msg = "Output is not a dataframe"
+            raise TypeError(msg)
         out = out.fillna(0)
 
         return out
@@ -757,6 +759,9 @@ class TA:
 def _apply_t(series: pd.Series, func: Callable) -> pd.DataFrame:
     df = series.apply(func).T
     if df.empty:
-        raise InputError(f"{func.__name__} returned an empty dataframe")
-    assert isinstance(df, pd.DataFrame)
+        msg = f"{func.__name__} returned an empty dataframe"
+        raise InputError(msg)
+    if not isinstance(df, pd.DataFrame):
+        msg = f"{func.__name__} must return a dataframe"
+        raise TypeError(msg)
     return df

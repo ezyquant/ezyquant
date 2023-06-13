@@ -8,10 +8,10 @@ import quantstats as qs
 from pandas.testing import assert_index_equal
 from quantstats import stats as qs_stats
 
-from . import fields as fld
-from . import utils
-from .reader import _SETDataReaderCached
-from .utils import cached_property
+from ezyquant import fields as fld
+from ezyquant import utils
+from ezyquant.reader import _SETDataReaderCached
+from ezyquant.utils import cached_property
 
 nan = float("nan")
 
@@ -277,11 +277,7 @@ class SETBacktestReport:
 
         cash_dvd_df["pay_date"] = cash_dvd_df["pay_date"].fillna(cash_dvd_df["ex_date"])
 
-        cash_dvd_df["before_ex_date"] = cash_dvd_df[
-            "ex_date"
-        ] - self._sdr._SETBusinessDay(
-            1
-        )  # type: ignore
+        cash_dvd_df["before_ex_date"] = cash_dvd_df["ex_date"] - self._sdr._SETBusinessDay(1)  # type: ignore
 
         position_df = position_df.rename(columns={"timestamp": "before_ex_date"})
 
@@ -388,7 +384,9 @@ class SETBacktestReport:
 
         # sort columns
         df = df[self._nav_df.columns]
-        assert isinstance(df, pd.DataFrame)
+        if not isinstance(df, pd.DataFrame):
+            msg = "df must be pd.DataFrame"
+            raise TypeError(msg)
 
         return df
 
@@ -1028,14 +1026,18 @@ class SETBacktestReport:
     def start_date(self) -> datetime:
         """Start date."""
         out = self._nav_df.index[0]
-        assert isinstance(out, datetime)
+        if not isinstance(out, datetime):
+            msg = "start_date must be datetime"
+            raise TypeError(msg)
         return out
 
     @cached_property
     def end_date(self) -> datetime:
         """End date."""
         out = self._nav_df.index[-1]
-        assert isinstance(out, datetime)
+        if not isinstance(out, datetime):
+            msg = "end_date must be datetime"
+            raise TypeError(msg)
         return out
 
     @property

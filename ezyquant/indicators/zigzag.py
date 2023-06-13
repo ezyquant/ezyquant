@@ -7,7 +7,7 @@ import numpy as np
 PEAK, VALLEY = 1, -1
 
 
-def _identify_initial_pivot(X, up_thresh, down_thresh):
+def _identify_initial_pivot(X, up_thresh, down_thresh):  # noqa: N803
     """Quickly identify the X[0] as a peak or valley."""
     x_0 = X[0]
     max_x = x_0
@@ -67,7 +67,8 @@ def peak_valley_pivots_candlestick(close, high, low, up_thresh, down_thresh):
     ignoring data outside the fully realized segments, which may bias analysis.
     """
     if down_thresh > 0:
-        raise ValueError("The down_thresh must be negative.")
+        msg = "The down_thresh must be negative."
+        raise ValueError(msg)
 
     initial_pivot = _identify_initial_pivot(close, up_thresh, down_thresh)
 

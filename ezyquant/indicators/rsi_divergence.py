@@ -3,7 +3,7 @@ import operator
 import pandas as pd
 from ta.momentum import rsi
 
-from . import zigzag
+from ezyquant.indicators import zigzag
 
 
 def rsi_divergence(

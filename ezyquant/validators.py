@@ -3,8 +3,8 @@ from typing import List, Optional
 import pandas as pd
 from pandas.testing import assert_index_equal
 
-from . import utils
-from .errors import InputError
+from ezyquant import utils
+from ezyquant.errors import InputError
 
 
 def check_start_end_date(
@@ -18,17 +18,20 @@ def check_start_end_date(
 
     if s is not None and e is not None:
         if s > e:
-            raise InputError(f"Start date {s} is after end date {e}")
+            msg = f"Start date {s} is after end date {e}"
+            raise InputError(msg)
 
     if l is not None:
         if s is not None and s > l:
-            raise InputError(f"Start date {s} is after last update date {l}")
+            msg = f"Start date {s} is after last update date {l}"
+            raise InputError(msg)
         if e is not None and e > l:
-            raise InputError(f"End date {e} is after last update date {l}")
+            msg = f"End date {e} is after last update date {l}"
+            raise InputError(msg)
 
 
 def check_duplicate(data_list: Optional[List[str]]):
-    if data_list == None:
+    if data_list is None:
         return
 
     data_list = [x.upper() for x in data_list]
@@ -36,34 +39,47 @@ def check_duplicate(data_list: Optional[List[str]]):
     if len(data_list) == len(set(data_list)):
         return
 
-    raise InputError(f"Input was duplicate ({data_list})")
+    msg = f"Input was duplicate ({data_list})"
+    raise InputError(msg)
 
 
 def check_cash(cash: float) -> None:
     if cash < 0:
-        raise InputError("cash must be positive")
+        msg = "cash must be positive"
+        raise InputError(msg)
 
 
 def check_pct(pct: float) -> None:
     if pct < 0 or pct > 1:
-        raise InputError("pct must be between 0 and 1")
+        msg = "pct must be between 0 and 1"
+        raise InputError(msg)
 
 
 def check_df_symbol_daily(df):
-    assert isinstance(df, pd.DataFrame)
+    if not isinstance(df, pd.DataFrame):
+        msg = "Input must be a DataFrame"
+        raise TypeError(msg)
     check_df_index_daily(df)
     check_df_column_symbol(df)
 
 
 def check_df_index_daily(df):
     index = df.index
-    assert isinstance(index, pd.DatetimeIndex)
-    assert index.is_monotonic_increasing
-    assert index.is_unique
+    if not isinstance(index, pd.DatetimeIndex):
+        msg = "Index must be a DatetimeIndex"
+        raise TypeError(msg)
+    if not index.is_monotonic_increasing:
+        msg = "Index must be sorted in ascending order"
+        raise ValueError(msg)
+    if not index.is_unique:
+        msg = "Duplicate dates found"
+        raise ValueError(msg)
     assert_index_equal(index, index.normalize())
 
 
 def check_df_column_symbol(df):
     column = df.columns
-    assert column.is_unique
+    if not column.is_unique:
+        msg = "Duplicate symbols found"
+        raise ValueError(msg)
     assert_index_equal(column, column.str.upper())

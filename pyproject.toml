@@ -67,19 +67,23 @@ all = ["style", "typing"]
 
 [tool.black]
 target-version = ["py38"]
+line-length = 88
+
+[tool.docformatter]
+black = true
+exclude = ["venv"]
 
 [tool.ruff]
 target-version = "py38"
+line-length = 88
 select = [
   "A",
   "ARG",
   "B",
   "C",
-  "DTZ",
   "E",
   "EM",
   "F",
-  "FBT",
   "I",
   "ICN",
   "ISC",
@@ -100,8 +104,6 @@ select = [
 ignore = [
   # Allow non-abstract empty methods in abstract base classes
   "B027",
-  # Allow boolean positional values in function calls, like `dict.get(... True)`
-  "FBT003",
   # Ignore checks for possible passwords
   "S105",
   "S106",
@@ -112,10 +114,14 @@ ignore = [
   "PLR0912",
   "PLR0913",
   "PLR0915",
-]
-unfixable = [
-  # Don't touch unused imports
-  "F401",
+  # Ignore line length, let black, docformatter handle it
+  "E501",
+  # Ignore lowercase function names
+  "N802",
+  # Ignore cache usage
+  "B019",
+  # Ignore other
+  "E741",
 ]
 
 [tool.ruff.isort]
@@ -125,8 +131,11 @@ known-first-party = ["ezyquant"]
 ban-relative-imports = "all"
 
 [tool.ruff.per-file-ignores]
-# Tests can use magic values, assertions, and relative imports
-"tests/**/*" = ["PLR2004", "S101", "TID252"]
+# Don't touch unused imports
+"**/__init__.py" = ["F401"]
+# Tests can use magic values, assertions, and other things
+"tests/**/*" = ["PLR2004", "S101", "T", "ARG", "B006", "B008"]
+"examples/**/*" = ["T", "PLR2004"]
 
 [tool.coverage.run]
 source_pkgs = ["ezyquant", "tests"]
