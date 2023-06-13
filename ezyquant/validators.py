@@ -14,19 +14,19 @@ def check_start_end_date(
 ):
     s = utils.str_to_date(start_date) if start_date else None
     e = utils.str_to_date(end_date) if end_date else None
-    lu = utils.str_to_date(last_update_date) if last_update_date else None
+    l = utils.str_to_date(last_update_date) if last_update_date else None
 
     if s is not None and e is not None:
         if s > e:
             msg = f"Start date {s} is after end date {e}"
             raise InputError(msg)
 
-    if lu is not None:
-        if s is not None and s > lu:
-            msg = f"Start date {s} is after last update date {lu}"
+    if l is not None:
+        if s is not None and s > l:
+            msg = f"Start date {s} is after last update date {l}"
             raise InputError(msg)
-        if e is not None and e > lu:
-            msg = f"End date {e} is after last update date {lu}"
+        if e is not None and e > l:
+            msg = f"End date {e} is after last update date {l}"
             raise InputError(msg)
 
 

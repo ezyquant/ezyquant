@@ -12,20 +12,22 @@ class SETPosition:
 
     def __post_init__(self):
         # symbol
-        assert isinstance(
-            self.symbol, str
-        ), f"symbol must be str, got {type(self.symbol)}"
+        if not isinstance(self.symbol, str):
+            msg = f"symbol must be str, got {type(self.symbol)}"
+            raise TypeError(msg)
 
         # volume
-        assert self.volume >= 0, f"volume must be positive, got {self.volume}"
-        assert (
-            self.volume % 100 == 0
-        ), f"volume must be multiple of 100, got {self.volume}"
+        if not self.volume >= 0:
+            msg = f"volume must be positive, got {self.volume}"
+            raise ValueError(msg)
+        if not (self.volume % 100 == 0):
+            msg = f"volume must be multiple of 100, got {self.volume}"
+            raise ValueError(msg)
 
         # price
-        assert (
-            self.cost_price >= 0
-        ), f"cost_price must be positive, got {self.cost_price}"
+        if not (self.cost_price >= 0):
+            msg = f"cost_price must be positive, got {self.cost_price}"
+            raise ValueError(msg)
 
     @property
     def cost_value(self) -> float:

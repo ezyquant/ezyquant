@@ -23,8 +23,8 @@ class SETSignalCreator:
         self,
         start_date: str = "2010-01-01",
         end_date: Optional[str] = None,
-        index_list: List[str] = [],
-        symbol_list: List[str] = [],
+        index_list: List[str] = [],  # noqa: B006
+        symbol_list: List[str] = [],  # noqa: B006
     ):
         """Initialize SETSignalCreator.
 
@@ -621,7 +621,7 @@ class SETSignalCreator:
             elif i in fld.SECTOR_LIST_UPPER:
                 df = self._get_symbol_info(sector=i)
             else:
-                warnings.warn(f"Index {i} is invalid.")
+                warnings.warn(f"Index {i} is invalid.", stacklevel=2)
                 continue
 
             symbols.update(df["symbol"])
@@ -630,7 +630,7 @@ class SETSignalCreator:
 
         invalid_symbols = list(set(self._symbol_list) - set(df["symbol"]))
         if len(invalid_symbols) > 0:
-            warnings.warn(f"Symbols {invalid_symbols} is invalid.")
+            warnings.warn(f"Symbols {invalid_symbols} is invalid.", stacklevel=2)
 
         return sorted(set(df["symbol"]))
 
@@ -693,9 +693,9 @@ class SETSignalCreator:
         roll = data.rolling(period)
         try:
             data = getattr(roll, method)(*args, **kwargs)
-        except AttributeError:
+        except AttributeError as e:
             msg = f"{method} is invalid method. Please read document to check valid method."
-            raise InputError(msg)
+            raise InputError(msg) from e
         return data
 
     def _rolling_skip_na_keep_inf(

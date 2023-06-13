@@ -38,6 +38,19 @@ TRADE_DATE = "trade_date"
 NAME = "name"
 VALUE = "value"
 
+set50_number = 50
+set100_number = 100
+sethd_number = 30
+
+sqlite_max_variable_number = 100
+
+fourth_quarter_number = 9
+
+TIMEFRAME_MAP = {
+    fld.TIMEFRAME_QUARTERLY: ("Q1", "Q2", "Q3", "Q4"),
+    fld.TIMEFRAME_YEARLY: ("YE",),
+}
+
 
 class SETDataReader:
     _engine: Optional[Engine] = None
@@ -54,7 +67,7 @@ class SETDataReader:
         try:
             self._table("SECURITY")
         except DatabaseError as e:
-            raise InputError(e)
+            raise InputError(e) from e
 
     # TODO: Clear cache
     @lru_cache
@@ -99,7 +112,12 @@ class SETDataReader:
         d1 = self.last_table_update("DAILY_STOCK_TRADE")
         d2 = self.last_table_update("DAILY_STOCK_STAT")
         d3 = self.last_table_update("DAILY_SECTOR_INFO")
-        assert d1 == d2 == d3, "Last update is not the same."
+        if d1 != d2 or d1 != d3:
+            warnings.warn(
+                "Last update is not the same for all tables. "
+                "Please check your database.",
+                stacklevel=2,
+            )
         return d1
 
     def get_trading_dates(
@@ -354,7 +372,9 @@ class SETDataReader:
         1         646    PTT     บริษัท ปตท. จำกัด (มหาชน)           PTT PUBLIC COMPANY LIMITED
         """
         warnings.warn(
-            "This function will be deprecated in the future.", DeprecationWarning
+            "This function will be deprecated in the future.",
+            DeprecationWarning,
+            stacklevel=2,
         )
         company_t = self._table("COMPANY")
         security_t = self._table("SECURITY")
@@ -425,7 +445,9 @@ class SETDataReader:
         5       3375  SMG-W1-R  2014-08-28  SCSMG-W1-R   SMG-W1-R
         """
         warnings.warn(
-            "This function will be deprecated in the future.", DeprecationWarning
+            "This function will be deprecated in the future.",
+            DeprecationWarning,
+            stacklevel=2,
         )
         security_t = self._table("SECURITY")
         change_name_t = self._table("CHANGE_NAME_SECURITY")
@@ -468,7 +490,7 @@ class SETDataReader:
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
         ca_type_list: Optional[List[str]] = None,
-        adjusted_list: List[str] = ["", "CR", "PC", "RC", "SD", "XR"],
+        adjusted_list: List[str] = ["", "CR", "PC", "RC", "SD", "XR"],  # noqa: B006
     ) -> pd.DataFrame:
         """Data from table RIGHTS_BENEFIT. Include only Cash Dividend (CD) and Stock
         Dividend (SD). Not include Cancelled (F_CANCEL!='C') and dps more than 0
@@ -709,7 +731,9 @@ class SETDataReader:
         3  CB20220B    2020-02-20
         """
         warnings.warn(
-            "This function will be deprecated in the future.", DeprecationWarning
+            "This function will be deprecated in the future.",
+            DeprecationWarning,
+            stacklevel=2,
         )
 
         security_t = self._table("SECURITY")
@@ -930,15 +954,15 @@ class SETDataReader:
                 case(
                     (
                         func.trim(sector_t.c.N_SYMBOL_FEED) == fld.INDEX_SET50,
-                        security_index_t.c.S_SEQ <= 50,
+                        security_index_t.c.S_SEQ <= set50_number,
                     ),
                     (
                         func.trim(sector_t.c.N_SYMBOL_FEED) == fld.INDEX_SET100,
-                        security_index_t.c.S_SEQ <= 100,
+                        security_index_t.c.S_SEQ <= set100_number,
                     ),
                     (
                         func.trim(sector_t.c.N_SYMBOL_FEED) == fld.INDEX_SETHD,
-                        security_index_t.c.S_SEQ <= 30,
+                        security_index_t.c.S_SEQ <= sethd_number,
                     ),
                     else_=True,
                 )
@@ -1044,7 +1068,7 @@ class SETDataReader:
         symbol_list: Optional[List[str]] = None,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
-        adjusted_list: List[str] = ["", "CR", "PC", "RC", "SD", "XR"],
+        adjusted_list: List[str] = ["", "CR", "PC", "RC", "SD", "XR"],  # noqa: B006
     ) -> pd.DataFrame:
         """Data from table DAILY_STOCK_TRADE, DAILY_STOCK_STAT.
 
@@ -1891,7 +1915,9 @@ class SETDataReader:
 
     @property
     def engine(self) -> Engine:
-        assert self._engine is not None
+        if self._engine is None:
+            msg = "engine is not set"
+            raise ValueError(msg)
         return self._engine
 
     def _func_date(self, column: ColumnElement):
@@ -2024,7 +2050,9 @@ class SETDataReader:
 
         prefix = ""
         if isinstance(table, Join):
-            assert isinstance(table.left, Table)
+            if not isinstance(table.left, Table):
+                msg = "table must be a Table or Join of Table"
+                raise ValueError(msg)
             prefix = table.left.name + "_"
 
         return table.join(
@@ -2133,14 +2161,15 @@ class SETDataReader:
         self,
         min_date: str,
         max_date: str,
-        symbol_list: List[str],
+        symbol_list: Optional[List[str]],
         start_date: Optional[str] = None,
         ca_type_list: Optional[List[str]] = None,
     ) -> pd.DataFrame:
+        if symbol_list is not None and len(symbol_list) > sqlite_max_variable_number:
+            symbol_list = None
+
         df = self.get_adjust_factor(
-            symbol_list=symbol_list if len(symbol_list) < 100 else None,
-            start_date=start_date,
-            ca_type_list=ca_type_list,
+            symbol_list=symbol_list, start_date=start_date, ca_type_list=ca_type_list
         )
 
         # pivot table
@@ -2172,11 +2201,6 @@ class SETDataReader:
     def _get_financial_screen_stmt(
         self, timeframe: str, field: str, d_trade_subquery: Subquery
     ) -> Select:
-        TIMEFRAME_MAP = {
-            fld.TIMEFRAME_QUARTERLY: ("Q1", "Q2", "Q3", "Q4"),
-            fld.TIMEFRAME_YEARLY: ("YE",),
-        }
-
         financial_screen_t = self._table("FINANCIAL_SCREEN")
         security_t = self._table("SECURITY")
 
@@ -2247,7 +2271,7 @@ class SETDataReader:
         )
 
         if timeframe == fld.TIMEFRAME_YEARLY:
-            stmt = stmt.where(financial_stat_std_t.c.I_QUARTER == 9)
+            stmt = stmt.where(financial_stat_std_t.c.I_QUARTER == fourth_quarter_number)
 
         return stmt
 
@@ -2314,7 +2338,9 @@ class SETDataReader:
         field = field.lower()
         f_data = f_data.upper()
 
-        assert f_data in ("I", "S", "M"), "Invalid f_data"
+        if f_data not in ("I", "S", "M"):
+            msg = "f_data must be one of I, S, M"
+            raise ValueError(msg)
 
         security_t = self._table("SECURITY")
         sector_t = self._table("SECTOR")
@@ -2338,11 +2364,11 @@ class SETDataReader:
 
         try:
             field_col = daily_sector_info_t.c[fld.DAILY_SECTOR_INFO_MAP[field]]
-        except KeyError:
+        except KeyError as e:
             msg = (
                 f"{field} is invalid field. Please read document to check valid field."
             )
-            raise InputError(msg)
+            raise InputError(msg) from e
 
         stmt = (
             select(

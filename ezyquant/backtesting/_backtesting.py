@@ -178,7 +178,9 @@ def _backtest(
         [on_interval(k, v) for k, v in close_price_dict.items()],
         index=close_price_df.index,
     )
-    assert isinstance(cash_s, pd.Series)
+    if not isinstance(cash_s, pd.Series):
+        msg = "cash_s must be pd.Series"
+        raise TypeError(msg)
 
     position_df = pd.concat(position_df_list, ignore_index=True)
     position_df["timestamp"] = pd.to_datetime(position_df["timestamp"])

@@ -7,7 +7,7 @@ import numpy as np
 PEAK, VALLEY = 1, -1
 
 
-def _identify_initial_pivot(X, up_thresh, down_thresh):
+def _identify_initial_pivot(X, up_thresh, down_thresh):  # noqa: N803
     """Quickly identify the X[0] as a peak or valley."""
     x_0 = X[0]
     max_x = x_0

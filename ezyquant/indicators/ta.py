@@ -435,7 +435,9 @@ class TA:
 
         # Return only signal
         out = np.sign(out)
-        assert isinstance(out, pd.DataFrame)
+        if not isinstance(out, pd.DataFrame):
+            msg = "Output is not a dataframe"
+            raise TypeError(msg)
         out = out.fillna(0)
 
         return out
@@ -759,5 +761,7 @@ def _apply_t(series: pd.Series, func: Callable) -> pd.DataFrame:
     if df.empty:
         msg = f"{func.__name__} returned an empty dataframe"
         raise InputError(msg)
-    assert isinstance(df, pd.DataFrame)
+    if not isinstance(df, pd.DataFrame):
+        msg = f"{func.__name__} must return a dataframe"
+        raise TypeError(msg)
     return df

@@ -69,6 +69,10 @@ all = ["style", "typing"]
 target-version = ["py38"]
 line-length = 88
 
+[tool.docformatter]
+black = true
+exclude = ["venv"]
+
 [tool.ruff]
 target-version = "py38"
 line-length = 88
@@ -110,6 +114,14 @@ ignore = [
   "PLR0912",
   "PLR0913",
   "PLR0915",
+  # Ignore line length, let black, docformatter handle it
+  "E501",
+  # Ignore lowercase function names
+  "N802",
+  # Ignore cache usage
+  "B019",
+  # Ignore other
+  "E741",
 ]
 
 [tool.ruff.isort]
@@ -123,7 +135,7 @@ ban-relative-imports = "all"
 "**/__init__.py" = ["F401"]
 # Tests can use magic values, assertions, and other things
 "tests/**/*" = ["PLR2004", "S101", "T", "ARG", "B006", "B008"]
-"examples/**/*" = ["T"]
+"examples/**/*" = ["T", "PLR2004"]
 
 [tool.coverage.run]
 source_pkgs = ["ezyquant", "tests"]
