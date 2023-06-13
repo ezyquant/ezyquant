@@ -109,7 +109,7 @@ def is_rebalance(
 
         tds = tds.mask(
             tds.dt.day < rebalance_at,
-            tds - pd.DateOffset(months=1),  # type: ignore
+            tds - pd.DateOffset(months=1),
         )
         by = [tds.dt.year, tds.dt.month]
 

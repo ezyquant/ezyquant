@@ -464,7 +464,7 @@ class SETDataReader:
                 func.trim(change_name_t.c.N_SECURITY_NEW).label("symbol_new"),
             )
             .select_from(from_clause)
-            .where(change_name_t.c.D_EFFECT is not None)
+            .where(change_name_t.c.D_EFFECT is not None)  # type: ignore
             .where(
                 func.trim(change_name_t.c.N_SECURITY_OLD)
                 != func.trim(change_name_t.c.N_SECURITY_NEW)
@@ -748,7 +748,7 @@ class SETDataReader:
                 security_detail_t.c.D_DELISTED.label("delisted_date"),
             )
             .select_from(from_clause)
-            .where(security_detail_t.c.D_DELISTED is not None)
+            .where(security_detail_t.c.D_DELISTED is not None)  # type: ignore
             .order_by(security_detail_t.c.D_DELISTED)
         )
         stmt = self._filter_stmt_by_symbol_and_date(
@@ -1961,7 +1961,7 @@ class SETDataReader:
         end_date: Optional[str],
     ):
         if isinstance(column.table, Table) and "D_TRADE" in column.table.columns:
-            last_update_date = self.last_table_update(column.table)  # type: ignore
+            last_update_date = self.last_table_update(column.table)
         else:
             last_update_date = None
 
@@ -2378,7 +2378,7 @@ class SETDataReader:
             )
             .select_from(from_clause)
             .where(sector_t.c.F_DATA == f_data)
-            .where(sector_t.c.D_CANCEL is None)
+            .where(sector_t.c.D_CANCEL is None)  # type: ignore
             .order_by(daily_sector_info_t.c.D_TRADE)
         )
 
@@ -2431,7 +2431,7 @@ class SETDataReader:
     @lru_cache(maxsize=1)
     def _get_holidays(self) -> List[str]:
         tds = self.get_trading_dates()
-        bds = pd.bdate_range(tds[0], tds[-1]).strftime("%Y-%m-%d")  # type: ignore
+        bds = pd.bdate_range(tds[0], tds[-1]).strftime("%Y-%m-%d")
         return list(set(bds) - set(tds))
 
     def _SETBusinessDay(self, n: int = 1) -> CustomBusinessDay:
