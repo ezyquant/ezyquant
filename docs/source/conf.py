@@ -14,17 +14,15 @@ import sys
 
 sys.path.insert(0, os.path.abspath("../.."))
 
-from datetime import datetime
+from datetime import datetime  # noqa: E402
 
-import ezyquant as ez
+import ezyquant as ez  # noqa: E402
 
 # -- Project information -----------------------------------------------------
 
 project = "EzyQuant"
 author = "Fintech (Thailand) Company Limited"
-copyright = (
-    f"2022-{datetime.now().year}, Thailand Capital Market Development Fund (CMDF)"
-)
+copyright = f"2022-{datetime.now().year}, Thailand Capital Market Development Fund (CMDF)"  # noqa: A001
 release = ez.__version__
 
 

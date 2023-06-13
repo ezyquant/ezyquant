@@ -9,6 +9,7 @@ from pandas.tseries.offsets import CustomBusinessDay
 from sqlalchemy import (
     ColumnElement,
     MetaData,
+    Subquery,
     Table,
     and_,
     case,
@@ -22,10 +23,10 @@ from sqlalchemy.exc import DatabaseError
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql import FromClause, Join, Select
 
-from . import fields as fld
-from . import utils
-from . import validators as vld
-from .errors import InputError
+from ezyquant import fields as fld
+from ezyquant import utils
+from ezyquant import validators as vld
+from ezyquant.errors import InputError
 
 warnings.filterwarnings(
     "ignore",
@@ -37,16 +38,28 @@ TRADE_DATE = "trade_date"
 NAME = "name"
 VALUE = "value"
 
+set50_number = 50
+set100_number = 100
+sethd_number = 30
+
+sqlite_max_variable_number = 100
+
+fourth_quarter_number = 9
+
+TIMEFRAME_MAP = {
+    fld.TIMEFRAME_QUARTERLY: ("Q1", "Q2", "Q3", "Q4"),
+    fld.TIMEFRAME_YEARLY: ("YE",),
+}
+
 
 class SETDataReader:
     _engine: Optional[Engine] = None
 
     def __init__(self):
         """SETDataReader read PSIMS data."""
-        if self._engine == None:
-            raise InputError(
-                "You need to connect sqlite using ezyquant.connect_sqlite."
-            )
+        if self._engine is None:
+            msg = "You need to connect sqlite using ezyquant.connect_sqlite."
+            raise InputError(msg)
 
         self._metadata = MetaData()
 
@@ -54,8 +67,10 @@ class SETDataReader:
         try:
             self._table("SECURITY")
         except DatabaseError as e:
-            raise InputError(e)
+            raise InputError(e) from e
 
+    # TODO: Clear cache
+    @lru_cache
     def last_table_update(self, table_name: str) -> str:
         """Last D_TRADE in table.
 
@@ -97,7 +112,12 @@ class SETDataReader:
         d1 = self.last_table_update("DAILY_STOCK_TRADE")
         d2 = self.last_table_update("DAILY_STOCK_STAT")
         d3 = self.last_table_update("DAILY_SECTOR_INFO")
-        assert d1 == d2 == d3, "Last update is not the same."
+        if d1 != d2 or d1 != d3:
+            warnings.warn(
+                "Last update is not the same for all tables. "
+                "Please check your database.",
+                stacklevel=2,
+            )
         return d1
 
     def get_trading_dates(
@@ -182,8 +202,7 @@ class SETDataReader:
         start_has_price_date: Optional[str] = None,
         end_has_price_date: Optional[str] = None,
     ) -> pd.DataFrame:
-        """Data from table SECURITY. Symbol must exist in table
-        DAILY_STOCK_TRADE.
+        """Data from table SECURITY. Symbol must exist in table DAILY_STOCK_TRADE.
 
         Parameters
         ----------
@@ -353,7 +372,9 @@ class SETDataReader:
         1         646    PTT     บริษัท ปตท. จำกัด (มหาชน)           PTT PUBLIC COMPANY LIMITED
         """
         warnings.warn(
-            "This function will be deprecated in the future.", DeprecationWarning
+            "This function will be deprecated in the future.",
+            DeprecationWarning,
+            stacklevel=2,
         )
         company_t = self._table("COMPANY")
         security_t = self._table("SECURITY")
@@ -424,7 +445,9 @@ class SETDataReader:
         5       3375  SMG-W1-R  2014-08-28  SCSMG-W1-R   SMG-W1-R
         """
         warnings.warn(
-            "This function will be deprecated in the future.", DeprecationWarning
+            "This function will be deprecated in the future.",
+            DeprecationWarning,
+            stacklevel=2,
         )
         security_t = self._table("SECURITY")
         change_name_t = self._table("CHANGE_NAME_SECURITY")
@@ -441,7 +464,7 @@ class SETDataReader:
                 func.trim(change_name_t.c.N_SECURITY_NEW).label("symbol_new"),
             )
             .select_from(from_clause)
-            .where(change_name_t.c.D_EFFECT != None)
+            .where(change_name_t.c.D_EFFECT is not None)  # type: ignore
             .where(
                 func.trim(change_name_t.c.N_SECURITY_OLD)
                 != func.trim(change_name_t.c.N_SECURITY_NEW)
@@ -467,11 +490,11 @@ class SETDataReader:
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
         ca_type_list: Optional[List[str]] = None,
-        adjusted_list: List[str] = ["", "CR", "PC", "RC", "SD", "XR"],
+        adjusted_list: List[str] = ["", "CR", "PC", "RC", "SD", "XR"],  # noqa: B006
     ) -> pd.DataFrame:
-        """Data from table RIGHTS_BENEFIT. Include only Cash Dividend (CD) and
-        Stock Dividend (SD). Not include Cancelled (F_CANCEL!='C') and dps more
-        than 0 (Z_RIGHTS>0). ex_date and pay_date can be null.
+        """Data from table RIGHTS_BENEFIT. Include only Cash Dividend (CD) and Stock
+        Dividend (SD). Not include Cancelled (F_CANCEL!='C') and dps more than 0
+        (Z_RIGHTS>0). ex_date and pay_date can be null.
 
         Parameters
         ----------
@@ -557,8 +580,8 @@ class SETDataReader:
         end_date: Optional[str] = None,
         ca_type_list: Optional[List[str]] = None,
     ) -> pd.DataFrame:
-        """Data from table RIGHTS_BENEFIT. Not include Cancelled
-        (F_CANCEL!='C') sign_date and pay_date can be null.
+        """Data from table RIGHTS_BENEFIT. Not include Cancelled (F_CANCEL!='C')
+        sign_date and pay_date can be null.
 
         Parameters
         ----------
@@ -678,8 +701,7 @@ class SETDataReader:
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
     ) -> pd.DataFrame:
-        """Data from table SECURITY_DETAIL. Filter delisted by D_DELISTED !=
-        None.
+        """Data from table SECURITY_DETAIL. Filter delisted by D_DELISTED != None.
 
         Parameters
         ----------
@@ -709,7 +731,9 @@ class SETDataReader:
         3  CB20220B    2020-02-20
         """
         warnings.warn(
-            "This function will be deprecated in the future.", DeprecationWarning
+            "This function will be deprecated in the future.",
+            DeprecationWarning,
+            stacklevel=2,
         )
 
         security_t = self._table("SECURITY")
@@ -724,7 +748,7 @@ class SETDataReader:
                 security_detail_t.c.D_DELISTED.label("delisted_date"),
             )
             .select_from(from_clause)
-            .where(security_detail_t.c.D_DELISTED != None)
+            .where(security_detail_t.c.D_DELISTED is not None)  # type: ignore
             .order_by(security_detail_t.c.D_DELISTED)
         )
         stmt = self._filter_stmt_by_symbol_and_date(
@@ -930,15 +954,15 @@ class SETDataReader:
                 case(
                     (
                         func.trim(sector_t.c.N_SYMBOL_FEED) == fld.INDEX_SET50,
-                        security_index_t.c.S_SEQ <= 50,
+                        security_index_t.c.S_SEQ <= set50_number,
                     ),
                     (
                         func.trim(sector_t.c.N_SYMBOL_FEED) == fld.INDEX_SET100,
-                        security_index_t.c.S_SEQ <= 100,
+                        security_index_t.c.S_SEQ <= set100_number,
                     ),
                     (
                         func.trim(sector_t.c.N_SYMBOL_FEED) == fld.INDEX_SETHD,
-                        security_index_t.c.S_SEQ <= 30,
+                        security_index_t.c.S_SEQ <= sethd_number,
                     ),
                     else_=True,
                 )
@@ -1044,7 +1068,7 @@ class SETDataReader:
         symbol_list: Optional[List[str]] = None,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
-        adjusted_list: List[str] = ["", "CR", "PC", "RC", "SD", "XR"],
+        adjusted_list: List[str] = ["", "CR", "PC", "RC", "SD", "XR"],  # noqa: B006
     ) -> pd.DataFrame:
         """Data from table DAILY_STOCK_TRADE, DAILY_STOCK_STAT.
 
@@ -1159,9 +1183,10 @@ class SETDataReader:
                 daily_stock_t.c.Z_LAST_OFFER > 0,
             )
         else:
-            raise InputError(
+            msg = (
                 f"{field} is invalid field. Please read document to check valid field."
             )
+            raise InputError(msg)
 
         from_clause = daily_stock_t.join(
             security_t, daily_stock_t.c.I_SECURITY == security_t.c.I_SECURITY
@@ -1230,8 +1255,8 @@ class SETDataReader:
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
     ) -> pd.DataFrame:
-        """Data from tables FINANCIAL_STAT_STD and FINANCIAL_SCREEN.If field is
-        in both table, the data from FINANCIAL_STAT_STD will be used.
+        """Data from tables FINANCIAL_STAT_STD and FINANCIAL_SCREEN.If field is in both
+        table, the data from FINANCIAL_STAT_STD will be used.
 
         FINANCIAL_STAT_STD using data from column M_ACCOUNT multiply 1000.
         FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and I_PERIOD in ('Q1','Q2','Q3','Q4').
@@ -1371,8 +1396,8 @@ class SETDataReader:
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
     ) -> pd.DataFrame:
-        """Data from table FINANCIAL_STAT_STD and FINANCIAL_SCREEN. If field is
-        in both table, the data from FINANCIAL_STAT_STD will be used.
+        """Data from table FINANCIAL_STAT_STD and FINANCIAL_SCREEN. If field is in both
+        table, the data from FINANCIAL_STAT_STD will be used.
 
         FINANCIAL_STAT_STD filter by "I_QUARTER"='9' and using data from column M_ACCOUNT multiply 1000.
         FINANCIAL_SCREEN filter by I_PERIOD_TYPE='QY' and I_PERIOD='YE'.
@@ -1512,8 +1537,8 @@ class SETDataReader:
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
     ) -> pd.DataFrame:
-        """Trailing 12 months (TTM) is a term used to describe the past 12
-        consecutive months of a company's performance data.
+        """Trailing 12 months (TTM) is a term used to describe the past 12 consecutive
+        months of a company's performance data.
 
         TTM can be calculate only Income Statement and Cashflow, but not Financial Ratio and Balance Sheet.
 
@@ -1600,8 +1625,8 @@ class SETDataReader:
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
     ) -> pd.DataFrame:
-        """Year to date (YTD) refers to the period of time beginning the first
-        day of the current calendar year or fiscal year up to the current date.
+        """Year to date (YTD) refers to the period of time beginning the first day of
+        the current calendar year or fiscal year up to the current date.
 
         Data from table FINANCIAL_STAT_STD and FINANCIAL_SCREEN. If field is in both table, the data from FINANCIAL_STAT_STD will be used.
 
@@ -1890,14 +1915,16 @@ class SETDataReader:
 
     @property
     def engine(self) -> Engine:
-        assert self._engine is not None
+        if self._engine is None:
+            msg = "engine is not set"
+            raise ValueError(msg)
         return self._engine
 
     def _func_date(self, column: ColumnElement):
         """Convert date column to date type for sqlite engine.
 
-        Usually use in where clause. Select clause will be converted
-        automatically by pandas.read_sql_query
+        Usually use in where clause. Select clause will be converted automatically by
+        pandas.read_sql_query
         """
         if self.engine.name == "sqlite":
             return func.DATE(column)
@@ -1934,7 +1961,7 @@ class SETDataReader:
         end_date: Optional[str],
     ):
         if isinstance(column.table, Table) and "D_TRADE" in column.table.columns:
-            last_update_date = self.last_table_update(column.table)  # type: ignore
+            last_update_date = self.last_table_update(column.table)
         else:
             last_update_date = None
 
@@ -1944,9 +1971,11 @@ class SETDataReader:
             last_update_date=last_update_date,
         )
 
-        if start_date is not None:
+        if start_date is not None and end_date is not None:
+            stmt = stmt.where(self._func_date(column).between(start_date, end_date))
+        elif start_date is not None:
             stmt = stmt.where(self._func_date(column) >= start_date)
-        if end_date is not None:
+        elif end_date is not None:
             stmt = stmt.where(self._func_date(column) <= end_date)
 
         return stmt
@@ -1977,31 +2006,37 @@ class SETDataReader:
         )
         return stmt
 
-    @lru_cache(maxsize=1)
-    def _d_trade_subquery(self):
+    def _d_trade_subquery(
+        self, start_date: Optional[str] = None, end_date: Optional[str] = None
+    ) -> Subquery:
         daily_stock_stat_t = self._table("DAILY_STOCK_STAT")
-        return (
-            select(
-                daily_stock_stat_t.c.I_SECURITY,
-                daily_stock_stat_t.c.D_AS_OF,
-                func.min(daily_stock_stat_t.c.D_TRADE).label("D_TRADE"),
-            )
-            .group_by(daily_stock_stat_t.c.I_SECURITY, daily_stock_stat_t.c.D_AS_OF)
-            .subquery()
+        stmt = select(
+            daily_stock_stat_t.c.I_SECURITY,
+            daily_stock_stat_t.c.D_AS_OF,
+            func.min(daily_stock_stat_t.c.D_TRADE).label("D_TRADE"),
         )
+        stmt = self._filter_stmt_by_date(
+            stmt=stmt,
+            column=daily_stock_stat_t.c.D_TRADE,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        stmt = stmt.group_by(
+            daily_stock_stat_t.c.I_SECURITY, daily_stock_stat_t.c.D_AS_OF
+        )
+        return stmt.subquery()
 
-    def _join_security_and_d_trade_subquery(self, table: Table):
+    def _join_security_and_d_trade_subquery(
+        self, table: Table, d_trade_subquery: Subquery
+    ) -> Join:
         security_t = self._table("SECURITY")
-        d_trade_subquery = self._d_trade_subquery()
-        return table.join(
-            security_t, table.c.I_SECURITY == security_t.c.I_SECURITY
-        ).join(
-            d_trade_subquery,
+        return d_trade_subquery.join(
+            table,
             and_(
                 table.c.I_SECURITY == d_trade_subquery.c.I_SECURITY,
                 table.c.D_AS_OF == d_trade_subquery.c.D_AS_OF,
             ),
-        )
+        ).join(security_t, security_t.c.I_SECURITY == d_trade_subquery.c.I_SECURITY)
 
     def _join_sector_table(
         self,
@@ -2015,7 +2050,9 @@ class SETDataReader:
 
         prefix = ""
         if isinstance(table, Join):
-            assert isinstance(table.left, Table)
+            if not isinstance(table.left, Table):
+                msg = "table must be a Table or Join of Table"
+                raise ValueError(msg)
             prefix = table.left.name + "_"
 
         return table.join(
@@ -2057,7 +2094,7 @@ class SETDataReader:
         if df.empty:
             return df
 
-        if start_adjust_date == None:
+        if start_adjust_date is None:
             start_adjust_date = utils.date_to_str(df.index.min())
 
         symbol_list = df.columns.tolist()
@@ -2090,7 +2127,7 @@ class SETDataReader:
         if df.empty:
             return df
 
-        if start_adjust_date == None:
+        if start_adjust_date is None:
             start_adjust_date = utils.date_to_str(df["ex_date"].min())
 
         symbol_list = df["symbol"].unique().tolist()
@@ -2103,9 +2140,7 @@ class SETDataReader:
             ca_type_list=adjusted_list,
         )
 
-        adjust_factor_df = (
-            adjust_factor_df.stack().rename("adjust_factor").reset_index()  # type: ignore
-        )
+        adjust_factor_df = adjust_factor_df.stack().rename("adjust_factor").reset_index()  # type: ignore
 
         df = df.merge(
             adjust_factor_df,
@@ -2126,14 +2161,15 @@ class SETDataReader:
         self,
         min_date: str,
         max_date: str,
-        symbol_list: List[str],
+        symbol_list: Optional[List[str]],
         start_date: Optional[str] = None,
         ca_type_list: Optional[List[str]] = None,
     ) -> pd.DataFrame:
+        if symbol_list is not None and len(symbol_list) > sqlite_max_variable_number:
+            symbol_list = None
+
         df = self.get_adjust_factor(
-            symbol_list=symbol_list if len(symbol_list) < 100 else None,
-            start_date=start_date,
-            ca_type_list=ca_type_list,
+            symbol_list=symbol_list, start_date=start_date, ca_type_list=ca_type_list
         )
 
         # pivot table
@@ -2162,15 +2198,11 @@ class SETDataReader:
 
         return df
 
-    def _get_financial_screen_stmt(self, timeframe: str, field: str) -> Select:
-        TIMEFRAME_MAP = {
-            fld.TIMEFRAME_QUARTERLY: ("Q1", "Q2", "Q3", "Q4"),
-            fld.TIMEFRAME_YEARLY: ("YE",),
-        }
-
+    def _get_financial_screen_stmt(
+        self, timeframe: str, field: str, d_trade_subquery: Subquery
+    ) -> Select:
         financial_screen_t = self._table("FINANCIAL_SCREEN")
         security_t = self._table("SECURITY")
-        d_trade_subquery = self._d_trade_subquery()
 
         value_column = financial_screen_t.c[fld.FINANCIAL_SCREEN_MAP[field]]
 
@@ -2180,7 +2212,11 @@ class SETDataReader:
                 func.trim(security_t.c.N_SECURITY).label(NAME),
                 value_column.label(VALUE),
             )
-            .select_from(self._join_security_and_d_trade_subquery(financial_screen_t))
+            .select_from(
+                self._join_security_and_d_trade_subquery(
+                    financial_screen_t, d_trade_subquery=d_trade_subquery
+                )
+            )
             .where(func.trim(financial_screen_t.c.I_PERIOD_TYPE) == "QY")
             .where(
                 func.trim(financial_screen_t.c.I_PERIOD).in_(TIMEFRAME_MAP[timeframe])
@@ -2189,10 +2225,11 @@ class SETDataReader:
 
         return stmt
 
-    def _get_financial_stat_std_stmt(self, timeframe: str, field: str) -> Select:
+    def _get_financial_stat_std_stmt(
+        self, timeframe: str, field: str, d_trade_subquery: Subquery
+    ) -> Select:
         financial_stat_std_t = self._table("FINANCIAL_STAT_STD")
         security_t = self._table("SECURITY")
-        d_trade_subquery = self._d_trade_subquery()
 
         field_type = ""
         for i in fld.FINANCIAL_STAT_STD_MAP:
@@ -2211,7 +2248,8 @@ class SETDataReader:
         elif timeframe == fld.TIMEFRAME_TTM and field_type != "B":
             value_column = financial_stat_std_t.c["M_ACC_ACCOUNT_12M"]
         else:
-            raise ValueError(f"Invalid timeframe {timeframe}")
+            msg = f"Invalid timeframe {timeframe}"
+            raise ValueError(msg)
 
         db_field = fld.FINANCIAL_STAT_STD_MAP[field_type][field]
 
@@ -2224,12 +2262,16 @@ class SETDataReader:
                 func.trim(security_t.c.N_SECURITY).label(NAME),
                 value_column.label(VALUE),
             )
-            .select_from(self._join_security_and_d_trade_subquery(financial_stat_std_t))
+            .select_from(
+                self._join_security_and_d_trade_subquery(
+                    financial_stat_std_t, d_trade_subquery=d_trade_subquery
+                )
+            )
             .where(func.trim(financial_stat_std_t.c.N_ACCOUNT) == db_field)
         )
 
         if timeframe == fld.TIMEFRAME_YEARLY:
-            stmt = stmt.where(financial_stat_std_t.c.I_QUARTER == 9)
+            stmt = stmt.where(financial_stat_std_t.c.I_QUARTER == fourth_quarter_number)
 
         return stmt
 
@@ -2245,28 +2287,30 @@ class SETDataReader:
         timeframe = timeframe.lower()
         field = field.lower()
 
-        security_t = self._table("SECURITY")
-        d_trade_subquery = self._d_trade_subquery()
+        d_trade_subquery = self._d_trade_subquery(
+            start_date=start_date, end_date=end_date
+        )
 
         if field in fld.FINANCIAL_STAT_STD_MAP_COMPACT:
-            stmt = self._get_financial_stat_std_stmt(field=field, timeframe=timeframe)
+            stmt = self._get_financial_stat_std_stmt(
+                field=field, timeframe=timeframe, d_trade_subquery=d_trade_subquery
+            )
         elif field in fld.FINANCIAL_SCREEN_MAP and timeframe in (
             fld.TIMEFRAME_QUARTERLY,
             fld.TIMEFRAME_YEARLY,
         ):
-            stmt = self._get_financial_screen_stmt(field=field, timeframe=timeframe)
+            stmt = self._get_financial_screen_stmt(
+                field=field, timeframe=timeframe, d_trade_subquery=d_trade_subquery
+            )
         else:
-            raise InputError(
+            msg = (
                 f"{field} is invalid field. Please read document to check valid field."
             )
+            raise InputError(msg)
 
-        stmt = self._filter_stmt_by_symbol_and_date(
-            stmt=stmt,
-            symbol_column=security_t.c.N_SECURITY,
-            date_column=d_trade_subquery.c.D_TRADE,
-            symbol_list=symbol_list,
-            start_date=start_date,
-            end_date=end_date,
+        security_t = self._table("SECURITY")
+        stmt = self._filter_str_in_list(
+            stmt=stmt, column=security_t.c.N_SECURITY, values=symbol_list
         )
 
         df = self._read_sql_query(stmt)
@@ -2294,7 +2338,9 @@ class SETDataReader:
         field = field.lower()
         f_data = f_data.upper()
 
-        assert f_data in ("I", "S", "M"), "Invalid f_data"
+        if f_data not in ("I", "S", "M"):
+            msg = "f_data must be one of I, S, M"
+            raise ValueError(msg)
 
         security_t = self._table("SECURITY")
         sector_t = self._table("SECTOR")
@@ -2318,10 +2364,11 @@ class SETDataReader:
 
         try:
             field_col = daily_sector_info_t.c[fld.DAILY_SECTOR_INFO_MAP[field]]
-        except KeyError:
-            raise InputError(
+        except KeyError as e:
+            msg = (
                 f"{field} is invalid field. Please read document to check valid field."
             )
+            raise InputError(msg) from e
 
         stmt = (
             select(
@@ -2331,7 +2378,7 @@ class SETDataReader:
             )
             .select_from(from_clause)
             .where(sector_t.c.F_DATA == f_data)
-            .where(sector_t.c.D_CANCEL == None)
+            .where(sector_t.c.D_CANCEL is None)  # type: ignore
             .order_by(daily_sector_info_t.c.D_TRADE)
         )
 
@@ -2384,7 +2431,7 @@ class SETDataReader:
     @lru_cache(maxsize=1)
     def _get_holidays(self) -> List[str]:
         tds = self.get_trading_dates()
-        bds = pd.bdate_range(tds[0], tds[-1]).strftime("%Y-%m-%d")  # type: ignore
+        bds = pd.bdate_range(tds[0], tds[-1]).strftime("%Y-%m-%d")
         return list(set(bds) - set(tds))
 
     def _SETBusinessDay(self, n: int = 1) -> CustomBusinessDay:

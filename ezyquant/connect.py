@@ -2,8 +2,8 @@ import os.path
 
 import sqlalchemy as sa
 
-from .errors import InputError
-from .reader import SETDataReader, _SETDataReaderCached
+from ezyquant.errors import InputError
+from ezyquant.reader import SETDataReader, _SETDataReaderCached
 
 
 def connect_sqlite(sqlite_path: str):
@@ -15,9 +15,10 @@ def connect_sqlite(sqlite_path: str):
         SQLite database location path (e.g. C:/.../ezyquant.db)
     """
     if not os.path.isfile(sqlite_path):
-        raise InputError(f"{sqlite_path} is not found")
+        msg = f"{sqlite_path} is not found"
+        raise InputError(msg)
 
-    url = f"sqlite:///{sqlite_path}"
+    url = f"sqlite:///{sqlite_path}?mode=ro"
     return _set_engine(url)
 
 

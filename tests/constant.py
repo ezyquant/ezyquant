@@ -321,7 +321,7 @@ SSET_2022_01_04 = [
     "APCO",
     "APCS",
     "APURE",
-    "AQ",
+    "AKS",
     "AS",
     "ASIAN",
     "ASP",

@@ -5,9 +5,9 @@ from typing import Dict, List
 
 import pandas as pd
 
-from .. import utils
-from .position import SETPosition
-from .trade import SETTrade
+from ezyquant import utils
+from ezyquant.backtesting.position import SETPosition
+from ezyquant.backtesting.trade import SETTrade
 
 
 @dataclass
@@ -22,21 +22,29 @@ class SETAccount:
 
     def __post_init__(self):
         # cash
-        assert self.cash >= 0, "cash must be positive"
+        if not self.cash >= 0:
+            msg = "cash must be positive"
+            raise ValueError(msg)
 
         # pct_commission
-        assert 0 <= self.pct_commission <= 1, "pct_commission must be between 0 and 1"
+        if not 0 <= self.pct_commission <= 1:
+            msg = "pct_commission must be between 0 and 1"
+            raise ValueError(msg)
 
         # position_dict
         for k, v in self.position_dict.items():
-            assert isinstance(
-                v, SETPosition
-            ), "position_dict must be a dict of SETPosition"
-            assert v.symbol == k, "position_dict must be a dict of SETPosition"
+            if not isinstance(v, SETPosition):
+                msg = "position_dict must be a dict of SETPosition"
+                raise TypeError(msg)
+            if v.symbol != k:
+                msg = "position_dict key must be symbol"
+                raise ValueError(msg)
 
         # trade_list
         for i in self.trade_list:
-            assert isinstance(i, SETTrade), "trade_list must be a list of SETTrade"
+            if not isinstance(i, SETTrade):
+                msg = "trade_list must be a list of SETTrade"
+                raise TypeError(msg)
 
         self.ratio_commission = 1.0 + self.pct_commission
 
@@ -75,8 +83,8 @@ class SETAccount:
         volume: float,
         price: float,
     ):
-        """Buy/Sell with enough cash/position. skip if price is invalid (<=0,
-        NaN). Volume don't need to be rounded to 100.
+        """Buy/Sell with enough cash/position. skip if price is invalid (<=0, NaN).
+        Volume don't need to be rounded to 100.
 
         Parameters
         ----------
@@ -110,7 +118,7 @@ class SETAccount:
 
         volume = utils.round_down(volume, base=100.0)
 
-        if volume == 0.0:
+        if not volume:
             return
 
         return self.match_order(
@@ -140,7 +148,8 @@ class SETAccount:
         # Add/Reduce cash
         self.cash -= trade.value_with_commission
         if self.cash < 0:
-            raise ValueError("Insufficient cash")
+            msg = "Insufficient cash"
+            raise ValueError(msg)
 
         # Add/Remove SETPosition
         if symbol not in self.position_dict:

@@ -11,7 +11,7 @@ from ezyquant import validators as vld
 from ezyquant.errors import InputError
 from tests import utils
 
-INDEX_LIST = fld.INDEX_LIST + [fld.MARKET_SET, fld.MARKET_MAI]
+INDEX_LIST = [*fld.INDEX_LIST, fld.MARKET_SET, fld.MARKET_MAI]
 
 
 def test_last_table_update(sdr: SETDataReader):
@@ -214,9 +214,9 @@ class TestGetSymbolInfo:
     def test_start_has_price_date(
         self, sdr: SETDataReader, start: str, expected: List[str]
     ):
-        """
-        SCBB last trade date is 2022-04-26
-        SCB first trade date is 2022-04-27
+        """SCBB last trade date is 2022-04-26.
+
+        SCB first trade date is 2022-04-27.
         """
 
         # Test
@@ -236,9 +236,9 @@ class TestGetSymbolInfo:
     def test_end_has_price_date(
         self, sdr: SETDataReader, end: str, expected: List[str]
     ):
-        """
-        SCBB last trade date is 2022-04-26
-        SCB first trade date is 2022-04-27
+        """SCBB last trade date is 2022-04-26.
+
+        SCB first trade date is 2022-04-27.
         """
 
         # Test
@@ -820,9 +820,9 @@ class TestGetSignPosting:
             pd.Index(["symbol", "hold_date", "release_date", "sign"]),
         )
 
-        assert pd.notna(result["symbol"]).all(), f"symbol is null"
-        assert pd.notna(result["hold_date"]).all(), f"hold_date is null"
-        assert pd.notna(result["sign"]).all(), f"sign is null"
+        assert pd.notna(result["symbol"]).all(), "symbol is null"
+        assert pd.notna(result["hold_date"]).all(), "hold_date is null"
+        assert pd.notna(result["sign"]).all(), "sign is null"
 
         assert result["sign"].isin(["C", "CM", "DS", "H", "NC", "NP", "SP", "ST"]).all()
 
@@ -938,7 +938,7 @@ class TestGetSymbolsByIndex:
                         "TRUEE",
                         "DELTA",
                     ],
-                    "seq": [i for i in range(1, 51)],
+                    "seq": list(range(1, 51)),
                 },
                 columns=["as_of_date", "index", "symbol", "seq"],
             ),
@@ -954,7 +954,7 @@ class TestGetSymbolsByIndex:
         start_date: Optional[str],
         end_date: Optional[str],
     ):
-        """sSET is not upper"""
+        """SSET is not upper."""
         # Test
         result = sdr.get_symbols_by_index(
             index_list=index_list,
@@ -965,9 +965,7 @@ class TestGetSymbolsByIndex:
         # Check
         self._check(result)
 
-        assert_series_equal(
-            result["seq"], pd.Series([i for i in range(1, 139)], name="seq")
-        )
+        assert_series_equal(result["seq"], pd.Series(list(range(1, 139)), name="seq"))
         assert (result["as_of_date"] == pd.Timestamp("2022-01-04")).all()
         assert (result["index"] == fld.INDEX_SSET).all()
 
@@ -1458,7 +1456,7 @@ class TestGetDataSymbolYearly:
         [
             # Financial Ratio
             (fld.Q_ROA, [1.6829434061191892]),
-            (fld.Q_GROSS_PROFIT_MARGIN, [-float("nan")]),
+            (fld.Q_GROSS_PROFIT_MARGIN, [72.95928471247944]),
             # Balance Sheet
             (fld.Q_CASH, [233127550000.0]),
             # Income Statement

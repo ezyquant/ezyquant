@@ -7,10 +7,9 @@ typing_extensions~=4.4
 quantstats~=0.0
 
 # Sytle
-isort~=5.0
-black[jupyter]~=22.0
-docformatter~=1.0
-autoflake~=1.0
+black[jupyter]~=23.0
+docformatter[tomli]~=1.0
+ruff~=0.0
 
 # Test
 pytest~=7.0
@@ -23,7 +22,4 @@ sphinx-book-theme~=1.0
 ezyquant-execution
 
 # Build
-setuptools
-wheel
-twine
-build
+hatch

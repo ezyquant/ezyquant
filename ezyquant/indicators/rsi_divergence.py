@@ -3,7 +3,7 @@ import operator
 import pandas as pd
 from ta.momentum import rsi
 
-from . import zigzag
+from ezyquant.indicators import zigzag
 
 
 def rsi_divergence(
@@ -14,8 +14,8 @@ def rsi_divergence(
     pivot_up_thresh: float = 0.05,
     pivot_down_thresh: float = -0.05,
 ) -> pd.Series:
-    """Return Positive RSI of the bullish divergence points and Negative RSI of
-    the bearish divergence points.
+    """Return Positive RSI of the bullish divergence points and Negative RSI of the
+    bearish divergence points.
 
     Parameters
     ----------

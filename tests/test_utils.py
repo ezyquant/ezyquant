@@ -348,10 +348,10 @@ def test_count_max_true_consecutive(series: pd.Series, expect_result):
 class TestWrapCacheClass:
     def _test(
         self,
-        args1: tuple = tuple(),
-        kwargs1: dict = dict(),
-        args2: tuple = tuple(),
-        kwargs2: dict = dict(),
+        args1: tuple = (),
+        kwargs1: dict = {},
+        args2: tuple = (),
+        kwargs2: dict = {},
         expect_call_count: int = 1,
     ):
         # Mock
@@ -362,7 +362,7 @@ class TestWrapCacheClass:
                 return m()
 
         # Test
-        A1 = utils.wrap_cache_class(A)
+        A1 = utils.wrap_cache_class(A)  # noqa: N806
 
         a: A = A1()  # type: ignore
 

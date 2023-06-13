@@ -1,12 +1,12 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from ..utils import cached_property
+from ezyquant.utils import cached_property
 
 
 @dataclass(frozen=True)
 class SETTrade:
-    """SETTrade
+    """SETTrade.
 
     Parameters
     ----------
@@ -30,41 +30,51 @@ class SETTrade:
 
     def __post_init__(self):
         # matched_at
-        assert isinstance(
-            self.matched_at, datetime
-        ), f"matched_at must be datetime, got {type(self.matched_at)}"
+        if not isinstance(self.matched_at, datetime):
+            msg = f"matched_at must be datetime, got {type(self.matched_at)}"
+            raise TypeError(msg)
 
         # symbol
-        assert isinstance(
-            self.symbol, str
-        ), f"symbol must be str, got {type(self.symbol)}"
-        assert self.symbol != "", f"symbol must not be empty, got {self.symbol}"
+        if not isinstance(self.symbol, str):
+            msg = f"symbol must be str, got {type(self.symbol)}"
+            raise TypeError(msg)
+        if not self.symbol:
+            msg = "symbol must not be empty"
+            raise ValueError(msg)
 
         # volume
-        assert self.volume != 0, f"volume must not be 0, got {self.volume}"
-        assert (
-            self.volume % 100 == 0
-        ), f"volume must be multiple of 100, got {self.volume}"
+        if self.volume == 0:
+            msg = "volume must not be zero"
+            raise ValueError(msg)
+
+        if self.volume % 100 != 0:
+            msg = "volume must be multiple of 100"
+            raise ValueError(msg)
 
         # price
-        assert self.price > 0, f"price must be positive, got {self.price}"
+        if not self.price > 0:
+            msg = "price must be positive"
+            raise ValueError(msg)
 
         # pct_commission
-        assert (
-            0 <= self.pct_commission <= 1
-        ), f"pct_commission must be between 0 and 1, got {self.pct_commission}"
+        if not (0 <= self.pct_commission <= 1):
+            msg = "pct_commission must be between 0 and 1"
+            raise ValueError(msg)
 
     @cached_property
     def value(self) -> float:
-        """Positive is Buy, Negative is Sell"""
+        """Positive is Buy, Negative is Sell."""
         return self.price * self.volume
 
     @cached_property
     def commission(self) -> float:
-        """Always positive"""
+        """Always positive."""
         return abs(self.value * self.pct_commission)
 
     @cached_property
     def value_with_commission(self) -> float:
-        """Amount of cash reduced by this trade. Positive is Buy, Negative is Sell"""
+        """Amount of cash reduced by this trade.
+
+        Positive is Buy, Negative is Sell
+        """
         return self.value + self.commission

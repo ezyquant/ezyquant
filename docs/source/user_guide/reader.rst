@@ -135,7 +135,7 @@ GetData with method and period
         field="eps", timeframe="yearly", method="sum", period=3
     )
 
-Screen_Universe
+Screen Universe
 ---------------
 
 ใช้ในการเปลี่ยน signal หุ้นที่ไม่ได้อยู่ใน Universe หรือ โดน Banned ให้เป็นไปตาม mask ที่ตั้งไว้ ผ่านฟังก์ชั่น :py:meth:`SETSignalCreator.screen_universe`

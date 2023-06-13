@@ -1,16 +1,15 @@
 import warnings
 from functools import lru_cache
-from typing import Dict, List, Optional
+from typing import Dict, List, Literal, Optional
 
 import numpy as np
 import pandas as pd
-from typing_extensions import Literal
 
-from . import fields as fld
-from . import utils
-from .errors import InputError
-from .indicators.ta import TA
-from .reader import _SETDataReaderCached
+from ezyquant import fields as fld
+from ezyquant import utils
+from ezyquant.errors import InputError
+from ezyquant.indicators.ta import TA
+from ezyquant.reader import _SETDataReaderCached
 
 nan = float("nan")
 
@@ -24,8 +23,8 @@ class SETSignalCreator:
         self,
         start_date: str = "2010-01-01",
         end_date: Optional[str] = None,
-        index_list: List[str] = [],
-        symbol_list: List[str] = [],
+        index_list: List[str] = [],  # noqa: B006
+        symbol_list: List[str] = [],  # noqa: B006
     ):
         """Initialize SETSignalCreator.
 
@@ -125,8 +124,8 @@ class SETSignalCreator:
         period: int = 1,
         shift: int = 0,
     ) -> pd.DataFrame:
-        """Return DataFrame which columns are symbols and index is the trading
-        date start from start_date to end_date.
+        """Return DataFrame which columns are symbols and index is the trading date
+        start from start_date to end_date.
 
         OHLCV fillna with prior value.
 
@@ -237,13 +236,14 @@ class SETSignalCreator:
         # TODO: load mare data for shift
 
         if period < 1:
-            raise InputError(f"period must be greater than 0. but {period} is given.")
+            msg = f"period must be greater than 0. but {period} is given."
+            raise InputError(msg)
         if shift < 0:
-            raise InputError(
-                f"shift must be greater than or equal to 0, but {shift} is given."
-            )
+            msg = f"shift must be greater than or equal to 0, but {shift} is given."
+            raise InputError(msg)
         if method == fld.METHOD_CONSTANT and period != 1:
-            raise InputError(f"{fld.METHOD_CONSTANT} method only support period=1")
+            msg = f"{fld.METHOD_CONSTANT} method only support period=1"
+            raise InputError(msg)
 
         symbol_list = self._get_symbol_in_universe()
 
@@ -269,9 +269,8 @@ class SETSignalCreator:
                     is_stock_column=True,
                 )
             else:
-                raise InputError(
-                    f"{value_by} is invalid value_by. Please read document to check valid value_by."
-                )
+                msg = f"{value_by} is invalid value_by. Please read document to check valid value_by."
+                raise InputError(msg)
 
             df = self._reindex_trade_date(df)
 
@@ -304,13 +303,11 @@ class SETSignalCreator:
                     shift=shift,
                 )
             else:
-                raise InputError(
-                    f"{value_by} is invalid value_by. Please read document to check valid value_by."
-                )
+                msg = f"{value_by} is invalid value_by. Please read document to check valid value_by."
+                raise InputError(msg)
         else:
-            raise InputError(
-                f"{timeframe} is invalid timeframe. Please read document to check valid timeframe."
-            )
+            msg = f"{timeframe} is invalid timeframe. Please read document to check valid timeframe."
+            raise InputError(msg)
 
         df = df.reindex(columns=symbol_list)
 
@@ -568,13 +565,11 @@ class SETSignalCreator:
         df = factor_df.rank(ascending=ascending, axis=1, method=method, pct=pct)
         if quantity is not None:
             if quantity <= 0:
-                raise InputError(
-                    f"quantity must be greater than 0. but {quantity} is given."
-                )
+                msg = f"quantity must be greater than 0. but {quantity} is given."
+                raise InputError(msg)
             if pct and quantity >= 1:
-                raise InputError(
-                    f"quantity must be less than 1 if pct is True. but {quantity} is given."
-                )
+                msg = f"quantity must be less than 1 if pct is True. but {quantity} is given."
+                raise InputError(msg)
             df = df.mask(df > quantity, np.nan)
         return df
 
@@ -584,8 +579,7 @@ class SETSignalCreator:
 
     @lru_cache(maxsize=1)
     def _make_nan_df(self) -> pd.DataFrame:
-        """Make empty dataframe with trading dates as index and symbols as
-        columns.
+        """Make empty dataframe with trading dates as index and symbols as columns.
 
         Returns
         -------
@@ -601,7 +595,7 @@ class SETSignalCreator:
     @lru_cache(maxsize=1)
     def _get_trading_dates(self) -> List[str]:
         end = self._end_date
-        if self._end_date == None:
+        if self._end_date is None:
             end = self._sdr.last_table_update("DAILY_STOCK_TRADE")
         return self._sdr.get_trading_dates(start_date=self._start_date, end_date=end)
 
@@ -627,7 +621,7 @@ class SETSignalCreator:
             elif i in fld.SECTOR_LIST_UPPER:
                 df = self._get_symbol_info(sector=i)
             else:
-                warnings.warn(f"Index {i} is invalid.")
+                warnings.warn(f"Index {i} is invalid.", stacklevel=2)
                 continue
 
             symbols.update(df["symbol"])
@@ -636,7 +630,7 @@ class SETSignalCreator:
 
         invalid_symbols = list(set(self._symbol_list) - set(df["symbol"]))
         if len(invalid_symbols) > 0:
-            warnings.warn(f"Symbols {invalid_symbols} is invalid.")
+            warnings.warn(f"Symbols {invalid_symbols} is invalid.", stacklevel=2)
 
         return sorted(set(df["symbol"]))
 
@@ -691,18 +685,17 @@ class SETSignalCreator:
         args: Optional[tuple] = None,
         kwargs: Optional[dict] = None,
     ):
-        if args == None:
-            args = tuple()
-        if kwargs == None:
-            kwargs = dict()
+        if args is None:
+            args = ()
+        if kwargs is None:
+            kwargs = {}
 
         roll = data.rolling(period)
         try:
             data = getattr(roll, method)(*args, **kwargs)
-        except AttributeError:
-            raise InputError(
-                f"{method} is invalid method. Please read document to check valid method."
-            )
+        except AttributeError as e:
+            msg = f"{method} is invalid method. Please read document to check valid method."
+            raise InputError(msg) from e
         return data
 
     def _rolling_skip_na_keep_inf(
@@ -831,9 +824,8 @@ class SETSignalCreator:
         elif universe in self._get_symbol_in_universe():
             uni_typ = "symbol"
         else:
-            raise InputError(
-                f"{universe} is invalid universe. Please read document to check valid universe."
-            )
+            msg = f"{universe} is invalid universe. Please read document to check valid universe."
+            raise InputError(msg)
 
         is_uni = df[uni_typ].str.upper() == universe
 
@@ -845,9 +837,8 @@ class SETSignalCreator:
 
     def _is_universe_dynamic(self, universe: str) -> pd.DataFrame:
         if universe not in fld.INDEX_LIST_UPPER:
-            raise InputError(
-                f"{universe} is invalid universe. Please read document to check valid universe."
-            )
+            msg = f"{universe} is invalid universe. Please read document to check valid universe."
+            raise InputError(msg)
 
         df = self._get_symbols_by_index(universe)
 

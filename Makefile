@@ -8,18 +8,9 @@ test:
 
 .PHONY: format
 format:
-	autoflake -i --remove-all-unused-imports --ignore-init-module-imports --expand-star-imports --exclude venv -r .
-	isort .
 	black .
-
-	docformatter -i ezyquant/reader.py
-	docformatter -i ezyquant/creator.py
-	docformatter -i ezyquant/indicators/ta.py
-	docformatter -i ezyquant/report.py
-	docformatter -i ezyquant/utils.py
-	docformatter -i ezyquant/backtesting/_backtesting.py
-	docformatter -i ezyquant/backtesting/backtesting.py
-	docformatter -i ezyquant/backtesting/account.py
+	docformatter -i -r .
+	ruff check --fix .
 
 .PHONY: venv
 venv:
