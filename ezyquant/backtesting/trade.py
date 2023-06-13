@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from ..utils import cached_property
+from ezyquant.utils import cached_property
 
 
 @dataclass(frozen=True)

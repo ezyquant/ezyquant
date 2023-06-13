@@ -46,7 +46,7 @@ def backtest_algorithm(c: Context):
     if c.symbol == "PTT":
         print("------------------------------------------")
 
-    if c.signal == True:
+    if c.signal is True:
         return c.target_pct_port(0.2)
     else:
         return c.target_pct_port(0)

@@ -6,7 +6,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import pandas as pd
 
-from .errors import InputError
+from ezyquant.errors import InputError
 
 
 def date_to_str(value: date) -> str:
@@ -22,7 +22,7 @@ def str_to_date(value: str) -> date:
 
 
 def str_date_add_timedelta(value: str, delta: timedelta) -> str:
-    return date_to_str((str_to_date(value) + delta))
+    return date_to_str(str_to_date(value) + delta)
 
 
 def pivot_remove_index_name(df: pd.DataFrame, *args, **kwargs) -> pd.DataFrame:
@@ -86,20 +86,23 @@ def is_rebalance(
     trade_date_index: pd.DatetimeIndex, rebalance_at: int, freq: str
 ) -> pd.Series:
     if not trade_date_index.is_monotonic_increasing or not trade_date_index.is_unique:
-        raise InputError("trade_date_index must be monotonic and unique")
+        msg = "trade_date_index must be monotonic and unique"
+        raise InputError(msg)
 
     tds = trade_date_index.to_series()
 
     if freq == "W":
         if not 1 <= rebalance_at <= 5:
-            raise InputError("rebalance_at must be between 1 and 5")
+            msg = "rebalance_at must be between 1 and 5"
+            raise InputError(msg)
 
         rule = f"W-{calendar.day_abbr[rebalance_at-2]}"
         by = pd.Grouper(freq=rule)
 
     elif freq == "M":
         if not 1 <= rebalance_at <= 31:
-            raise InputError("rebalance_at must be between 1 and 31")
+            msg = "rebalance_at must be between 1 and 31"
+            raise InputError(msg)
 
         tds = tds.mask(
             tds.dt.day < rebalance_at,
@@ -108,7 +111,8 @@ def is_rebalance(
         by = [tds.dt.year, tds.dt.month]
 
     else:
-        raise InputError("freq must be either W or M")
+        msg = "freq must be either W or M"
+        raise InputError(msg)
 
     return tds.groupby(by=by, group_keys=False).apply(lambda x: x == x[0])
 
@@ -224,19 +228,19 @@ def cache_dataframe_wrapper(method: Callable):
             c_start_date = call_dict[call_key]["start_date"]
             c_end_date = call_dict[call_key]["end_date"]
 
-            if c_symbol_list == None or symbol_list == None:
+            if c_symbol_list is None or symbol_list is None:
                 c_symbol_list = None
             elif set(symbol_list) - set(c_symbol_list):
                 c_symbol_list = c_symbol_list + list(
                     set(symbol_list) - set(c_symbol_list)
                 )
 
-            if c_start_date == None or start_date == None:
+            if c_start_date is None or start_date is None:
                 c_start_date = None
             elif c_start_date > start_date:
                 c_start_date = start_date
 
-            if c_end_date == None or end_date == None:
+            if c_end_date is None or end_date is None:
                 c_end_date = None
             elif c_end_date < end_date:
                 c_end_date = end_date
@@ -265,4 +269,5 @@ def cache_dataframe_wrapper(method: Callable):
     return wrapped
 
 
-cached_property = lambda x: property(lru_cache(maxsize=1)(x))
+def cached_property(x):
+    return property(lru_cache(maxsize=1)(x))

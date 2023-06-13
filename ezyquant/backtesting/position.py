@@ -47,6 +47,7 @@ class SETPosition:
         self.volume += volume
 
         if self.volume < 0:
-            raise ValueError("Insufficient volume")
+            msg = "Insufficient volume"
+            raise ValueError(msg)
 
         return self.volume

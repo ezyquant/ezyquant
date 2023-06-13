@@ -4,11 +4,11 @@ from typing import Callable, Dict, List, Tuple
 import pandas as pd
 from pandas.testing import assert_index_equal
 
-from .. import validators as vld
-from .account import SETAccount
-from .context import Context
-from .position import SETPosition
-from .trade import SETTrade
+from ezyquant import validators as vld
+from ezyquant.backtesting.account import SETAccount
+from ezyquant.backtesting.context import Context
+from ezyquant.backtesting.position import SETPosition
+from ezyquant.backtesting.trade import SETTrade
 
 position_df_columns = ["timestamp"] + [i.name for i in fields(SETPosition)]
 trade_df_columns = [i.name for i in fields(SETTrade)]
@@ -109,12 +109,8 @@ def _backtest(
 
     # Dict
     signal_dict: Dict[pd.Timestamp, Dict[str, float]] = signal_df.to_dict("index")  # type: ignore
-    close_price_dict: Dict[pd.Timestamp, Dict[str, float]] = close_price_df.to_dict(
-        "index"
-    )  # type: ignore
-    price_match_dict: Dict[pd.Timestamp, Dict[str, float]] = price_match_df.to_dict(
-        "index"
-    )  # type: ignore
+    close_price_dict: Dict[pd.Timestamp, Dict[str, float]] = close_price_df.to_dict("index")  # type: ignore
+    price_match_dict: Dict[pd.Timestamp, Dict[str, float]] = price_match_df.to_dict("index")  # type: ignore
 
     position_df_list: List[pd.DataFrame] = [
         # First dataframe for sort columns
@@ -126,8 +122,8 @@ def _backtest(
     ) -> Tuple[Dict[str, float], Dict[str, float]]:
         signal_d = signal_dict[ts]
 
-        buy_volume_d = dict()
-        sell_volume_d = dict()
+        buy_volume_d = {}
+        sell_volume_d = {}
 
         ctx = Context(
             ts=ts,

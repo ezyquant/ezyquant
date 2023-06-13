@@ -5,9 +5,9 @@ from typing import Dict, List
 
 import pandas as pd
 
-from .. import utils
-from .position import SETPosition
-from .trade import SETTrade
+from ezyquant import utils
+from ezyquant.backtesting.position import SETPosition
+from ezyquant.backtesting.trade import SETTrade
 
 
 @dataclass
@@ -140,7 +140,8 @@ class SETAccount:
         # Add/Reduce cash
         self.cash -= trade.value_with_commission
         if self.cash < 0:
-            raise ValueError("Insufficient cash")
+            msg = "Insufficient cash"
+            raise ValueError(msg)
 
         # Add/Remove SETPosition
         if symbol not in self.position_dict:

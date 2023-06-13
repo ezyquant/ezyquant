@@ -67,7 +67,8 @@ def peak_valley_pivots_candlestick(close, high, low, up_thresh, down_thresh):
     ignoring data outside the fully realized segments, which may bias analysis.
     """
     if down_thresh > 0:
-        raise ValueError("The down_thresh must be negative.")
+        msg = "The down_thresh must be negative."
+        raise ValueError(msg)
 
     initial_pivot = _identify_initial_pivot(close, up_thresh, down_thresh)
 

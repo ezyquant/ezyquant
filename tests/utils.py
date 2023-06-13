@@ -25,7 +25,7 @@ def assert_frame_equal_sort_index(
 
 
 def is_df_unique(df) -> bool:
-    return (df.groupby([i for i in df.columns]).size() == 1).all()
+    return (df.groupby(list(df.columns)).size() == 1).all()
 
 
 def is_df_unique_cols(df) -> bool:

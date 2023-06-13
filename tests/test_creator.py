@@ -529,7 +529,7 @@ class TestIsUniverse:
 
         # Check
         self._check(result)
-        assert (result == False).all().all()
+        assert (result is False).all().all()
 
     def test_multi_universe(self):
         # Mock
@@ -542,7 +542,7 @@ class TestIsUniverse:
         self._check(result)
         assert result["AOT"].all()
         assert result["BBL"].all()
-        assert (result["CPF"] == False).all()
+        assert (result["CPF"] is False).all()
 
     def test_no_universe(self):
         # Mock
@@ -553,7 +553,7 @@ class TestIsUniverse:
 
         # Check
         self._check(result)
-        assert (result == False).all().all()
+        assert (result is False).all().all()
 
     @pytest.mark.parametrize(
         ("index_list", "symbol_list"),

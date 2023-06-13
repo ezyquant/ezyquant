@@ -67,19 +67,19 @@ all = ["style", "typing"]
 
 [tool.black]
 target-version = ["py38"]
+line-length = 88
 
 [tool.ruff]
 target-version = "py38"
+line-length = 88
 select = [
   "A",
   "ARG",
   "B",
   "C",
-  "DTZ",
   "E",
   "EM",
   "F",
-  "FBT",
   "I",
   "ICN",
   "ISC",
@@ -100,8 +100,6 @@ select = [
 ignore = [
   # Allow non-abstract empty methods in abstract base classes
   "B027",
-  # Allow boolean positional values in function calls, like `dict.get(... True)`
-  "FBT003",
   # Ignore checks for possible passwords
   "S105",
   "S106",
@@ -125,8 +123,9 @@ known-first-party = ["ezyquant"]
 ban-relative-imports = "all"
 
 [tool.ruff.per-file-ignores]
-# Tests can use magic values, assertions, and relative imports
-"tests/**/*" = ["PLR2004", "S101", "TID252"]
+# Tests can use magic values, assertions, and other things
+"tests/**/*" = ["PLR2004", "S101", "T", "ARG", "B006", "B008"]
+"examples/**/*" = ["T"]
 
 [tool.coverage.run]
 source_pkgs = ["ezyquant", "tests"]

@@ -11,7 +11,7 @@ from ezyquant import validators as vld
 from ezyquant.errors import InputError
 from tests import utils
 
-INDEX_LIST = fld.INDEX_LIST + [fld.MARKET_SET, fld.MARKET_MAI]
+INDEX_LIST = [*fld.INDEX_LIST, fld.MARKET_SET, fld.MARKET_MAI]
 
 
 def test_last_table_update(sdr: SETDataReader):
@@ -820,9 +820,9 @@ class TestGetSignPosting:
             pd.Index(["symbol", "hold_date", "release_date", "sign"]),
         )
 
-        assert pd.notna(result["symbol"]).all(), f"symbol is null"
-        assert pd.notna(result["hold_date"]).all(), f"hold_date is null"
-        assert pd.notna(result["sign"]).all(), f"sign is null"
+        assert pd.notna(result["symbol"]).all(), "symbol is null"
+        assert pd.notna(result["hold_date"]).all(), "hold_date is null"
+        assert pd.notna(result["sign"]).all(), "sign is null"
 
         assert result["sign"].isin(["C", "CM", "DS", "H", "NC", "NP", "SP", "ST"]).all()
 
@@ -938,7 +938,7 @@ class TestGetSymbolsByIndex:
                         "TRUEE",
                         "DELTA",
                     ],
-                    "seq": [i for i in range(1, 51)],
+                    "seq": list(range(1, 51)),
                 },
                 columns=["as_of_date", "index", "symbol", "seq"],
             ),
@@ -965,9 +965,7 @@ class TestGetSymbolsByIndex:
         # Check
         self._check(result)
 
-        assert_series_equal(
-            result["seq"], pd.Series([i for i in range(1, 139)], name="seq")
-        )
+        assert_series_equal(result["seq"], pd.Series(list(range(1, 139)), name="seq"))
         assert (result["as_of_date"] == pd.Timestamp("2022-01-04")).all()
         assert (result["index"] == fld.INDEX_SSET).all()
 

@@ -3,8 +3,8 @@ from typing import List, Optional
 import pandas as pd
 from pandas.testing import assert_index_equal
 
-from . import utils
-from .errors import InputError
+from ezyquant import utils
+from ezyquant.errors import InputError
 
 
 def check_start_end_date(
@@ -14,21 +14,24 @@ def check_start_end_date(
 ):
     s = utils.str_to_date(start_date) if start_date else None
     e = utils.str_to_date(end_date) if end_date else None
-    l = utils.str_to_date(last_update_date) if last_update_date else None
+    lu = utils.str_to_date(last_update_date) if last_update_date else None
 
     if s is not None and e is not None:
         if s > e:
-            raise InputError(f"Start date {s} is after end date {e}")
+            msg = f"Start date {s} is after end date {e}"
+            raise InputError(msg)
 
-    if l is not None:
-        if s is not None and s > l:
-            raise InputError(f"Start date {s} is after last update date {l}")
-        if e is not None and e > l:
-            raise InputError(f"End date {e} is after last update date {l}")
+    if lu is not None:
+        if s is not None and s > lu:
+            msg = f"Start date {s} is after last update date {lu}"
+            raise InputError(msg)
+        if e is not None and e > lu:
+            msg = f"End date {e} is after last update date {lu}"
+            raise InputError(msg)
 
 
 def check_duplicate(data_list: Optional[List[str]]):
-    if data_list == None:
+    if data_list is None:
         return
 
     data_list = [x.upper() for x in data_list]
@@ -36,17 +39,20 @@ def check_duplicate(data_list: Optional[List[str]]):
     if len(data_list) == len(set(data_list)):
         return
 
-    raise InputError(f"Input was duplicate ({data_list})")
+    msg = f"Input was duplicate ({data_list})"
+    raise InputError(msg)
 
 
 def check_cash(cash: float) -> None:
     if cash < 0:
-        raise InputError("cash must be positive")
+        msg = "cash must be positive"
+        raise InputError(msg)
 
 
 def check_pct(pct: float) -> None:
     if pct < 0 or pct > 1:
-        raise InputError("pct must be between 0 and 1")
+        msg = "pct must be between 0 and 1"
+        raise InputError(msg)
 
 
 def check_df_symbol_daily(df):

@@ -23,10 +23,10 @@ from sqlalchemy.exc import DatabaseError
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql import FromClause, Join, Select
 
-from . import fields as fld
-from . import utils
-from . import validators as vld
-from .errors import InputError
+from ezyquant import fields as fld
+from ezyquant import utils
+from ezyquant import validators as vld
+from ezyquant.errors import InputError
 
 warnings.filterwarnings(
     "ignore",
@@ -44,10 +44,9 @@ class SETDataReader:
 
     def __init__(self):
         """SETDataReader read PSIMS data."""
-        if self._engine == None:
-            raise InputError(
-                "You need to connect sqlite using ezyquant.connect_sqlite."
-            )
+        if self._engine is None:
+            msg = "You need to connect sqlite using ezyquant.connect_sqlite."
+            raise InputError(msg)
 
         self._metadata = MetaData()
 
@@ -443,7 +442,7 @@ class SETDataReader:
                 func.trim(change_name_t.c.N_SECURITY_NEW).label("symbol_new"),
             )
             .select_from(from_clause)
-            .where(change_name_t.c.D_EFFECT != None)
+            .where(change_name_t.c.D_EFFECT is not None)
             .where(
                 func.trim(change_name_t.c.N_SECURITY_OLD)
                 != func.trim(change_name_t.c.N_SECURITY_NEW)
@@ -725,7 +724,7 @@ class SETDataReader:
                 security_detail_t.c.D_DELISTED.label("delisted_date"),
             )
             .select_from(from_clause)
-            .where(security_detail_t.c.D_DELISTED != None)
+            .where(security_detail_t.c.D_DELISTED is not None)
             .order_by(security_detail_t.c.D_DELISTED)
         )
         stmt = self._filter_stmt_by_symbol_and_date(
@@ -1160,9 +1159,10 @@ class SETDataReader:
                 daily_stock_t.c.Z_LAST_OFFER > 0,
             )
         else:
-            raise InputError(
+            msg = (
                 f"{field} is invalid field. Please read document to check valid field."
             )
+            raise InputError(msg)
 
         from_clause = daily_stock_t.join(
             security_t, daily_stock_t.c.I_SECURITY == security_t.c.I_SECURITY
@@ -2066,7 +2066,7 @@ class SETDataReader:
         if df.empty:
             return df
 
-        if start_adjust_date == None:
+        if start_adjust_date is None:
             start_adjust_date = utils.date_to_str(df.index.min())
 
         symbol_list = df.columns.tolist()
@@ -2099,7 +2099,7 @@ class SETDataReader:
         if df.empty:
             return df
 
-        if start_adjust_date == None:
+        if start_adjust_date is None:
             start_adjust_date = utils.date_to_str(df["ex_date"].min())
 
         symbol_list = df["symbol"].unique().tolist()
@@ -2224,7 +2224,8 @@ class SETDataReader:
         elif timeframe == fld.TIMEFRAME_TTM and field_type != "B":
             value_column = financial_stat_std_t.c["M_ACC_ACCOUNT_12M"]
         else:
-            raise ValueError(f"Invalid timeframe {timeframe}")
+            msg = f"Invalid timeframe {timeframe}"
+            raise ValueError(msg)
 
         db_field = fld.FINANCIAL_STAT_STD_MAP[field_type][field]
 
@@ -2278,9 +2279,10 @@ class SETDataReader:
                 field=field, timeframe=timeframe, d_trade_subquery=d_trade_subquery
             )
         else:
-            raise InputError(
+            msg = (
                 f"{field} is invalid field. Please read document to check valid field."
             )
+            raise InputError(msg)
 
         security_t = self._table("SECURITY")
         stmt = self._filter_str_in_list(
@@ -2337,9 +2339,10 @@ class SETDataReader:
         try:
             field_col = daily_sector_info_t.c[fld.DAILY_SECTOR_INFO_MAP[field]]
         except KeyError:
-            raise InputError(
+            msg = (
                 f"{field} is invalid field. Please read document to check valid field."
             )
+            raise InputError(msg)
 
         stmt = (
             select(
@@ -2349,7 +2352,7 @@ class SETDataReader:
             )
             .select_from(from_clause)
             .where(sector_t.c.F_DATA == f_data)
-            .where(sector_t.c.D_CANCEL == None)
+            .where(sector_t.c.D_CANCEL is None)
             .order_by(daily_sector_info_t.c.D_TRADE)
         )
 
