@@ -10,7 +10,7 @@ test:
 format:
 	black .
 	docformatter -i -r .
-	ruff check . --fix
+	ruff check --fix .
 
 .PHONY: venv
 venv:
