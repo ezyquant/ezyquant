@@ -8,6 +8,9 @@ import pandas as pd
 
 from ezyquant.errors import InputError
 
+business_day_in_week = 5
+day_in_month = 31
+
 
 def date_to_str(value: date) -> str:
     return value.strftime("%Y-%m-%d")
@@ -92,7 +95,7 @@ def is_rebalance(
     tds = trade_date_index.to_series()
 
     if freq == "W":
-        if not 1 <= rebalance_at <= 5:
+        if not 1 <= rebalance_at <= business_day_in_week:
             msg = "rebalance_at must be between 1 and 5"
             raise InputError(msg)
 
@@ -100,7 +103,7 @@ def is_rebalance(
         by = pd.Grouper(freq=rule)
 
     elif freq == "M":
-        if not 1 <= rebalance_at <= 31:
+        if not 1 <= rebalance_at <= day_in_month:
             msg = "rebalance_at must be between 1 and 31"
             raise InputError(msg)
 
@@ -132,7 +135,9 @@ def union_datetime_index(indexes: List[pd.DatetimeIndex]) -> pd.DatetimeIndex:
     out = pd.DatetimeIndex([])
     for i in indexes:
         out = out.union(i)
-    assert isinstance(out, pd.DatetimeIndex)
+    if not isinstance(out, pd.DatetimeIndex):
+        msg = "indexes must be a list of pd.DatetimeIndex"
+        raise TypeError(msg)
     return out
 
 

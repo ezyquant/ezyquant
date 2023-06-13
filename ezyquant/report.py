@@ -1024,14 +1024,18 @@ class SETBacktestReport:
     def start_date(self) -> datetime:
         """Start date."""
         out = self._nav_df.index[0]
-        assert isinstance(out, datetime)
+        if not isinstance(out, datetime):
+            msg = "start_date must be datetime"
+            raise TypeError(msg)
         return out
 
     @cached_property
     def end_date(self) -> datetime:
         """End date."""
         out = self._nav_df.index[-1]
-        assert isinstance(out, datetime)
+        if not isinstance(out, datetime):
+            msg = "end_date must be datetime"
+            raise TypeError(msg)
         return out
 
     @property

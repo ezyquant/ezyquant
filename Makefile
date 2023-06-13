@@ -8,18 +8,9 @@ test:
 
 .PHONY: format
 format:
-	autoflake -i \
-	--expand-star-imports \
-	--remove-all-unused-imports \
-	--ignore-init-module-imports \
-	--remove-duplicate-keys \
-	--remove-unused-variables \
-	--exclude venv \
-	-r .
-
-	isort .
 	black .
 	docformatter -i --black -e venv -r .
+	ruff check . --fix
 
 .PHONY: venv
 venv:

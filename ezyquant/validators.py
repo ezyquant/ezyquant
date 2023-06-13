@@ -56,20 +56,30 @@ def check_pct(pct: float) -> None:
 
 
 def check_df_symbol_daily(df):
-    assert isinstance(df, pd.DataFrame)
+    if not isinstance(df, pd.DataFrame):
+        msg = "Input must be a DataFrame"
+        raise TypeError(msg)
     check_df_index_daily(df)
     check_df_column_symbol(df)
 
 
 def check_df_index_daily(df):
     index = df.index
-    assert isinstance(index, pd.DatetimeIndex)
-    assert index.is_monotonic_increasing
-    assert index.is_unique
+    if not isinstance(index, pd.DatetimeIndex):
+        msg = "Index must be a DatetimeIndex"
+        raise TypeError(msg)
+    if not index.is_monotonic_increasing:
+        msg = "Index must be sorted in ascending order"
+        raise ValueError(msg)
+    if not index.is_unique:
+        msg = "Duplicate dates found"
+        raise ValueError(msg)
     assert_index_equal(index, index.normalize())
 
 
 def check_df_column_symbol(df):
     column = df.columns
-    assert column.is_unique
+    if not column.is_unique:
+        msg = "Duplicate symbols found"
+        raise ValueError(msg)
     assert_index_equal(column, column.str.upper())
