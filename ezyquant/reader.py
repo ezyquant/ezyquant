@@ -464,7 +464,7 @@ class SETDataReader:
                 func.trim(change_name_t.c.N_SECURITY_NEW).label("symbol_new"),
             )
             .select_from(from_clause)
-            .where(change_name_t.c.D_EFFECT is not None)  # type: ignore
+            .where(change_name_t.c.D_EFFECT != None)
             .where(
                 func.trim(change_name_t.c.N_SECURITY_OLD)
                 != func.trim(change_name_t.c.N_SECURITY_NEW)
@@ -748,7 +748,7 @@ class SETDataReader:
                 security_detail_t.c.D_DELISTED.label("delisted_date"),
             )
             .select_from(from_clause)
-            .where(security_detail_t.c.D_DELISTED is not None)  # type: ignore
+            .where(security_detail_t.c.D_DELISTED != None)
             .order_by(security_detail_t.c.D_DELISTED)
         )
         stmt = self._filter_stmt_by_symbol_and_date(
@@ -2378,7 +2378,7 @@ class SETDataReader:
             )
             .select_from(from_clause)
             .where(sector_t.c.F_DATA == f_data)
-            .where(sector_t.c.D_CANCEL is None)  # type: ignore
+            .where(sector_t.c.D_CANCEL == None)
             .order_by(daily_sector_info_t.c.D_TRADE)
         )
 

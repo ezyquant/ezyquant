@@ -116,12 +116,14 @@ ignore = [
   "PLR0915",
   # Ignore line length, let black, docformatter handle it
   "E501",
-  # Ignore lowercase function names
-  "N802",
   # Ignore cache usage
   "B019",
+  # Ignore None and Boolen comparisons from sqlalchemy and pandas
+  "E711",
+  "E712",
   # Ignore other
   "E741",
+  "N802",
 ]
 
 [tool.ruff.isort]
@@ -149,3 +151,11 @@ tests = ["tests"]
 
 [tool.coverage.report]
 exclude_lines = ["no cov", "if __name__ == .__main__.:", "if TYPE_CHECKING:"]
+
+[tool.pytest.ini_options]
+addopts = "-n auto"
+usefixtures = [
+  "connect_sqlite",
+  # "connect_postgres",
+]
+testpaths = ["tests"]

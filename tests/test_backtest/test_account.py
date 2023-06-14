@@ -271,7 +271,7 @@ class TestMatchOrderBuy:
         acct = SETAccount(cash=1e6)
 
         # Test
-        with pytest.raises(AssertionError) as e:
+        with pytest.raises(ValueError) as e:
             acct.match_order(
                 symbol=symbol,
                 volume=volume,

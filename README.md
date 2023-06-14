@@ -4,7 +4,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/ezyquant?label=PyPI)](https://pypi.org/project/ezyquant/)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/ezyquant?label=PyPI%20Downloads)](https://pepy.tech/project/ezyquant)
-[![License](https://img.shields.io/pypi/l/ezyquant.svg)](https://github.com/ezyquant/ezyquant/blob/main/LICENSE.txt)
+[![License](https://img.shields.io/pypi/l/ezyquant.svg)](https://github.com/ezyquant/ezyquant/blob/main/LICENSE)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Formatter: docformatter](https://img.shields.io/badge/%20formatter-docformatter-fedcba.svg)](https://github.com/PyCQA/docformatter)
 [![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
