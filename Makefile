@@ -4,7 +4,7 @@ install:
 
 .PHONY: test
 test:
-	pytest
+	coverage run -m pytest
 
 .PHONY: format
 format:
