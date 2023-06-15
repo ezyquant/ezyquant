@@ -60,5 +60,7 @@ def _set_engine(url: str):
 
 EZYQUANT_DATABASE_URI = os.getenv("EZYQUANT_DATABASE_URI")
 if EZYQUANT_DATABASE_URI:
-    logging.info("EZYQUANT_DATABASE_URI was found. Connecting database.")
+    logging.info(
+        "EZYQUANT_DATABASE_URI was found in environment variables. Connecting to database..."
+    )
     connect_sqlite(EZYQUANT_DATABASE_URI)
