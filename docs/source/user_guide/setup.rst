@@ -25,7 +25,8 @@ Connect Database
 
 หรือ
 
-ตั้ง Environment variables ชื่อ EZYQUANT_DATABASE_PATH ให้ชี้ไปยังที่อยู่ของ file 'ezyquant.db'
+ตั้ง Environment variables ชื่อ EZYQUANT_DATABASE_URI ให้ชี้ไปยังที่อยู่ของ file 'ezyquant.db'
 
 .. code-block::
+
    EZYQUANT_DATABASE_URI = "sqlite:///path/to/ezyquant.db"
