@@ -12,10 +12,6 @@ format:
 	docformatter -i -r .
 	ruff check --fix .
 
-.PHONY: venv
-venv:
-	python -m venv venv
-
 .PHONY: sphinx
 sphinx:
 	sphinx-build -b html docs/source/ docs/build/html
