@@ -81,7 +81,7 @@ if EZYQUANT_DB_PORT is not None:
     EZYQUANT_DB_PORT = int(EZYQUANT_DB_PORT)
 
 if EZYQUANT_DB_DRIVER is not None:
-    logger.critical("Environment variables are found. Connecting to database...")
+    logger.info("Environment variables are found. Connecting to database...")
     url = URL.create(
         drivername=EZYQUANT_DB_DRIVER,
         username=EZYQUANT_DB_USERNAME,
