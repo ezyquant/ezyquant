@@ -35,6 +35,7 @@ dependencies = [
   "XlsxWriter>=3.0",
   "typing_extensions>=4.4",
   "quantstats>=0.0",
+  "python-dotenv>=1.0",
 ]
 
 [project.urls]
@@ -71,7 +72,7 @@ line-length = 88
 
 [tool.docformatter]
 black = true
-exclude = ["venv"]
+exclude = [".venv"]
 
 [tool.ruff]
 target-version = "py38"
