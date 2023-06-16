@@ -1,4 +1,4 @@
-[![Logo](https://pydoc.ezyquant.com/_static/logo-text-right.svg)](https://pydoc.ezyquant.com/)
+[![Logo](https://raw.githubusercontent.com/ezyquant/ezyquant/main/docs/source/_static/logo-text-right.svg)](https://pydoc.ezyquant.com/)
 
 # EzyQuant: Powerful Python backtesting for Thai stocks
 
