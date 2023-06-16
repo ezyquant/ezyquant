@@ -1,9 +1,16 @@
+import logging
+import os
 import os.path
 
 import sqlalchemy as sa
+from dotenv import load_dotenv
 
 from ezyquant.errors import InputError
 from ezyquant.reader import SETDataReader, _SETDataReaderCached
+
+load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 
 def connect_sqlite(sqlite_path: str):
@@ -49,3 +56,11 @@ def _set_engine(url: str):
     SETDataReader._engine = engine
 
     return SETDataReader()
+
+
+EZYQUANT_DATABASE_URI = os.getenv("EZYQUANT_DATABASE_URI")
+if EZYQUANT_DATABASE_URI:
+    logging.info(
+        "EZYQUANT_DATABASE_URI was found in environment variables. Connecting to database..."
+    )
+    connect_sqlite(EZYQUANT_DATABASE_URI)
