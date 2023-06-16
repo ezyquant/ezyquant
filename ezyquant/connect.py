@@ -1,9 +1,11 @@
 import logging
 import os
 import os.path
+from typing import Union
 
 import sqlalchemy as sa
 from dotenv import load_dotenv
+from sqlalchemy.engine import URL
 
 from ezyquant.errors import InputError
 from ezyquant.reader import SETDataReader, _SETDataReaderCached
@@ -25,11 +27,12 @@ def connect_sqlite(sqlite_path: str):
         msg = f"{sqlite_path} is not found"
         raise InputError(msg)
 
-    url = f"sqlite:///{sqlite_path}?mode=ro"
+    url = URL.create(drivername="sqlite", database=sqlite_path, query={"mode": "ro"})
+
     return _set_engine(url)
 
 
-def connect_postgres(host: str, username: str, password: str, port: str, database: str):
+def connect_postgres(host: str, username: str, password: str, port: int, database: str):
     """Connect to PostgreSQL database.
 
     Parameters
@@ -45,11 +48,18 @@ def connect_postgres(host: str, username: str, password: str, port: str, databas
     database: str
         PostgreSQL database name (e.g. ezyquant)
     """
-    url = f"postgresql://{username}:{password}@{host}:{port}/{database}"
+    url = URL.create(
+        drivername="postgresql",
+        username=username,
+        password=password,
+        host=host,
+        port=port,
+        database=database,
+    )
     return _set_engine(url)
 
 
-def _set_engine(url: str):
+def _set_engine(url: Union[str, URL]):
     engine = sa.create_engine(url)
 
     _SETDataReaderCached.cache_clear()
@@ -58,9 +68,31 @@ def _set_engine(url: str):
     return SETDataReader()
 
 
+EZYQUANT_DB_DRIVER = os.getenv("EZYQUANT_DB_DRIVER")
+EZYQUANT_DB_USERNAME = os.getenv("EZYQUANT_DB_USERNAME")
+EZYQUANT_DB_PASSWORD = os.getenv("EZYQUANT_DB_PASSWORD")
+EZYQUANT_DB_HOST = os.getenv("EZYQUANT_DB_HOST")
+EZYQUANT_DB_PORT = os.getenv("EZYQUANT_DB_PORT")
+EZYQUANT_DB_DATABASE = os.getenv("EZYQUANT_DB_DATABASE")
+
 EZYQUANT_DATABASE_URI = os.getenv("EZYQUANT_DATABASE_URI")
-if EZYQUANT_DATABASE_URI:
-    logging.info(
-        "EZYQUANT_DATABASE_URI was found in environment variables. Connecting to database..."
+
+if EZYQUANT_DB_PORT is not None:
+    EZYQUANT_DB_PORT = int(EZYQUANT_DB_PORT)
+
+if EZYQUANT_DB_DRIVER is not None:
+    logger.info("Environment variables are found. Connecting to database...")
+    url = URL.create(
+        drivername=EZYQUANT_DB_DRIVER,
+        username=EZYQUANT_DB_USERNAME,
+        password=EZYQUANT_DB_PASSWORD,
+        host=EZYQUANT_DB_HOST,
+        port=EZYQUANT_DB_PORT,
+        database=EZYQUANT_DB_DATABASE,
     )
-    connect_sqlite(EZYQUANT_DATABASE_URI)
+    _set_engine(url)
+
+if EZYQUANT_DATABASE_URI is not None:
+    logger.critical("Environment variables are found. Connecting to database...")
+    url = EZYQUANT_DATABASE_URI
+    _set_engine(url)
