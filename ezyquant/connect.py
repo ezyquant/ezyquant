@@ -93,6 +93,6 @@ if EZYQUANT_DB_DRIVER is not None:
     _set_engine(url)
 
 if EZYQUANT_DATABASE_URI is not None:
-    logger.critical("Environment variables are found. Connecting to database...")
+    logger.info("Environment variables are found. Connecting to database...")
     url = EZYQUANT_DATABASE_URI
     _set_engine(url)
