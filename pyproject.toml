@@ -158,11 +158,11 @@ addopts = "-n auto"
 env = [
   "EZYQUANT_DATABASE_URI=sqlite:///ezyquant.db",
   # -------- OR --------
-  # "EZYQUANT_DB_DRIVER = postgresql",
-  # "EZYQUANT_DB_USERNAME = postgres",
-  # "EZYQUANT_DB_PASSWORD = postgres",
-  # "EZYQUANT_DB_HOST =localhost",
-  # "EZYQUANT_DB_PORT = 5432",
-  # "EZYQUANT_DB_DATABASE = psims",
+  # "EZYQUANT_DATABASE_DRIVER=postgresql",
+  # "EZYQUANT_DATABASE_USERNAME=postgres",
+  # "EZYQUANT_DATABASE_PASSWORD=postgres",
+  # "EZYQUANT_DATABASE_HOST=localhost",
+  # "EZYQUANT_DATABASE_PORT=5432",
+  # "EZYQUANT_DATABASE_NAME=psims",
 ]
 testpaths = ["tests"]
