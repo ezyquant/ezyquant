@@ -69,13 +69,20 @@ def _set_engine(url: Union[str, URL]):
 
 
 EZYQUANT_DATABASE_DRIVER = os.getenv("EZYQUANT_DATABASE_DRIVER")
+"""Environment variable for database driver."""
 EZYQUANT_DATABASE_USERNAME = os.getenv("EZYQUANT_DATABASE_USERNAME")
+"""Environment variable for database username."""
 EZYQUANT_DATABASE_PASSWORD = os.getenv("EZYQUANT_DATABASE_PASSWORD")
+"""Environment variable for database password."""
 EZYQUANT_DATABASE_HOST = os.getenv("EZYQUANT_DATABASE_HOST")
+"""Environment variable for database host."""
 EZYQUANT_DATABASE_PORT = os.getenv("EZYQUANT_DATABASE_PORT")
+"""Environment variable for database port."""
 EZYQUANT_DATABASE_NAME = os.getenv("EZYQUANT_DATABASE_NAME")
+"""Environment variable for database name."""
 
 EZYQUANT_DATABASE_URI = os.getenv("EZYQUANT_DATABASE_URI")
+"""Environment variable for database URI."""
 
 if EZYQUANT_DATABASE_PORT is not None:
     EZYQUANT_DATABASE_PORT = int(EZYQUANT_DATABASE_PORT)
