@@ -2165,11 +2165,14 @@ class SETDataReader:
         start_date: Optional[str] = None,
         ca_type_list: Optional[List[str]] = None,
     ) -> pd.DataFrame:
-        if symbol_list is not None and len(symbol_list) > sqlite_max_variable_number:
-            symbol_list = None
+        should_symbol_list_none = (
+            symbol_list is not None and len(symbol_list) > sqlite_max_variable_number
+        )
 
         df = self.get_adjust_factor(
-            symbol_list=symbol_list, start_date=start_date, ca_type_list=ca_type_list
+            symbol_list=None if should_symbol_list_none else symbol_list,
+            start_date=start_date,
+            ca_type_list=ca_type_list,
         )
 
         # pivot table
