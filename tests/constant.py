@@ -515,7 +515,6 @@ AGRI_SET = [
     "TEGH",
     "TFM",
     "TRUBB",
-    "TWPC",
     "UPOIC",
     "UVAN",
     "VPO",
@@ -547,7 +546,6 @@ FOOD_SET = [
     "LST",
     "M",
     "MALEE",
-    "MINT",
     "NRF",
     "NSL",
     "OISHI",
@@ -555,6 +553,7 @@ FOOD_SET = [
     "PB",
     "PLUS",
     "PM",
+    # "PQS",
     "PRG",
     "RBF",
     "SAPPE",
@@ -574,10 +573,11 @@ FOOD_SET = [
     "TKN",
     "TU",
     "TVO",
+    "TWPC",
     "W",
     "ZEN",
 ]
 
 ARGO_SET = AGRI_SET + FOOD_SET
 
-ARGO_MAI = ["ABICO", "AU", "JCKH", "KASET", "MUD", "TACC", "TMILL", "XO"]
+ARGO_MAI = ["ABICO", "AU", "JCKH", "KASET", "MUD", "TACC", "TMILL", "WINNER", "XO"]
