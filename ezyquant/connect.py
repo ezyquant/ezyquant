@@ -4,13 +4,14 @@ import os.path
 from typing import Union
 
 import sqlalchemy as sa
-from dotenv import load_dotenv
+from dotenv import find_dotenv, load_dotenv
 from sqlalchemy.engine import URL
 
 from ezyquant.errors import InputError
 from ezyquant.reader import SETDataReader, _SETDataReaderCached
 
-load_dotenv()
+dotenv_path = find_dotenv(usecwd=True)
+load_dotenv(dotenv_path=dotenv_path)
 
 logger = logging.getLogger(__name__)
 
