@@ -155,8 +155,14 @@ exclude_lines = ["no cov", "if __name__ == .__main__.:", "if TYPE_CHECKING:"]
 
 [tool.pytest.ini_options]
 addopts = "-n auto"
-usefixtures = [
-  "connect_sqlite",
-  # "connect_postgres",
+env = [
+  "EZYQUANT_DATABASE_URI=sqlite:///ezyquant.db",
+  # -------- OR --------
+  # "EZYQUANT_DB_DRIVER = postgresql",
+  # "EZYQUANT_DB_USERNAME = postgres",
+  # "EZYQUANT_DB_PASSWORD = postgres",
+  # "EZYQUANT_DB_HOST =localhost",
+  # "EZYQUANT_DB_PORT = 5432",
+  # "EZYQUANT_DB_DATABASE = psims",
 ]
 testpaths = ["tests"]

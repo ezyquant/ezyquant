@@ -16,6 +16,7 @@ ruff~=0.0
 pytest~=7.0
 pytest-kwparametrize~=0.0
 pytest-xdist[psutil]~=3.0
+pytest-env~=0.8
 
 # Doc
 sphinx~=6.2
