@@ -4,13 +4,14 @@ import os.path
 from typing import Union
 
 import sqlalchemy as sa
-from dotenv import load_dotenv
+from dotenv import find_dotenv, load_dotenv
 from sqlalchemy.engine import URL
 
 from ezyquant.errors import InputError
 from ezyquant.reader import SETDataReader, _SETDataReaderCached
 
-load_dotenv()
+dotenv_path = find_dotenv(usecwd=True)
+load_dotenv(dotenv_path=dotenv_path)
 
 logger = logging.getLogger(__name__)
 
@@ -69,13 +70,20 @@ def _set_engine(url: Union[str, URL]):
 
 
 EZYQUANT_DATABASE_DRIVER = os.getenv("EZYQUANT_DATABASE_DRIVER")
+"""Environment variable for database driver."""
 EZYQUANT_DATABASE_USERNAME = os.getenv("EZYQUANT_DATABASE_USERNAME")
+"""Environment variable for database username."""
 EZYQUANT_DATABASE_PASSWORD = os.getenv("EZYQUANT_DATABASE_PASSWORD")
+"""Environment variable for database password."""
 EZYQUANT_DATABASE_HOST = os.getenv("EZYQUANT_DATABASE_HOST")
+"""Environment variable for database host."""
 EZYQUANT_DATABASE_PORT = os.getenv("EZYQUANT_DATABASE_PORT")
+"""Environment variable for database port."""
 EZYQUANT_DATABASE_NAME = os.getenv("EZYQUANT_DATABASE_NAME")
+"""Environment variable for database name."""
 
 EZYQUANT_DATABASE_URI = os.getenv("EZYQUANT_DATABASE_URI")
+"""Environment variable for database URI."""
 
 if EZYQUANT_DATABASE_PORT is not None:
     EZYQUANT_DATABASE_PORT = int(EZYQUANT_DATABASE_PORT)
