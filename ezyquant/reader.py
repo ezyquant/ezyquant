@@ -2166,7 +2166,7 @@ class SETDataReader:
         ca_type_list: Optional[List[str]] = None,
     ) -> pd.DataFrame:
         should_symbol_list_none = (
-            symbol_list is not None and len(symbol_list) > sqlite_max_variable_number
+            symbol_list is None or len(symbol_list) > sqlite_max_variable_number
         )
 
         df = self.get_adjust_factor(
