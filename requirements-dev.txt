@@ -13,6 +13,7 @@ docformatter[tomli]~=1.0
 ruff~=0.0
 
 # Test
+coverage[toml]~=7.2
 pytest~=7.0
 pytest-kwparametrize~=0.0
 pytest-xdist[psutil]~=3.0
