@@ -645,7 +645,7 @@ class SETSignalCreator:
         )
 
     def _reindex(
-        self, df: pd.DataFrame, method: MethodType = None, fill_value=nan
+        self, df: pd.DataFrame, method: Optional[MethodType] = None, fill_value=nan
     ) -> pd.DataFrame:
         """Reindex dataframe to trading date and symbol.
 
@@ -668,7 +668,7 @@ class SETSignalCreator:
         return df
 
     def _reindex_trade_date(
-        self, df: pd.DataFrame, method: MethodType = None, fill_value=nan
+        self, df: pd.DataFrame, method: Optional[MethodType] = None, fill_value=nan
     ) -> pd.DataFrame:
         td = self._get_trading_dates()
         return self._reindex_date(df=df, index=td, method=method, fill_value=fill_value)
@@ -863,7 +863,7 @@ class SETSignalCreator:
     def _reindex_date(
         df: pd.DataFrame,
         index,
-        method: MethodType = None,
+        method: Optional[MethodType] = None,
         fill_value=nan,
     ) -> pd.DataFrame:
         """Reindex and fillna with method and fill_value."""

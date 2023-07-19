@@ -5,6 +5,7 @@ ta~=0.10
 XlsxWriter~=3.0
 typing_extensions~=4.4
 quantstats~=0.0
+ipython
 python-dotenv~=1.0
 
 # Sytle
@@ -13,6 +14,7 @@ docformatter[tomli]~=1.0
 ruff~=0.0
 
 # Test
+coverage[toml]~=7.2
 pytest~=7.0
 pytest-kwparametrize~=0.0
 pytest-xdist[psutil]~=3.0
