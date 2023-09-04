@@ -11,17 +11,12 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v3
-        with:
-          python-version: "3.8"
-
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          make install
+          pip install -U -e .[dev]
 
-      - name: Build a binary wheel and a source tarball
+      - name: Build binary
         run: |
           hatch build
 
