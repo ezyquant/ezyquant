@@ -1,6 +1,6 @@
 .PHONY: install
 install:
-	pip install -U -r requirements-dev.txt
+	pip install -U -e .[dev]
 
 .PHONY: test
 test:
