@@ -65,6 +65,8 @@ summary_trade_columns = [
     "hold_days",
 ]
 
+DEFAULT_PERIOD_PER_YEAR = 365
+
 
 def return_nan_on_failure(func):
     def wrapper(*args, **kwargs):
@@ -623,7 +625,7 @@ class SETBacktestReport:
         title="Strategy Tearsheet",
         output=None,
         compounded=True,
-        periods_per_year=252,
+        periods_per_year=DEFAULT_PERIOD_PER_YEAR,
         download_filename="quantstats-tearsheet.html",
         figfmt="svg",
         template_path=None,
@@ -690,7 +692,7 @@ class SETBacktestReport:
         figsize=(8, 5),
         display=True,
         compounded=True,
-        periods_per_year=252,
+        periods_per_year=DEFAULT_PERIOD_PER_YEAR,
         match_dates=False,
     ):
         """Calculate performance metrics and generate visualizations for a given
@@ -743,7 +745,7 @@ class SETBacktestReport:
         figsize=(8, 5),
         display=True,
         compounded=True,
-        periods_per_year=252,
+        periods_per_year=DEFAULT_PERIOD_PER_YEAR,
         match_dates=False,
     ):
         """Calculate performance metrics and generate visualizations for a given
@@ -821,12 +823,8 @@ class SETBacktestReport:
     @property
     def cagr(self) -> pd.Series:
         """Calculates the communicative annualized growth return (CAGR%) of access
-        returns.
-
-        If rf is non-zero, you must specify periods. In this case, rf is assumed to be
-        expressed in yearly (annualized) terms
-        """
-        return qs_stats.cagr(self._nav_df)
+        returns."""
+        return qs_stats.cagr(self._nav_df, periods=DEFAULT_PERIOD_PER_YEAR)
 
     @property
     def pct_maximum_drawdown(self) -> pd.Series:
@@ -847,7 +845,7 @@ class SETBacktestReport:
     @property
     def std(self) -> pd.Series:
         """Calculates the volatility of returns for a period."""
-        return qs_stats.volatility(self._nav_df)
+        return qs_stats.volatility(self._nav_df, periods=DEFAULT_PERIOD_PER_YEAR)
 
     @property
     @return_nan_on_failure
