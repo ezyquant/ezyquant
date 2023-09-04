@@ -65,7 +65,7 @@ summary_trade_columns = [
     "hold_days",
 ]
 
-DEFAULT_PERIOD_PER_YEAR = 365
+DEFAULT_PERIOD_PER_YEAR = 252
 
 
 def return_nan_on_failure(func):
@@ -824,7 +824,7 @@ class SETBacktestReport:
     def cagr(self) -> pd.Series:
         """Calculates the communicative annualized growth return (CAGR%) of access
         returns."""
-        return qs_stats.cagr(self._nav_df, periods=DEFAULT_PERIOD_PER_YEAR)
+        return qs_stats.cagr(self._nav_df)
 
     @property
     def pct_maximum_drawdown(self) -> pd.Series:

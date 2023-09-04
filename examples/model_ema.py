@@ -57,3 +57,4 @@ result = backtest(
 
 print(result.stat_df)
 result.to_excel("model_ema_report.xlsx")
+result.to_html(output="model_ema_report.html")
