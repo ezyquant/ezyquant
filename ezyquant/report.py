@@ -7,6 +7,7 @@ import pandas as pd
 import quantstats as qs
 from pandas.testing import assert_index_equal
 from quantstats import stats as qs_stats
+from quantstats import utils as qs_utils
 
 from ezyquant import fields as fld
 from ezyquant import utils
@@ -1122,3 +1123,30 @@ class SETBacktestReport:
         df["entry_at"] = tmp["entry_at"]
 
         return df
+
+
+# Change default periods to 365
+def cagr(returns, rf=0.0, compounded=True, periods=365):
+    """Calculates the communicative annualized growth return (CAGR%) of access returns.
+
+    If rf is non-zero, you must specify periods. In this case, rf is assumed to be
+    expressed in yearly (annualized) terms
+    """
+    total = qs_utils._prepare_returns(returns, rf)
+    if compounded:
+        total = qs_stats.comp(total)
+    else:
+        total = np.sum(total)
+
+    years = (returns.index[-1] - returns.index[0]).days / periods
+
+    res = abs(total + 1.0) ** (1.0 / years) - 1  #   type: ignore
+
+    if isinstance(returns, pd.DataFrame):
+        res = pd.Series(res)
+        res.index = returns.columns
+
+    return res
+
+
+qs_stats.cagr = cagr
