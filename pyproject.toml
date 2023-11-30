@@ -55,6 +55,7 @@ dev = [
   "sphinx~=6.2",
   "sphinx-book-theme~=1.0",
   "ezyquant-execution",
+  "sphinxcontrib-googleanalytics",
   # Build
   "hatch",
 ]

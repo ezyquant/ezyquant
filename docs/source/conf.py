@@ -35,6 +35,7 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
+    "sphinxcontrib.googleanalytics",
 ]
 
 autosummary_generate = True
@@ -80,3 +81,6 @@ html_theme_options = {
     "use_fullscreen_button": False,
     "show_navbar_depth": 2,
 }
+
+# Google Analytics
+googleanalytics_id = "G-W4J7K7883K"
