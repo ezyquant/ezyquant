@@ -91,7 +91,7 @@ def peak_valley_pivots_candlestick(close, high, low, up_thresh, down_thresh):
             x = low[t]
             r = x / last_pivot_x
             if r >= up_thresh:
-                pivots[last_pivot_t] = trend  #
+                pivots[last_pivot_t] = trend
                 trend = 1
                 # last_pivot_x = x
                 last_pivot_x = high[t]
