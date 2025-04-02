@@ -801,6 +801,46 @@ class TestGetSignPosting:
             ),
         )
 
+    @pytest.mark.parametrize(
+        ["start_date", "end_date", "expected_size"],
+        [
+            # D_HOLD edge
+            ("2025-03-19", "2025-03-20", 0),
+            ("2025-03-20", "2025-03-21", 1),
+            ("2025-03-21", "2025-03-22", 1),
+            ("2025-03-22", "2025-03-23", 1),
+            # D_RELEASE edge
+            ("2025-04-01", "2025-04-02", 1),
+            ("2025-04-02", "2025-04-03", 1),
+            ("2025-04-03", "2025-04-04", 1),
+            ("2025-04-04", "2025-04-05", 0),
+        ],
+    )
+    def test_intuch(
+        self,
+        sdr: SETDataReader,
+        start_date: Optional[str],
+        end_date: Optional[str],
+        expected_size: int,
+    ):
+        """
+        - Symbol : INTUCH
+        - N_SIGN: SP
+        - SIGN RANGE: 2025-03-21 to 2025-04-03
+        """
+        # Test
+        result = sdr.get_sign_posting(
+            symbol_list=["INTUCH"],
+            start_date=start_date,
+            end_date=end_date,
+            sign_list=["SP"],
+        )
+
+        # Check
+        self._check(result)
+
+        assert len(result) == expected_size
+
     @pytest.mark.parametrize("symbol_list", [["ABCD"], []])
     def test_empty(self, sdr: SETDataReader, symbol_list: Optional[List[str]]):
         # Test
@@ -824,7 +864,27 @@ class TestGetSignPosting:
         assert pd.notna(result["hold_date"]).all(), "hold_date is null"
         assert pd.notna(result["sign"]).all(), "sign is null"
 
-        assert result["sign"].isin(["C", "CM", "DS", "H", "NC", "NP", "SP", "ST"]).all()
+        assert (
+            result["sign"]
+            .isin(
+                [
+                    "C",
+                    "CB",
+                    "CC",
+                    "CF",
+                    "CM",
+                    "CS",
+                    "DS",
+                    "H",
+                    "NC",
+                    "NP",
+                    "SP",
+                    "ST",
+                    "P",
+                ]
+            )
+            .all()
+        )
 
         return result
 

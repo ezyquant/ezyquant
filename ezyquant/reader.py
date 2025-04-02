@@ -779,7 +779,7 @@ class SETDataReader:
         start_date: Optional[str] = None
             start of hold_date (D_HOLD).
         end_date: Optional[str] = None
-            end of hold_date (D_HOLD).
+            end of release_date (D_RELEASE).
         sign_list: Optional[List[str]] = None,
             N_SIGN in sign_list.
                 - C - Caution Flag
@@ -825,13 +825,20 @@ class SETDataReader:
             .select_from(from_clause)
             .order_by(sign_posting_t.c.D_HOLD)
         )
-        stmt = self._filter_stmt_by_symbol_and_date(
+        stmt = self._filter_stmt_by_date(
             stmt=stmt,
-            symbol_column=security_t.c.N_SECURITY,
-            date_column=sign_posting_t.c.D_HOLD,
-            symbol_list=symbol_list,
+            column=sign_posting_t.c.D_RELEASE,
             start_date=start_date,
+            end_date=None,
+        )
+        stmt = self._filter_stmt_by_date(
+            stmt=stmt,
+            column=sign_posting_t.c.D_HOLD,
+            start_date=None,
             end_date=end_date,
+        )
+        stmt = self._filter_str_in_list(
+            stmt=stmt, column=security_t.c.N_SECURITY, values=symbol_list
         )
         stmt = self._filter_str_in_list(
             stmt=stmt, column=sign_posting_t.c.N_SIGN, values=sign_list
