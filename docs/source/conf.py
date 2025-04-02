@@ -14,9 +14,9 @@ import sys
 
 sys.path.insert(0, os.path.abspath("../.."))
 
-from datetime import datetime  # noqa: E402
+from datetime import datetime
 
-import ezyquant as ez  # noqa: E402
+import ezyquant as ez
 
 # -- Project information -----------------------------------------------------
 
