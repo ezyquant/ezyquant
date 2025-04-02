@@ -35,7 +35,7 @@ import pandas as pd
 
 import ezyquant as ez
 from ezyquant import SETDataReader, backtest
-from ezyquant.backtest import Context
+from ezyquant.backtesting import Context
 
 ez.connect_sqlite("ezyquant.db")
 
@@ -64,6 +64,8 @@ report = backtest(
     initial_cash=initial_cash,
     pct_commission=0.25,
 )
+
+print(report.stat_df)
 ```
 
 Backtest report:
