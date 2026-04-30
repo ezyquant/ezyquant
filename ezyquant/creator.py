@@ -615,11 +615,11 @@ class SETSignalCreator:
         ]
         for i in static_index_list:
             if i in fld.MARKET_MAP_UPPER:
-                df = self._get_symbol_info(market=i)
+                df = self._get_symbol_info(market=i, sec_type="S", native="L")
             elif i in fld.INDUSTRY_LIST_UPPER:
-                df = self._get_symbol_info(industry=i)
+                df = self._get_symbol_info(industry=i, sec_type="S", native="L")
             elif i in fld.SECTOR_LIST_UPPER:
-                df = self._get_symbol_info(sector=i)
+                df = self._get_symbol_info(sector=i, sec_type="S", native="L")
             else:
                 warnings.warn(f"Index {i} is invalid.", stacklevel=2)
                 continue
@@ -638,8 +638,6 @@ class SETSignalCreator:
         return self._sdr.get_symbol_info(
             *args,
             **kwargs,
-            sec_type="S",
-            native="L",
             start_has_price_date=self._start_date,
             end_has_price_date=self._end_date,
         )
